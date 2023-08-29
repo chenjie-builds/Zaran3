@@ -1,6 +1,6 @@
 #include "vanleer.h"
 using namespace zaran;
-void Vanleer::Solver(std::shared_ptr<RiemannSolverPara>& para)
+void Vanleer::Solver(Ptr<RiemannSolverPara>& para)
 {
 	double& rhoL = para->primL(0);
 	double& uL = para->primL(1);

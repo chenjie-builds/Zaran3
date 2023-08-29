@@ -24,8 +24,7 @@ namespace zaran
 		void BoundaryCondition()override;
 		void ComputePrimtiveGradient()override;
 	protected:
-		using StructGridPtr = std::shared_ptr<StructGrid>;
-		StructGridPtr GetGrid();
+		Ptr<StructGrid> GetGrid();
 		void ComputeTimeStepLocal() override;
 	private:
 	};

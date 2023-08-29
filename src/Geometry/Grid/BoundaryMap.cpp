@@ -1,8 +1,6 @@
 #include "BoundaryMap.h"
 #include "log.h"
-namespace zaran
-{
-
+using namespace zaran;
 void BoundaryMap::AddBoundary(const std::string& name, Boundary& bound)
 {
 	auto it = boundaryMap_.find(name);
@@ -40,4 +38,3 @@ std::vector<Boundary>& BoundaryMap::GetBoundary(const std::string& name)
 
 }
 
-}

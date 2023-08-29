@@ -1,6 +1,6 @@
 #include "SpecialField.h"
-
-void CalcSupersonicVortex(const double& x, const double& y, const double& x0, const double y0, const double& ci, const double& Mi, const double& rhoi, Eigen::VectorXd& primitive)
+using namespace zaran;
+void CalcSupersonicVortex(const double& x, const double& y, const double& x0, const double y0, const double& ci, const double& Mi, const double& rhoi, DVector& primitive)
 {
 	if (primitive.size() != 5)
 	{
@@ -23,7 +23,7 @@ void CalcSupersonicVortex(const double& x, const double& y, const double& x0, co
 	primitive[4] = p;
 }
 
-void CalcIsentropicVortex(const double& x, const double& y, const double& beta, Eigen::VectorXd& primitive)
+void CalcIsentropicVortex(const double& x, const double& y, const double& beta, DVector& primitive)
 {
 	double xv, yv;
 	xv = yv = 0;

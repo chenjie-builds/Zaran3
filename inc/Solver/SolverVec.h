@@ -11,10 +11,8 @@
 //==============================================================================||
 #pragma once
 #include "solver.h"
-#include <vector>
 namespace zaran
 {
-	using std::shared_ptr;
 	//网格的集合，所有的网格均存在此处
 	class SolverVec
 	{
@@ -22,14 +20,14 @@ namespace zaran
 		SolverVec();
 		~SolverVec();
 		//向网格集合中添加一个网格
-		void AddSolver(shared_ptr<Solver>& solver);
+		void AddSolver(Ptr<Solver>& solver);
 		//检查网格的index是否和网格集合中匹配
 		void CheckSolver();
 		//返回一个网格
-		shared_ptr<Solver>& GetSolverPtr(const int index);
+		Ptr<Solver>& GetSolverPtr(const int index);
 		//返回网格的个数
 		int GetSolverNumber() { return solverVec_.size(); }
 	private:
-		std::vector<shared_ptr<Solver>> solverVec_;
+		Array<Ptr<Solver>> solverVec_;
 	};
 }

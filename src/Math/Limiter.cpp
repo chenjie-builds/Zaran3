@@ -1,6 +1,7 @@
 #include "Limiter.h"
 #include "MathBasic.h"
 #include<cmath>
+using namespace zaran;
 namespace zaran
 {
 	double NoLimiter(const double& x, const double& y)

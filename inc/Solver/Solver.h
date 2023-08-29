@@ -14,14 +14,13 @@
 #include "solverpara.h"
 #include "GlobalData.h"
 #include "GridList.h"
-#include <memory>
 namespace zaran
 {
 
 	//网格指针
-	using GridPtr = std::shared_ptr<Grid>;
-	using GridListPtr = std::shared_ptr<GridList>;
-	using SolverParaPtr = std::shared_ptr<SolverPara>;
+	using GridPtr =Ptr<Grid>;
+	using GridListPtr = Ptr<GridList>;
+	using SolverParaPtr = Ptr<SolverPara>;
 	class Solver
 	{
 	public:
@@ -29,11 +28,11 @@ namespace zaran
 		virtual ~Solver();
 	public:
 		void SetIndex(const int& index) { index_ = index; }
-		void SetName(const std::string& name) { name_ = name; }
+		void SetName(const string& name) { name_ = name; }
 		void SetPara(SolverParaPtr para) { para_ = para; }
 		void SetGridList(GridListPtr& gridList) { gridList_ = gridList; }
 		void SetGridIndex(const int& gridIndex) { gridIndex_ = gridIndex; }
-		const std::string& GetName()const { return name_; }
+		const string& GetName()const { return name_; }
 		GridPtr& GetGrid() { return gridList_->GetGrid(gridIndex_); }
 		const int& GetIndex()const { return index_; }
 		SolverParaPtr& GetPara();
@@ -51,7 +50,7 @@ namespace zaran
 		// solver index
 		int index_;
 		//! solver name
-		std::string name_;
+		string name_;
 		// 全场网格数组
 		GridListPtr gridList_;
 		//! solver 作用的网格id

@@ -11,19 +11,17 @@
 //==============================================================================||
 #pragma once
 #include "Boundary.h"
-#include <string>
-#include <vector>
-#include <unordered_map>
+#include"BasicType.h"
 namespace zaran
 {
 	class BoundaryMap
 	{
 	public:
-		void AddBoundary(const std::string& name, Boundary& bound);
+		void AddBoundary(const string& name, Boundary& bound);
 		int GetBoundaryTypeName() { return boundaryMap_.size(); }
-		std::vector<Boundary>& GetBoundary(const std::string& name);
-		std::unordered_map<std::string, std::vector<Boundary>>& GetBoundaryMap() { return boundaryMap_; }
+		vector<Boundary>& GetBoundary(const string& name);
+		map<string, vector<Boundary>>& GetBoundaryMap() { return boundaryMap_; }
 	private:
-		std::unordered_map<std::string, std::vector<Boundary>>boundaryMap_;
+		map<string, vector<Boundary>>boundaryMap_;
 	};
 }

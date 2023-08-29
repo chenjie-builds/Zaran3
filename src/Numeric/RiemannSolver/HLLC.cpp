@@ -1,5 +1,6 @@
 #include "HLLC.h"
-void zaran::HLLC::Solver(std::shared_ptr<RiemannSolverPara>& para)
+using namespace zaran;
+void HLLC::Solver(Ptr<RiemannSolverPara>& para)
 {
 
 }

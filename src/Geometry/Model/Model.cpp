@@ -3,11 +3,12 @@
 #include<iostream>
 #include<fstream>
 #include<algorithm>
-void Model::SetBoxMin(const Eigen::Vector3d& box_min)
+using namespace zaran;
+void Model::SetBoxMin(const DVector3D& box_min)
 {
 	box_min_ = box_min;
 }
-void Model::SetBoxMax(const Eigen::Vector3d& box_max)
+void Model::SetBoxMax(const DVector3D& box_max)
 {
 	box_max_ = box_max;
 }

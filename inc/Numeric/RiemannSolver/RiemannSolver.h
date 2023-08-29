@@ -10,13 +10,13 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
+#include"BasicType.h"
 #include "RiemannSolverPara.h"
-#include <memory>
 namespace zaran
 {
 	class RiemannSolver
 	{
 	public:
-		virtual void Solver(std::shared_ptr<RiemannSolverPara>& para) = 0;
+		virtual void Solver(Ptr<RiemannSolverPara>& para) = 0;
 	};
 }

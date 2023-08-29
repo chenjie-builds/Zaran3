@@ -1,13 +1,13 @@
 #include "GlobalData.h"
 #include "log.h"
-
+using namespace zaran;
 GlobalData& GlobalData::Init()
 {
 	static GlobalData data;
 	return data;
 }
 
-bool GlobalData::IsExist(const std::string& dataName)
+bool GlobalData::IsExist(const string& dataName)
 {
 	if (dataMap_.find(dataName) != dataMap_.end())
 	{
@@ -16,7 +16,7 @@ bool GlobalData::IsExist(const std::string& dataName)
 	return false;
 }
 
-const dataVariant& GlobalData::Get(const std::string& dataName)
+const dataVariant& GlobalData::Get(const string& dataName)
 {
 	auto data = dataMap_.find(dataName);
 	if (data != dataMap_.end())
@@ -29,24 +29,24 @@ const dataVariant& GlobalData::Get(const std::string& dataName)
 	}
 }
 
-const int GlobalData::GetInt(const std::string& dataName)
+const int GlobalData::GetInt(const string& dataName)
 {
 	return *(std::get_if<int>(&Get(dataName)));
 }
 
-const double GlobalData::GetDouble(const std::string& dataName)
+const double GlobalData::GetDouble(const string& dataName)
 {
 	return *(std::get_if<double>(&Get(dataName)));
 }
 
-const std::string GlobalData::GetString(const std::string& dataName)
+const string GlobalData::GetString(const string& dataName)
 {
-	return *(std::get_if<std::string>(&Get(dataName)));
+	return *(std::get_if<string>(&Get(dataName)));
 }
 
-std::unordered_map<std::string, dataVariant > GlobalData::dataMap_;
+map<string, dataVariant > GlobalData::dataMap_;
 
-void GlobalData::Update(const std::string& varName, const dataVariant& varValue)
+void GlobalData::Update(const string& varName, const dataVariant& varValue)
 {
 	dataMap_[varName] = varValue;
 }

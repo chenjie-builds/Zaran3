@@ -3,6 +3,7 @@
 #include"MathBasic.h"
 #include "Gas.h"
 #include<cmath>
+using namespace zaran;
 RefValue::RefValue()
 {
 	gama_ = 1.4;

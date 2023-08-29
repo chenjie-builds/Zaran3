@@ -6,8 +6,7 @@
 #include "StegerWarming.h"
 #include "log.h"
 using namespace zaran;
-
-void RiemannSolverFactory::Create(std::shared_ptr<RiemannSolver>& riemannSolver, string& riemannSolverName)
+void RiemannSolverFactory::Create(Ptr<RiemannSolver>& riemannSolver, string& riemannSolverName)
 {
 	if (riemannSolverName == "VanLeer")
 		CreateVanLeer(riemannSolver);
@@ -26,27 +25,27 @@ void RiemannSolverFactory::Create(std::shared_ptr<RiemannSolver>& riemannSolver,
 
 }
 
-void RiemannSolverFactory::CreateVanLeer(std::shared_ptr<RiemannSolver>& riemannSolver)
+void RiemannSolverFactory::CreateVanLeer(Ptr<RiemannSolver>& riemannSolver)
 {
 	riemannSolver = std::make_shared<Vanleer>();
 }
 
-void RiemannSolverFactory::CreateHLLC(std::shared_ptr<RiemannSolver>& riemannSolver)
+void RiemannSolverFactory::CreateHLLC(Ptr<RiemannSolver>& riemannSolver)
 {
 	riemannSolver = std::make_shared<HLLC>();
 }
 
-void RiemannSolverFactory::CreateRoe(std::shared_ptr<RiemannSolver>& riemannSolver)
+void RiemannSolverFactory::CreateRoe(Ptr<RiemannSolver>& riemannSolver)
 {
 	riemannSolver = std::make_shared<Roe>();
 }
 
-void RiemannSolverFactory::CreateStegerWarming(std::shared_ptr<RiemannSolver>& riemannSolver)
+void RiemannSolverFactory::CreateStegerWarming(Ptr<RiemannSolver>& riemannSolver)
 {
 	riemannSolver = std::make_shared<StegerWarming>();
 }
 
-void RiemannSolverFactory::CreateAusmpw(std::shared_ptr<RiemannSolver>& riemannSolver)
+void RiemannSolverFactory::CreateAusmpw(Ptr<RiemannSolver>& riemannSolver)
 {
 	riemannSolver = std::make_shared<Ausmpw>();
 }

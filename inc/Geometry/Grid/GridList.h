@@ -10,7 +10,6 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include <vector>
 #include "grid.h"
 namespace zaran
 {
@@ -19,21 +18,21 @@ namespace zaran
 	{
 	public:
 		GridList() {}
-		GridList(std::vector<std::shared_ptr<Grid>>& gridList );
+		GridList(Array<Ptr<Grid>>& gridList);
 		~GridList();
 		//向网格集合中添加一个网格
-		void AddGrid(std::shared_ptr<Grid>& grid);
+		void AddGrid(Ptr<Grid>& grid);
 		//检查网格的index是否和网格集合中匹配
 		void CheckGrid();
 		//返回一个网格
-		std::shared_ptr<Grid>& GetGrid(const int index);
+		Ptr<Grid>& GetGrid(const int index);
 		//返回网格的个数
 		int GetGridNumber() { return gridList_.size(); }
 		// 返回网格数组
-		std::vector<std::shared_ptr<Grid>>& GetGrid();
+		Array<Ptr<Grid>>& GetGrid();
 		// 重设网格个数
 		void Resize(int gridNum);
 	private:
-		std::vector<std::shared_ptr<Grid>> gridList_;
+		Array<Ptr<Grid>> gridList_;
 	};
 }

@@ -14,8 +14,7 @@
 #include "flowsolverpara.h"
 namespace zaran
 {
-	using std::vector;
-	using FlowSolverParaPtr = std::shared_ptr<FlowSolverPara>;
+	using FlowSolverParaPtr = Ptr<FlowSolverPara>;
 	class FlowSolver :public FieldSolver
 	{
 	public:
@@ -45,12 +44,12 @@ namespace zaran
 		// 计算变量梯度
 		virtual void ComputePrimtiveGradient() = 0;
 	protected:
-		vector<vector<double>*> m_Primtive;
-		vector<vector<double>*> m_Conservative;
-		vector<vector<double>*> m_CoordTrans;
-		vector<double>* m_TimeStep;
-		vector<vector<double>*> m_Residual;
-		vector<vector<double>*> m_LimiterCoef;
-		vector<vector<double>*> m_ConservativeRK;// 用于存储Runge-Kutta的中间量
+		Array<DArray*> m_Primtive;
+		Array<DArray*> m_Conservative;
+		Array<DArray*> m_CoordTrans;
+		DArray* m_TimeStep;
+		Array<DArray*> m_Residual;
+		Array<DArray*> m_LimiterCoef;
+		Array<DArray*> m_ConservativeRK;// 用于存储Runge-Kutta的中间量
 	};
 }

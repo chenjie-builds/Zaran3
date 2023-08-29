@@ -10,18 +10,17 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
+#include"BasicType.h"
 #include "SolverVec.h"
 #include "GridList.h"
 #include "Visual.h"
-#include <memory>
-#include <vector>
 #include <iostream>
 namespace zaran
 {
 	class Controller
 	{
 	public:
-		Controller(std::shared_ptr<GridList>& gridList, std::shared_ptr<SolverVec>& solverVec);
+		Controller(Ptr<GridList>& gridList, Ptr<SolverVec>& solverVec);
 		~Controller();
 	public:
 		// 流场求解
@@ -54,9 +53,9 @@ namespace zaran
 		// 输出流场为Tecplot格式
 		void SaveDataTecplot();
 	private:
-		std::shared_ptr<GridList> gridList_;
-		std::shared_ptr<SolverVec> solverVec_;
-		std::shared_ptr<Visual> visual_;
+		shared_ptr<GridList> gridList_;
+		shared_ptr<SolverVec> solverVec_;
+		shared_ptr<Visual> visual_;
 	};
 
 }

@@ -2,6 +2,7 @@
 #include "Log.h"
 #include<fstream>
 #include<iostream>
+using namespace zaran;
 ModelControl::ModelControl(string filename)
 {
 	SetFileName(filename);
@@ -16,7 +17,7 @@ void ModelControl::SetFileName(string filename)
 void ModelControl::Input()
 {
 	double x, y;
-	vector<Eigen::Vector3d>vertex;
+	vector<DVector3D>vertex;
 
 	std::ifstream fin(m_filename);
 	//ÓÃÓÚÔúÈ¾ÑÝÊ¾
@@ -51,19 +52,7 @@ void ModelControl::Input()
 
 
 		fin >> modeType;
-		if (modeType == "Poly")
-		{
-			fin >> pointNum;
-			vertex.resize(pointNum);
-			for (int iPoint = 0; iPoint < pointNum; ++iPoint)
-			{
-				fin >> x;
-				fin >> y;
-				vertex[iPoint] = { x,y,0 };
-			}
-			modelVec_[iModel] = new PloygonModel(vertex);
-		}
-		else if (modeType == "Point")
+		if (modeType == "Point")
 		{
 			fin >> pointNum;
 			vertex.resize(pointNum);

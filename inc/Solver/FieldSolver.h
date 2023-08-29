@@ -13,7 +13,6 @@
 #pragma once
 #include"Solver.h"
 #include"FieldData.h"
-#include<memory>
 namespace zaran
 {
 	class FieldSolver :public Solver
@@ -33,12 +32,12 @@ namespace zaran
 		// 获取求解器求解方程的个数
 		int GetNumberOfEquations() { return m_NumberOfEquations; }
 		// 获取Fieldata
-		std::shared_ptr<FieldData>& GetFieldData() { return m_FieldData; }
+		Ptr<FieldData>& GetFieldData() { return m_FieldData; }
 	protected:
 		void SetNumberOfEquations(int n) { m_NumberOfEquations = n; }
 	private:
 		// 求解器求解方程的个数
 		int m_NumberOfEquations;
-		std::shared_ptr<FieldData> m_FieldData;
+		Ptr<FieldData> m_FieldData;
 	};
 }

@@ -17,9 +17,9 @@ namespace zaran
 	class GridListFactory
 	{
 	public:
-		virtual void Create(std::shared_ptr<GridList>& gridList);
+		virtual void Create(Ptr<GridList>& gridList);
 	private:
-		void ReadPlot3D(std::shared_ptr<GridList>& gridList);
-		void CreateByTest(std::shared_ptr<GridList>& gridList);
+		void ReadPlot3D(Ptr<GridList>& gridList);
+		void CreateByTest(Ptr<GridList>& gridList);
 	};
 }

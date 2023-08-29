@@ -1,6 +1,7 @@
 #include<iostream>
 #include "CoordTrans.h"
 #include "log.h"
+using namespace zaran;
 void CoordTrans::CoordTransNoTime2D(Coordinate xRight, Coordinate xLeft, Coordinate yRight, Coordinate yLeft)
 {
 	//x¦Î y¦Î z¦Î t¦Î

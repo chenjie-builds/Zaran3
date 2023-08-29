@@ -1,5 +1,6 @@
 #include "Roe.h"
-void zaran::Roe::Solver(std::shared_ptr<RiemannSolverPara>& para)
+using namespace zaran;
+void Roe::Solver(Ptr<RiemannSolverPara>& para)
 {
 
 }

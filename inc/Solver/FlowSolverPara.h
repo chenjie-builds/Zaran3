@@ -12,11 +12,9 @@
 #pragma once
 #include "solverpara.h"
 #include "Limiter.h"
-#include <vector>
-#include <Eigen/Dense>
+#include"BasicType.h"
 namespace zaran
 {
-	using namespace Eigen;
 	//梯度求解方法
 	enum class GradScheme
 	{
@@ -39,8 +37,8 @@ namespace zaran
 		void SetInitFieldType(const int& initflowType);
 		void SetIsViscous(const int& isViscous);
 		void SetCflNumber(const int& cfl);
-		void SetPrimitiveInflow(const VectorXd& primInflow);
-		void SetRKCoef(const std::vector<double>& rkCoef);
+		void SetPrimitiveInflow(const DVector& primInflow);
+		void SetRKCoef(const DArray& rkCoef);
 		void SetGradScheme(const GradScheme& gradScheme);
 		void SetLimiterType(const LimiterType& limiterType);
 	public:
@@ -53,8 +51,8 @@ namespace zaran
 		const int& GetInitFieldType()const;
 		const int& GetIsViscous()const;
 		const double& GetCflNumber()const;
-		const VectorXd& GetPrimitiveInflow()const;
-		const std::vector<double>& GetRKCoef()const;
+		const DVector& GetPrimitiveInflow()const;
+		const DArray& GetRKCoef()const;
 		const GradScheme& GetGradScheme()const;
 		const LimiterType& GetLimiterType()const;
 	private:
@@ -74,9 +72,9 @@ namespace zaran
 		// CFL数, 决定计算步长
 		double cflNumber_;
 		// 来流原始变量
-		VectorXd primInflow_;
+		DVector primInflow_;
 		// RK步数
-		std::vector<double> rkCoef_;
+		DArray rkCoef_;
 		// 梯度方法
 		GradScheme gradSchem_;
 		// 限制器

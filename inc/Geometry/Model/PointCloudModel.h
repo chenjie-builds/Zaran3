@@ -11,7 +11,6 @@
 //==============================================================================||
 #pragma once
 #include"Model.h"
-#include <vector>
 //#include "Utility/include/KDTree.h"
 #include <vtkIdList.h>
 #include <vtkNew.h>
@@ -21,16 +20,19 @@
 /*
 点云类，模型是由点云组成
 */
-class PointCloudModel :public Model
+namespace zaran
 {
-private:
-	vtkSmartPointer< vtkKdTreePointLocator> pointTree_;
-public:
-	PointCloudModel() {};
-	PointCloudModel(const std::vector<Eigen::Vector3d>& point_list);
-	bool InModel(const Eigen::Vector3d& pt)const  override;
-	Eigen::Vector3d GetClosestPoint(const Eigen::Vector3d& pt)const override;
-	void GenModelPoint(const double delta) override;//生成模型离散点数组
-	double NearestDistance(const Eigen::Vector3d& pt)const override;//求出pt离模型最近的点
+	class PointCloudModel :public Model
+	{
+	private:
+		vtkSmartPointer< vtkKdTreePointLocator> pointTree_;
+	public:
+		PointCloudModel() {};
+		PointCloudModel(const Array<DVector3D>& point_list);
+		bool InModel(const DVector3D& pt)const  override;
+		DVector3D GetClosestPoint(const DVector3D& pt)const override;
+		void GenModelPoint(const double delta) override;//生成模型离散点数组
+		double NearestDistance(const DVector3D& pt)const override;//求出pt离模型最近的点
 
-};
+	};
+}

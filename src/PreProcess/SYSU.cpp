@@ -5,7 +5,7 @@ zaran::GridListFactorySYSU::GridListFactorySYSU()
 {
 	m_fileName = "sysu.dat";
 }
-void zaran::GridListFactorySYSU::Create(std::shared_ptr<GridList>& gridList)
+void zaran::GridListFactorySYSU::Create(Ptr<GridList>& gridList)
 {
 	ReadFile();
 }

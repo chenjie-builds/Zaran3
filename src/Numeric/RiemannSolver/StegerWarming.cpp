@@ -1,5 +1,6 @@
 #include "StegerWarming.h"
-void zaran::StegerWarming::Solver(std::shared_ptr<RiemannSolverPara>& para)
+using namespace zaran;
+void StegerWarming::Solver(Ptr<RiemannSolverPara>& para)
 {
 
 }

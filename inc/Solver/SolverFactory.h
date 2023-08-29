@@ -10,7 +10,6 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include <memory>
 #include "SolverVec.h"
 #include "solver.h"
 #include "flowsolver.h"
@@ -22,6 +21,6 @@ namespace zaran
 	class SolverFactory
 	{
 	public:
-		void Create(std::shared_ptr<GridList>& gridList, std::shared_ptr<SolverVec>& solverVecPtr);
+		void Create(Ptr<GridList>& gridList, Ptr<SolverVec>& solverVecPtr);
 	};
 }

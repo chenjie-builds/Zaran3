@@ -10,21 +10,24 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include<string>
-#include<Eigen\Dense>
-class Model
+#include"BasicType.h"
+namespace zaran
 {
-public:
-	virtual bool InModel(const Eigen::Vector3d & pt)const = 0;//判断点pt是否在
-	virtual void GenModelPoint(const double delta) = 0;//生成模型离散点数组
-	virtual Eigen::Vector3d GetClosestPoint(const Eigen::Vector3d& pt)const = 0;//求出点pt在模型离散点数组中最近的点
-	virtual double NearestDistance(const Eigen::Vector3d& pt)const = 0;
-	void SetBoxMin(const Eigen::Vector3d& box_min);
-	void SetBoxMax(const Eigen::Vector3d& box_max);
-	const Eigen::Vector3d& GetBoxMax()const { return box_max_; }
-	const Eigen::Vector3d& GetBoxMin()const { return box_min_; }
+	class Model
+	{
+	public:
+		virtual bool InModel(const DVector3D& pt)const = 0;//判断点pt是否在
+		virtual void GenModelPoint(const double delta) = 0;//生成模型离散点数组
+		virtual DVector3D GetClosestPoint(const DVector3D& pt)const = 0;//求出点pt在模型离散点数组中最近的点
+		virtual double NearestDistance(const DVector3D& pt)const = 0;
+		void SetBoxMin(const DVector3D& box_min);
+		void SetBoxMax(const DVector3D& box_max);
+		const DVector3D& GetBoxMax()const { return box_max_; }
+		const DVector3D& GetBoxMin()const { return box_min_; }
 
-	//	virtual vector<Point> ModelPoint() { return modelPoint_; };
-private:
-	Eigen::Vector3d box_min_, box_max_;
-};
+		//	virtual vector<Point> ModelPoint() { return modelPoint_; };
+	private:
+		DVector3D box_min_, box_max_;
+	};
+
+}

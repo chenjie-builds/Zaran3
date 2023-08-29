@@ -1,36 +1,33 @@
 #include "CellTopoInfo.h"
-namespace zaran
+using namespace zaran;
+CellTopoInfo::CellTopoInfo()
 {
-	CellTopoInfo::CellTopoInfo()
-	{
 
-	}
+}
 
-	CellTopoInfo::~CellTopoInfo()
-	{
+CellTopoInfo::~CellTopoInfo()
+{
 
-	}
+}
 
-	void CellTopoInfo::SetNode(std::vector<int>& node)
-	{
-		node_ = node;
+void CellTopoInfo::SetNode(IArray& node)
+{
+	node_ = node;
 
-	}
+}
 
-	void CellTopoInfo::SetFace(std::vector<int>& face)
-	{
-		face_ = face;
-	}
+void CellTopoInfo::SetFace(IArray& face)
+{
+	face_ = face;
+}
 
-	std::vector<int>& CellTopoInfo::GetFace()
-	{
-		return face_;
-	}
+IArray& CellTopoInfo::GetFace()
+{
+	return face_;
+}
 
 
-	std::vector<int>& CellTopoInfo::GetNode()
-	{
-		return node_;
-	}
-
+IArray& CellTopoInfo::GetNode()
+{
+	return node_;
 }

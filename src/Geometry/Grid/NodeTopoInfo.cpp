@@ -34,12 +34,12 @@ const int& NodeTopoInfo::GetTag() const
 
 
 
-std::vector<int>& NodeTopoInfo::GetNeighborCloud()
+IArray& NodeTopoInfo::GetNeighborCloud()
 {
 	return neighborCloud_;
 }
 
-Eigen::Vector3d& NodeTopoInfo::GetCoordinate()
+DVector3D& NodeTopoInfo::GetCoordinate()
 {
 	return coordinate_;
 }
@@ -51,37 +51,37 @@ void NodeTopoInfo::SetCoordinate(const double& x, const double& y, const double&
 	coordinate_[2] = z;
 }
 
-void NodeTopoInfo::SetNeighborTemplateI(std::vector<int>& neighborTemplateI)
+void NodeTopoInfo::SetNeighborTemplateI(IArray& neighborTemplateI)
 {
 	neighborTemplateI_ = neighborTemplateI;
 }
 
-void NodeTopoInfo::SetNeighborTemplateJ(std::vector<int>& neighborTemplateJ)
+void NodeTopoInfo::SetNeighborTemplateJ(IArray& neighborTemplateJ)
 {
 	neighborTemplateJ_ = neighborTemplateJ;
 }
 
-void NodeTopoInfo::SetNeighborTemplateK(std::vector<int>& neighborTemplateK)
+void NodeTopoInfo::SetNeighborTemplateK(IArray& neighborTemplateK)
 {
 	neighborTemplateK_ = neighborTemplateK;
 }
 
-std::vector<int>& NodeTopoInfo::GetNeighborTemplateI()
+IArray& NodeTopoInfo::GetNeighborTemplateI()
 {
 	return neighborTemplateI_;
 }
 
-std::vector<int>& NodeTopoInfo::GetNeighborTemplateJ()
+IArray& NodeTopoInfo::GetNeighborTemplateJ()
 {
 	return neighborTemplateJ_;
 }
 
-std::vector<int>& NodeTopoInfo::GetNeighborTemplateK()
+IArray& NodeTopoInfo::GetNeighborTemplateK()
 {
 	return neighborTemplateK_;
 }
 
-void NodeTopoInfo::SetNeighborCloud(const std::vector<int>& neighborCloud)
+void NodeTopoInfo::SetNeighborCloud(const IArray& neighborCloud)
 {
 	neighborCloud_ = neighborCloud;
 }

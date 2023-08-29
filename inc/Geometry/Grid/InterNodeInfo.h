@@ -10,8 +10,7 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include <vector>
-#include <string>
+#include"BasicType.h"
 namespace zaran
 {
 
@@ -20,22 +19,22 @@ namespace zaran
 	public:
 		InterNodeInfo();
 		~InterNodeInfo();
-		void SetLocalNodeIndex(const std::vector<int>& localNodeIndex);
-		void SetNeiborGridIndex(const std::vector<int>& neighborGridIndex);
-		void SetNeighborNodeIndex(const std::vector<int>& neighborNodeIndex);
-		void SetDataName(const std::vector<std::string>& dataName);
-		std::vector<int>& GetLocalNodeIndex();
-		std::vector<int>& GetNeighborGridIndex();
-		std::vector<int>& GetNeighborNodeIndex();
-		std::vector<std::string>& GetDataName();
+		void SetLocalNodeIndex(const IArray& localNodeIndex);
+		void SetNeiborGridIndex(const IArray& neighborGridIndex);
+		void SetNeighborNodeIndex(const IArray& neighborNodeIndex);
+		void SetDataName(const SArray& dataName);
+		IArray& GetLocalNodeIndex();
+		IArray& GetNeighborGridIndex();
+		IArray& GetNeighborNodeIndex();
+		SArray& GetDataName();
 	private:
 		//插值节点在当前节点的位置
-		std::vector<int>	localNodeIndex_;
+		IArray	localNodeIndex_;
 		//插值节点对应的节点在其所在的网格上的位置
-		std::vector<int> neighborNodeIndex_;
+		IArray neighborNodeIndex_;
 		//插值节点对应的邻居网格的索引
-		std::vector<int> neighborGridIndex_;
+		IArray neighborGridIndex_;
 		//插值节点需要传递变量名字列表
-		std::vector<std::string> dataName_;
+		SArray dataName_;
 	};
 }

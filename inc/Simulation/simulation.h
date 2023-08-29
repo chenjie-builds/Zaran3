@@ -15,8 +15,6 @@
 #include "GridListFactory.h"
 #include "SolverFactory.h"
 #include "GridList.h"
-#include <string>
-#include <memory>
 namespace zaran
 {
 	enum class SimulationTask
@@ -45,18 +43,18 @@ namespace zaran
 	private:
 		SimulationTask task_;
 		//参数文件名
-		std::string globalDataFileName_;
+		string globalDataFileName_;
 		//网格生成工厂
-		std::shared_ptr<GridListFactory> gridListFatory_;
+		Ptr<GridListFactory> gridListFatory_;
 		//求解器生成工厂
-		std::shared_ptr<SolverFactory> solverFactory_;
+		Ptr<SolverFactory> solverFactory_;
 		//程序版本号, 内部生成
-		std::string programVersion_;
+		string programVersion_;
 		//程序上次更改日期, 内部生成
-		std::string lastModifyDate_;
+		string lastModifyDate_;
 		//程序支持的最小控制文件版本号, 如果读取的版本号低于此版本, 将不进行计算
 		//作用: 防止程序更新后，需要更多的控制文件信息，老版本控制文件未添加导致计算失败
-		std::string minSupportContrlFileVersion_;
+		string minSupportContrlFileVersion_;
 	};
 
 }

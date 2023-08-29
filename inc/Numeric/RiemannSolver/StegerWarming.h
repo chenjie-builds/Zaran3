@@ -16,6 +16,6 @@ namespace zaran
 	class StegerWarming :public RiemannSolver
 	{
 	public:
-		void Solver(std::shared_ptr<RiemannSolverPara>& para)override;
+		void Solver(Ptr<RiemannSolverPara>& para)override;
 	};
 }

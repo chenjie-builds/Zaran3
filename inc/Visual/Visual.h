@@ -16,7 +16,7 @@ namespace zaran
 	class Visual
 	{
 	public:
-		void WriteTecplot(std::shared_ptr<FieldSolver>& solver);
-		void WriteVTK(std::shared_ptr<FieldSolver>& solver);
+		void WriteTecplot(Ptr<FieldSolver>& solver);
+		void WriteVTK(Ptr<FieldSolver>& solver);
 	};
 }

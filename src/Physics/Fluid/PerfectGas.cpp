@@ -1,5 +1,6 @@
 #include"PerfectGas.h"
 #include"MathBasic.h"
+using namespace zaran;
 PerfectGas::PerfectGas(const double& Mw, const double& gamma, const RefValue& refValue) :Gas{ Mw, gamma, refValue }
 {
 	gamma_ = 1.4;

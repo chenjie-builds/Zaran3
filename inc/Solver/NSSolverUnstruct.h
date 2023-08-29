@@ -25,8 +25,7 @@ namespace zaran
 		void BoundaryCondition()override;
 		void ComputePrimtiveGradient()override;
 	protected:
-		using UnstructGridPtr = std::shared_ptr<UnstructGrid>;
-		UnstructGridPtr GetGrid();
+		Ptr<UnstructGrid> GetGrid();
 		void ComputeTimeStepLocal() override;
 	private:
 	};

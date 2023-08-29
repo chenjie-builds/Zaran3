@@ -10,21 +10,24 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include<Eigen/Dense>
-//@brief 使用最小二乘法求解Ax=b
-class LastSquare
+#include"BasicType.h"
+namespace zaran
 {
-public:
-  LastSquare(const Eigen::MatrixXd& A, const Eigen::VectorXd& b,const int& solver_type=0) :A_(A), b_(b),solver_type_(solver_type) {};
-  Eigen::VectorXd Solver();
-private:
-  Eigen::MatrixXd A_;
-  Eigen::VectorXd b_;
-  Eigen::VectorXd x_;
-  int solver_type_;
-private:
-  //几种最小二乘方法 https://blog.csdn.net/weixin_46581517/article/details/105178304
- void SolverNormalMatrix();
- void SolverSVD();
- void SolverColPivHouseholderQR();
-};
+	//@brief 使用最小二乘法求解Ax=b
+	class LastSquare
+	{
+	public:
+		LastSquare(const Matrix& A, const DVector& b, const int& solver_type = 0) :A_(A), b_(b), solver_type_(solver_type) {};
+		DVector Solver();
+	private:
+		Matrix A_;
+		DVector b_;
+		DVector x_;
+		int solver_type_;
+	private:
+		//几种最小二乘方法 https://blog.csdn.net/weixin_46581517/article/details/105178304
+		void SolverNormalMatrix();
+		void SolverSVD();
+		void SolverColPivHouseholderQR();
+	};
+}

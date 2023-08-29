@@ -10,23 +10,23 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include <unordered_map>
-#include <string>
-#include <variant>
-using dataVariant = std::variant<std::string, int, double>;
-class GlobalData
+#include"BasicType.h"
+namespace zaran
 {
-public:
-	static GlobalData& Init();
-	static bool IsExist(const std::string& dataName);
-	static const int GetInt(const std::string& dataName);
-	static const double GetDouble(const std::string& dataName);
-	static const std::string GetString(const std::string& dataName);
-	static void Update(const std::string& dataName, const dataVariant& dataValue);
-private:
-	GlobalData() {};
-	~GlobalData() {};
-	static const dataVariant& Get(const std::string& dataName);
-	static std::unordered_map<std::string, dataVariant >dataMap_;
-};
-
+	using dataVariant = variant<string, int, double>;
+	class GlobalData
+	{
+	public:
+		static GlobalData& Init();
+		static bool IsExist(const string& dataName);
+		static const int GetInt(const string& dataName);
+		static const double GetDouble(const string& dataName);
+		static const string GetString(const string& dataName);
+		static void Update(const string& dataName, const dataVariant& dataValue);
+	private:
+		GlobalData() {};
+		~GlobalData() {};
+		static const dataVariant& Get(const string& dataName);
+		static map<string, dataVariant >dataMap_;
+	};
+}

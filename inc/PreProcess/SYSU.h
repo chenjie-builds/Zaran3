@@ -11,7 +11,6 @@
 //==============================================================================||
 #pragma once
 #include"GridListFactory.h"
-#include<map>
 namespace zaran
 {
 	const int SYSU_INLET = 1;
@@ -22,16 +21,16 @@ namespace zaran
 	{
 	public:
 		GridListFactorySYSU();
-		void Create(std::shared_ptr<GridList>& gridList) override;
+		void Create(Ptr<GridList>& gridList) override;
 	private:
 		void ReadFile();
 	private:
-		std::string m_fileName;
+		string m_fileName;
 		int m_NodeNum;
 		int m_BoundNodeNum;
-		std::vector<double> m_NodeX, m_NodeY, m_NodeZ;
-		std::map<int,std::vector<int>> m_NodeNeiborNodeIndex;
-		std::vector<int> m_InletNodeIndex, m_OutletNodeIndex, m_WallNodeIndex;
-		std::vector<int> m_InletNeiborNodeIndex, m_OutletNeiborNodeIndex, m_WallNeiborNodeIndex;
+		DArray m_NodeX, m_NodeY, m_NodeZ;
+		map<int, IArray> m_NodeNeiborNodeIndex;
+		IArray m_InletNodeIndex, m_OutletNodeIndex, m_WallNodeIndex;
+		IArray m_InletNeiborNodeIndex, m_OutletNeiborNodeIndex, m_WallNeiborNodeIndex;
 	};
 }

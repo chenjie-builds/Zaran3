@@ -4,9 +4,7 @@
 #include "log.h"
 #include "GridListFactory.h"
 #include"SYSU.h"
-#include <string>
 #include <filesystem>
-#include <Eigen/Dense>
 using namespace zaran;
 void Simulation::Start()
 {
@@ -15,13 +13,13 @@ void Simulation::Start()
 	ShowInfo();
 	if (task_ == SimulationTask::SOLVE_FIELD)
 	{
-		std::shared_ptr<GridList> gridList;
+		Ptr<GridList> gridList;
 		gridListFatory_ = std::make_shared<GridListFactorySYSU>();
 		gridListFatory_->Create(gridList);
-		std::shared_ptr<SolverVec> solverVec = std::make_shared<SolverVec>();
+		Ptr<SolverVec> solverVec = std::make_shared<SolverVec>();
 		solverFactory_ = std::make_shared<SolverFactory>();
 		solverFactory_->Create(gridList, solverVec);
-		std::shared_ptr<Controller> controller = std::make_shared<Controller>(gridList, solverVec);
+		Ptr<Controller> controller = std::make_shared<Controller>(gridList, solverVec);
 		controller->SolveField();
 	}
 	else if (task_ == SimulationTask::CONVERT_GRID)

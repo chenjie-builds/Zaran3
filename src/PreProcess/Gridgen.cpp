@@ -1,9 +1,6 @@
 #include "Gridgen.h"
 #include <fstream>
-namespace zaran
-{
-
-
+using namespace zaran;
 	void Gridgen::ReadGridgenCoord()
 	{
 
@@ -14,7 +11,7 @@ namespace zaran
 		gridFileName_ = fileName;
 	}
 
-	void Gridgen::Create(std::shared_ptr<GridList>& gridList)
+	void Gridgen::Create(Ptr<GridList>& gridList)
 	{
 
 		std::fstream fin;
@@ -31,5 +28,3 @@ namespace zaran
 			currentGridPtr = std::make_shared<Grid>();
 		}
 	}
-
-}

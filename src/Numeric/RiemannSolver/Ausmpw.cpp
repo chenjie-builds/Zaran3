@@ -1,5 +1,6 @@
 #include "Ausmpw.h"
-void zaran::Ausmpw::Solver(std::shared_ptr<RiemannSolverPara>& para)
+using namespace zaran;
+void Ausmpw::Solver(Ptr<RiemannSolverPara>& para)
 {
 
 }

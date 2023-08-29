@@ -11,20 +11,17 @@
 //==============================================================================||
 #pragma once
 #include "RiemannSolver.h"
-#include <string>
-#include <memory>
 namespace zaran
 {
-	using std::string;
 	class RiemannSolverFactory
 	{
 	public:
-		void Create(std::shared_ptr<RiemannSolver>& riemannSolver,string& riemannSolverName);
+		void Create(Ptr<RiemannSolver>& riemannSolver,string& riemannSolverName);
 	private:
-		void CreateVanLeer(std::shared_ptr<RiemannSolver>& riemannSolver);
-		void CreateHLLC(std::shared_ptr<RiemannSolver>& riemannSolver);
-		void CreateRoe(std::shared_ptr<RiemannSolver>& riemannSolver);
-		void CreateStegerWarming(std::shared_ptr<RiemannSolver>& riemannSolver);
-		void CreateAusmpw(std::shared_ptr<RiemannSolver>& riemannSolver);
+		void CreateVanLeer(Ptr<RiemannSolver>& riemannSolver);
+		void CreateHLLC(Ptr<RiemannSolver>& riemannSolver);
+		void CreateRoe(Ptr<RiemannSolver>& riemannSolver);
+		void CreateStegerWarming(Ptr<RiemannSolver>& riemannSolver);
+		void CreateAusmpw(Ptr<RiemannSolver>& riemannSolver);
 	};
 }

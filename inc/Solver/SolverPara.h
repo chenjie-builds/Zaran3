@@ -10,7 +10,6 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include <string>
 namespace zaran
 {
 	/*

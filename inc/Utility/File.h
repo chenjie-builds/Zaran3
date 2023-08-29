@@ -9,8 +9,7 @@
 //*	@brief	文件相关操作															||
 //*	@author	Chen Jie.															||
 //==============================================================================||
-#include<string>
-#include<Eigen\Dense>
+#include"BasicType.h"
 //判断文件存在
 bool IsFileExist(const std::string& fileName);
 //判断文件夹是否存在

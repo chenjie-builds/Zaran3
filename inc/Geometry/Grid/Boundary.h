@@ -10,29 +10,28 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include <vector>
-#include <Eigen/Dense>
+#include"BasicType.h"
 namespace zaran
 {
 	class Boundary
 	{
 	public:
 		Boundary();
-		Boundary(int nodeIndex, int innerNodeIndex, int ghostNodeIndex, Eigen::Vector3d& norm);
+		Boundary(int nodeIndex, int innerNodeIndex, int ghostNodeIndex, DVector3D& norm);
 		~Boundary() {};
 		void SetGhostNodeIndex(const int& ghostNodeIndex);
 		void SetInnerNodeIndex(const int& innnerNodeIndex);
 		void SetNodeIndex(const int& nodeIndex);
-		void SetNorm(const Eigen::Vector3d& boundNorm);
-		 int& GetIndex() { return nodeIndex_; }
-		 int& GetInnerNodeIndex() { return innerNodeIndex_; }
-		 int& GetGhostNodeIndex() { return ghostNodeIndex_; }
-		 Eigen::Vector3d& GetNorm() { return norm_; }
-		 bool operator==(const Boundary& bound);
+		void SetNorm(const DVector3D& boundNorm);
+		int& GetIndex() { return nodeIndex_; }
+		int& GetInnerNodeIndex() { return innerNodeIndex_; }
+		int& GetGhostNodeIndex() { return ghostNodeIndex_; }
+		DVector3D& GetNorm() { return norm_; }
+		bool operator==(const Boundary& bound);
 	private:
 		int nodeIndex_;
 		int innerNodeIndex_;
 		int ghostNodeIndex_;
-		Eigen::Vector3d norm_;
+		DVector3D norm_;
 	};
 }

@@ -1,5 +1,6 @@
 #include"LastSquare.h"
-Eigen::VectorXd LastSquare::Solver()
+using namespace zaran;
+DVector LastSquare::Solver()
 {
   if (solver_type_ == 0)
     SolverNormalMatrix();

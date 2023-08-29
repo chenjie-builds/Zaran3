@@ -10,10 +10,7 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include<vector>
-#include<string>
-#include <memory>
-#include<unordered_map>
+#include"BasicType.h"
 namespace zaran
 {
 	class FieldData
@@ -21,13 +18,13 @@ namespace zaran
 	public:
 		FieldData();
 		~FieldData();
-		void AddData(const std::string& name,  std::vector<double>& data);
-		void AddData(const std::string& name, std::vector<double>&& data);
-		void EraseData(const std::string& name);
-		bool HasData(const std::string& name)const;
-		std::vector<double>& GetData(const std::string& name);
+		void AddData(const string& name, DArray& data);
+		void AddData(const string& name, DArray&& data);
+		void EraseData(const string& name);
+		bool HasData(const string& name)const;
+		DArray& GetData(const string& name);
 	private:
-		std::unordered_map<std::string, std::vector<double>> m_data;
+		map<string, DArray> m_data;
 	};
 }
 

@@ -19,16 +19,15 @@
 #include "BoundaryMap.h"
 #include "CommonPara.h"
 #include <Eigen/Dense>
-#include <memory>
-#include <vector>
+#include"BasicType.h"
 // grid
 namespace zaran
 {
-	using NodeTopoInfoVec = std::vector<NodeTopoInfo>;
-	using CellTopoInfoVec = std::vector<CellTopoInfo>;
-	using FaceTopoInfoVec = std::vector<FaceTopoInfo>;
-	using BoundaryMapPtr = std::shared_ptr<BoundaryMap>;
-	using InterNodeInfoPtr = std::shared_ptr<InterNodeInfo>;
+	using NodeTopoInfoVec = vector<NodeTopoInfo>;
+	using CellTopoInfoVec = vector<CellTopoInfo>;
+	using FaceTopoInfoVec = vector<FaceTopoInfo>;
+	using BoundaryMapPtr = shared_ptr<BoundaryMap>;
+	using InterNodeInfoPtr = shared_ptr<InterNodeInfo>;
 	class Grid : public GridBase
 	{
 	public:
@@ -42,8 +41,8 @@ namespace zaran
 		void SetNodeTopo(NodeTopoInfoVec& nodeTopo);
 		void SetFaceTopo(FaceTopoInfoVec& faceTopo);
 		void SetCellTopoInfo(CellTopoInfoVec& cellTopo);
-		void SetInterNodeInfo(std::shared_ptr<InterNodeInfo> interNodeInfo);
-		void SetBoundaryMap(std::shared_ptr<BoundaryMap> boundaryMap);
+		void SetInterNodeInfo(shared_ptr<InterNodeInfo> interNodeInfo);
+		void SetBoundaryMap(shared_ptr<BoundaryMap> boundaryMap);
 	public:
 		const int& GetLevel()const;
 		const int& GetTotalNodeNum()const;

@@ -1,35 +1,36 @@
 #include "StructGrid.h"
-void zaran::StructGrid::SetNi(int ni)
+using namespace zaran;
+void StructGrid::SetNi(int ni)
 {
 	ni_ = ni;
 }
 
-void zaran::StructGrid::SetNj(int nj)
+void StructGrid::SetNj(int nj)
 {
 	nj_ = nj;
 }
 
-void zaran::StructGrid::SetNk(int nk)
+void StructGrid::SetNk(int nk)
 {
 	nk_ = nk;
 }
 
-int zaran::StructGrid::GetNi()
+int StructGrid::GetNi()
 {
 	return ni_;
 }
 
-int zaran::StructGrid::GetNj()
+int StructGrid::GetNj()
 {
 	return nj_;
 }
 
-int zaran::StructGrid::GetNk()
+int StructGrid::GetNk()
 {
 	return nk_;
 }
 
-void zaran::StructGrid::GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd)
+void StructGrid::GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd)
 {
 	iStart = 1;
 	iEnd = GetNi();

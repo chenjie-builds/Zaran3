@@ -3,7 +3,7 @@
 #include <fstream>
 #include"FlowSolver.h"
 using namespace zaran;
-Controller::Controller(std::shared_ptr<GridList>& gridList, std::shared_ptr<SolverVec>& solverVec)
+Controller::Controller(Ptr<GridList>& gridList, Ptr<SolverVec>& solverVec)
 {
 	gridList_ = gridList;
 	solverVec_ = solverVec;

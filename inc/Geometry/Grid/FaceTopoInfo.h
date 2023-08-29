@@ -10,7 +10,7 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include <vector>
+#include"BasicType.h"
 namespace zaran
 {
 	class FaceTopoInfo
@@ -18,14 +18,14 @@ namespace zaran
 	public:
 		FaceTopoInfo();
 		~FaceTopoInfo();
-		void SetFace2Node(std::vector<int>& face2node);
+		void SetFace2Node(IArray& face2node);
 		void SetLeftCell(int& leftCell);
 		void SetRightCell(int& rightCell);
-		std::vector<int>& GetFace2Node();
+		IArray& GetFace2Node();
 		int& GetLeftCell();
 		int& GetRightCell();
 	private:
-		std::vector<int>face2node_;
+		IArray face2node_;
 		int leftCell_;
 		int rightCell_;
 	};

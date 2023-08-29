@@ -12,9 +12,7 @@
 //==============================================================================||
 #pragma once
 #include "CoordTrans.h"
-#include <vector>
-#include <Eigen/Dense>
-
+#include"BasicType.h"
 namespace zaran
 {
 	enum class NodeType//节点类型
@@ -42,31 +40,31 @@ namespace zaran
 		// 设置节点标记
 		void SetTag(const int& tag);
 		// 设置I方向的节点模板
-		void SetNeighborTemplateI(std::vector<int>& neighborTemplateI);
+		void SetNeighborTemplateI(IArray& neighborTemplateI);
 		// 设置J方向的节点模板
-		void SetNeighborTemplateJ(std::vector<int>& neighborTemplateJ);
+		void SetNeighborTemplateJ(IArray& neighborTemplateJ);
 		// 设置K方向的节点模板
-		void SetNeighborTemplateK(std::vector<int>& neighborTemplateK);
+		void SetNeighborTemplateK(IArray& neighborTemplateK);
 		// 设置邻居点云
-		void SetNeighborCloud(const std::vector<int>& neighborCloud);
+		void SetNeighborCloud(const IArray& neighborCloud);
 	public:
 		// 返回节点类型
 		const NodeType& GetType()const;
 		// 返回节点标记
 		const int& GetTag()const;
 		// 返回I方向的节点模板
-		std::vector<int>& GetNeighborTemplateI();
+		IArray& GetNeighborTemplateI();
 		// 返回J方向的节点模板
-		std::vector<int>& GetNeighborTemplateJ();
+		IArray& GetNeighborTemplateJ();
 		// 返回K方向的节点模板
-		std::vector<int>& GetNeighborTemplateK();
+		IArray& GetNeighborTemplateK();
 		// 返回节点坐标
-		Eigen::Vector3d& GetCoordinate();
+		DVector3D& GetCoordinate();
 		// 返回邻居点云
-		std::vector<int>& GetNeighborCloud();
+		IArray& GetNeighborCloud();
 	private:
 		//节点坐标
-		Eigen::Vector3d coordinate_;
+		DVector3D coordinate_;
 		//节点类型
 		NodeType type_;
 		// 节点标记，决定是否更新
@@ -76,16 +74,16 @@ namespace zaran
 		//如一阶迎风记录如下
 		//i-1,i,i+1
 		//其中i,j,k均为自身
-		std::vector<int>neighborTemplateI_;
-		std::vector<int>neighborTemplateJ_;
-		std::vector<int>neighborTemplateK_;
+		IArray neighborTemplateI_;
+		IArray neighborTemplateJ_;
+		IArray neighborTemplateK_;
 		//邻居节点点云
 		//对于常规节点，为其网格线连接的邻居
 		//用于计算梯度等
-		std::vector<int> neighborCloud_;
+		IArray neighborCloud_;
 		//对应的面元编号
-		std::vector<int> face_;
+		IArray face_;
 		//对应的单元编号
-		std::vector<int> cell_;
+		IArray cell_;
 	};
 }

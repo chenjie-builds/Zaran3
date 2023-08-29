@@ -85,11 +85,11 @@ namespace zaran
 		void  ComputeWallBC(Boundary& bound);
 	private:
 		// 原始变量梯度
-		std::vector<std::vector<double>*> m_PrimGradX;
-		std::vector<std::vector<double>*> m_PrimGradY;
-		std::vector<std::vector<double>*> m_PrimGradZ;
+		Array<DArray*> m_PrimGradX;
+		Array<DArray*> m_PrimGradY;
+		Array<DArray*> m_PrimGradZ;
 		//通量求解器
-		std::shared_ptr<RiemannSolver> riemannSolver_;
+		Ptr<RiemannSolver> riemannSolver_;
 		//限制器函数指针
 		double (*limiter)(const double&, const double&);
 	};

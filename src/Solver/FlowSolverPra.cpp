@@ -142,12 +142,12 @@ const double& FlowSolverPara::GetCflNumber() const
 	return cflNumber_;
 }
 
-const VectorXd& FlowSolverPara::GetPrimitiveInflow() const
+const DVector& FlowSolverPara::GetPrimitiveInflow() const
 {
 	return primInflow_;
 }
 
-const std::vector<double>& FlowSolverPara::GetRKCoef() const
+const DArray& FlowSolverPara::GetRKCoef() const
 {
 	return rkCoef_;
 }
@@ -193,12 +193,12 @@ void FlowSolverPara::SetCflNumber(const int& cfl)
 	cflNumber_ = cfl;
 }
 
-void FlowSolverPara::SetPrimitiveInflow(const VectorXd& primInflow)
+void FlowSolverPara::SetPrimitiveInflow(const DVector& primInflow)
 {
 	primInflow_ = primInflow;
 }
 
-void FlowSolverPara::SetRKCoef(const std::vector<double>& rkCoef)
+void FlowSolverPara::SetRKCoef(const DArray& rkCoef)
 {
 	rkCoef_ = rkCoef;
 }

@@ -2,7 +2,7 @@
 #include "grid.h"
 #include "log.h"
 using namespace zaran;
-void GridListFactory::Create(std::shared_ptr<GridList>& gridList)
+void GridListFactory::Create(Ptr<GridList>& gridList)
 {
 	std::string createMethod = GlobalData::GetString("createGridMethod");
 	if (createMethod == "Plot3D")
@@ -16,13 +16,13 @@ void GridListFactory::Create(std::shared_ptr<GridList>& gridList)
 	}
 }
 
-void GridListFactory::ReadPlot3D(std::shared_ptr<GridList>& gridList)
+void GridListFactory::ReadPlot3D(Ptr<GridList>& gridList)
 {
 	if (gridList.get() == nullptr)
 	{
 		gridList = std::make_shared<GridList>();
 	}
-	std::shared_ptr<Grid>testGrid = std::make_shared<Grid>();
+	Ptr<Grid>testGrid = std::make_shared<Grid>();
 	testGrid->SetDimension(Dimension::three);
 	testGrid->SetIndex(0);
 	testGrid->SetLevel(0);
@@ -31,13 +31,13 @@ void GridListFactory::ReadPlot3D(std::shared_ptr<GridList>& gridList)
 	gridList->AddGrid(testGrid);
 }
 
-void GridListFactory::CreateByTest(std::shared_ptr<GridList>& gridList)
+void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 {
 	if (gridList.get() == nullptr)
 	{
 		gridList = std::make_shared<GridList>();
 	}
-	std::shared_ptr<Grid>testGrid = std::make_shared<Grid>();
+	Ptr<Grid>testGrid = std::make_shared<Grid>();
 	testGrid->SetDimension(Dimension::three);
 	testGrid->SetIndex(0);
 	testGrid->SetLevel(0);
@@ -61,7 +61,7 @@ void GridListFactory::CreateByTest(std::shared_ptr<GridList>& gridList)
 	double x, y, z;
 	node.resize((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
 	//生成结构网格ijk索引对应的节点编号
-	std::vector<std::vector<std::vector<int>>> structNodeIndex;
+	Array<Array<IArray>> structNodeIndex;
 	structNodeIndex.resize(xNodeNum + 2);
 	for (i = 0; i < xNodeNum + 2; ++i)
 	{
@@ -118,7 +118,7 @@ void GridListFactory::CreateByTest(std::shared_ptr<GridList>& gridList)
 			}
 		}
 	}
-	std::vector<int> nodeTempI(3), nodeTempJ(3), nodeTempK(3);
+	IArray nodeTempI(3), nodeTempJ(3), nodeTempK(3);
 	for (k = 0; k < zNodeNum + 2; ++k)
 	{
 		z = k * dz + zMin - dz;
@@ -150,7 +150,7 @@ void GridListFactory::CreateByTest(std::shared_ptr<GridList>& gridList)
 			}
 		}
 	}
-	std::vector<int>neiborCloud(6);
+	IArray neiborCloud(6);
 	for (k = 0; k < zNodeNum + 2; ++k)
 	{
 		for (j = 0; j < yNodeNum + 2; ++j)
@@ -344,7 +344,7 @@ void GridListFactory::CreateByTest(std::shared_ptr<GridList>& gridList)
 
 			for (i = 1; i < xNodeNum; ++i)
 			{
-				iterCell->SetNode(std::vector<int>{ structNodeIndex[i][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i + 1][j + 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k + 1], structNodeIndex[i + 1][j][k + 1], structNodeIndex[i + 1][j + 1][k + 1], structNodeIndex[i][j + 1][k + 1] });
+				iterCell->SetNode(IArray{ structNodeIndex[i][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i + 1][j + 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k + 1], structNodeIndex[i + 1][j][k + 1], structNodeIndex[i + 1][j + 1][k + 1], structNodeIndex[i][j + 1][k + 1] });
 				iterCell++;
 			}
 		}
@@ -352,7 +352,7 @@ void GridListFactory::CreateByTest(std::shared_ptr<GridList>& gridList)
 
 	auto boundMap = testGrid->GetBoundaryMap();
 	int nodeIndex, innerNodeIndex, ghostNodeIndex;
-	Eigen::Vector3d boundNorm;
+	DVector3D boundNorm;
 	Boundary bound;
 	//i方向两个面分别为入口和出口
 	for (k = 1; k < zNodeNum + 1; ++k)
