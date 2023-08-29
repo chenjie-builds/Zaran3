@@ -48,7 +48,6 @@ void FlowSolverPara::Init()
 		ZaranLog::warn("Wrong Runge-Kutta Stage: {}, Please Check Control File!", rkStage);
 		system("pause");
 	}
-	rkCoef_;
 	int gradScheme = GlobalData::GetInt("gradScheme");
 	if (gradScheme == 0)
 	{

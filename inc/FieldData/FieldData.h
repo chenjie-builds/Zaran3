@@ -19,7 +19,6 @@ namespace zaran
 		FieldData();
 		~FieldData();
 		void AddData(const string& name, DArray& data);
-		void AddData(const string& name, DArray&& data);
 		void EraseData(const string& name);
 		bool HasData(const string& name)const;
 		DArray& GetData(const string& name);
