@@ -492,11 +492,7 @@ void NSSolver::ComputeTimeStepLocal()
 		dt[iNode] = cfl / lamda;
 		minDt = Min(minDt, dt[iNode]);
 	}
-	double globalDt = GlobalData::GetDouble("dt");
-	if (globalDt > minDt)
-	{
 		GlobalData::Update("dt", minDt);
-	}
 }
 
 void NSSolver::RungeKutta()

@@ -1,4 +1,5 @@
 #include"SYSU.h"
+#include"Log.h"
 #include<fstream>
 using namespace zaran;
 zaran::GridListFactorySYSU::GridListFactorySYSU()
@@ -7,70 +8,126 @@ zaran::GridListFactorySYSU::GridListFactorySYSU()
 }
 void zaran::GridListFactorySYSU::Create(Ptr<GridList>& gridList)
 {
-	ReadFile();
+	if (!gridList)
+		gridList = std::make_shared<GridList>();
+	ReadFile(gridList);
 }
 
-void zaran::GridListFactorySYSU::ReadFile()
+void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 {
+	Ptr < Grid > grid = std::make_shared<Grid>();
+	gridList->AddGrid(grid);
+	auto& nodeTopoVec = grid->GetNodeTopoInfo();
 	std::ifstream fin(m_fileName);
+	//读取所有节点坐标
 	fin >> m_NodeNum;
-	m_NodeX.resize(m_NodeNum);
-	m_NodeY.resize(m_NodeNum);
-	m_NodeZ.resize(m_NodeNum);
+	grid->SetTotalNodeNumber(m_NodeNum);
+	nodeTopoVec.resize(m_NodeNum);
 	for (size_t i = 0; i < m_NodeNum; i++)
 	{
-		fin >> m_NodeX[i] >> m_NodeY[i] >> m_NodeZ[i];
+		auto& currentNode = nodeTopoVec[i];
+		auto& currentCoord = currentNode.GetCoordinate();
+		fin >> currentCoord[0] >> currentCoord[1] >> currentCoord[2];
+		if (i == m_NodeNum - 1)
+		{
+			ZaranLog::info("读取节点坐标完成！");
+			ZaranLog::info("最后一组坐标为：（{},{},{})", currentCoord[0], currentCoord[1], currentCoord[2]);
+		}
 	}
+	//读取所有内部节点邻居节点
+	int innerNodeNum = 0;
+	fin >> innerNodeNum;
+	innerNodeNum-=1;
+	int innerNodeIndex;
+	IArray neiborNodeIndex(6);
+	for (size_t i = 0; i < innerNodeNum; i++)
+	{
+		fin >> innerNodeIndex;
+		fin >> neiborNodeIndex[0] >> neiborNodeIndex[1] >> neiborNodeIndex[2] >> neiborNodeIndex[3] >> neiborNodeIndex[4] >> neiborNodeIndex[5];
+		auto& currentNode = nodeTopoVec[innerNodeIndex];
+		currentNode.SetType(NodeType::inner);
+		currentNode.SetNeighborCloud(neiborNodeIndex);
+		currentNode.SetNeighborTemplateI(IArray{ neiborNodeIndex[0],innerNodeIndex,neiborNodeIndex[1] });
+		currentNode.SetNeighborTemplateJ(IArray{ neiborNodeIndex[2],innerNodeIndex,neiborNodeIndex[3] });
+		currentNode.SetNeighborTemplateK(IArray{ neiborNodeIndex[4],innerNodeIndex,neiborNodeIndex[5] });
+	}
+	//读取所有边界节点邻居节点
+	auto& boundMap = grid->GetBoundaryMap();
 	m_BoundNodeNum = 0;
-	double nBound;
+	int nBound;
 	fin >> nBound;
 	m_BoundNodeNum += nBound;
 	int tempIndex1, tempIndex2;
+	int boundNodeIndex, connectNodeIndex;
+	Boundary tempBound;
 	for (size_t i = 0; i < nBound; i++)
 	{
-		fin >> tempIndex1 >> tempIndex2;
-		m_InletNodeIndex.push_back(tempIndex1);
-		m_InletNeiborNodeIndex.push_back(tempIndex2);
+		fin >> boundNodeIndex>> tempIndex1;
+		boundNodeIndex-= 1;
+		boundMap->AddBoundary("inlet", Boundary{ boundNodeIndex,0,0,DVector3D{} });
+		nodeTopoVec[boundNodeIndex].SetType(NodeType::inlet);
 	}
 	fin >> nBound;
 	m_BoundNodeNum += nBound;
 	for (size_t i = 0; i < nBound; i++)
 	{
-		fin >> tempIndex1 >> tempIndex2;
-		m_OutletNodeIndex.push_back(tempIndex1);
-		m_OutletNeiborNodeIndex.push_back(tempIndex2);
+		fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
+		boundNodeIndex -= 1;
+		connectNodeIndex -= 1;
+		boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+		nodeTopoVec[boundNodeIndex].SetType(NodeType::outlet);
 	}
 	fin >> nBound;
 	m_BoundNodeNum += nBound;
 	for (size_t i = 0; i < nBound; i++)
 	{
-		fin >> tempIndex1 >> tempIndex2;
-		m_OutletNodeIndex.push_back(tempIndex1);
-		m_OutletNeiborNodeIndex.push_back(tempIndex2);
+		fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
+		boundNodeIndex -= 1;
+		connectNodeIndex -= 1;
+		boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+		nodeTopoVec[boundNodeIndex].SetType(NodeType::outlet);
 	}
 	fin >> nBound;
 	m_BoundNodeNum += nBound;
 	for (size_t i = 0; i < nBound; i++)
 	{
-		fin >> tempIndex1 >> tempIndex2;
-		m_OutletNodeIndex.push_back(tempIndex1);
-		m_OutletNeiborNodeIndex.push_back(tempIndex2);
+		fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
+		boundNodeIndex -= 1;
+		connectNodeIndex -= 1;
+		boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+		nodeTopoVec[boundNodeIndex].SetType(NodeType::outlet);
 	}
 	fin >> nBound;
 	m_BoundNodeNum += nBound;
 	for (size_t i = 0; i < nBound; i++)
 	{
-		fin >> tempIndex1 >> tempIndex2;
-		m_OutletNodeIndex.push_back(tempIndex1);
-		m_OutletNeiborNodeIndex.push_back(tempIndex2);
+		fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
+		boundNodeIndex -= 1;
+		connectNodeIndex -= 1;
+		boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+		nodeTopoVec[boundNodeIndex].SetType(NodeType::outlet);
 	}
 	fin >> nBound;
 	m_BoundNodeNum += nBound;
 	for (size_t i = 0; i < nBound; i++)
 	{
-		fin >> tempIndex1 >> tempIndex2;
-		m_WallNodeIndex.push_back(tempIndex1);
-		m_WallNeiborNodeIndex.push_back(tempIndex2);
+		if (i == nBound - 1)
+			i = i;
+		fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
+		boundNodeIndex -= 1;
+		connectNodeIndex -= 1;
+		boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+		nodeTopoVec[boundNodeIndex].SetType(NodeType::outlet);
 	}
-
+	fin >> nBound;
+	m_BoundNodeNum += nBound;
+	for (size_t i = 0; i < nBound; i++)
+	{
+		fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
+		boundNodeIndex -= 1;
+		connectNodeIndex -= 1;
+		DVector3D wallNorm = nodeTopoVec[connectNodeIndex].GetCoordinate() - nodeTopoVec[boundNodeIndex].GetCoordinate();
+		boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+		nodeTopoVec[boundNodeIndex].SetType(NodeType::slipWall);
+	}
 }

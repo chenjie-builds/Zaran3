@@ -6,6 +6,8 @@ using namespace zaran;
 Grid::Grid()
 {
 	GridBase();
+	boundaryMap_ = std::make_shared<BoundaryMap>();
+	interNodeInfo_ = std::make_shared<InterNodeInfo>();	
 }
 
 Grid::Grid(const Grid& grid)

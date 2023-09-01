@@ -23,7 +23,7 @@ namespace zaran
 		GridListFactorySYSU();
 		void Create(Ptr<GridList>& gridList) override;
 	private:
-		void ReadFile();
+		void ReadFile(Ptr<GridList>& gridList);
 	private:
 		string m_fileName;
 		int m_NodeNum;
