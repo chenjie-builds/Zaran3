@@ -18,7 +18,7 @@ Log::Log()
 	logger.set_level(ZaranLog::level::trace);
 	logger.info("Start Logger, Log file path: ./{}", file_sink->filename());
 	ZaranLog::set_default_logger(std::make_shared<ZaranLog::logger>(logger));
-	ZaranLog::flush_every(std::chrono::seconds(1));//每隔1s刷新一次log文件
+	ZaranLog::flush_every(std::chrono::milliseconds(10));//每隔0.01s刷新一次log文件
 }
 
 Log::~Log()

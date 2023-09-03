@@ -37,13 +37,20 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 	//读取所有内部节点邻居节点
 	int innerNodeNum = 0;
 	fin >> innerNodeNum;
-	innerNodeNum-=1;
+	innerNodeNum -= 1;
 	int innerNodeIndex;
 	IArray neiborNodeIndex(6);
 	for (size_t i = 0; i < innerNodeNum; i++)
 	{
 		fin >> innerNodeIndex;
 		fin >> neiborNodeIndex[0] >> neiborNodeIndex[1] >> neiborNodeIndex[2] >> neiborNodeIndex[3] >> neiborNodeIndex[4] >> neiborNodeIndex[5];
+		innerNodeIndex -= 1;
+		neiborNodeIndex[0] -= 1;
+		neiborNodeIndex[1] -= 1;
+		neiborNodeIndex[2] -= 1;
+		neiborNodeIndex[3] -= 1;
+		neiborNodeIndex[4] -= 1;
+		neiborNodeIndex[5] -= 1;
 		auto& currentNode = nodeTopoVec[innerNodeIndex];
 		currentNode.SetType(NodeType::inner);
 		currentNode.SetNeighborCloud(neiborNodeIndex);
@@ -62,8 +69,8 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 	Boundary tempBound;
 	for (size_t i = 0; i < nBound; i++)
 	{
-		fin >> boundNodeIndex>> tempIndex1;
-		boundNodeIndex-= 1;
+		fin >> boundNodeIndex >> tempIndex1;
+		boundNodeIndex -= 1;
 		boundMap->AddBoundary("inlet", Boundary{ boundNodeIndex,0,0,DVector3D{} });
 		nodeTopoVec[boundNodeIndex].SetType(NodeType::inlet);
 	}
@@ -127,7 +134,25 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 		boundNodeIndex -= 1;
 		connectNodeIndex -= 1;
 		DVector3D wallNorm = nodeTopoVec[connectNodeIndex].GetCoordinate() - nodeTopoVec[boundNodeIndex].GetCoordinate();
-		boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+		boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,connectNodeIndex,0,wallNorm });
 		nodeTopoVec[boundNodeIndex].SetType(NodeType::slipWall);
 	}
+
+	for (int iNode = 0; iNode < grid->GetTotalNodeNum(); iNode++)
+	{
+		auto& currentNode = grid->GetNodeTopoInfo()[iNode];
+		auto& coord = currentNode.GetCoordinate();
+		if (abs(coord[0] + 0.25) < SMALL_NUMBER)
+		{
+			if (currentNode.GetType() == NodeType::inner)
+				continue;
+			currentNode.SetType(NodeType::inlet);
+			boundMap->AddBoundary("inlet", Boundary{ iNode ,0,0,DVector3D{} });
+		}
+	}
+
+
+
+
+
 }
