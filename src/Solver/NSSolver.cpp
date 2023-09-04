@@ -41,7 +41,6 @@ void NSSolver::InitField()
 	double x, y, z;
 	for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 	{
-		NodeTopoInfoVec& nodeTopoVec = grid->GetNodeTopoInfo();
 		rho[iNode] = primInit(0);
 		u[iNode] = primInit(1);
 		v[iNode] = primInit(2);
@@ -242,8 +241,6 @@ void NSSolver::ComputeCoordTrans()
 	DVector3D xRight, xLeft, yRight, yLeft, zRight, zLeft;
 	for (size_t iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
-		if (iNode == 27963)
-			int a = 0;
 		auto& currentNode = nodeTopoVec[iNode];
 		if (currentNode.GetType() != NodeType::inner)
 			continue;
@@ -257,11 +254,21 @@ void NSSolver::ComputeCoordTrans()
 		yRight = nodeTopoVec[tempJ[2]].GetCoordinate();
 		zLeft = nodeTopoVec[tempK[0]].GetCoordinate();
 		zRight = nodeTopoVec[tempK[2]].GetCoordinate();
-		coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, yLeft, zRight, zLeft);
 		if (coordTrans.J() < 0)
 		{
 			currentNode.SetNeighborTemplateK(IArray({ tempK[2], tempK[1], tempK[0] }));
 			coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, yLeft, zLeft, zRight);
+		}
+		if (abs(coordTrans.J()) < SMALL_NUMBER || isnan(abs(coordTrans.J())) || isinf((coordTrans.J())))
+		{
+			currentNode.SetNeighborTemplateJ(IArray({ tempJ[0], tempK[1], tempK[0] }));
+			currentNode.SetNeighborTemplateK(IArray({ tempJ[2], tempK[1], tempK[2] }));
+			coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, zRight, yLeft, zLeft);
+			if (coordTrans.J() < 0)
+			{
+				currentNode.SetNeighborTemplateK(IArray({ tempK[2], tempK[1], tempK[0] }));
+				coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, yLeft, zLeft, zRight);
+			}
 		}
 		(*coordTransCoef[0])[iNode] = coordTrans.GetX()[0];
 		(*coordTransCoef[1])[iNode] = coordTrans.GetX()[1];
@@ -344,10 +351,7 @@ void NSSolver::BoundaryCondition()
 		auto& boundVec = iter->second;
 		if (iter->first == "inlet")
 		{
-			for (int iBound = 0; iBound < boundVec.size(); ++iBound)
-			{
-				ComputeInletBC(boundVec[iBound]);
-			}
+			continue;
 		}
 		else if (iter->first == "outlet")
 		{
@@ -366,6 +370,17 @@ void NSSolver::BoundaryCondition()
 		else
 		{
 			ZaranLog::warn("Unsupportted Boundary Condition!");
+		}
+	}
+	for (auto iter = boundaryMap.begin(); iter != boundaryMap.end(); ++iter)
+	{
+		auto& boundVec = iter->second;
+		if (iter->first == "inlet")
+		{
+			for (int iBound = 0; iBound < boundVec.size(); ++iBound)
+			{
+				ComputeInletBC(boundVec[iBound]);
+			}
 		}
 	}
 }
@@ -469,7 +484,7 @@ void NSSolver::ComputeTimeStepLocal()
 	for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
 		if (iNode == 27963)
-			int a = 0; 
+			int a = 0;
 		auto& currentNode = nodeTopo[iNode];
 		double gamma = 1.4;
 		if (currentNode.GetType() != NodeType::inner)
@@ -602,7 +617,8 @@ void NSSolver::InviscidFlux()
 	fluxPara->gammaL = fluxPara->gammaR = 1.4;
 	for (size_t iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
-
+		if (iNode == 7941)
+			int k = 0;
 		auto& currentNode = nodeTopoVec[iNode];
 		if (currentNode.GetType() != NodeType::inner)
 			continue;
@@ -619,14 +635,14 @@ void NSSolver::InviscidFlux()
 			grad(0) = (*primGradX[iVal])[iNode];
 			grad(1) = (*primGradY[iVal])[iNode];
 			grad(2) = (*primGradZ[iVal])[iNode];
-			fluxPara->primL(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r);
+			fluxPara->primL(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
 		}
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
 			grad(0) = (*primGradX[iVal])[tempI[2]];
 			grad(1) = (*primGradY[iVal])[tempI[2]];
 			grad(2) = (*primGradZ[iVal])[tempI[2]];
-			fluxPara->primR(iVal) = (*prim[iVal])[tempI[2]] - 0.5 * (*limiterCoef[iVal])[tempI[2]] * grad.dot(r);
+			fluxPara->primR(iVal) = (*prim[iVal])[tempI[2]] /*- 0.5 * (*limiterCoef[iVal])[tempI[2]] * grad.dot(r)*/;
 		}
 
 		riemannSolver_->Solver(fluxPara);
@@ -635,17 +651,17 @@ void NSSolver::InviscidFlux()
 		r = nodeTopoVec[tempI[0]].GetCoordinate() - currentNode.GetCoordinate();
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
-			grad(0) = (*primGradX[iVal])[iNode];
-			grad(1) = (*primGradY[iVal])[iNode];
-			grad(2) = (*primGradZ[iVal])[iNode];
-			fluxPara->primL(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r);
-		}
-		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-		{
 			grad(0) = (*primGradX[iVal])[tempI[0]];
 			grad(1) = (*primGradY[iVal])[tempI[0]];
 			grad(2) = (*primGradZ[iVal])[tempI[0]];
-			fluxPara->primR(iVal) = (*prim[iVal])[tempI[0]] - 0.5 * (*limiterCoef[iVal])[tempI[0]] * grad.dot(r);
+			fluxPara->primL(iVal) = (*prim[iVal])[tempI[0]] /*- 0.5 * (*limiterCoef[iVal])[tempI[0]] * grad.dot(r)*/;
+		}
+		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+		{
+			grad(0) = (*primGradX[iVal])[iNode];
+			grad(1) = (*primGradY[iVal])[iNode];
+			grad(2) = (*primGradZ[iVal])[iNode];
+			fluxPara->primR(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
 		}
 
 		riemannSolver_->Solver(fluxPara);
@@ -664,14 +680,14 @@ void NSSolver::InviscidFlux()
 			grad(0) = (*primGradX[iVal])[iNode];
 			grad(1) = (*primGradY[iVal])[iNode];
 			grad(2) = (*primGradZ[iVal])[iNode];
-			fluxPara->primL(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r);
+			fluxPara->primL(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
 		}
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
 			grad(0) = (*primGradX[iVal])[tempJ[2]];
 			grad(1) = (*primGradY[iVal])[tempJ[2]];
 			grad(2) = (*primGradZ[iVal])[tempJ[2]];
-			fluxPara->primR(iVal) = (*prim[iVal])[tempJ[2]] - 0.5 * (*limiterCoef[iVal])[tempJ[2]] * grad.dot(r);
+			fluxPara->primR(iVal) = (*prim[iVal])[tempJ[2]] /*- 0.5 * (*limiterCoef[iVal])[tempJ[2]] * grad.dot(r)*/;
 		}
 		riemannSolver_->Solver(fluxPara);
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -679,17 +695,17 @@ void NSSolver::InviscidFlux()
 		r = nodeTopoVec[tempJ[0]].GetCoordinate() - currentNode.GetCoordinate();
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
-			grad(0) = (*primGradX[iVal])[iNode];
-			grad(1) = (*primGradY[iVal])[iNode];
-			grad(2) = (*primGradZ[iVal])[iNode];
-			fluxPara->primL(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r);
-		}
-		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-		{
 			grad(0) = (*primGradX[iVal])[tempJ[0]];
 			grad(1) = (*primGradY[iVal])[tempJ[0]];
 			grad(2) = (*primGradZ[iVal])[tempJ[0]];
-			fluxPara->primR(iVal) = (*prim[iVal])[tempJ[0]] - 0.5 * (*limiterCoef[iVal])[tempJ[0]] * grad.dot(r);
+			fluxPara->primL(iVal) = (*prim[iVal])[tempJ[0]]/* - 0.5 * (*limiterCoef[iVal])[tempJ[0]] * grad.dot(r)*/;
+		}
+		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+		{
+			grad(0) = (*primGradX[iVal])[iNode];
+			grad(1) = (*primGradY[iVal])[iNode];
+			grad(2) = (*primGradZ[iVal])[iNode];
+			fluxPara->primR(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
 		}
 
 		riemannSolver_->Solver(fluxPara);
@@ -708,14 +724,14 @@ void NSSolver::InviscidFlux()
 			grad(0) = (*primGradX[iVal])[iNode];
 			grad(1) = (*primGradY[iVal])[iNode];
 			grad(2) = (*primGradZ[iVal])[iNode];
-			fluxPara->primL(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r);
+			fluxPara->primL(iVal) = (*prim[iVal])[iNode]/* + 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
 		}
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
 			grad(0) = (*primGradX[iVal])[tempK[2]];
 			grad(1) = (*primGradY[iVal])[tempK[2]];
 			grad(2) = (*primGradZ[iVal])[tempK[2]];
-			fluxPara->primR(iVal) = (*prim[iVal])[tempK[2]] - 0.5 * (*limiterCoef[iVal])[tempK[2]] * grad.dot(r);
+			fluxPara->primR(iVal) = (*prim[iVal])[tempK[2]] /*- 0.5 * (*limiterCoef[iVal])[tempK[2]] * grad.dot(r)*/;
 		}
 		riemannSolver_->Solver(fluxPara);
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -723,17 +739,17 @@ void NSSolver::InviscidFlux()
 		r = nodeTopoVec[tempK[0]].GetCoordinate() - currentNode.GetCoordinate();
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
-			grad(0) = (*primGradX[iVal])[iNode];
-			grad(1) = (*primGradY[iVal])[iNode];
-			grad(2) = (*primGradZ[iVal])[iNode];
-			fluxPara->primL(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r);
-		}
-		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-		{
 			grad(0) = (*primGradX[iVal])[tempK[0]];
 			grad(1) = (*primGradY[iVal])[tempK[0]];
 			grad(2) = (*primGradZ[iVal])[tempK[0]];
-			fluxPara->primR(iVal) = (*prim[iVal])[tempK[0]] - 0.5 * (*limiterCoef[iVal])[tempK[0]] * grad.dot(r);
+			fluxPara->primL(iVal) = (*prim[iVal])[tempK[0]] /*- 0.5 * (*limiterCoef[iVal])[tempK[0]] * grad.dot(r)*/;
+		}
+		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+		{
+			grad(0) = (*primGradX[iVal])[iNode];
+			grad(1) = (*primGradY[iVal])[iNode];
+			grad(2) = (*primGradZ[iVal])[iNode];
+			fluxPara->primR(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
 		}
 
 		riemannSolver_->Solver(fluxPara);
@@ -814,11 +830,8 @@ void NSSolver::ComputeOutletBC(Boundary& bound)
 	v[boundIndex] = w[innerIndex];
 	w[boundIndex] = w[innerIndex];
 	p[boundIndex] = p[innerIndex];
-	cons0[boundIndex] = cons0[innerIndex];
-	cons1[boundIndex] = cons1[innerIndex];
-	cons2[boundIndex] = cons2[innerIndex];
-	cons3[boundIndex] = cons3[innerIndex];
-	cons4[boundIndex] = cons4[innerIndex];
+	Primitive2Conservative(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex], cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
+
 
 }
 
@@ -842,11 +855,11 @@ void NSSolver::ComputeWallBC(Boundary& bound)
 	v[boundIndex] = v[innerIndex];
 	w[boundIndex] = w[innerIndex];
 	p[boundIndex] = p[innerIndex];
-	DVector3D innerVel(u[innerIndex], v[innerIndex], w[innerIndex]);
-	DVector3D ghostVel = innerVel - 2.0 * (innerVel.dot(boundNorm)) * boundNorm;
-	u[boundIndex] = ghostVel(0);
-	v[boundIndex] = ghostVel(1);
-	w[boundIndex] = ghostVel(2);
+	//DVector3D innerVel(u[innerIndex], v[innerIndex], w[innerIndex]);
+	//DVector3D boundVel = innerVel - (innerVel.dot(boundNorm)) * boundNorm / (boundNorm.norm() * boundNorm.norm());
+	//u[boundIndex] = boundVel(0);
+	//v[boundIndex] = boundVel(1);
+	//w[boundIndex] = boundVel(2);
 	Primitive2Conservative(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex], cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
 }
 

@@ -2,7 +2,7 @@
 using namespace zaran;
 NodeTopoInfo::NodeTopoInfo()
 {
-
+	type_ = NodeType::undefined;
 }
 
 NodeTopoInfo::~NodeTopoInfo()

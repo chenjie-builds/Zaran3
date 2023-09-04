@@ -11,8 +11,8 @@ Boundary::Boundary()
 Boundary::Boundary(int nodeIndex, int innerNodeIndex, int ghostNodeIndex, DVector3D& norm)
 {
 	nodeIndex_ = nodeIndex;
-	ghostNodeIndex_ = innerNodeIndex;
-	innerNodeIndex_ = ghostNodeIndex;
+	innerNodeIndex_ = innerNodeIndex;
+	ghostNodeIndex_ = ghostNodeIndex;
 	norm_ = norm;
 }
 

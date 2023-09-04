@@ -28,16 +28,10 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 		auto& currentNode = nodeTopoVec[i];
 		auto& currentCoord = currentNode.GetCoordinate();
 		fin >> currentCoord[0] >> currentCoord[1] >> currentCoord[2];
-		if (i == m_NodeNum - 1)
-		{
-			ZaranLog::info("读取节点坐标完成！");
-			ZaranLog::info("最后一组坐标为：（{},{},{})", currentCoord[0], currentCoord[1], currentCoord[2]);
-		}
 	}
 	//读取所有内部节点邻居节点
 	int innerNodeNum = 0;
 	fin >> innerNodeNum;
-	innerNodeNum -= 1;
 	int innerNodeIndex;
 	IArray neiborNodeIndex(6);
 	for (size_t i = 0; i < innerNodeNum; i++)
@@ -142,9 +136,9 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 	{
 		auto& currentNode = grid->GetNodeTopoInfo()[iNode];
 		auto& coord = currentNode.GetCoordinate();
-		if (abs(coord[0] + 0.25) < SMALL_NUMBER)
+		if (abs(coord[0] + 0.2499) < SMALL_NUMBER)
 		{
-			if (currentNode.GetType() == NodeType::inner)
+			if (currentNode.GetType() == NodeType::inlet)
 				continue;
 			currentNode.SetType(NodeType::inlet);
 			boundMap->AddBoundary("inlet", Boundary{ iNode ,0,0,DVector3D{} });

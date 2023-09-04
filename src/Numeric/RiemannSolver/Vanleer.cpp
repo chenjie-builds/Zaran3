@@ -18,7 +18,7 @@ void Vanleer::Solver(Ptr<RiemannSolverPara>& para)
 	para->v2L = uL * uL + vL * vL + wL * wL;
 	para->vnL = uL * para->norm(0) + vL * para->norm(1) + wL * para->norm(2) + para->nt;
 	para->machL = para->vnL / (para->cL * deltaNorm);
-	para->eL = 0.5 * para->v2L  + pL / (rhoL * (para->gammaL - 1));
+	para->eL = 0.5 * para->v2L + pL / (rhoL * (para->gammaL - 1));
 	para->flux.setZero();
 	if (para->machL <= -1.0)
 	{
@@ -48,7 +48,7 @@ void Vanleer::Solver(Ptr<RiemannSolverPara>& para)
 	para->v2R = uR * uR + vR * vR + wR * wR;
 	para->vnR = uR * para->norm(0) + vR * para->norm(1) + wR * para->norm(2) + para->nt;
 	para->machR = para->vnR / (para->cR * deltaNorm);
-	para->eR = 0.5 * para->v2R  + pR / (rhoR * (para->gammaR - 1));
+	para->eR = 0.5 * para->v2R + pR / (rhoR * (para->gammaR - 1));
 	if (para->machR <= -1.0)
 	{
 		para->flux[0] += rhoR * para->vnR;
@@ -68,7 +68,8 @@ void Vanleer::Solver(Ptr<RiemannSolverPara>& para)
 		para->flux[1] += fluxMass * deltaNorm * (para->norm(0) / deltaNorm * (-para->vnR / deltaNorm - 2 * para->cR) / para->gammaR + uR);
 		para->flux[2] += fluxMass * deltaNorm * (para->norm(1) / deltaNorm * (-para->vnR / deltaNorm - 2 * para->cR) / para->gammaR + vR);
 		para->flux[3] += fluxMass * deltaNorm * (para->norm(2) / deltaNorm * (-para->vnR / deltaNorm - 2 * para->cR) / para->gammaR + wR);
-		para->flux[4] += fluxMass * deltaNorm * (para->vnR / deltaNorm * (-para->vnR / deltaNorm - 2 * para->cR) / (para->gammaR + 1) +
-			2 * para->cR * para->cR / (para->gammaR * para->gammaR - 1) + 0.5 * para->v2R - para->nt * (-para->vnR / deltaNorm - 2 * para->cR) / para->gammaR);
+		para->flux[4] += fluxMass * deltaNorm * (para->vnR / deltaNorm * (-para->vnR / deltaNorm - 2 * para->cR) / (para->gammaR + 1)
+			+ 2 * para->cR * para->cR / (para->gammaR * para->gammaR - 1)
+			+ 0.5 * para->v2R - para->nt * (-para->vnR / deltaNorm - 2 * para->cR) / para->gammaR);
 	}
 }

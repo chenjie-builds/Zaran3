@@ -95,8 +95,11 @@ void Controller::SaveDataVTK(std::ostream& os)
 
 void Controller::SolveField()
 {
+	ZaranLog::info("Start to solve field!");
 	Initialize();
+	ZaranLog::info("Initialize finished!");
 	SaveFieldData();
+	ZaranLog::info("Save data");
 	SaveResidual();
 	while (!IsStopSolve())
 	{

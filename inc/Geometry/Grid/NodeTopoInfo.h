@@ -26,7 +26,8 @@ namespace zaran
 		symmetry,//对称面
 		farfield,//远场
 		corner,//角点
-		ghost//ghonst point
+		ghost,//ghonst point
+		undefined//未定义
 	};
 	class NodeTopoInfo
 	{

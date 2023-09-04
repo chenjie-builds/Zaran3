@@ -47,7 +47,7 @@ void zaran::Visual::WriteTecplotPoint(Ptr<FieldSolver>& solver)
 	int step = GlobalData::GetInt("step");
 	std::string filename = "result/" + std::to_string(step) + ".dat";
 	std::ofstream fout(filename);
-	fout << "variables=x,y,z,rho,u,v,w,p,nodetype\n";
+	fout << "variables=x,y,z,rho,u,v,w,p\n";
 	auto& grid = solver->GetGrid();
 	auto& nodeTopo = grid->GetNodeTopoInfo();
 	auto& cellTopo = grid->GetCellTopoInfo();
@@ -62,10 +62,60 @@ void zaran::Visual::WriteTecplotPoint(Ptr<FieldSolver>& solver)
 	{
 		auto& currentCoord = nodeTopo[iNode].GetCoordinate();
 		fout << currentCoord(0) << "  " << currentCoord(1) << "  " << currentCoord(2) << "  ";
-		fout << rho[iNode] << "  " << u[iNode] << "  " << v[iNode] << "  " << w[iNode] << "  " << p[iNode] << "   "<<int(nodeTopo[iNode].GetType());
+		fout << rho[iNode] << "  " << u[iNode] << "  " << v[iNode] << "  " << w[iNode] << "  " << p[iNode];
 		fout << std::endl;
 	}
 	fout.close();
+
+	auto& boundMap = grid->GetBoundaryMap();
+	//fout.open("result/inlet.dat");
+	//fout << "variables=x,y,z\n";
+	//auto& boundNode = boundMap->GetBoundary("inlet");
+	//for (int iBound = 0; iBound < boundNode.size(); ++iBound)
+	//{
+	//	auto& boundIndex = boundNode[iBound].GetIndex();
+	//	auto& currentNode = nodeTopo[boundIndex];
+	//	auto& currentCoord = currentNode.GetCoordinate();
+	//	fout << currentCoord(0) << "  " << currentCoord(1) << "  " << currentCoord(2) << "  ";
+	//	fout << std::endl;
+	//}
+	//fout.close();
+	//fout.open("result/outlet.dat");
+	//fout << "variables=x,y,z\n";
+	//boundNode = boundMap->GetBoundary("outlet");
+	//for (int iBound = 0; iBound < boundNode.size(); ++iBound)
+	//{
+	//	auto& boundIndex = boundNode[iBound].GetIndex();
+	//	auto& currentNode = nodeTopo[boundIndex];
+	//	auto& currentCoord = currentNode.GetCoordinate();
+	//	fout << currentCoord(0) << "  " << currentCoord(1) << "  " << currentCoord(2) << "  ";
+	//	fout << std::endl;
+	//}
+	//fout.close();
+	fout.open("result/wall_" + std::to_string(step) + ".dat");
+	fout << "variables=x,y,z,rho,u,v,w,p\n";
+	auto& boundNode = boundMap->GetBoundary("slipWall");
+	//std::ofstream fout1("result/innerNode.dat");
+	//fout1 << "variables=x,y,z\n";
+	for (int iBound = 0; iBound < boundNode.size(); ++iBound)
+	{
+		auto& boundIndex = boundNode[iBound].GetIndex();
+		//auto& innerIndex = boundNode[iBound].GetInnerNodeIndex();
+		auto& currentNode = nodeTopo[boundIndex];
+		auto& currentCoord = currentNode.GetCoordinate();
+		fout << currentCoord(0) << "  " << currentCoord(1) << "  " << currentCoord(2)<<"  ";
+		fout << rho[boundIndex] << "  " << u[boundIndex] << "  " << v[boundIndex] << "  " << w[boundIndex] << "  " << p[boundIndex];
+		fout << std::endl;
+		//auto& innerNode = nodeTopo[innerIndex];
+		//auto& innerNodeCoord = innerNode.GetCoordinate();
+		//fout1 << innerNodeCoord(0) << "  " << innerNodeCoord(1) << "  " << innerNodeCoord(2);
+		//fout1 << std::endl;
+	}
+	fout.close();
+	//fout1.close();
+
+
+
 }
 
 void Visual::WriteVTK(Ptr<FieldSolver>& solver)
