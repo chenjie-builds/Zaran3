@@ -27,6 +27,7 @@ namespace zaran
 		void CreateFieldData()override;
 		void RegisterFieldData()override;
 		void ComputeCoordTrans();
+		double ComputeMaxResidual()override;
 		/*
 		* 梯度计算函数
 		* 目前包括最小二乘法、非结构有限差分法

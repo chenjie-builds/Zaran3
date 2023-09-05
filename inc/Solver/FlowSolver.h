@@ -29,6 +29,7 @@ namespace zaran
 		void Post()override;
 		// 同步时间步长为全局时间步
 		virtual void SnycTimeStepWithGlobal(double& dt) = 0;
+		virtual	double ComputeMaxResidual()=0;
 	public:
 		//计算当前时刻的CFL数
 		double ComputeCFL();

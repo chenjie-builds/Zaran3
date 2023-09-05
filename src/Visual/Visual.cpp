@@ -21,10 +21,10 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 	auto& v = data->GetData("v");
 	auto& w = data->GetData("w");
 	auto& p = data->GetData("p");
-	fout << "ZONE T= " << grid->GetName() << std::endl;
-	fout << "N=" << nInnerNum + nBoundNum << ", E= " << cellTopo.size() << ", F=FEPOINT, ET=Brick" << std::endl;
+	fout << "ZONE T= grid_" << grid->GetName() << std::endl;
+	fout << "N=" << grid->GetTotalNodeNum() << ", E= " << cellTopo.size() << ", F=FEPOINT, ET=Brick" << std::endl;
 	fout << "solutiontime= " << GlobalData::GetDouble("globalTime") << std::endl;
-	for (int iNode = 0; iNode < nInnerNum + nBoundNum; ++iNode)
+	for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
 		auto& currentCoord = nodeTopo[iNode].GetCoordinate();
 		fout << currentCoord(0) << "  " << currentCoord(1) << "  " << currentCoord(2) << "  ";
@@ -92,27 +92,61 @@ void zaran::Visual::WriteTecplotPoint(Ptr<FieldSolver>& solver)
 	//	fout << std::endl;
 	//}
 	//fout.close();
-	fout.open("result/wall_" + std::to_string(step) + ".dat");
-	fout << "variables=x,y,z,rho,u,v,w,p\n";
-	auto& boundNode = boundMap->GetBoundary("slipWall");
-	//std::ofstream fout1("result/innerNode.dat");
-	//fout1 << "variables=x,y,z\n";
-	for (int iBound = 0; iBound < boundNode.size(); ++iBound)
-	{
-		auto& boundIndex = boundNode[iBound].GetIndex();
-		//auto& innerIndex = boundNode[iBound].GetInnerNodeIndex();
-		auto& currentNode = nodeTopo[boundIndex];
-		auto& currentCoord = currentNode.GetCoordinate();
-		fout << currentCoord(0) << "  " << currentCoord(1) << "  " << currentCoord(2)<<"  ";
-		fout << rho[boundIndex] << "  " << u[boundIndex] << "  " << v[boundIndex] << "  " << w[boundIndex] << "  " << p[boundIndex];
-		fout << std::endl;
-		//auto& innerNode = nodeTopo[innerIndex];
-		//auto& innerNodeCoord = innerNode.GetCoordinate();
-		//fout1 << innerNodeCoord(0) << "  " << innerNodeCoord(1) << "  " << innerNodeCoord(2);
-		//fout1 << std::endl;
-	}
-	fout.close();
-	//fout1.close();
+
+
+
+	//fout.open("result/wall_" + std::to_string(step) + ".dat");
+	//fout << "variables=x,y,z,rho,u,v,w,p\n";
+	//auto& wallBoundNode = boundMap->GetBoundary("slipWall");
+	//for (int iBound = 0; iBound < wallBoundNode.size(); ++iBound)
+	//{
+	//	auto& boundIndex = wallBoundNode[iBound].GetIndex();
+	//	auto& currentNode = nodeTopo[boundIndex];
+	//	auto& currentCoord = currentNode.GetCoordinate();
+	//	fout << currentCoord(0) << "  " << currentCoord(1) << "  " << currentCoord(2) << "  ";
+	//	fout << rho[boundIndex] << "  " << u[boundIndex] << "  " << v[boundIndex] << "  " << w[boundIndex] << "  " << p[boundIndex];
+	//	fout << std::endl;
+	//}
+	//fout.close();
+	//fout.open("result/wallInnerNode_" + std::to_string(step) + ".dat");
+	//fout << "variables=x,y,z,rho,u,v,w,p\n";
+	//for (int iBound = 0; iBound < wallBoundNode.size(); ++iBound)
+	//{
+	//	auto& innerIndex = wallBoundNode[iBound].GetInnerNodeIndex();
+	//	auto& innerNode = nodeTopo[innerIndex];
+	//	auto& innerNodeCoord = innerNode.GetCoordinate();
+	//	fout << innerNodeCoord(0) << "  " << innerNodeCoord(1) << "  " << innerNodeCoord(2);
+	//	fout << "  " << rho[innerIndex] << "  " << u[innerIndex] << "  " << v[innerIndex] << "  " << w[innerIndex] << "  " << p[innerIndex];
+	//	fout << std::endl;
+	//}
+	//fout.close();
+
+	//fout.open("result/outlet_" + std::to_string(step) + ".dat");
+	//fout << "variables=x,y,z,rho,u,v,w,p\n";
+	//auto& outletBoundNode = boundMap->GetBoundary("outlet");
+	//for (int iBound = 0; iBound < outletBoundNode.size(); ++iBound)
+	//{
+	//	auto& boundIndex = outletBoundNode[iBound].GetIndex();
+	//	auto& currentNode = nodeTopo[boundIndex];
+	//	auto& currentCoord = currentNode.GetCoordinate();
+	//	fout << currentCoord(0) << "  " << currentCoord(1) << "  " << currentCoord(2) << "  ";
+	//	fout << rho[boundIndex] << "  " << u[boundIndex] << "  " << v[boundIndex] << "  " << w[boundIndex] << "  " << p[boundIndex];
+	//	fout << std::endl;
+	//}
+	//fout.close();
+	//fout.open("result/outletInnerNode_" + std::to_string(step) + ".dat");
+	//fout << "variables=x,y,z,rho,u,v,w,p\n";
+	//for (int iBound = 0; iBound < outletBoundNode.size(); ++iBound)
+	//{
+	//	auto& innerIndex = outletBoundNode[iBound].GetInnerNodeIndex();
+	//	auto& innerNode = nodeTopo[innerIndex];
+	//	auto& innerNodeCoord = innerNode.GetCoordinate();
+	//	fout << innerNodeCoord(0) << "  " << innerNodeCoord(1) << "  " << innerNodeCoord(2);
+	//	fout << "  " << rho[innerIndex] << "  " << u[innerIndex] << "  " << v[innerIndex] << "  " << w[innerIndex] << "  " << p[innerIndex];
+	//	fout << std::endl;
+	//}
+	//fout.close();
+
 
 
 

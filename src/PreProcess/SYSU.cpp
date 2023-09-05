@@ -145,8 +145,29 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 		}
 	}
 
+	fin.close();
+	fin.open("cell.dat");
+	auto& cellTopoVec = grid->GetCellTopoInfo();
+	int cellNum;
+	fin >> cellNum;
+	cellTopoVec.resize(cellNum);
+	IArray cellNeiborNodeIndex(8);
+	for (int iCell = 0; iCell < cellNum; iCell++)
+	{
+		fin >> cellNeiborNodeIndex[0] >> cellNeiborNodeIndex[1] >> cellNeiborNodeIndex[2] >> cellNeiborNodeIndex[3] 
+			>> cellNeiborNodeIndex[4] >> cellNeiborNodeIndex[5] >> cellNeiborNodeIndex[6] >> cellNeiborNodeIndex[7];
+		cellNeiborNodeIndex[0] -= 1;
+		cellNeiborNodeIndex[1] -= 1;
+		cellNeiborNodeIndex[2] -= 1;
+		cellNeiborNodeIndex[3] -= 1;
+		cellNeiborNodeIndex[4] -= 1;
+		cellNeiborNodeIndex[5] -= 1;
+		cellNeiborNodeIndex[6] -= 1;
+		cellNeiborNodeIndex[7] -= 1;
+		cellTopoVec[iCell].SetNode(cellNeiborNodeIndex);
+	}
 
-
+	fin.close();
 
 
 }

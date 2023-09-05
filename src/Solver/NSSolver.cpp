@@ -231,6 +231,18 @@ void NSSolver::Solve()
 	TimeAdvance();
 	UpdateField();
 }
+double zaran::NSSolver::ComputeMaxResidual()
+{
+	double maxRes = 0;
+	auto& rhoRes= *m_Residual[0];
+	for (int i = 0; i < rhoRes.size(); ++i)
+	{
+		double res = rhoRes[i];
+		if (res > maxRes)
+			maxRes = res;
+	}
+	return maxRes;
+}
 void NSSolver::ComputeCoordTrans()
 {
 	GridPtr grid = GetGrid();
@@ -241,6 +253,8 @@ void NSSolver::ComputeCoordTrans()
 	DVector3D xRight, xLeft, yRight, yLeft, zRight, zLeft;
 	for (size_t iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
+		if (iNode == 7540)
+			int a = 0;
 		auto& currentNode = nodeTopoVec[iNode];
 		if (currentNode.GetType() != NodeType::inner)
 			continue;
@@ -254,6 +268,7 @@ void NSSolver::ComputeCoordTrans()
 		yRight = nodeTopoVec[tempJ[2]].GetCoordinate();
 		zLeft = nodeTopoVec[tempK[0]].GetCoordinate();
 		zRight = nodeTopoVec[tempK[2]].GetCoordinate();
+		coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, yLeft, zLeft, zRight);
 		if (coordTrans.J() < 0)
 		{
 			currentNode.SetNeighborTemplateK(IArray({ tempK[2], tempK[1], tempK[0] }));
@@ -522,6 +537,8 @@ void NSSolver::RungeKutta()
 		ComputeResidual();
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
+			if (iNode == 7540)
+				int a = 0;
 			//ZaranLog::info("iNode = {}", iNode);
 			for (int iVal = 0; iVal < 5; ++iVal)
 			{
@@ -617,9 +634,9 @@ void NSSolver::InviscidFlux()
 	fluxPara->gammaL = fluxPara->gammaR = 1.4;
 	for (size_t iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
-		if (iNode == 7941)
-			int k = 0;
 		auto& currentNode = nodeTopoVec[iNode];
+		if (iNode == 7540)
+			int a = 0;
 		if (currentNode.GetType() != NodeType::inner)
 			continue;
 		auto& jacobi = (*coordTrans[32])[iNode];
@@ -855,11 +872,11 @@ void NSSolver::ComputeWallBC(Boundary& bound)
 	v[boundIndex] = v[innerIndex];
 	w[boundIndex] = w[innerIndex];
 	p[boundIndex] = p[innerIndex];
-	//DVector3D innerVel(u[innerIndex], v[innerIndex], w[innerIndex]);
-	//DVector3D boundVel = innerVel - (innerVel.dot(boundNorm)) * boundNorm / (boundNorm.norm() * boundNorm.norm());
-	//u[boundIndex] = boundVel(0);
-	//v[boundIndex] = boundVel(1);
-	//w[boundIndex] = boundVel(2);
+	DVector3D innerVel(u[innerIndex], v[innerIndex], w[innerIndex]);
+	DVector3D boundVel = innerVel - (innerVel.dot(boundNorm)) * boundNorm / (boundNorm.norm() * boundNorm.norm());
+	u[boundIndex] = boundVel(0);
+	v[boundIndex] = boundVel(1);
+	w[boundIndex] = boundVel(2);
 	Primitive2Conservative(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex], cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
 }
 

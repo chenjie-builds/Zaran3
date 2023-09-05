@@ -25,7 +25,7 @@ void FlowSolverPara::Init()
 	cflNumber_ = GlobalData::GetDouble("cflNumber");
 	primInflow_.resize(5);
 	primInflow_ << 1.4, 3, 0, 0, 1.0;
-
+	primInflow_[1] = refMachNumber_;
 	int rkStage = GlobalData::GetInt("rkStage");
 	if (rkStage == 1)
 	{

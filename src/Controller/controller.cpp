@@ -2,6 +2,7 @@
 #include "log.h"
 #include <fstream>
 #include"FlowSolver.h"
+#include"MathBasic.h"
 using namespace zaran;
 Controller::Controller(Ptr<GridList>& gridList, Ptr<SolverVec>& solverVec)
 {
@@ -48,8 +49,8 @@ void Controller::SaveDataTecplot()
 	for (int iSolver = 0; iSolver < solverVec_->GetSolverNumber(); iSolver++)
 	{
 		auto& currentSolver = solverVec_->GetSolverPtr(iSolver);
-		//visual_->WriteTecplot(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
-		visual_->WriteTecplotPoint(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
+		visual_->WriteTecplot(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
+		//visual_->WriteTecplotPoint(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
 	}
 }
 void Controller::SaveDataVTK(std::ostream& os)
@@ -109,8 +110,15 @@ void Controller::SolveField()
 	}
 }
 
-void Controller::CalcMaxAveResidual()
+double Controller::CalcMaxAveResidual()
 {
+	double maxResidual = 0.0;
+	for (size_t iSolver = 0; iSolver < solverVec_->GetSolverNumber(); iSolver++)
+	{
+		auto& currentSolver = std::dynamic_pointer_cast<FlowSolver>(solverVec_->GetSolverPtr(iSolver));
+		maxResidual = Max(maxResidual, currentSolver->ComputeMaxResidual());
+	}
+	return maxResidual;
 }
 
 void Controller::SaveFieldData()
@@ -180,8 +188,8 @@ void Controller::PostSolve()
 	int writeFieldStep = GlobalData::GetInt("writeFieldStep");
 	if (iterStep % calResidualStep == 0)
 	{
-		ZaranLog::info("step={}  ,dt={}", GlobalData::GetInt("step"),GlobalData::GetDouble("dt"));
-		CalcMaxAveResidual();
+		double maxResidual = CalcMaxAveResidual();
+		ZaranLog::info("step={}, dt={}, maxRes={}", GlobalData::GetInt("step"), GlobalData::GetDouble("dt"), maxResidual);
 		SaveResidual();
 	}
 	if (iterStep % writeFieldStep == 0)
