@@ -4,6 +4,7 @@
 #include "CommonPara.h"
 #include "RiemannSolverFactory.h"
 #include "Limiter.h"
+#include<fstream>
 using namespace zaran;
 void NSSolver::Init()
 {
@@ -234,7 +235,7 @@ void NSSolver::Solve()
 double zaran::NSSolver::ComputeMaxResidual()
 {
 	double maxRes = 0;
-	auto& rhoRes= *m_Residual[0];
+	auto& rhoRes = *m_Residual[0];
 	for (int i = 0; i < rhoRes.size(); ++i)
 	{
 		double res = rhoRes[i];
@@ -361,43 +362,17 @@ void NSSolver::BoundaryCondition()
 	GridPtr& grid = GetGrid();
 	BoundaryMapPtr& boundaryMapPtr = grid->GetBoundaryMap();
 	auto& boundaryMap = boundaryMapPtr->GetBoundaryMap();
-	for (auto iter = boundaryMap.begin(); iter != boundaryMap.end(); ++iter)
-	{
-		auto& boundVec = iter->second;
-		if (iter->first == "inlet")
-		{
-			continue;
-		}
-		else if (iter->first == "outlet")
-		{
-			for (int iBound = 0; iBound < boundVec.size(); ++iBound)
-			{
-				ComputeOutletBC(boundVec[iBound]);
-			}
-		}
-		else if (iter->first == "slipWall")
-		{
-			for (int iBound = 0; iBound < boundVec.size(); ++iBound)
-			{
-				ComputeWallBC(boundVec[iBound]);
-			}
-		}
-		else
-		{
-			ZaranLog::warn("Unsupportted Boundary Condition!");
-		}
-	}
-	for (auto iter = boundaryMap.begin(); iter != boundaryMap.end(); ++iter)
-	{
-		auto& boundVec = iter->second;
-		if (iter->first == "inlet")
-		{
-			for (int iBound = 0; iBound < boundVec.size(); ++iBound)
-			{
-				ComputeInletBC(boundVec[iBound]);
-			}
-		}
-	}
+	auto& wallBound = boundaryMap["slipWall"];
+	for (int iBound = 0; iBound < wallBound.size(); ++iBound)
+		ComputeWallBC(wallBound[iBound]);
+	auto& outletBound = boundaryMap["outlet"];
+	for (int iBound = 0; iBound < outletBound.size(); ++iBound)
+		ComputeOutletBC(outletBound[iBound]);
+	auto& inletletBound = boundaryMap["inlet"];
+	for (int iBound = 0; iBound < inletletBound.size(); ++iBound)
+		ComputeInletBC(inletletBound[iBound]);
+
+
 }
 
 
@@ -600,7 +575,21 @@ void NSSolver::Conservative2Primitive()
 	for (int iNode = 0; iNode < nTotalNode; ++iNode)
 	{
 		Conservative2Primitive(cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode], rho[iNode], u[iNode], v[iNode], w[iNode], p[iNode]);
+		//if (rho[iNode] > 15)
+		//	ZaranLog::info("Bad node£º{}", iNode);
 	}
+	int step = GlobalData::GetInt("step");
+	std::ofstream fout;
+	fout.open("nodedata.dat", std::ios::app);
+	fout << "step=" << step << std::endl;
+	fout << "node: " << 877 << "prim=" << rho[877] << ", " << u[877] << ", " << v[877] << ", " << w[877] << ", " << p[877] << std::endl;
+	fout << "node: " << 882 << "prim=" << rho[882] << ", " << u[882] << ", " << v[882] << ", " << w[882] << ", " << p[882] << std::endl;
+	fout << "node: " << 883 << "prim=" << rho[883] << ", " << u[883] << ", " << v[883] << ", " << w[883] << ", " << p[883] << std::endl;
+	fout << "node: " << 881 << "prim=" << rho[881] << ", " << u[881] << ", " << v[881] << ", " << w[881] << ", " << p[881] << std::endl;
+	fout << "node: " << 884 << "prim=" << rho[884] << ", " << u[884] << ", " << v[884] << ", " << w[884] << ", " << p[884] << std::endl;
+	fout << "node: " << 885 << "prim=" << rho[885] << ", " << u[885] << ", " << v[885] << ", " << w[885] << ", " << p[885] << std::endl;
+	fout << "node: " << 768 << "prim=" << rho[768] << ", " << u[768] << ", " << v[768] << ", " << w[768] << ", " << p[768] << std::endl;
+	fout << std::endl;
 }
 
 void NSSolver::Conservative2Primitive(double& cons0, double& cons1, double& cons2, double& cons3, double& cons4, double& rho, double& u, double& v, double& w, double& p)
@@ -635,8 +624,6 @@ void NSSolver::InviscidFlux()
 	for (size_t iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
 		auto& currentNode = nodeTopoVec[iNode];
-		if (iNode == 7540)
-			int a = 0;
 		if (currentNode.GetType() != NodeType::inner)
 			continue;
 		auto& jacobi = (*coordTrans[32])[iNode];

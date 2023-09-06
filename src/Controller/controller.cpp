@@ -189,7 +189,7 @@ void Controller::PostSolve()
 	if (iterStep % calResidualStep == 0)
 	{
 		double maxResidual = CalcMaxAveResidual();
-		ZaranLog::info("step={}, dt={}, maxRes={}", GlobalData::GetInt("step"), GlobalData::GetDouble("dt"), maxResidual);
+		ZaranLog::info("step={}, dt={:e}, maxRes={:e}", GlobalData::GetInt("step"), GlobalData::GetDouble("dt"), maxResidual);
 		SaveResidual();
 	}
 	if (iterStep % writeFieldStep == 0)
