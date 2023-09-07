@@ -228,9 +228,9 @@ void NSSolver::Solve()
 	ComputeTimeStep();
 	ComputePrimtiveGradient();
 	ComputeLimiterCoef();
-	BoundaryCondition();
 	TimeAdvance();
 	UpdateField();
+	BoundaryCondition();
 }
 double zaran::NSSolver::ComputeMaxResidual()
 {
@@ -254,8 +254,6 @@ void NSSolver::ComputeCoordTrans()
 	DVector3D xRight, xLeft, yRight, yLeft, zRight, zLeft;
 	for (size_t iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
-		if (iNode == 7540)
-			int a = 0;
 		auto& currentNode = nodeTopoVec[iNode];
 		if (currentNode.GetType() != NodeType::inner)
 			continue;
@@ -473,8 +471,6 @@ void NSSolver::ComputeTimeStepLocal()
 	double minDt = LARGE_NUMBER;
 	for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
-		if (iNode == 27963)
-			int a = 0;
 		auto& currentNode = nodeTopo[iNode];
 		double gamma = 1.4;
 		if (currentNode.GetType() != NodeType::inner)
@@ -512,9 +508,6 @@ void NSSolver::RungeKutta()
 		ComputeResidual();
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
-			if (iNode == 7540)
-				int a = 0;
-			//ZaranLog::info("iNode = {}", iNode);
 			for (int iVal = 0; iVal < 5; ++iVal)
 			{
 				auto& currentCons = (*cons[iVal])[iNode];
@@ -812,7 +805,8 @@ void NSSolver::ComputeInletBC(Boundary& bound)
 	v[boundIndex] = inletPara[2];
 	w[boundIndex] = inletPara[3];
 	p[boundIndex] = inletPara[4];
-	Primitive2Conservative(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex], cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
+	Primitive2Conservative(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex],
+		cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
 }
 
 void NSSolver::ComputeOutletBC(Boundary& bound)
@@ -834,7 +828,15 @@ void NSSolver::ComputeOutletBC(Boundary& bound)
 	v[boundIndex] = w[innerIndex];
 	w[boundIndex] = w[innerIndex];
 	p[boundIndex] = p[innerIndex];
-	Primitive2Conservative(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex], cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
+	FlowSolverParaPtr para = GetPara();
+	auto& inletPara = para->GetPrimitiveInflow();
+	rho[boundIndex] = inletPara[0];
+	u[boundIndex] = inletPara[1];
+	v[boundIndex] = inletPara[2];
+	w[boundIndex] = inletPara[3];
+	p[boundIndex] = inletPara[4];
+	Primitive2Conservative(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex],
+		cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
 
 
 }
@@ -859,12 +861,20 @@ void NSSolver::ComputeWallBC(Boundary& bound)
 	v[boundIndex] = v[innerIndex];
 	w[boundIndex] = w[innerIndex];
 	p[boundIndex] = p[innerIndex];
-	DVector3D innerVel(u[innerIndex], v[innerIndex], w[innerIndex]);
-	DVector3D boundVel = innerVel - (innerVel.dot(boundNorm)) * boundNorm / (boundNorm.norm() * boundNorm.norm());
-	u[boundIndex] = boundVel(0);
-	v[boundIndex] = boundVel(1);
-	w[boundIndex] = boundVel(2);
-	Primitive2Conservative(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex], cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
+	//DVector3D innerVel(u[innerIndex], v[innerIndex], w[innerIndex]);
+	//DVector3D boundVel = innerVel - (innerVel.dot(boundNorm)) * boundNorm / (boundNorm.norm() * boundNorm.norm());
+	//u[boundIndex] = boundVel(0);
+	//v[boundIndex] = boundVel(1);
+	//w[boundIndex] = boundVel(2);
+	FlowSolverParaPtr para = GetPara();
+	auto& inletPara = para->GetPrimitiveInflow();
+	rho[boundIndex] = inletPara[0];
+	u[boundIndex] = inletPara[1];
+	v[boundIndex] = inletPara[2];
+	w[boundIndex] = inletPara[3];
+	p[boundIndex] = inletPara[4];
+	Primitive2Conservative(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex],
+		cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
 }
 
 void NSSolver::ComputeLimiterCoef()
