@@ -267,7 +267,7 @@ void NSSolver::ComputeCoordTrans()
 		yRight = nodeTopoVec[tempJ[2]].GetCoordinate();
 		zLeft = nodeTopoVec[tempK[0]].GetCoordinate();
 		zRight = nodeTopoVec[tempK[2]].GetCoordinate();
-		coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, yLeft, zLeft, zRight);
+		coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, yLeft, zRight, zLeft);
 		if (coordTrans.J() < 0)
 		{
 			currentNode.SetNeighborTemplateK(IArray({ tempK[2], tempK[1], tempK[0] }));
@@ -564,25 +564,12 @@ void NSSolver::Conservative2Primitive()
 	auto& cons2 = *m_Conservative[2];
 	auto& cons3 = *m_Conservative[3];
 	auto& cons4 = *m_Conservative[4];
+	auto& inflowPrim = GetPara()->GetPrimitiveInflow();
 	int nTotalNode = grid->GetTotalNodeNum();
 	for (int iNode = 0; iNode < nTotalNode; ++iNode)
 	{
 		Conservative2Primitive(cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode], rho[iNode], u[iNode], v[iNode], w[iNode], p[iNode]);
-		//if (rho[iNode] > 15)
-		//	ZaranLog::info("Bad node£º{}", iNode);
 	}
-	int step = GlobalData::GetInt("step");
-	std::ofstream fout;
-	fout.open("nodedata.dat", std::ios::app);
-	fout << "step=" << step << std::endl;
-	fout << "node: " << 877 << "prim=" << rho[877] << ", " << u[877] << ", " << v[877] << ", " << w[877] << ", " << p[877] << std::endl;
-	fout << "node: " << 882 << "prim=" << rho[882] << ", " << u[882] << ", " << v[882] << ", " << w[882] << ", " << p[882] << std::endl;
-	fout << "node: " << 883 << "prim=" << rho[883] << ", " << u[883] << ", " << v[883] << ", " << w[883] << ", " << p[883] << std::endl;
-	fout << "node: " << 881 << "prim=" << rho[881] << ", " << u[881] << ", " << v[881] << ", " << w[881] << ", " << p[881] << std::endl;
-	fout << "node: " << 884 << "prim=" << rho[884] << ", " << u[884] << ", " << v[884] << ", " << w[884] << ", " << p[884] << std::endl;
-	fout << "node: " << 885 << "prim=" << rho[885] << ", " << u[885] << ", " << v[885] << ", " << w[885] << ", " << p[885] << std::endl;
-	fout << "node: " << 768 << "prim=" << rho[768] << ", " << u[768] << ", " << v[768] << ", " << w[768] << ", " << p[768] << std::endl;
-	fout << std::endl;
 }
 
 void NSSolver::Conservative2Primitive(double& cons0, double& cons1, double& cons2, double& cons3, double& cons4, double& rho, double& u, double& v, double& w, double& p)
@@ -825,16 +812,16 @@ void NSSolver::ComputeOutletBC(Boundary& bound)
 	int innerIndex = bound.GetInnerNodeIndex();
 	rho[boundIndex] = rho[innerIndex];
 	u[boundIndex] = u[innerIndex];
-	v[boundIndex] = w[innerIndex];
+	v[boundIndex] = v[innerIndex];
 	w[boundIndex] = w[innerIndex];
 	p[boundIndex] = p[innerIndex];
-	FlowSolverParaPtr para = GetPara();
-	auto& inletPara = para->GetPrimitiveInflow();
-	rho[boundIndex] = inletPara[0];
-	u[boundIndex] = inletPara[1];
-	v[boundIndex] = inletPara[2];
-	w[boundIndex] = inletPara[3];
-	p[boundIndex] = inletPara[4];
+	//FlowSolverParaPtr para = GetPara();
+	//auto& inletPara = para->GetPrimitiveInflow();
+	//rho[boundIndex] = inletPara[0];
+	//u[boundIndex] = inletPara[1];
+	//v[boundIndex] = inletPara[2];
+	//w[boundIndex] = inletPara[3];
+	//p[boundIndex] = inletPara[4];
 	Primitive2Conservative(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex],
 		cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
 
@@ -861,18 +848,18 @@ void NSSolver::ComputeWallBC(Boundary& bound)
 	v[boundIndex] = v[innerIndex];
 	w[boundIndex] = w[innerIndex];
 	p[boundIndex] = p[innerIndex];
-	//DVector3D innerVel(u[innerIndex], v[innerIndex], w[innerIndex]);
-	//DVector3D boundVel = innerVel - (innerVel.dot(boundNorm)) * boundNorm / (boundNorm.norm() * boundNorm.norm());
-	//u[boundIndex] = boundVel(0);
-	//v[boundIndex] = boundVel(1);
-	//w[boundIndex] = boundVel(2);
-	FlowSolverParaPtr para = GetPara();
-	auto& inletPara = para->GetPrimitiveInflow();
-	rho[boundIndex] = inletPara[0];
-	u[boundIndex] = inletPara[1];
-	v[boundIndex] = inletPara[2];
-	w[boundIndex] = inletPara[3];
-	p[boundIndex] = inletPara[4];
+	DVector3D innerVel(u[innerIndex], v[innerIndex], w[innerIndex]);
+	DVector3D boundVel = innerVel - (innerVel.dot(boundNorm)) * boundNorm / (boundNorm.norm() * boundNorm.norm());
+	u[boundIndex] = boundVel(0);
+	v[boundIndex] = boundVel(1);
+	w[boundIndex] = boundVel(2);
+	//FlowSolverParaPtr para = GetPara();
+	//auto& inletPara = para->GetPrimitiveInflow();
+	//rho[boundIndex] = inletPara[0];
+	//u[boundIndex] = inletPara[1];
+	//v[boundIndex] = inletPara[2];
+	//w[boundIndex] = inletPara[3];
+	//p[boundIndex] = inletPara[4];
 	Primitive2Conservative(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex],
 		cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
 }
