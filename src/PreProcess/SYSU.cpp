@@ -17,16 +17,16 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 {
 	Ptr < Grid > grid = std::make_shared<Grid>();
 	gridList->AddGrid(grid);
-	auto& nodeTopoVec = grid->GetNodeTopoInfo();
+	auto& nodeTopo = grid->GetNodeTopo();
 	std::ifstream fin(m_fileName);
 	//读取所有节点坐标
 	fin >> m_NodeNum;
-	grid->SetTotalNodeNumber(m_NodeNum);
-	nodeTopoVec.resize(m_NodeNum);
+	grid->SetTotalNodeNum(m_NodeNum);
+	auto& nodeCoord = nodeTopo->GetCoordinate();
+	nodeCoord.resize(m_NodeNum);
 	for (size_t i = 0; i < m_NodeNum; i++)
 	{
-		auto& currentNode = nodeTopoVec[i];
-		auto& currentCoord = currentNode.GetCoordinate();
+		auto& currentCoord = nodeCoord[i];
 		fin >> currentCoord[0] >> currentCoord[1] >> currentCoord[2];
 	}
 	//读取所有内部节点邻居节点
@@ -34,6 +34,16 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 	fin >> innerNodeNum;
 	int innerNodeIndex;
 	IArray neiborNodeIndex(6);
+	auto& nodeType = nodeTopo->GetType();
+	nodeType.resize(m_NodeNum);
+	auto& temp_i = nodeTopo->GetTemplateI();
+	auto& temp_j = nodeTopo->GetTemplateJ();
+	auto& temp_k = nodeTopo->GetTemplateK();
+	temp_i.resize(m_NodeNum);
+	temp_j.resize(m_NodeNum);
+	temp_k.resize(m_NodeNum);
+	auto& nodeNeibor = nodeTopo->GetNeighborCloud();
+	nodeNeibor.resize(m_NodeNum);
 	for (size_t i = 0; i < innerNodeNum; i++)
 	{
 		fin >> innerNodeIndex;
@@ -45,12 +55,11 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 		neiborNodeIndex[3] -= 1;
 		neiborNodeIndex[4] -= 1;
 		neiborNodeIndex[5] -= 1;
-		auto& currentNode = nodeTopoVec[innerNodeIndex];
-		currentNode.SetType(NodeType::inner);
-		currentNode.SetNeighborCloud(neiborNodeIndex);
-		currentNode.SetNeighborTemplateI(IArray{ neiborNodeIndex[0],innerNodeIndex,neiborNodeIndex[1] });
-		currentNode.SetNeighborTemplateJ(IArray{ neiborNodeIndex[2],innerNodeIndex,neiborNodeIndex[3] });
-		currentNode.SetNeighborTemplateK(IArray{ neiborNodeIndex[4],innerNodeIndex,neiborNodeIndex[5] });
+		nodeType[innerNodeIndex] = NodeType::inner;
+		nodeNeibor[innerNodeIndex] = neiborNodeIndex;
+		temp_i[innerNodeIndex] = IArray{ neiborNodeIndex[0],innerNodeIndex,neiborNodeIndex[1] };
+		temp_j[innerNodeIndex] = IArray{ neiborNodeIndex[2],innerNodeIndex,neiborNodeIndex[3] };
+		temp_k[innerNodeIndex] = IArray{ neiborNodeIndex[4],innerNodeIndex,neiborNodeIndex[5] };
 	}
 	//读取所有边界节点邻居节点
 	auto& boundMap = grid->GetBoundaryMap();
@@ -66,7 +75,7 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 		fin >> boundNodeIndex >> tempIndex1;
 		boundNodeIndex -= 1;
 		boundMap->AddBoundary("inlet", Boundary{ boundNodeIndex,0,0,DVector3D{} });
-		nodeTopoVec[boundNodeIndex].SetType(NodeType::inlet);
+		nodeType[boundNodeIndex] = NodeType::inlet;
 	}
 	fin >> nBound;
 	m_BoundNodeNum += nBound;
@@ -76,7 +85,7 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 		boundNodeIndex -= 1;
 		connectNodeIndex -= 1;
 		boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
-		nodeTopoVec[boundNodeIndex].SetType(NodeType::outlet);
+		nodeType[boundNodeIndex] = NodeType::outlet;
 	}
 	fin >> nBound;
 	m_BoundNodeNum += nBound;
@@ -86,7 +95,7 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 		boundNodeIndex -= 1;
 		connectNodeIndex -= 1;
 		boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
-		nodeTopoVec[boundNodeIndex].SetType(NodeType::outlet);
+		nodeType[boundNodeIndex] = NodeType::outlet;
 	}
 	fin >> nBound;
 	m_BoundNodeNum += nBound;
@@ -96,7 +105,7 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 		boundNodeIndex -= 1;
 		connectNodeIndex -= 1;
 		boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
-		nodeTopoVec[boundNodeIndex].SetType(NodeType::outlet);
+		nodeType[boundNodeIndex] = NodeType::outlet;
 	}
 	fin >> nBound;
 	m_BoundNodeNum += nBound;
@@ -106,7 +115,7 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 		boundNodeIndex -= 1;
 		connectNodeIndex -= 1;
 		boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
-		nodeTopoVec[boundNodeIndex].SetType(NodeType::outlet);
+		nodeType[boundNodeIndex] = NodeType::outlet;
 	}
 	fin >> nBound;
 	m_BoundNodeNum += nBound;
@@ -118,7 +127,7 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 		boundNodeIndex -= 1;
 		connectNodeIndex -= 1;
 		boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
-		nodeTopoVec[boundNodeIndex].SetType(NodeType::outlet);
+		nodeType[boundNodeIndex] = NodeType::outlet;
 	}
 	fin >> nBound;
 	m_BoundNodeNum += nBound;
@@ -127,9 +136,9 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 		fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
 		boundNodeIndex -= 1;
 		connectNodeIndex -= 1;
-		DVector3D wallNorm = nodeTopoVec[connectNodeIndex].GetCoordinate() - nodeTopoVec[boundNodeIndex].GetCoordinate();
+		DVector3D wallNorm = nodeCoord[connectNodeIndex] - nodeCoord[boundNodeIndex];
 		boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,connectNodeIndex,0,wallNorm });
-		nodeTopoVec[boundNodeIndex].SetType(NodeType::slipWall);
+		nodeType[boundNodeIndex] = NodeType::slipWall;
 	}
 
 	//for (int iNode = 0; iNode < grid->GetTotalNodeNum(); iNode++)
@@ -147,14 +156,15 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 
 	fin.close();
 	fin.open("cell.dat");
-	auto& cellTopoVec = grid->GetCellTopoInfo();
+	auto& cellTopo = grid->GetCellTopo();
 	int cellNum;
 	fin >> cellNum;
-	cellTopoVec.resize(cellNum);
+	auto& cell_node = cellTopo->GetNodeIndex();
+	cell_node.resize(cellNum);
 	IArray cellNeiborNodeIndex(8);
 	for (int iCell = 0; iCell < cellNum; iCell++)
 	{
-		fin >> cellNeiborNodeIndex[0] >> cellNeiborNodeIndex[1] >> cellNeiborNodeIndex[2] >> cellNeiborNodeIndex[3] 
+		fin >> cellNeiborNodeIndex[0] >> cellNeiborNodeIndex[1] >> cellNeiborNodeIndex[2] >> cellNeiborNodeIndex[3]
 			>> cellNeiborNodeIndex[4] >> cellNeiborNodeIndex[5] >> cellNeiborNodeIndex[6] >> cellNeiborNodeIndex[7];
 		cellNeiborNodeIndex[0] -= 1;
 		cellNeiborNodeIndex[1] -= 1;
@@ -164,7 +174,7 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 		cellNeiborNodeIndex[5] -= 1;
 		cellNeiborNodeIndex[6] -= 1;
 		cellNeiborNodeIndex[7] -= 1;
-		cellTopoVec[iCell].SetNode(cellNeiborNodeIndex);
+		cell_node[iCell] = cellNeiborNodeIndex;
 	}
 
 	fin.close();

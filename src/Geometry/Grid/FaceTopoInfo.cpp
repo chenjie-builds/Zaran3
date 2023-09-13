@@ -1,42 +1,25 @@
 #include "FaceTopoInfo.h"
-using namespace zaran;
-FaceTopoInfo::FaceTopoInfo()
+namespace zaran
 {
+	FaceTopoInfo::FaceTopoInfo()
+	{
 
+	}
+
+	FaceTopoInfo::~FaceTopoInfo()
+	{
+
+	}
+	void FaceTopoInfo::SetNodeIndex(Array<IArray>& node_index)
+	{
+		m_node_index = node_index;
+	}
+	void FaceTopoInfo::SetLeftCell(IArray& left_cell_index)
+	{
+		m_left_cell_index = left_cell_index;
+	}
+	void FaceTopoInfo::SetRightCell(IArray& right_cell_index)
+	{
+		m_right_cell_index = right_cell_index;
+	}
 }
-
-FaceTopoInfo::~FaceTopoInfo()
-{
-
-}
-
-void FaceTopoInfo::SetFace2Node(IArray& face2node)
-{
-	face2node_ = face2node;
-}
-
-void FaceTopoInfo::SetLeftCell(int& leftCell)
-{
-	leftCell_ = leftCell;
-}
-
-void FaceTopoInfo::SetRightCell(int& rightCell)
-{
-	rightCell_ = rightCell;
-}
-
-IArray& FaceTopoInfo::GetFace2Node()
-{
-	return face2node_;
-}
-
-int& FaceTopoInfo::GetLeftCell()
-{
-	return leftCell_;
-}
-
-int& FaceTopoInfo::GetRightCell()
-{
-	return rightCell_;
-}
-

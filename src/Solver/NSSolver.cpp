@@ -247,26 +247,26 @@ double NSSolver::ComputeMaxResidual()
 void NSSolver::ComputeCoordTrans()
 {
 	GridPtr grid = GetGrid();
-	NodeTopoInfoVec& nodeTopoVec = grid->GetNodeTopoInfo();
+	auto& nodeTopo = grid->GetNodeTopo();
+	auto& nodeCoord = nodeTopo->GetCoordinate();
+	auto& nodeType = nodeTopo->GetType();
+	auto& tempI = nodeTopo->GetTemplateI();
+	auto& tempJ = nodeTopo->GetTemplateJ();
+	auto& tempK = nodeTopo->GetTemplateK();
 	auto& coordTransCoef = m_CoordTrans;
 	int nInnerNode = grid->GetInnerNodeNum();
 	CoordTrans coordTrans;
 	DVector3D xRight, xLeft, yRight, yLeft, zRight, zLeft;
 	for (size_t iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
-		auto& currentNode = nodeTopoVec[iNode];
-		if (currentNode.GetType() != NodeType::inner)
+		if (nodeType[iNode] != NodeType::inner)
 			continue;
-		auto& tempI = currentNode.GetNeighborTemplateI();
-		auto& tempJ = currentNode.GetNeighborTemplateJ();
-		auto& tempK = currentNode.GetNeighborTemplateK();
-		auto& coord = currentNode.GetCoordinate();
-		xLeft = nodeTopoVec[tempI[0]].GetCoordinate();
-		xRight = nodeTopoVec[tempI[2]].GetCoordinate();
-		yLeft = nodeTopoVec[tempJ[0]].GetCoordinate();
-		yRight = nodeTopoVec[tempJ[2]].GetCoordinate();
-		zLeft = nodeTopoVec[tempK[0]].GetCoordinate();
-		zRight = nodeTopoVec[tempK[2]].GetCoordinate();
+		xLeft = nodeCoord[tempI[iNode][0]];
+		xRight = nodeCoord[tempI[iNode][2]];
+		yLeft = nodeCoord[tempJ[iNode][0]];
+		yRight = nodeCoord[tempJ[iNode][2]];
+		zLeft = nodeCoord[tempK[iNode][0]];
+		zRight = nodeCoord[tempK[iNode][2]];
 
 
 
@@ -274,17 +274,19 @@ void NSSolver::ComputeCoordTrans()
 		coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, yLeft, zRight, zLeft);
 		if (coordTrans.J() < 0)
 		{
-			currentNode.SetNeighborTemplateK(IArray({ tempK[2], tempK[1], tempK[0] }));
+			tempK[iNode] = IArray{ tempK[iNode][2], tempK[iNode][1], tempK[iNode][0] };
 			coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, yLeft, zLeft, zRight);
 		}
 		if (abs(coordTrans.J()) < SMALL_NUMBER || isnan(abs(coordTrans.J())) || isinf((coordTrans.J())))
 		{
-			currentNode.SetNeighborTemplateJ(IArray({ tempJ[0], tempK[1], tempK[0] }));
-			currentNode.SetNeighborTemplateK(IArray({ tempJ[2], tempK[1], tempK[2] }));
+			IArray currentTempJ = { tempJ[iNode][0], tempJ[iNode][1], tempK[iNode][0] };
+			IArray currentTempK = { tempJ[iNode][2], tempK[iNode][1], tempK[iNode][2] };
+			tempJ[iNode] = currentTempJ;
+			tempK[iNode] = currentTempK;
 			coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, zRight, yLeft, zLeft);
 			if (coordTrans.J() < 0)
 			{
-				currentNode.SetNeighborTemplateK(IArray({ tempK[2], tempK[1], tempK[0] }));
+				tempK[iNode] = IArray{ tempK[iNode][2], tempK[iNode][1], tempK[iNode][0] };
 				coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, yLeft, zLeft, zRight);
 			}
 		}
@@ -293,13 +295,13 @@ void NSSolver::ComputeCoordTrans()
 //if (Abs(xRight.x() - xLeft.x()) < EPSILON_NUMBER || Abs(yRight.y() - yLeft.y()) < EPSILON_NUMBER || Abs(zRight.z() - zLeft.z()) < EPSILON_NUMBER)
 		if (coordTrans.J() > 1e15)
 		{
-			ZaranLog::warn("Node {}: {},{},{}", iNode, currentNode.GetCoordinate().x(), currentNode.GetCoordinate().y(), currentNode.GetCoordinate().z());
-			ZaranLog::info("xLeft index={}: {},{},{}", tempI[0], xLeft.x(), xLeft.y(), xLeft.z());
-			ZaranLog::info("xRight index={}: {},{},{}", tempI[2], xRight.x(), xRight.y(), xRight.z());
-			ZaranLog::info("yLeft index={}: {},{},{}", tempJ[0], yLeft.x(), yLeft.y(), yLeft.z());
-			ZaranLog::info("yRight index={}: {},{},{}", tempJ[2], yRight.x(), yRight.y(), yRight.z());
-			ZaranLog::info("zLeft index={}: {},{},{}", tempK[0], zLeft.x(), zLeft.y(), zLeft.z());
-			ZaranLog::info("zRight index={}: {},{},{}", tempK[2], zRight.x(), zRight.y(), zRight.z());
+			ZaranLog::warn("Node {}: {},{},{}", iNode, nodeCoord[iNode].x(), nodeCoord[iNode].y(), nodeCoord[iNode].z());
+			ZaranLog::info("xLeft index={}: {},{},{}", tempI[iNode][0], xLeft.x(), xLeft.y(), xLeft.z());
+			ZaranLog::info("xRight index={}: {},{},{}", tempI[iNode][2], xRight.x(), xRight.y(), xRight.z());
+			ZaranLog::info("yLeft index={}: {},{},{}", tempJ[iNode][0], yLeft.x(), yLeft.y(), yLeft.z());
+			ZaranLog::info("yRight index={}: {},{},{}", tempJ[iNode][2], yRight.x(), yRight.y(), yRight.z());
+			ZaranLog::info("zLeft index={}: {},{},{}", tempK[iNode][0], zLeft.x(), zLeft.y(), zLeft.z());
+			ZaranLog::info("zRight index={}: {},{},{}", tempK[iNode][2], zRight.x(), zRight.y(), zRight.z());
 		}
 
 		(*coordTransCoef[0])[iNode] = coordTrans.GetX()[0];
@@ -416,7 +418,9 @@ void NSSolver::ComputePrimtiveGradient()
 void NSSolver::ComputeGradientWLS()
 {
 	GridPtr grid = GetGrid();
-	NodeTopoInfoVec& nodeTopo = grid->GetNodeTopoInfo();
+	auto& nodeTopo = grid->GetNodeTopo();
+	auto& nodeCoord = nodeTopo->GetCoordinate();
+	auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
 	auto& prim = m_Primtive;
 	auto& limiterCoef = m_LimiterCoef;
 	auto& primGradX = m_PrimGradX;
@@ -431,13 +435,12 @@ void NSSolver::ComputeGradientWLS()
 	double deltaX, deltaY, deltaZ;
 	for (int iNode = 0; iNode < nInnerNode; ++iNode)
 	{
-		auto& currentNode = nodeTopo[iNode];
-		auto& currentCoord = currentNode.GetCoordinate();
-		auto& neighborNodeVec = currentNode.GetNeighborCloud();
+		auto& currentCoord = nodeCoord[iNode];
+		auto& neighborNodeVec = nodeNeighbor[iNode];
 		Matrix deltaCoord(3, neighborNodeVec.size());
 		for (size_t iNeib = 0; iNeib < neighborNodeVec.size(); ++iNeib)
 		{
-			auto& neighborCoord = nodeTopo[neighborNodeVec[iNeib]].GetCoordinate();
+			auto& neighborCoord = nodeCoord[neighborNodeVec[iNeib]];
 			deltaCoord.col(iNeib) = neighborCoord - currentCoord;
 		}
 		for (size_t iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -475,7 +478,8 @@ void NSSolver::ComputeGradientWLS()
 void NSSolver::ComputeTimeStepLocal()
 {
 	GridPtr grid = GetGrid();
-	NodeTopoInfoVec& nodeTopo = grid->GetNodeTopoInfo();
+	auto& nodeTopo = grid->GetNodeTopo();
+	auto& nodeType = nodeTopo->GetType();
 	FlowSolverParaPtr para = GetPara();
 	auto& rho = *m_Primtive[0];
 	auto& u = *m_Primtive[1];
@@ -490,9 +494,8 @@ void NSSolver::ComputeTimeStepLocal()
 	for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
 
-		auto& currentNode = nodeTopo[iNode];
 		double gamma = 1.4;
-		if (currentNode.GetType() != NodeType::inner)
+		if (nodeType[iNode] != NodeType::inner)
 			continue;
 		double c = sqrt(gamma * p[iNode] / rho[iNode]);
 		double normXi = sqrt((*coordTrans[16])[iNode] * (*coordTrans[16])[iNode] + (*coordTrans[17])[iNode] * (*coordTrans[17])[iNode] + (*coordTrans[18])[iNode] * (*coordTrans[19])[iNode]);
@@ -519,7 +522,7 @@ void NSSolver::RungeKutta()
 	auto& dt = *m_TimeStep;
 	auto& res = m_Residual;
 	auto& coordTrans = m_CoordTrans;
-	auto& nodeTopo = grid->GetNodeTopoInfo();
+	auto& nodeTopo = grid->GetNodeTopo();
 	int nInnerNode = grid->GetInnerNodeNum();
 	int nBoundNode = grid->GetBoundNodeNum();
 	for (int iStage = 0; iStage < rkStage; ++iStage)
@@ -605,7 +608,12 @@ void NSSolver::Conservative2Primitive(double& cons0, double& cons1, double& cons
 void NSSolver::InviscidFlux()
 {
 	GridPtr grid = GetGrid();
-	NodeTopoInfoVec& nodeTopoVec = grid->GetNodeTopoInfo();
+	auto& nodeTopo = grid->GetNodeTopo();
+	auto& nodeType = nodeTopo->GetType();
+	auto& templateI = nodeTopo->GetTemplateI();
+	auto& templateJ = nodeTopo->GetTemplateJ();
+	auto& templateK = nodeTopo->GetTemplateK();
+	auto& nodeCoord = nodeTopo->GetCoordinate();
 	auto& prim = m_Primtive;
 	auto& cons = m_Conservative;
 	auto& primGradX = m_PrimGradX;
@@ -622,8 +630,7 @@ void NSSolver::InviscidFlux()
 	fluxPara->gammaL = fluxPara->gammaR = 1.4;
 	for (size_t iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
-		auto& currentNode = nodeTopoVec[iNode];
-		if (currentNode.GetType() != NodeType::inner)
+		if (nodeType[iNode] != NodeType::inner)
 			continue;
 		auto& jacobi = (*coordTrans[32])[iNode];
 		// i direction
@@ -631,8 +638,8 @@ void NSSolver::InviscidFlux()
 		fluxPara->norm(1) = (*coordTrans[17])[iNode];
 		fluxPara->norm(2) = (*coordTrans[18])[iNode];
 		fluxPara->nt = (*coordTrans[19])[iNode];
-		auto& tempI = currentNode.GetNeighborTemplateI();
-		r = nodeTopoVec[tempI[2]].GetCoordinate() - currentNode.GetCoordinate();
+		auto& tempI = templateI[iNode];
+		r = nodeCoord[tempI[2]] - nodeCoord[iNode];
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
 			grad(0) = (*primGradX[iVal])[iNode];
@@ -651,7 +658,7 @@ void NSSolver::InviscidFlux()
 		riemannSolver_->Solver(fluxPara);
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			(*res[iVal])[iNode] += fluxPara->flux[iVal] / jacobi;
-		r = nodeTopoVec[tempI[0]].GetCoordinate() - currentNode.GetCoordinate();
+		r = nodeCoord[tempI[0]] - nodeCoord[iNode];
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
 			grad(0) = (*primGradX[iVal])[tempI[0]];
@@ -676,8 +683,8 @@ void NSSolver::InviscidFlux()
 		fluxPara->norm(1) = (*coordTrans[21])[iNode];
 		fluxPara->norm(2) = (*coordTrans[22])[iNode];
 		fluxPara->nt = (*coordTrans[23])[iNode];
-		auto& tempJ = currentNode.GetNeighborTemplateJ();
-		r = nodeTopoVec[tempJ[2]].GetCoordinate() - currentNode.GetCoordinate();
+		auto& tempJ = templateJ[iNode];
+		r = nodeCoord[tempJ[2]] - nodeCoord[iNode];
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
 			grad(0) = (*primGradX[iVal])[iNode];
@@ -695,7 +702,7 @@ void NSSolver::InviscidFlux()
 		riemannSolver_->Solver(fluxPara);
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			(*res[iVal])[iNode] += fluxPara->flux[iVal] / jacobi;
-		r = nodeTopoVec[tempJ[0]].GetCoordinate() - currentNode.GetCoordinate();
+		r = nodeCoord[tempJ[0]] - nodeCoord[iNode];
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
 			grad(0) = (*primGradX[iVal])[tempJ[0]];
@@ -720,8 +727,8 @@ void NSSolver::InviscidFlux()
 		fluxPara->norm(1) = (*coordTrans[25])[iNode];
 		fluxPara->norm(2) = (*coordTrans[26])[iNode];
 		fluxPara->nt = (*coordTrans[27])[iNode];
-		auto& tempK = currentNode.GetNeighborTemplateK();
-		r = nodeTopoVec[tempK[2]].GetCoordinate() - currentNode.GetCoordinate();
+		auto& tempK = templateK[iNode];
+		r = nodeCoord[tempK[2]] - nodeCoord[iNode];
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
 			grad(0) = (*primGradX[iVal])[iNode];
@@ -739,7 +746,7 @@ void NSSolver::InviscidFlux()
 		riemannSolver_->Solver(fluxPara);
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			(*res[iVal])[iNode] += fluxPara->flux[iVal] / jacobi;
-		r = nodeTopoVec[tempK[0]].GetCoordinate() - currentNode.GetCoordinate();
+		r = nodeCoord[tempK[0]] - nodeCoord[iNode];
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
 			grad(0) = (*primGradX[iVal])[tempK[0]];
@@ -886,7 +893,9 @@ void NSSolver::ComputeWallBC(Boundary& bound)
 void NSSolver::ComputeLimiterCoef()
 {
 	GridPtr grid = GetGrid();
-	NodeTopoInfoVec& nodeTopoVec = grid->GetNodeTopoInfo();
+	auto& nodeTopo = grid->GetNodeTopo();
+	auto& nodeCoord = nodeTopo->GetCoordinate();
+	auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
 	auto& prim = m_Primtive;
 	auto& limiterCoef = m_LimiterCoef;
 	auto& primGradX = m_PrimGradX;
@@ -896,7 +905,7 @@ void NSSolver::ComputeLimiterCoef()
 	double maxVal, minVal;
 	for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 	{
-		auto& neighborNode = nodeTopoVec[iNode].GetNeighborCloud();
+		auto& neighborNode = nodeNeighbor[iNode];
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
 			maxVal = (*prim[iVal])[iNode];
@@ -915,7 +924,7 @@ void NSSolver::ComputeLimiterCoef()
 			(*limiterCoef[iVal])[iNode] = LARGE_NUMBER;
 			for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
 			{
-				auto current2Neighbor = nodeTopoVec[neighborNode[iNeighbor]].GetCoordinate() - nodeTopoVec[iNode].GetCoordinate();
+				auto current2Neighbor = nodeCoord[neighborNode[iNeighbor]] - nodeCoord[iNode];
 				double delta2 = 0.5 * (current2Neighbor(0) * gradx + current2Neighbor(1) * grady + current2Neighbor(2) * gradz);
 				if (delta2 > 0)
 				{

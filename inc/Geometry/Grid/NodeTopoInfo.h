@@ -35,56 +35,55 @@ namespace zaran
 		NodeTopoInfo();
 		virtual~NodeTopoInfo();
 		// 设置节点坐标
-		void SetCoordinate(const double& x, const double& y, const double& z = 0);
+		void SetCoordinate(Array<DVector3D>& coordinate) { m_coordinate = coordinate; }
 		// 设置节点类型
-		void SetType(const NodeType& type);
-		// 设置节点标记
-		void SetTag(const int& tag);
+		void SetType(Array<NodeType>& type) { m_type = type; }
 		// 设置I方向的节点模板
-		void SetNeighborTemplateI(IArray& neighborTemplateI);
+		void SetTemplateI(Array<IArray>& template_i) { m_template_i = template_i; }
 		// 设置J方向的节点模板
-		void SetNeighborTemplateJ(IArray& neighborTemplateJ);
+		void SetTemplateJ(Array<IArray>& template_j) { m_template_j = template_j; }
 		// 设置K方向的节点模板
-		void SetNeighborTemplateK(IArray& neighborTemplateK);
+		void SetTemplateK(Array<IArray>& template_k) { m_template_k = template_k; }
 		// 设置邻居点云
-		void SetNeighborCloud(const IArray& neighborCloud);
+		void SetNeighborCloud(Array<IArray>& neighborNodeIndex) { m_neighbor_node_index = neighborNodeIndex; }
 	public:
 		// 返回节点类型
-		const NodeType& GetType()const;
-		// 返回节点标记
-		const int& GetTag()const;
+		Array<NodeType>& GetType() { return m_type; }
+		NodeType& GetType(const int& index) { return m_type[index]; }
 		// 返回I方向的节点模板
-		IArray& GetNeighborTemplateI();
+		Array<IArray>& GetTemplateI() { return m_template_i; }
+		IArray& GetTemplateI(const int& index) { return m_template_i[index]; }
 		// 返回J方向的节点模板
-		IArray& GetNeighborTemplateJ();
+		Array<IArray>& GetTemplateJ() { return m_template_j; }
+		IArray& GetTemplateJ(const int& index) { return m_template_j[index]; }
 		// 返回K方向的节点模板
-		IArray& GetNeighborTemplateK();
+		Array<IArray>& GetTemplateK() { return m_template_k; }
+		IArray& GetTemplateK(const int& index) { return m_template_k[index]; }
 		// 返回节点坐标
-		DVector3D& GetCoordinate();
+		Array<DVector3D>& GetCoordinate() { return m_coordinate; }
+		DVector3D& GetCoordinate(const int& index) { return m_coordinate[index]; }
 		// 返回邻居点云
-		IArray& GetNeighborCloud();
+		Array<IArray>& GetNeighborCloud() { return m_neighbor_node_index; }
+		IArray& GetNeighborCloud(const int& index) { return m_neighbor_node_index[index]; }
 	private:
 		//节点坐标
-		DVector3D coordinate_;
+		Array<DVector3D> m_coordinate;
 		//节点类型
-		NodeType type_;
-		// 节点标记，决定是否更新
-		//=1 更新, =0 不更新
-		int tag_;
+		Array<NodeType> m_type;
 		//邻居节点模板，用于计算,分别为i,j,k三个方向的模板
 		//如一阶迎风记录如下
 		//i-1,i,i+1
 		//其中i,j,k均为自身
-		IArray neighborTemplateI_;
-		IArray neighborTemplateJ_;
-		IArray neighborTemplateK_;
+		Array<IArray> m_template_i;
+		Array<IArray> m_template_j;
+		Array<IArray> m_template_k;
 		//邻居节点点云
 		//对于常规节点，为其网格线连接的邻居
 		//用于计算梯度等
-		IArray neighborCloud_;
+		Array<IArray> m_neighbor_node_index;
 		//对应的面元编号
-		IArray face_;
+		Array<IArray> m_face_index;
 		//对应的单元编号
-		IArray cell_;
+		Array<IArray> m_cell_index;
 	};
 }

@@ -13,8 +13,10 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 	int nInnerNum = grid->GetInnerNodeNum();
 	int nBoundNum = grid->GetBoundNodeNum();
 	int nTotalNum = grid->GetTotalNodeNum();
-	auto& nodeTopo = grid->GetNodeTopoInfo();
-	auto& cellTopo = grid->GetCellTopoInfo();
+	auto& nodeTopo = grid->GetNodeTopo();
+	auto&nodeCoord=nodeTopo->GetCoordinate();
+	auto& cellTopo = grid->GetCellTopo();
+	auto&cell2node=cellTopo->GetNodeIndex();
 	auto& data = solver->GetFieldData();
 	auto& rho = data->GetData("rho");
 	auto& u = data->GetData("u");
@@ -26,23 +28,22 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 	auto& xi_z = data->GetData("coordTransXiZ");
 	auto& jacobi = data->GetData("coordTransJ");
 	fout << "ZONE T= grid_" << grid->GetName() << std::endl;
-	fout << "N=" << grid->GetTotalNodeNum() << ", E= " << cellTopo.size() << ", F=FEPOINT, ET=Brick" << std::endl;
+	fout << "N=" << grid->GetTotalNodeNum() << ", E= " << cell2node.size() << ", F=FEPOINT, ET=Brick" << std::endl;
 	fout << "solutiontime= " << GlobalData::GetDouble("globalTime") << std::endl;
 	for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
-		auto& currentCoord = nodeTopo[iNode].GetCoordinate();
+		auto& currentCoord = nodeCoord[iNode];
 		fout << currentCoord(0) << "  " << currentCoord(1) << "  " << currentCoord(2) << "  ";
 		fout << rho[iNode] << "  " << u[iNode] << "  " << v[iNode] << "  " << w[iNode] << "  " << p[iNode] << "   ";
 		fout << xi_x[iNode] << "  " << xi_y[iNode] << "  " << xi_z[iNode] << "  " << jacobi[iNode];
 		fout << std::endl;
 	}
-	int nCell = cellTopo.size();
+	int nCell = cell2node.size();
 	for (int iCell = 0; iCell < nCell; ++iCell)
 	{
-		auto& cell2node = cellTopo[iCell].GetNode();
-		for (int iNode = 0; iNode < cell2node.size(); ++iNode)
+		for (int iNode = 0; iNode < cell2node[iCell].size(); ++iNode)
 		{
-			fout << cell2node[iNode] + 1 << "  ";
+			fout << cell2node[iCell][iNode] + 1 << "  ";
 		}
 		fout << std::endl;
 	}
@@ -138,8 +139,8 @@ void zaran::Visual::WriteTecplotPoint(Ptr<FieldSolver>& solver)
 	std::ofstream fout(filename);
 	fout << "variables=x,y,z,rho,u,v,w,p\n";
 	auto& grid = solver->GetGrid();
-	auto& nodeTopo = grid->GetNodeTopoInfo();
-	auto& cellTopo = grid->GetCellTopoInfo();
+	auto& nodeTopo = grid->GetNodeTopo();
+	auto&nodeCoord=nodeTopo->GetCoordinate();
 	auto& data = solver->GetFieldData();
 	auto& rho = data->GetData("rho");
 	auto& u = data->GetData("u");
@@ -149,7 +150,7 @@ void zaran::Visual::WriteTecplotPoint(Ptr<FieldSolver>& solver)
 	//fout << "solutiontime= " << GlobalData::GetDouble("globalTime") << std::endl;
 	for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
-		auto& currentCoord = nodeTopo[iNode].GetCoordinate();
+		auto& currentCoord = nodeCoord[iNode];
 		fout << currentCoord(0) << "  " << currentCoord(1) << "  " << currentCoord(2) << "  ";
 		fout << rho[iNode] << "  " << u[iNode] << "  " << v[iNode] << "  " << w[iNode] << "  " << p[iNode];
 		fout << std::endl;

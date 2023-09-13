@@ -39,7 +39,7 @@ void Controller::SaveWallNode()
 	for (size_t iGrid = 0; iGrid < gridList_->GetGridNumber(); iGrid++)
 	{
 		auto& currentGrid = gridList_->GetGrid(iGrid);
-		auto& nodeTopo = currentGrid->GetNodeTopoInfo();
+		auto& nodeTopo = currentGrid->GetNodeTopo();
 		auto& boundNode = currentGrid->GetBoundaryMap();
 	}
 	fout.close();

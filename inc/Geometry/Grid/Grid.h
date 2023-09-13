@@ -23,11 +23,8 @@
 // grid
 namespace zaran
 {
-	using NodeTopoInfoVec = vector<NodeTopoInfo>;
-	using CellTopoInfoVec = vector<CellTopoInfo>;
-	using FaceTopoInfoVec = vector<FaceTopoInfo>;
-	using BoundaryMapPtr = shared_ptr<BoundaryMap>;
-	using InterNodeInfoPtr = shared_ptr<InterNodeInfo>;
+	using BoundaryMapPtr = Ptr<BoundaryMap>;
+	using InterNodeInfoPtr = Ptr<InterNodeInfo>;
 	class Grid : public GridBase
 	{
 	public:
@@ -35,12 +32,12 @@ namespace zaran
 		Grid(const Grid& grid);
 	public:
 		void SetLevel(const int& level);
-		void SetInnerNodeNumber(const int& innerNodeNum);
-		void SetBoundNodeNumber(const int& boundNodeNum);
-		void SetTotalNodeNumber(const int& totalNodeNum);
-		void SetNodeTopo(NodeTopoInfoVec& nodeTopo);
-		void SetFaceTopo(FaceTopoInfoVec& faceTopo);
-		void SetCellTopoInfo(CellTopoInfoVec& cellTopo);
+		void SetInnerNodeNum(const int& innerNodeNum);
+		void SetBoundNodeNum(const int& boundNodeNum);
+		void SetTotalNodeNum(const int& totalNodeNum);
+		void SetNodeTopo(NodeTopoInfo& nodeTopo);
+		void SetFaceTopo(FaceTopoInfo& faceTopo);
+		void SetCellTopo(CellTopoInfo& cellTopo);
 		void SetInterNodeInfo(shared_ptr<InterNodeInfo> interNodeInfo);
 		void SetBoundaryMap(shared_ptr<BoundaryMap> boundaryMap);
 	public:
@@ -48,29 +45,29 @@ namespace zaran
 		const int& GetTotalNodeNum()const;
 		const int& GetInnerNodeNum()const;
 		const int& GetBoundNodeNum()const;
-		CellTopoInfoVec& GetCellTopoInfo();
-		FaceTopoInfoVec& GetFaceTopoInfo();
-		NodeTopoInfoVec& GetNodeTopoInfo();
-		InterNodeInfoPtr& GetInterNodeInfo();
+		Ptr<CellTopoInfo>& GetCellTopo();
+		Ptr<FaceTopoInfo>& GetFaceTopo();
+		Ptr<NodeTopoInfo>& GetNodeTopo();
+		InterNodeInfoPtr& GetInterNode();
 		BoundaryMapPtr& GetBoundaryMap();
 	private:
 		/// 网格的级别
-		int level_;
+		int m_level;
 		/// 内部节点，正常计算的点
-		int nInnerNode_;
+		int m_num_inner_node;
 		/// 边界节点数目
-		int nBoundNode_;
+		int m_num_bound_node;
 		/// 节点总数
-		int nTotalNode_;
+		int m_num_total_node;
 		// 节点拓扑信息
-		NodeTopoInfoVec nodeTopo_;
+		Ptr<NodeTopoInfo> m_node_topo;
 		// 单元拓扑信息
-		CellTopoInfoVec cellTopo_;
+		Ptr<CellTopoInfo> m_cell_topo;
 		// 面元拓扑信息
-		FaceTopoInfoVec faceTopo_;
+		Ptr<FaceTopoInfo> m_face_topo;
 		// 插值节点信息
-		InterNodeInfoPtr  interNodeInfo_;
+		InterNodeInfoPtr  m_inter_node_info;
 		// 边界信息
-		BoundaryMapPtr boundaryMap_;
+		BoundaryMapPtr m_bound_map;
 	};
 }

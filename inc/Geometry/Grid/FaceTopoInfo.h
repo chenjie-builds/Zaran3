@@ -18,15 +18,15 @@ namespace zaran
 	public:
 		FaceTopoInfo();
 		~FaceTopoInfo();
-		void SetFace2Node(IArray& face2node);
-		void SetLeftCell(int& leftCell);
-		void SetRightCell(int& rightCell);
-		IArray& GetFace2Node();
-		int& GetLeftCell();
-		int& GetRightCell();
+		void SetNodeIndex(Array<IArray>& node_index);
+		void SetLeftCell(IArray& left_cell_index);
+		void SetRightCell(IArray& right_cell_index);
+		Array<IArray>& GetFace2Node() { return m_node_index; }
+		IArray& GetLeftCellIndex() { return m_left_cell_index; }
+		IArray& GetRightCellIndex() { return m_right_cell_index; }
 	private:
-		IArray face2node_;
-		int leftCell_;
-		int rightCell_;
+		Array<IArray> m_node_index;
+		IArray m_left_cell_index;
+		IArray m_right_cell_index;
 	};
 }

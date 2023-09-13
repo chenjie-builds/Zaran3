@@ -43,7 +43,8 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 	testGrid->SetLevel(0);
 	testGrid->SetName("noname");
 	testGrid->SetType(GridType::NOTSET);
-	auto& node = testGrid->GetNodeTopoInfo();
+	auto& nodeTopo = testGrid->GetNodeTopo();
+	auto& nodeCoord = nodeTopo->GetCoordinate();
 	int xNodeNum = 31;
 	int yNodeNum = 31;
 	int zNodeNum = 31;
@@ -59,7 +60,7 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 	double dz = (zMax - zMin) / (zNodeNum - 1);
 	int i, j, k;
 	double x, y, z;
-	node.resize((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
+	nodeCoord.resize((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
 	//生成结构网格ijk索引对应的节点编号
 	Array<Array<IArray>> structNodeIndex;
 	structNodeIndex.resize(xNodeNum + 2);
@@ -118,7 +119,14 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 			}
 		}
 	}
-	IArray nodeTempI(3), nodeTempJ(3), nodeTempK(3);
+	auto& nodeType = nodeTopo->GetType();
+	nodeType.resize((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
+	auto& tempI = nodeTopo->GetTemplateI();
+	auto& tempJ = nodeTopo->GetTemplateJ();
+	auto& tempK = nodeTopo->GetTemplateK();
+	tempI.resize((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
+	tempJ.resize((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
+	tempK.resize((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
 	for (k = 0; k < zNodeNum + 2; ++k)
 	{
 		z = k * dz + zMin - dz;
@@ -129,28 +137,23 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 			{
 				int iNode = structNodeIndex[i][j][k];
 				x = i * dx + xMin - dx;
-				auto& currentNode = node[iNode];
-				currentNode.SetCoordinate(x, y, z);
-				currentNode.SetTag(1);
+				nodeCoord[iNode] = { x,y,z };
 				if (i == 0 || j == 0 || k == 0 || i == xNodeNum + 1 || j == yNodeNum + 1 || k == zNodeNum + 1)
 				{
-					currentNode.SetType(NodeType::ghost);
+					nodeType[iNode] = NodeType::ghost;
 					continue;
 				}
 				if (i == 1 || j == 1 || k == 1 || i == xNodeNum || j == yNodeNum || k == zNodeNum)
 				{
-					currentNode.SetType(NodeType::inlet);
+					nodeType[iNode] = NodeType::inlet;
 				}
-				nodeTempI = { structNodeIndex[i - 1][j][k], structNodeIndex[i][j][k], structNodeIndex[i + 1][j][k] };
-				nodeTempJ = { structNodeIndex[i][j - 1][k], structNodeIndex[i][j][k], structNodeIndex[i][j + 1][k] };
-				nodeTempK = { structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k], structNodeIndex[i][j][k + 1] };
-				currentNode.SetNeighborTemplateI(nodeTempI);
-				currentNode.SetNeighborTemplateJ(nodeTempJ);
-				currentNode.SetNeighborTemplateK(nodeTempK);
+				tempI[iNode] = { structNodeIndex[i - 1][j][k], structNodeIndex[i][j][k], structNodeIndex[i + 1][j][k] };
+				tempI[iNode] = { structNodeIndex[i][j - 1][k], structNodeIndex[i][j][k], structNodeIndex[i][j + 1][k] };
+				tempI[iNode] = { structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k], structNodeIndex[i][j][k + 1] };
 			}
 		}
 	}
-	IArray neiborCloud(6);
+	auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
 	for (k = 0; k < zNodeNum + 2; ++k)
 	{
 		for (j = 0; j < yNodeNum + 2; ++j)
@@ -158,39 +161,38 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 			for (i = 0; i < xNodeNum + 2; ++i)
 			{
 				int iNode = structNodeIndex[i][j][k];
-				auto& currentNode = node[iNode];
 				if (i == 0)
 				{
 					if (j == 0)
 					{
 						if (k == 0)
 						{
-							neiborCloud = { structNodeIndex[i + 1][j][k],  structNodeIndex[i][j + 1][k],  structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i + 1][j][k],  structNodeIndex[i][j + 1][k],  structNodeIndex[i][j][k + 1] };
 						}
 						else if (k == zNodeNum + 1)
 						{
-							neiborCloud = { structNodeIndex[i + 1][j][k],  structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i + 1][j][k],  structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1] };
 						}
 						else
 						{
-							neiborCloud = { structNodeIndex[i + 1][j][k],  structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i + 1][j][k],  structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
 						}
 					}
 					else if (j == yNodeNum + 1)
 					{
 						if (k == 0)
 						{
-							neiborCloud = { structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j][k + 1] };
 
 						}
 						else if (k == zNodeNum + 1)
 						{
-							neiborCloud = { structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k],  structNodeIndex[i][j][k - 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k],  structNodeIndex[i][j][k - 1] };
 
 						}
 						else
 						{
-							neiborCloud = { structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
 
 						}
 					}
@@ -198,17 +200,17 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 					{
 						if (k == 0)
 						{
-							neiborCloud = { structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k],  structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k],  structNodeIndex[i][j][k + 1] };
 
 						}
 						else if (k == zNodeNum + 1)
 						{
-							neiborCloud = { structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1] };
 
 						}
 						else
 						{
-							neiborCloud = { structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
 
 						}
 					}
@@ -219,32 +221,32 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 					{
 						if (k == 0)
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k],  structNodeIndex[i][j + 1][k],  structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k],  structNodeIndex[i][j + 1][k],  structNodeIndex[i][j][k + 1] };
 						}
 						else if (k == zNodeNum + 1)
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k],  structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k],  structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1] };
 						}
 						else
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k],  structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k],  structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
 						}
 					}
 					else if (j == yNodeNum + 1)
 					{
 						if (k == 0)
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k], structNodeIndex[i][j - 1][k],  structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k], structNodeIndex[i][j - 1][k],  structNodeIndex[i][j][k + 1] };
 
 						}
 						else if (k == zNodeNum + 1)
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k], structNodeIndex[i][j - 1][k],  structNodeIndex[i][j][k - 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k], structNodeIndex[i][j - 1][k],  structNodeIndex[i][j][k - 1] };
 
 						}
 						else
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k], structNodeIndex[i][j - 1][k],  structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k], structNodeIndex[i][j - 1][k],  structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
 
 						}
 					}
@@ -252,17 +254,17 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 					{
 						if (k == 0)
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k + 1] };
 
 						}
 						else if (k == zNodeNum + 1)
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1] };
 
 						}
 						else
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
 
 						}
 					}
@@ -273,17 +275,17 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 					{
 						if (k == 0)
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i][j + 1][k],structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i][j + 1][k],structNodeIndex[i][j][k + 1] };
 
 						}
 						else if (k == zNodeNum + 1)
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1] };
 
 						}
 						else
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k],  structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k],  structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
 
 						}
 					}
@@ -291,17 +293,17 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 					{
 						if (k == 0)
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k],   structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k],   structNodeIndex[i][j][k + 1] };
 
 						}
 						else if (k == zNodeNum + 1)
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k],  structNodeIndex[i][j][k - 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k],  structNodeIndex[i][j][k - 1] };
 
 						}
 						else
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k],  structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k],  structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
 
 						}
 					}
@@ -309,34 +311,34 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 					{
 						if (k == 0)
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k],  structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k],  structNodeIndex[i][j][k + 1] };
 
 						}
 						else if (k == zNodeNum + 1)
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1] };
 
 						}
 						else
 						{
-							neiborCloud = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
+							nodeNeighbor[iNode] = { structNodeIndex[i - 1][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i][j - 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k - 1], structNodeIndex[i][j][k + 1] };
 
 						}
 					}
 				}
-				currentNode.SetNeighborCloud(neiborCloud);
 			}
 		}
 	}
-	testGrid->SetInnerNodeNumber((xNodeNum - 2) * (yNodeNum - 2) * (zNodeNum - 2));
-	testGrid->SetTotalNodeNumber((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
-	testGrid->SetBoundNodeNumber(xNodeNum * yNodeNum * zNodeNum - testGrid->GetInnerNodeNum());
+	testGrid->SetInnerNodeNum((xNodeNum - 2) * (yNodeNum - 2) * (zNodeNum - 2));
+	testGrid->SetTotalNodeNum((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
+	testGrid->SetBoundNodeNum(xNodeNum * yNodeNum * zNodeNum - testGrid->GetInnerNodeNum());
 	testGrid->SetInterNodeInfo(std::make_shared<InterNodeInfo>());
 	testGrid->SetBoundaryMap(std::make_shared<BoundaryMap>());
 
-	auto& cell = testGrid->GetCellTopoInfo();
-	cell.resize((xNodeNum - 1) * (yNodeNum - 1) * (zNodeNum - 1));
-	auto& iterCell = cell.begin();
+	auto& cellTopo = testGrid->GetCellTopo();
+	auto& cell2node = cellTopo->GetNodeIndex();
+	cell2node.resize((xNodeNum - 1) * (yNodeNum - 1) * (zNodeNum - 1));
+	auto& iterCell = cell2node.begin();
 	for (k = 1; k < zNodeNum; ++k)
 	{
 		for (j = 1; j < yNodeNum; ++j)
@@ -344,7 +346,7 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 
 			for (i = 1; i < xNodeNum; ++i)
 			{
-				iterCell->SetNode(IArray{ structNodeIndex[i][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i + 1][j + 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k + 1], structNodeIndex[i + 1][j][k + 1], structNodeIndex[i + 1][j + 1][k + 1], structNodeIndex[i][j + 1][k + 1] });
+				*iterCell = (IArray{ structNodeIndex[i][j][k], structNodeIndex[i + 1][j][k], structNodeIndex[i + 1][j + 1][k], structNodeIndex[i][j + 1][k], structNodeIndex[i][j][k + 1], structNodeIndex[i + 1][j][k + 1], structNodeIndex[i + 1][j + 1][k + 1], structNodeIndex[i][j + 1][k + 1] });
 				iterCell++;
 			}
 		}
@@ -367,7 +369,7 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 			bound.SetInnerNodeIndex(innerNodeIndex);
 			ghostNodeIndex = structNodeIndex[i - 1][j][k];
 			bound.SetGhostNodeIndex(ghostNodeIndex);
-			boundNorm = node[ghostNodeIndex].GetCoordinate() - node[nodeIndex].GetCoordinate();
+			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 			bound.SetNorm(boundNorm);
 			boundMap->AddBoundary("inlet", bound);
 
@@ -378,7 +380,7 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 			bound.SetInnerNodeIndex(innerNodeIndex);
 			ghostNodeIndex = structNodeIndex[i + 1][j][k];
 			bound.SetGhostNodeIndex(ghostNodeIndex);
-			boundNorm = node[ghostNodeIndex].GetCoordinate() - node[nodeIndex].GetCoordinate();
+			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 			bound.SetNorm(boundNorm);
 			boundMap->AddBoundary("outlet", bound);
 		}
@@ -397,7 +399,7 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 			bound.SetInnerNodeIndex(innerNodeIndex);
 			ghostNodeIndex = structNodeIndex[i][j - 1][k];
 			bound.SetGhostNodeIndex(ghostNodeIndex);
-			boundNorm = node[ghostNodeIndex].GetCoordinate() - node[nodeIndex].GetCoordinate();
+			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 			bound.SetNorm(boundNorm);
 			boundMap->AddBoundary("wall", bound);
 			j = yNodeNum;
@@ -407,7 +409,7 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 			bound.SetInnerNodeIndex(innerNodeIndex);
 			ghostNodeIndex = structNodeIndex[i][j + 1][k];
 			bound.SetGhostNodeIndex(ghostNodeIndex);
-			boundNorm = node[ghostNodeIndex].GetCoordinate() - node[nodeIndex].GetCoordinate();
+			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 			bound.SetNorm(boundNorm);
 			boundMap->AddBoundary("wall", bound);
 		}
@@ -422,7 +424,7 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 			bound.SetInnerNodeIndex(innerNodeIndex);
 			ghostNodeIndex = structNodeIndex[i][j][k - 1];
 			bound.SetGhostNodeIndex(ghostNodeIndex);
-			boundNorm = node[ghostNodeIndex].GetCoordinate() - node[nodeIndex].GetCoordinate();
+			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 			bound.SetNorm(boundNorm);
 			boundMap->AddBoundary("wall", bound);
 			k = zNodeNum;
@@ -432,7 +434,7 @@ void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
 			bound.SetInnerNodeIndex(innerNodeIndex);
 			ghostNodeIndex = structNodeIndex[i][j][k + 1];
 			bound.SetGhostNodeIndex(ghostNodeIndex);
-			boundNorm = node[ghostNodeIndex].GetCoordinate() - node[nodeIndex].GetCoordinate();
+			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 			bound.SetNorm(boundNorm);
 			boundMap->AddBoundary("wall", bound);
 		}
