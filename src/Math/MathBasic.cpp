@@ -9,11 +9,6 @@ double zaran::DistanceOfTwoPoints(const double* pt1, const double* pt2)
 }
 
 template < typename T >
-T Abs(const T& a)
-{
-	return (a < 0) ? -a : a;
-}
-template < typename T >
 bool zaran::IsErrorData(T data)
 {
 #ifdef WIN32

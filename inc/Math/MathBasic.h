@@ -17,7 +17,7 @@ namespace zaran
 	template < typename T >
 	bool IsErrorData(T data);
 	template < typename T >
-	T Abs(const T& a);
+	T Abs(const T& a) { return (a < 0) ? -a : a; }
 	double GetRand(const double& range_low, const double& range_high);
 	double Southerland(double T, double mu0 = 1.71608e-5, double T0 = 273.16,
 		double Ts = 110.4);

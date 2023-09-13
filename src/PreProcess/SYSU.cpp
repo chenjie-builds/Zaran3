@@ -132,18 +132,18 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 		nodeTopoVec[boundNodeIndex].SetType(NodeType::slipWall);
 	}
 
-	for (int iNode = 0; iNode < grid->GetTotalNodeNum(); iNode++)
-	{
-		auto& currentNode = grid->GetNodeTopoInfo()[iNode];
-		auto& coord = currentNode.GetCoordinate();
-		if (abs(coord[0] + 0.2499) < SMALL_NUMBER)
-		{
-			if (currentNode.GetType() == NodeType::inlet)
-				continue;
-			currentNode.SetType(NodeType::inlet);
-			boundMap->AddBoundary("inlet", Boundary{ iNode ,0,0,DVector3D{} });
-		}
-	}
+	//for (int iNode = 0; iNode < grid->GetTotalNodeNum(); iNode++)
+	//{
+	//	auto& currentNode = grid->GetNodeTopoInfo()[iNode];
+	//	auto& coord = currentNode.GetCoordinate();
+	//	if (abs(coord[0] + 0.61) < SMALL_NUMBER)
+	//	{
+	//		if (currentNode.GetType() == NodeType::inlet)
+	//			continue;
+	//		currentNode.SetType(NodeType::inlet);
+	//		boundMap->AddBoundary("inlet", Boundary{ iNode ,0,0,DVector3D{} });
+	//	}
+	//}
 
 	fin.close();
 	fin.open("cell.dat");

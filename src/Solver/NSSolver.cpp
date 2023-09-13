@@ -232,13 +232,13 @@ void NSSolver::Solve()
 	UpdateField();
 	BoundaryCondition();
 }
-double zaran::NSSolver::ComputeMaxResidual()
+double NSSolver::ComputeMaxResidual()
 {
 	double maxRes = 0;
 	auto& rhoRes = *m_Residual[0];
 	for (int i = 0; i < rhoRes.size(); ++i)
 	{
-		double res = rhoRes[i];
+		double res = abs(rhoRes[i]);
 		if (res > maxRes)
 			maxRes = res;
 	}
@@ -267,6 +267,10 @@ void NSSolver::ComputeCoordTrans()
 		yRight = nodeTopoVec[tempJ[2]].GetCoordinate();
 		zLeft = nodeTopoVec[tempK[0]].GetCoordinate();
 		zRight = nodeTopoVec[tempK[2]].GetCoordinate();
+
+
+
+
 		coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, yLeft, zRight, zLeft);
 		if (coordTrans.J() < 0)
 		{
@@ -284,6 +288,20 @@ void NSSolver::ComputeCoordTrans()
 				coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, yLeft, zLeft, zRight);
 			}
 		}
+
+		// check coordinate
+//if (Abs(xRight.x() - xLeft.x()) < EPSILON_NUMBER || Abs(yRight.y() - yLeft.y()) < EPSILON_NUMBER || Abs(zRight.z() - zLeft.z()) < EPSILON_NUMBER)
+		if (coordTrans.J() > 1e15)
+		{
+			ZaranLog::warn("Node {}: {},{},{}", iNode, currentNode.GetCoordinate().x(), currentNode.GetCoordinate().y(), currentNode.GetCoordinate().z());
+			ZaranLog::info("xLeft index={}: {},{},{}", tempI[0], xLeft.x(), xLeft.y(), xLeft.z());
+			ZaranLog::info("xRight index={}: {},{},{}", tempI[2], xRight.x(), xRight.y(), xRight.z());
+			ZaranLog::info("yLeft index={}: {},{},{}", tempJ[0], yLeft.x(), yLeft.y(), yLeft.z());
+			ZaranLog::info("yRight index={}: {},{},{}", tempJ[2], yRight.x(), yRight.y(), yRight.z());
+			ZaranLog::info("zLeft index={}: {},{},{}", tempK[0], zLeft.x(), zLeft.y(), zLeft.z());
+			ZaranLog::info("zRight index={}: {},{},{}", tempK[2], zRight.x(), zRight.y(), zRight.z());
+		}
+
 		(*coordTransCoef[0])[iNode] = coordTrans.GetX()[0];
 		(*coordTransCoef[1])[iNode] = coordTrans.GetX()[1];
 		(*coordTransCoef[2])[iNode] = coordTrans.GetX()[2];
@@ -471,6 +489,7 @@ void NSSolver::ComputeTimeStepLocal()
 	double minDt = LARGE_NUMBER;
 	for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
+
 		auto& currentNode = nodeTopo[iNode];
 		double gamma = 1.4;
 		if (currentNode.GetType() != NodeType::inner)
