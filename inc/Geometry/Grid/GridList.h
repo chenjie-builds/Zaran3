@@ -21,7 +21,7 @@ namespace zaran
 		GridList(Array<Ptr<Grid>>& gridList);
 		~GridList();
 		//向网格集合中添加一个网格
-		void AddGrid(Ptr<Grid>& grid);
+		void AddGrid(Ptr<Grid> grid);
 		//检查网格的index是否和网格集合中匹配
 		void CheckGrid();
 		//返回一个网格

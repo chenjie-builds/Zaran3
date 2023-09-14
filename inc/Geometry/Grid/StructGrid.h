@@ -18,7 +18,7 @@ namespace zaran
 	{
 	public:
 		StructGrid()
-			:Grid(), ni_(0), nj_(0), nk_(0) 
+			:Grid(), ni_(0), nj_(0), nk_(0)
 		{}
 	public:
 		void SetNi(int ni);
@@ -27,6 +27,12 @@ namespace zaran
 		int GetNi();
 		int GetNj();
 		int GetNk();
+		void SetNodeNum(int ni, int nj, int nk);
+		void GetNodeNum(int& ni, int& nj, int& nk);
+		int GetNodeIndex(int i, int j, int k);
+		void GetNodeIndex(int index, int& i, int& j, int& k);
+		int GetCellIndex(int i, int j, int k);
+		void GetCellIndex(int index, int& i, int& j, int& k);
 	public:
 		void GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd);
 	private:

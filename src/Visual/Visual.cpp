@@ -14,9 +14,9 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 	int nBoundNum = grid->GetBoundNodeNum();
 	int nTotalNum = grid->GetTotalNodeNum();
 	auto& nodeTopo = grid->GetNodeTopo();
-	auto&nodeCoord=nodeTopo->GetCoordinate();
+	auto& nodeCoord = nodeTopo->GetCoordinate();
 	auto& cellTopo = grid->GetCellTopo();
-	auto&cell2node=cellTopo->GetNodeIndex();
+	auto& cell2node = cellTopo->GetNodeIndex();
 	auto& data = solver->GetFieldData();
 	auto& rho = data->GetData("rho");
 	auto& u = data->GetData("u");
@@ -140,7 +140,7 @@ void zaran::Visual::WriteTecplotPoint(Ptr<FieldSolver>& solver)
 	fout << "variables=x,y,z,rho,u,v,w,p\n";
 	auto& grid = solver->GetGrid();
 	auto& nodeTopo = grid->GetNodeTopo();
-	auto&nodeCoord=nodeTopo->GetCoordinate();
+	auto& nodeCoord = nodeTopo->GetCoordinate();
 	auto& data = solver->GetFieldData();
 	auto& rho = data->GetData("rho");
 	auto& u = data->GetData("u");

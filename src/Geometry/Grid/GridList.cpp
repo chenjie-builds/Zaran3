@@ -11,7 +11,7 @@ GridList::~GridList()
 
 }
 
-void GridList::AddGrid(Ptr<Grid>& grid)
+void GridList::AddGrid(Ptr<Grid> grid)
 {
 	gridList_.emplace_back(grid);
 }

@@ -21,5 +21,6 @@ namespace zaran
 	private:
 		void ReadPlot3D(Ptr<GridList>& gridList);
 		void CreateByTest(Ptr<GridList>& gridList);
+		void CreateStructGrid3D(Ptr<GridList>& gridList);
 	};
 }
