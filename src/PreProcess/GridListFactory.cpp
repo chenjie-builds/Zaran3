@@ -10,7 +10,8 @@ namespace zaran
 		std::string createMethod = GlobalData::GetString("createGridMethod");
 		if (createMethod == "Plot3D")
 		{
-			CreateByTest(gridList);
+			//CreateByTest(gridList);
+			CreateStructGrid3D(gridList);
 		}
 		else
 		{
@@ -495,6 +496,7 @@ namespace zaran
 				y = j * dy + yMin - dy;
 				for (i = 0; i < xNodeNum + 2; ++i)
 				{
+					x = i * dx + xMin - dx;
 					iNode = grid->GetNodeIndex(i, j, k);
 					nodeCoord[iNode] = { x,y,z };
 					if (i == 0 || j == 0 || k == 0 || i == xNodeNum + 1 || j == yNodeNum + 1 || k == zNodeNum + 1)
@@ -513,6 +515,7 @@ namespace zaran
 			}
 		}
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
+		nodeNeighbor.resize((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
 		for (k = 0; k < zNodeNum + 2; ++k)
 		{
 			for (j = 0; j < yNodeNum + 2; ++j)
@@ -696,14 +699,14 @@ namespace zaran
 
 		auto& cellTopo = grid->GetCellTopo();
 		auto& cell2node = cellTopo->GetNodeIndex();
-		cell2node.resize((xNodeNum - 1) * (yNodeNum - 1) * (zNodeNum - 1));
+		cell2node.resize((xNodeNum + 1) * (yNodeNum + 1) * (zNodeNum + 1));
 		int iCell;
-		for (k = 1; k < zNodeNum; ++k)
+		for (k = 0; k < zNodeNum + 1; ++k)
 		{
-			for (j = 1; j < yNodeNum; ++j)
+			for (j = 0; j < yNodeNum + 1; ++j)
 			{
 
-				for (i = 1; i < xNodeNum; ++i)
+				for (i = 0; i < xNodeNum + 1; ++i)
 				{
 					iCell = grid->GetCellIndex(i, j, k);
 					cell2node[iCell] = (IArray{ grid->GetNodeIndex(i, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i + 1, j + 1, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k + 1), grid->GetNodeIndex(i + 1, j, k + 1), grid->GetNodeIndex(i + 1, j + 1, k + 1), grid->GetNodeIndex(i, j + 1, k + 1) });

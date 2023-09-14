@@ -7,7 +7,7 @@ cmake_minimum_required (VERSION 3.11)
 project (Zaran VERSION 20221215.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 
-FILE(GLOB_RECURSE src_file  src/*.cpp)
+FILE(GLOB_RECURSE src_file  src/*.cpp src/*.h)
 message( STATUS "source files:" ${src_file} )
 
 add_executable(Zaran ${src_file} )

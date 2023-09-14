@@ -26,7 +26,7 @@ namespace zaran
 		void UpdateField()override;
 		void CreateFieldData()override;
 		void RegisterFieldData()override;
-		void ComputeCoordTrans();
+		virtual void ComputeCoordTrans();
 		double ComputeMaxResidual()override;
 		/*
 		* 梯度计算函数
@@ -35,9 +35,9 @@ namespace zaran
 	protected:
 		void ComputePrimtiveGradient()override;
 		// 使用最小二乘求梯度
-		void ComputeGradientWLS();
+		virtual void ComputeGradientWLS();
 		// 使用非结构有限差分法求梯度
-		void ComputeGradientUFDM();
+		virtual void ComputeGradientUFDM();
 		void NoGradient();
 		/**
 		 * 时间步计算与时间推进相关函数
@@ -84,7 +84,6 @@ namespace zaran
 		void ComputeOutletBC(Boundary& bound);
 		// 壁面边界条件
 		void  ComputeWallBC(Boundary& bound);
-	private:
 		// 原始变量梯度
 		Array<DArray*> m_PrimGradX;
 		Array<DArray*> m_PrimGradY;

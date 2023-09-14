@@ -66,10 +66,10 @@ namespace zaran
 	void StructGrid::GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd)
 	{
 		iStart = 1;
-		iEnd = GetNi();
+		iEnd = GetNi() - 1;
 		jStart = 1;
-		jEnd = GetNj();
+		jEnd = GetNj() - 1;
 		kStart = 1;
-		kEnd = GetNk();
+		kEnd = GetNk() - 1;
 	}
 }

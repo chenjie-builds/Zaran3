@@ -17,15 +17,16 @@ namespace zaran
 	class NSSolverStruct :public NSSolver
 	{
 	public:
-		void InitField()override;
-		void InitSolver()override;
-		void ComputeTimeStep()override;
-		void TimeAdvance()override;
-		void BoundaryCondition()override;
-		void ComputePrimtiveGradient()override;
+		virtual void ComputeCoordTrans()override;
+		// 使用最小二乘求梯度
+		virtual void ComputeGradientWLS()override;
 	protected:
 		Ptr<StructGrid> GetGrid();
-		void ComputeTimeStepLocal() override;
+		virtual void ComputeTimeStepLocal()override;
+		// 计算流动通量
+		virtual void InviscidFlux()override;
+		// 计算限制器系数
+		virtual void ComputeLimiterCoef()override;
 	private:
 	};
 }

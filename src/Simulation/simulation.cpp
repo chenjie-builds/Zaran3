@@ -14,7 +14,8 @@ void Simulation::Start()
 	if (task_ == SimulationTask::SOLVE_FIELD)
 	{
 		Ptr<GridList> gridList;
-		gridListFatory_ = std::make_shared<GridListFactorySYSU>();
+		//gridListFatory_ = std::make_shared<GridListFactorySYSU>();
+		gridListFatory_ = std::make_shared<GridListFactory>();
 		gridListFatory_->Create(gridList);
 		Ptr<SolverVec> solverVec = std::make_shared<SolverVec>();
 		solverFactory_ = std::make_shared<SolverFactory>();
