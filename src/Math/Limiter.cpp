@@ -38,7 +38,10 @@ namespace zaran
 		double eps = 1.0e-6;
 		return 0.5 * (Sign(1.0, x) + Sign(1.0, y)) * ((x * y) * abs(x + y)) / (x * x + y * y + eps);
 	}
-
+	double Barth(const double& x, const double& y)
+	{
+		return Min(1.0, x / y);
+	}
 	double OneOrder(const double& x, const double& y)
 	{
 		return 0;

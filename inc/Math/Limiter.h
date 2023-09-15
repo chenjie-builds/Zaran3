@@ -19,6 +19,7 @@ namespace zaran
 		vanalbada,
 		mixminmodvanleer,
 		nolimit,
+		barth,
 		oneorder
 	};
 	double NoLimiter(const double& x, const double& y);
@@ -27,4 +28,5 @@ namespace zaran
 	double MixMinModVanLeer(const double& x, const double& y);
 	double VanAlbada(const double& x, const double& y);
 	double OneOrder(const double& x, const double& y);
+	double Barth(const double& x, const double& y);
 }

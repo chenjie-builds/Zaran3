@@ -34,6 +34,7 @@ namespace zaran
 		*/
 	protected:
 		void ComputePrimtiveGradient()override;
+		void ComputeBoundaryPrimtiveGradient();
 		// 使用最小二乘求梯度
 		virtual void ComputeGradientWLS();
 		// 使用非结构有限差分法求梯度
@@ -70,6 +71,7 @@ namespace zaran
 		virtual void ComputeResidual();
 		// 计算限制器系数
 		virtual void ComputeLimiterCoef();
+		void ComputeBoundaryLimiterCoef();
 		// 创建限制器
 		void CreateLimiter();
 

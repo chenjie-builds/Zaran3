@@ -36,7 +36,7 @@ namespace zaran
 		void SetRefTemprature(const int& refTemperature);
 		void SetInitFieldType(const int& initflowType);
 		void SetIsViscous(const int& isViscous);
-		void SetCflNumber(const int& cfl);
+		void SetCflNumber(const double& cfl);
 		void SetPrimitiveInflow(const DVector& primInflow);
 		void SetRKCoef(const DArray& rkCoef);
 		void SetGradScheme(const GradScheme& gradScheme);

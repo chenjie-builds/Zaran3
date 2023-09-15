@@ -88,6 +88,10 @@ void FlowSolverPara::Init()
 	{
 		limiterType_ = LimiterType::oneorder;
 	}
+	else if (limiterType == "barth")
+	{
+		limiterType_ = LimiterType::barth;
+	}
 	else
 	{
 		ZaranLog::warn("Unsupportted Limiter: {}, Please Check Control File!", limiterType);
@@ -187,7 +191,7 @@ void FlowSolverPara::SetIsViscous(const int& isViscous)
 	isViscous_ = isViscous;
 }
 
-void FlowSolverPara::SetCflNumber(const int& cfl)
+void FlowSolverPara::SetCflNumber(const double& cfl)
 {
 	cflNumber_ = cfl;
 }

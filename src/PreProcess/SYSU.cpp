@@ -1,5 +1,6 @@
 #include"SYSU.h"
 #include"Log.h"
+#include<set>
 #include<fstream>
 using namespace zaran;
 zaran::GridListFactorySYSU::GridListFactorySYSU()
@@ -140,20 +141,41 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 		boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,connectNodeIndex,0,wallNorm });
 		nodeType[boundNodeIndex] = NodeType::slipWall;
 	}
-
-	//for (int iNode = 0; iNode < grid->GetTotalNodeNum(); iNode++)
-	//{
-	//	auto& currentNode = grid->GetNodeTopoInfo()[iNode];
-	//	auto& coord = currentNode.GetCoordinate();
-	//	if (abs(coord[0] + 0.61) < SMALL_NUMBER)
-	//	{
-	//		if (currentNode.GetType() == NodeType::inlet)
-	//			continue;
-	//		currentNode.SetType(NodeType::inlet);
-	//		boundMap->AddBoundary("inlet", Boundary{ iNode ,0,0,DVector3D{} });
-	//	}
-	//}
-
+	Array<std::set<int>> nodeNeiborSet(m_NodeNum);
+	for (int iNode = 0; iNode < m_NodeNum; iNode++)
+	{
+		if (nodeType[iNode] != NodeType::inner)
+			continue;
+		auto& currentNeibor = nodeNeibor[iNode];
+		auto& neiborSet = nodeNeiborSet[iNode];
+		for (auto& iNeibor : currentNeibor)
+		{
+			neiborSet.insert(iNeibor);
+		}
+		for (auto& iNeibor : currentNeibor)
+		{
+			auto& neiborNeibor = nodeNeibor[iNeibor];
+			for (auto& iNeiborNeibor : neiborNeibor)
+			{
+				neiborSet.insert(iNeiborNeibor);
+			}
+		}
+		neiborSet.erase(iNode);
+	}
+	for (int iNode = 0; iNode < m_NodeNum; iNode++)
+	{
+		if (nodeType[iNode] != NodeType::inner)
+			continue;
+		auto& currentNeibor = nodeNeibor[iNode];
+		auto& neiborSet = nodeNeiborSet[iNode];
+		currentNeibor.resize(neiborSet.size());
+		int i = 0;
+		for (auto& iNeibor : neiborSet)
+		{
+			currentNeibor[i] = iNeibor;
+			i++;
+		}
+	}
 	fin.close();
 	fin.open("cell.dat");
 	auto& cellTopo = grid->GetCellTopo();
@@ -176,7 +198,6 @@ void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
 		cellNeiborNodeIndex[7] -= 1;
 		cell_node[iCell] = cellNeiborNodeIndex;
 	}
-
 	fin.close();
 
 
