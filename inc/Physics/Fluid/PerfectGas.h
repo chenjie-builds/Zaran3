@@ -20,8 +20,6 @@ class PerfectGas : public Gas
 {
 public:
 	PerfectGas(const double& Mw = 0.028964, const double& gamma = 1.4, const RefValue& refValue = RefValue());
-
-
 	double GetGamma() const { return gamma_; }
 	double GetTemp(const double& density, const double& p);  //根据状态方程计算温度
 	double GetMul(const double& T);   //根据温度，利用southerland公式计算层流粘性系数μl

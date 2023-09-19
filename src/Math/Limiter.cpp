@@ -46,5 +46,11 @@ namespace zaran
 	{
 		return 0;
 	}
-
+	double VenFun(const double& x, const double& y, const double& eps)
+	{
+		double x2 = x * x;
+		double xy = x * y;
+		double y2 = y * y;
+		return ((x2 + eps + 2.0 * xy) / (x2 + 2.0 * y2 + xy + eps));
+	}
 }

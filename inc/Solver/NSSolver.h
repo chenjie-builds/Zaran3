@@ -71,6 +71,8 @@ namespace zaran
 		virtual void ComputeResidual();
 		// 计算限制器系数
 		virtual void ComputeLimiterCoef();
+		void ComputeLimiterCoefVK();
+		void ComputeLimiterCoefBJ();
 		void ComputeBoundaryLimiterCoef();
 		// 创建限制器
 		void CreateLimiter();

@@ -288,7 +288,7 @@ namespace zaran {
 			}
 
 			// check coordinate
-			if (coordTrans.J() > 1e15)
+			if (coordTrans.J() > 1e15 || coordTrans.J() < 0)
 			{
 				ZaranLog::warn("Node {}: {},{},{}", iNode, nodeCoord[iNode].x(), nodeCoord[iNode].y(), nodeCoord[iNode].z());
 				ZaranLog::info("xLeft index={}: {},{},{}", tempI[iNode][0], xLeft.x(), xLeft.y(), xLeft.z());
@@ -457,6 +457,8 @@ namespace zaran {
 		double deltaX, deltaY, deltaZ;
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
+			if (iNode == 6013)
+				int a = 0;
 			auto& currentCoord = nodeCoord[iNode];
 			auto& neighborNodeVec = nodeNeighbor[iNode];
 			for (size_t iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -466,6 +468,8 @@ namespace zaran {
 				for (size_t iNeib = 0; iNeib < neighborNodeVec.size(); ++iNeib)
 				{
 					omega = DistanceOfTwoPoints(nodeCoord[neighborNodeVec[iNeib]].data(), nodeCoord[iNode].data());
+					if (abs(omega) < SMALL_NUMBER)
+						continue;
 					omega = 1.0 / omega;
 					deltaVal = (*prim[iVal])[neighborNodeVec[iNeib]] - (*prim[iVal])[iNode];
 					deltaX = nodeCoord[neighborNodeVec[iNeib]].x() - nodeCoord[iNode].x();
@@ -648,6 +652,8 @@ namespace zaran {
 		{
 			if (nodeType[iNode] != NodeType::inner)
 				continue;
+			if (iNode == 5764)
+				int a = 0;
 			auto& jacobi = (*coordTrans[32])[iNode];
 			// i direction
 			riemanPara->norm(0) = (*coordTrans[16])[iNode];
@@ -780,7 +786,11 @@ namespace zaran {
 
 			riemannSolver_->Solver(riemanPara);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			{
 				(*res[iVal])[iNode] -= riemanPara->flux[iVal] / jacobi;
+				if (isnan((*res[iVal])[iNode]) || isinf((*res[iVal])[iNode]))
+					ZaranLog::error("inode={},NAN in Residual!", iNode);
+			}
 		}
 	}
 
@@ -892,6 +902,8 @@ namespace zaran {
 
 	void NSSolver::ComputeLimiterCoef()
 	{
+		//ComputeLimiterCoefVK();
+		//return;
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
@@ -929,6 +941,7 @@ namespace zaran {
 				{
 					auto current2Neighbor = nodeCoord[neighborNode[iNeighbor]] - nodeCoord[iNode];
 					double delta2 = current2Neighbor(0) * gradx + current2Neighbor(1) * grady + current2Neighbor(2) * gradz;
+					delta2 *= 0.5;
 					if (delta2 > 0)
 					{
 						tempCoef = limiter(maxVal - (*prim[iVal])[iNode], delta2);
@@ -936,6 +949,69 @@ namespace zaran {
 					else if (delta2 < 0)
 					{
 						tempCoef = limiter(minVal - (*prim[iVal])[iNode], delta2);
+					}
+					else
+					{
+						tempCoef = 1.0;
+					}
+					(*limiterCoef[iVal])[iNode] = Min((*limiterCoef[iVal])[iNode], tempCoef);
+				}
+			}
+		}
+		ComputeBoundaryLimiterCoef();
+	}
+	void NSSolver::ComputeLimiterCoefVK()
+	{
+		GridPtr grid = GetGrid();
+		auto& nodeTopo = grid->GetNodeTopo();
+		auto& nodeType = nodeTopo->GetType();
+		auto& nodeCoord = nodeTopo->GetCoordinate();
+		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
+		auto& prim = m_Primtive;
+		auto& limiterCoef = m_LimiterCoef;
+		auto& primGradX = m_PrimGradX;
+		auto& primGradY = m_PrimGradY;
+		auto& primGradZ = m_PrimGradZ;
+		int nTotalNodeNum = grid->GetTotalNodeNum();
+		double maxVal, minVal;
+		double eps = 1e-6;
+		double venkatCoeff = 1.0e-5;
+		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		{
+			if (nodeType[iNode] != NodeType::inner)
+				continue;
+			auto& neighborNode = nodeNeighbor[iNode];
+			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			{
+				maxVal = (*prim[iVal])[iNode];
+				minVal = (*prim[iVal])[iNode];
+				for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
+				{
+					maxVal = Max(maxVal, (*prim[iVal])[neighborNode[iNeighbor]]);
+					minVal = Min(minVal, (*prim[iVal])[neighborNode[iNeighbor]]);
+				}
+				//eps = venkatCoeff * (maxVal - minVal);
+				//eps = eps * eps + SMALL_NUMBER;
+				eps = venkatCoeff * (maxVal - minVal) + SMALL_NUMBER;
+				double gradx = (*primGradX[iVal])[iNode];
+				double grady = (*primGradY[iVal])[iNode];
+				double gradz = (*primGradZ[iVal])[iNode];
+				double deltaMax = maxVal - (*prim[iVal])[iNode];
+				double deltaMin = minVal - (*prim[iVal])[iNode];
+				double tempCoef = LARGE_NUMBER;
+				(*limiterCoef[iVal])[iNode] = LARGE_NUMBER;
+				for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
+				{
+					auto current2Neighbor = nodeCoord[neighborNode[iNeighbor]] - nodeCoord[iNode];
+					double delta2 = current2Neighbor(0) * gradx + current2Neighbor(1) * grady + current2Neighbor(2) * gradz;
+					delta2 *= 0.5;
+					if (delta2 > 0)
+					{
+						tempCoef = VenFun(maxVal - (*prim[iVal])[iNode], delta2, eps);
+					}
+					else if (delta2 < 0)
+					{
+						tempCoef = VenFun(minVal - (*prim[iVal])[iNode], delta2, eps);
 					}
 					else
 					{

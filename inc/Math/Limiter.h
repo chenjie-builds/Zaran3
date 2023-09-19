@@ -29,4 +29,6 @@ namespace zaran
 	double VanAlbada(const double& x, const double& y);
 	double OneOrder(const double& x, const double& y);
 	double Barth(const double& x, const double& y);
+	double VenFun(const double& x, const double& y, const double& eps);
+
 }
