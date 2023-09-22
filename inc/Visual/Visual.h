@@ -17,6 +17,7 @@ namespace zaran
 	{
 	public:
 		void WriteTecplot(Ptr<FieldSolver>& solver);
+		void WriteTecplot2D(Ptr<FieldSolver>& solver);
 		void WriteTecplotPoint(Ptr<FieldSolver>& solver);
 		void WriteVTK(Ptr<FieldSolver>& solver);
 	};
