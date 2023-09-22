@@ -475,18 +475,18 @@ namespace zaran {
 					deltaX = nodeCoord[neighborNodeVec[iNeib]].x() - nodeCoord[iNode].x();
 					deltaY = nodeCoord[neighborNodeVec[iNeib]].y() - nodeCoord[iNode].y();
 					deltaZ = nodeCoord[neighborNodeVec[iNeib]].z() - nodeCoord[iNode].z();
-					A(0, 0) += omega * omega * deltaX * deltaX;
-					A(0, 1) += omega * omega * deltaX * deltaY;
-					A(0, 2) += omega * omega * deltaX * deltaZ;
-					A(1, 0) += omega * omega * deltaY * deltaX;
-					A(1, 1) += omega * omega * deltaY * deltaY;
-					A(1, 2) += omega * omega * deltaY * deltaZ;
-					A(2, 0) += omega * omega * deltaZ * deltaX;
-					A(2, 1) += omega * omega * deltaZ * deltaY;
-					A(2, 2) += omega * omega * deltaZ * deltaZ;
-					b(0) += omega * omega * deltaVal * deltaX;
-					b(1) += omega * omega * deltaVal * deltaY;
-					b(2) += omega * omega * deltaVal * deltaZ;
+					A(0, 0) += omega * deltaX * deltaX;
+					A(0, 1) += omega * deltaX * deltaY;
+					A(0, 2) += omega * deltaX * deltaZ;
+					A(1, 0) += omega * deltaY * deltaX;
+					A(1, 1) += omega * deltaY * deltaY;
+					A(1, 2) += omega * deltaY * deltaZ;
+					A(2, 0) += omega * deltaZ * deltaX;
+					A(2, 1) += omega * deltaZ * deltaY;
+					A(2, 2) += omega * deltaZ * deltaZ;
+					b(0) += omega * deltaVal * deltaX;
+					b(1) += omega * deltaVal * deltaY;
+					b(2) += omega * deltaVal * deltaZ;
 				}
 				grad = A.inverse() * b;
 				(*primGradX[iVal])[iNode] = grad.x();
@@ -596,6 +596,7 @@ namespace zaran {
 
 	void NSSolver::Conservative2Primitive()
 	{
+
 		GridPtr grid = GetGrid();
 		auto& rho = *m_Primtive[0];
 		auto& u = *m_Primtive[1];
@@ -902,8 +903,8 @@ namespace zaran {
 
 	void NSSolver::ComputeLimiterCoef()
 	{
-		//ComputeLimiterCoefVK();
-		//return;
+		ComputeLimiterCoefVK();
+		return;
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
@@ -990,9 +991,9 @@ namespace zaran {
 					maxVal = Max(maxVal, (*prim[iVal])[neighborNode[iNeighbor]]);
 					minVal = Min(minVal, (*prim[iVal])[neighborNode[iNeighbor]]);
 				}
-				//eps = venkatCoeff * (maxVal - minVal);
-				//eps = eps * eps + SMALL_NUMBER;
-				eps = venkatCoeff * (maxVal - minVal) + SMALL_NUMBER;
+				eps = venkatCoeff * (maxVal - minVal);
+				eps = eps * eps + SMALL_NUMBER;
+				//eps = venkatCoeff * (maxVal - minVal) + SMALL_NUMBER;
 				double gradx = (*primGradX[iVal])[iNode];
 				double grady = (*primGradY[iVal])[iNode];
 				double gradz = (*primGradZ[iVal])[iNode];
@@ -1019,6 +1020,7 @@ namespace zaran {
 					}
 					(*limiterCoef[iVal])[iNode] = Min((*limiterCoef[iVal])[iNode], tempCoef);
 				}
+
 			}
 		}
 		ComputeBoundaryLimiterCoef();
