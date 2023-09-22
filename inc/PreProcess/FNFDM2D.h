@@ -5,28 +5,20 @@
 //*	License																		||
 //*	This file is part of ZaRan.													||
 //*																				||
-//*	@file	FNFDM3D.h															||
-//*	@brief	读取三维自由节点有限差分网格											||
+//*	@file	FNFDM2D.h															||
+//*	@brief	读取二维维自由节点有限差分网格											||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
 #include"GridListFactory.h"
 namespace zaran
 {
-	class GridListFactoryFNFDM3D :public GridListFactory
+	class GridListFactoryFNFDM2D :public GridListFactory
 	{
 	public:
-		GridListFactoryFNFDM3D();
+		GridListFactoryFNFDM2D() {};
 		void Create(Ptr<GridList>& gridList) override;
-	private:
-		void ReadFile(Ptr<GridList>& gridList);
-	private:
-		string m_fileName;
-		int m_NodeNum;
-		int m_BoundNodeNum;
-		DArray m_NodeX, m_NodeY, m_NodeZ;
-		map<int, IArray> m_NodeNeiborNodeIndex;
-		IArray m_InletNodeIndex, m_OutletNodeIndex, m_WallNodeIndex;
-		IArray m_InletNeiborNodeIndex, m_OutletNeiborNodeIndex, m_WallNeiborNodeIndex;
 	};
+
 }
+

@@ -4,6 +4,7 @@
 #include "log.h"
 #include "GridListFactory.h"
 #include"FNFDM3D.h"
+#include"FNFDM2D.h"
 #include <filesystem>
 using namespace zaran;
 void Simulation::Start()
@@ -15,7 +16,8 @@ void Simulation::Start()
 	{
 		Ptr<GridList> gridList;
 		//gridListFatory_ = std::make_shared<GridListFactoryFNFDM3D>();
-		gridListFatory_ = std::make_shared<GridListFactory>();
+		gridListFatory_ = std::make_shared<GridListFactoryFNFDM2D>();
+		//gridListFatory_ = std::make_shared<GridListFactory>();
 		gridListFatory_->Create(gridList);
 		Ptr<SolverVec> solverVec = std::make_shared<SolverVec>();
 		solverFactory_ = std::make_shared<SolverFactory>();

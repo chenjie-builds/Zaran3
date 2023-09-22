@@ -49,7 +49,7 @@ void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
 	int step = GlobalData::GetInt("step");
 	std::string filename = "result/" + std::to_string(step) + ".dat";
 	std::ofstream fout(filename);
-	fout << "variables=x,y,rho,u,v,p\n";
+	fout << "variables=x,y,rho,u,v,w,p\n";
 	auto& grid = solver->GetGrid();
 	int nInnerNum = grid->GetInnerNodeNum();
 	int nBoundNum = grid->GetBoundNodeNum();
@@ -71,7 +71,7 @@ void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
 	{
 		auto& currentCoord = nodeCoord[iNode];
 		fout << currentCoord(0) << "  " << currentCoord(1) << "  ";
-		fout << rho[iNode] << "  " << u[iNode] << "  " << v[iNode] << "  " << p[iNode];
+		fout << rho[iNode] << "  " << u[iNode] << "  " << v[iNode] << "  " <<w[iNode] << "  " << p[iNode];
 		fout << std::endl;
 	}
 	int nCell = cell2node.size();
