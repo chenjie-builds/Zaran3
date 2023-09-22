@@ -4,32 +4,32 @@ namespace zaran
 
 	void StructGrid::SetNi(int ni)
 	{
-		ni_ = ni;
+		m_ni = ni;
 	}
 
 	void StructGrid::SetNj(int nj)
 	{
-		nj_ = nj;
+		m_nj = nj;
 	}
 
 	void StructGrid::SetNk(int nk)
 	{
-		nk_ = nk;
+		m_nk = nk;
 	}
 
 	int StructGrid::GetNi()
 	{
-		return ni_;
+		return m_ni;
 	}
 
 	int StructGrid::GetNj()
 	{
-		return nj_;
+		return m_nj;
 	}
 
 	int StructGrid::GetNk()
 	{
-		return nk_;
+		return m_nk;
 	}
 	void StructGrid::SetNodeNum(int ni, int nj, int nk)
 	{

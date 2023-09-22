@@ -5,23 +5,30 @@
 //*	License																		||
 //*	This file is part of ZaRan.													||
 //*																				||
-//*	@file	GridListFactory.h													||
-//*	@brief	网格数组工厂, 负责生成网格数组											||
+//*	@file	Solver_NS_3D.h															||
+//*	@brief	三维NS 方程求解器														||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include "GridList.h"
-#include "GlobalData.h"
+#include "NSSolver.h"
 namespace zaran
 {
-	class GridListFactory
+	class Solver_NS_3D :public NSSolver
 	{
 	public:
-		virtual void Create(Ptr<GridList>& gridList);
-	private:
-		void ReadPlot3D(Ptr<GridList>& gridList);
-		void CreateByTest(Ptr<GridList>& gridList);
-		void CreateStructGrid3D(Ptr<GridList>& gridList);
-		void CreateGridFNFDM2D(Ptr<GridList>& gridList);
+		Solver_NS_3D() {}
+		~Solver_NS_3D() {}
+		 void ComputeCoordTrans()override;
+	protected:
+		 void ComputeGradientWLS()override;
+		 void ComputeTimeStepLocal() override;
+		// 计算流动通量
+		 void InviscidFlux()override;
+		//计算粘性通量
+		 void ViscousFlux() override;
+		//计算源项
+		 void SourceFlux() override;
+
+
 	};
 }

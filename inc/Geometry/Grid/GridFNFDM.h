@@ -5,23 +5,16 @@
 //*	License																		||
 //*	This file is part of ZaRan.													||
 //*																				||
-//*	@file	GridListFactory.h													||
-//*	@brief	网格数组工厂, 负责生成网格数组											||
+//*	@file	GridFNFDM.h															||
+//*	@brief	自由节点有限差分网格													||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include "GridList.h"
-#include "GlobalData.h"
+#include"Grid.h"
 namespace zaran
 {
-	class GridListFactory
+	class GridFNFDM :public Grid
 	{
-	public:
-		virtual void Create(Ptr<GridList>& gridList);
-	private:
-		void ReadPlot3D(Ptr<GridList>& gridList);
-		void CreateByTest(Ptr<GridList>& gridList);
-		void CreateStructGrid3D(Ptr<GridList>& gridList);
-		void CreateGridFNFDM2D(Ptr<GridList>& gridList);
+
 	};
 }

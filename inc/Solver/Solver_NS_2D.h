@@ -5,28 +5,30 @@
 //*	License																		||
 //*	This file is part of ZaRan.													||
 //*																				||
-//*	@file	NSSolverStruct.h													||
-//*	@brief	结构网格NS方程求解器													||
+//*	@file	Solver_NS_2D.h															||
+//*	@brief	二维NS 方程求解器														||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
 #include "NSSolver.h"
-#include "StructGrid.h"
 namespace zaran
 {
-	class NSSolverStruct :public NSSolver
+	class Solver_NS_2D :public NSSolver
 	{
 	public:
-		virtual void ComputeCoordTrans()override;
-		// 使用最小二乘求梯度
-		virtual void ComputeGradientWLS()override;
+		Solver_NS_2D() {}
+		~Solver_NS_2D() {}
+		void ComputeCoordTrans()override;
 	protected:
-		Ptr<StructGrid> GetGrid();
-		virtual void ComputeTimeStepLocal()override;
+		void ComputeGradientWLS()override;
+		void ComputeTimeStepLocal() override;
 		// 计算流动通量
-		virtual void InviscidFlux()override;
-		// 计算限制器系数
-		virtual void ComputeLimiterCoef()override;
-	private:
+		void InviscidFlux()override;
+		//计算粘性通量
+		void ViscousFlux() override;
+		//计算源项
+		void SourceFlux() override;
+
+
 	};
 }

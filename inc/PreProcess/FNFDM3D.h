@@ -13,14 +13,10 @@
 #include"GridListFactory.h"
 namespace zaran
 {
-	const int SYSU_INLET = 1;
-	const int SYSU_OUTLET = 2;
-	const int SYSU_WALL = 3;
-
-	class GridListFactorySYSU :public GridListFactory
+	class GridListFactoryFNFDM3D :public GridListFactory
 	{
 	public:
-		GridListFactorySYSU();
+		GridListFactoryFNFDM3D();
 		void Create(Ptr<GridList>& gridList) override;
 	private:
 		void ReadFile(Ptr<GridList>& gridList);

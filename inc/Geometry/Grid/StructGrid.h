@@ -18,7 +18,7 @@ namespace zaran
 	{
 	public:
 		StructGrid()
-			:Grid(), ni_(0), nj_(0), nk_(0)
+			:Grid(), m_ni(0), m_nj(0), m_nk(0)
 		{}
 	public:
 		void SetNi(int ni);
@@ -36,6 +36,6 @@ namespace zaran
 	public:
 		void GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd);
 	private:
-		int ni_, nj_, nk_;//三个方向的节点个数
+		int m_ni, m_nj, m_nk;//三个方向的节点个数
 	};
 }

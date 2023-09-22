@@ -3,7 +3,7 @@
 #include "GlobalData.h"
 #include "log.h"
 #include "GridListFactory.h"
-#include"SYSU.h"
+#include"FNFDM3D.h"
 #include <filesystem>
 using namespace zaran;
 void Simulation::Start()
@@ -14,8 +14,8 @@ void Simulation::Start()
 	if (task_ == SimulationTask::SOLVE_FIELD)
 	{
 		Ptr<GridList> gridList;
-		gridListFatory_ = std::make_shared<GridListFactorySYSU>();
-		//gridListFatory_ = std::make_shared<GridListFactory>();
+		//gridListFatory_ = std::make_shared<GridListFactoryFNFDM3D>();
+		gridListFatory_ = std::make_shared<GridListFactory>();
 		gridListFatory_->Create(gridList);
 		Ptr<SolverVec> solverVec = std::make_shared<SolverVec>();
 		solverFactory_ = std::make_shared<SolverFactory>();

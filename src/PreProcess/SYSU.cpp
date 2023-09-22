@@ -1,22 +1,23 @@
-#include"SYSU.h"
+#include"FNFDM3D.h"
 #include"Log.h"
 #include<set>
 #include<fstream>
 using namespace zaran;
-zaran::GridListFactorySYSU::GridListFactorySYSU()
+zaran::GridListFactoryFNFDM3D::GridListFactoryFNFDM3D()
 {
 	m_fileName = "sysu.dat";
 }
-void zaran::GridListFactorySYSU::Create(Ptr<GridList>& gridList)
+void zaran::GridListFactoryFNFDM3D::Create(Ptr<GridList>& gridList)
 {
 	if (!gridList)
 		gridList = std::make_shared<GridList>();
 	ReadFile(gridList);
 }
 
-void zaran::GridListFactorySYSU::ReadFile(Ptr<GridList>& gridList)
+void zaran::GridListFactoryFNFDM3D::ReadFile(Ptr<GridList>& gridList)
 {
 	Ptr < Grid > grid = std::make_shared<Grid>();
+	grid->SetDimension(Dimension::three);
 	gridList->AddGrid(grid);
 	auto& nodeTopo = grid->GetNodeTopo();
 	std::ifstream fin(m_fileName);

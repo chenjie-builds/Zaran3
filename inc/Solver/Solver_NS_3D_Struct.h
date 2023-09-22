@@ -5,25 +5,30 @@
 //*	License																		||
 //*	This file is part of ZaRan.													||
 //*																				||
-//*	@file	SolverFactory.h														||
-//*	@brief	求解器工厂类, 生成求解器												||
+//*	@file	Solver_NS_3D_Struct.h													||
+//*	@brief	三维结构网格NS方程求解器													||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include "SolverVec.h"
-#include "solver.h"
-#include "flowsolver.h"
-#include "NSSolver.h"
 #include "Solver_NS_3D.h"
-#include"Solver_NS_2D.h"
-#include "Solver_NS_3D_Struct.h"
-#include "Solver_NS_2D_Struct.h"
-#include "NSSolverUnstruct.h"
+#include "StructGrid.h"
 namespace zaran
 {
-	class SolverFactory
+	class Solver_NS_3D_Struct :public Solver_NS_3D
 	{
 	public:
-		void Create(Ptr<GridList>& gridList, Ptr<SolverVec>& solverVecPtr);
+		Solver_NS_3D_Struct() {}
+		~Solver_NS_3D_Struct() {}
+		virtual void ComputeCoordTrans()override;
+		// 使用最小二乘求梯度
+		virtual void ComputeGradientWLS()override;
+	protected:
+		Ptr<StructGrid> GetGrid();
+		virtual void ComputeTimeStepLocal()override;
+		// 计算流动通量
+		virtual void InviscidFlux()override;
+		// 计算限制器系数
+		virtual void ComputeLimiterCoef()override;
+	private:
 	};
 }

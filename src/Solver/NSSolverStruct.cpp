@@ -1,11 +1,11 @@
-#include "NSSolverStruct.h"
+#include "Solver_NS_3D_Struct.h"
 #include "GlobalData.h"
 #include "log.h"
 #include"MathBasic.h"
 namespace zaran
 {
 
-	void NSSolverStruct::ComputeCoordTrans()
+	void Solver_NS_3D_Struct::ComputeCoordTrans()
 	{
 		auto& grid = GetGrid();
 		// 起始点和终止点的编号,s: start, e: end
@@ -65,7 +65,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverStruct::ComputeGradientWLS()
+	void Solver_NS_3D_Struct::ComputeGradientWLS()
 	{
 		auto& grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -140,11 +140,11 @@ namespace zaran
 		}
 	}
 
-	Ptr<StructGrid> NSSolverStruct::NSSolverStruct::GetGrid()
+	Ptr<StructGrid> Solver_NS_3D_Struct::Solver_NS_3D_Struct::GetGrid()
 	{
 		return std::static_pointer_cast<StructGrid> (Solver::GetGrid());
 	}
-	void NSSolverStruct::InviscidFlux()
+	void Solver_NS_3D_Struct::InviscidFlux()
 	{
 		auto& grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -287,7 +287,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverStruct::ComputeTimeStepLocal()
+	void Solver_NS_3D_Struct::ComputeTimeStepLocal()
 	{
 		auto& grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -331,7 +331,7 @@ namespace zaran
 		}
 		GlobalData::Update("dt", minDt);
 	}
-	void NSSolverStruct::ComputeLimiterCoef()
+	void Solver_NS_3D_Struct::ComputeLimiterCoef()
 	{
 		auto& grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
