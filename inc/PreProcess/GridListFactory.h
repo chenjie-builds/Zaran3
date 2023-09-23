@@ -23,6 +23,8 @@ namespace zaran
 		void CreateByTest(Ptr<GridList>& gridList);
 		// 生成测试的三维结构网格
 		void CreateStructGrid3D(Ptr<GridList>& gridList);
+		// 生成测试的二维结构网格
+		void CreateStructGrid2D(Ptr<GridList>& gridList);
 		// 生成测试的二维自由节点有限差分网格
 		void CreateGridFNFDM2D(Ptr<GridList>& gridList);
 	};

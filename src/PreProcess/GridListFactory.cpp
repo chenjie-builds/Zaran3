@@ -1,5 +1,6 @@
 #include "GridListFactory.h"
-#include"StructGrid.h"
+#include"Grid_Struct_3D.h"
+#include"Grid_Struct_2D.h"
 #include "grid.h"
 #include "log.h"
 namespace zaran
@@ -454,7 +455,7 @@ namespace zaran
 			gridList = std::make_shared<GridList>();
 		}
 
-		Ptr<StructGrid>grid = std::make_shared<StructGrid>();
+		Ptr<Grid_Struct_3D>grid = std::make_shared<Grid_Struct_3D>();
 		grid->SetDimension(Dimension::three);
 		grid->SetIndex(0);
 		grid->SetLevel(0);
@@ -801,6 +802,191 @@ namespace zaran
 				bound.SetNorm(boundNorm);
 				boundMap->AddBoundary("wall", bound);
 			}
+		}
+		gridList->AddGrid(grid);
+	}
+	void GridListFactory::CreateStructGrid2D(Ptr<GridList>& gridList)
+	{
+		if (gridList.get() == nullptr)
+		{
+			gridList = std::make_shared<GridList>();
+		}
+		Ptr<Grid_Struct_2D>grid = std::make_shared<Grid_Struct_2D>();
+		grid->SetDimension(Dimension::two);
+		grid->SetIndex(0);
+		grid->SetLevel(0);
+		grid->SetName("fnfdm-structred-grid-2d");
+		grid->SetType(GridType::NOTSET);
+		auto& nodeTopo = grid->GetNodeTopo();
+		auto& nodeCoord = nodeTopo->GetCoordinate();
+		int xNodeNum = 31;
+		int yNodeNum = 31;
+		int nodeNum = 0;
+		double xMin = 0.0;
+		double yMin = 0.0;
+		double xMax = 1.0;
+		double yMax = 1.0;
+		double dx = (xMax - xMin) / (xNodeNum - 1);
+		double dy = (yMax - yMin) / (yNodeNum - 1);
+		int i, j;
+		double x, y;
+		grid->SetTotalNodeNum((xNodeNum + 2) * (yNodeNum + 2));
+		nodeCoord.resize((xNodeNum + 2) * (yNodeNum + 2));
+		auto& nodeType = nodeTopo->GetType();
+		nodeType.resize((xNodeNum + 2) * (yNodeNum + 2));
+		auto& tempI = nodeTopo->GetTemplateI();
+		auto& tempJ = nodeTopo->GetTemplateJ();
+		tempI.resize((xNodeNum + 2) * (yNodeNum + 2));
+		tempJ.resize((xNodeNum + 2) * (yNodeNum + 2));
+		//求节点下标的lamda表达式
+		auto GetNodeIndex = [&](int i, int j)
+			{
+				return j * (xNodeNum + 2) + i;
+			};
+		int iNode = 0;
+		for (j = 0; j < yNodeNum + 2; ++j)
+		{
+			y = j * dy + yMin - dy;
+			for (i = 0; i < xNodeNum + 2; ++i)
+			{
+				x = i * dx + xMin - dx;
+				iNode = grid->GetNodeIndex(i, j);
+				nodeCoord[iNode] = { x,y,0.0 };
+				if (i == 0 || j == 0 || i == xNodeNum + 1 || j == yNodeNum + 1)
+				{
+					nodeType[iNode] = NodeType::ghost;
+					continue;
+				}
+				if (i == 1 || j == 1 || i == xNodeNum || j == yNodeNum)
+				{
+					nodeType[iNode] = NodeType::inlet;
+				}
+				tempI[iNode] = { GetNodeIndex(i - 1, j), GetNodeIndex(i, j), GetNodeIndex(i + 1, j) };
+				tempJ[iNode] = { GetNodeIndex(i, j - 1), GetNodeIndex(i, j), GetNodeIndex(i, j + 1) };
+			}
+		}
+		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
+		nodeNeighbor.resize((xNodeNum + 2) * (yNodeNum + 2));
+		for (j = 0; j < yNodeNum + 2; ++j)
+		{
+			for (i = 0; i < xNodeNum + 2; ++i)
+			{
+				iNode = GetNodeIndex(i, j);
+				if (i == 0)
+				{
+					if (j == 0)
+					{
+						nodeNeighbor[iNode] = { GetNodeIndex(i + 1, j),  GetNodeIndex(i, j + 1) };
+					}
+					else if (j == yNodeNum + 1)
+					{
+						nodeNeighbor[iNode] = { GetNodeIndex(i + 1, j),  GetNodeIndex(i, j - 1) };
+					}
+					else
+					{
+						nodeNeighbor[iNode] = { GetNodeIndex(i + 1, j),  GetNodeIndex(i, j - 1), GetNodeIndex(i, j + 1) };
+					}
+				}
+				else if (i == xNodeNum + 1)
+				{
+					if (j == 0)
+					{
+						nodeNeighbor[iNode] = { GetNodeIndex(i - 1, j),  GetNodeIndex(i, j + 1) };
+
+					}
+					else if (j == yNodeNum + 1)
+					{
+						nodeNeighbor[iNode] = { GetNodeIndex(i - 1, j),  GetNodeIndex(i, j - 1) };
+					}
+				}
+				else
+				{
+					if (j == 0)
+					{
+						nodeNeighbor[iNode] = { GetNodeIndex(i - 1, j), GetNodeIndex(i + 1, j), GetNodeIndex(i, j + 1) };
+
+					}
+					else if (j == yNodeNum + 1)
+					{
+						nodeNeighbor[iNode] = { GetNodeIndex(i - 1, j), GetNodeIndex(i + 1, j), GetNodeIndex(i, j - 1) };
+
+					}
+					else
+					{
+						nodeNeighbor[iNode] = { GetNodeIndex(i - 1, j), GetNodeIndex(i + 1, j), GetNodeIndex(i, j - 1), GetNodeIndex(i, j + 1) };
+					}
+				}
+			}
+		}
+		grid->SetInnerNodeNum((xNodeNum - 2) * (yNodeNum - 2));
+		grid->SetBoundNodeNum(xNodeNum * yNodeNum - grid->GetInnerNodeNum());
+		grid->SetInterNodeInfo(std::make_shared<InterNodeInfo>());
+		grid->SetBoundaryMap(std::make_shared<BoundaryMap>());
+		auto& cellTopo = grid->GetCellTopo();
+		auto& cell2node = cellTopo->GetNodeIndex();
+		cell2node.resize((xNodeNum + 1) * (yNodeNum + 1));
+		int iCell;
+		for (j = 0; j < yNodeNum + 1; ++j)
+		{
+			for (i = 0; i < xNodeNum + 1; ++i)
+			{
+				iCell = j * (xNodeNum + 1) + i;
+				cell2node[iCell] = (IArray{ GetNodeIndex(i, j), GetNodeIndex(i + 1, j), GetNodeIndex(i + 1, j + 1), GetNodeIndex(i, j + 1) });
+			}
+		}
+
+		auto& boundMap = grid->GetBoundaryMap();
+		int nodeIndex, innerNodeIndex, ghostNodeIndex;
+		DVector3D boundNorm;
+		Boundary bound;
+		//i方向两个面分别为入口和出口
+		for (j = 1; j < yNodeNum + 1; ++j)
+		{
+			i = 1;
+			nodeIndex = GetNodeIndex(i, j);
+			bound.SetNodeIndex(nodeIndex);
+			innerNodeIndex = GetNodeIndex(i + 1, j);
+			bound.SetInnerNodeIndex(innerNodeIndex);
+			ghostNodeIndex = GetNodeIndex(i - 1, j);
+			bound.SetGhostNodeIndex(ghostNodeIndex);
+			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
+			bound.SetNorm(boundNorm);
+			boundMap->AddBoundary("inlet", bound);
+
+			i = xNodeNum;
+			nodeIndex = GetNodeIndex(i, j);
+			bound.SetNodeIndex(nodeIndex);
+			innerNodeIndex = GetNodeIndex(i - 1, j);
+			bound.SetInnerNodeIndex(innerNodeIndex);
+			ghostNodeIndex = GetNodeIndex(i + 1, j);
+			bound.SetGhostNodeIndex(ghostNodeIndex);
+			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
+			bound.SetNorm(boundNorm);
+			boundMap->AddBoundary("outlet", bound);
+		}
+		//j方向两个面均为壁面
+		for (i = 1; i < xNodeNum + 1; ++i)
+		{
+			j = 1;
+			nodeIndex = GetNodeIndex(i, j);
+			bound.SetNodeIndex(nodeIndex);
+			innerNodeIndex = GetNodeIndex(i, j + 1);
+			bound.SetInnerNodeIndex(innerNodeIndex);
+			ghostNodeIndex = GetNodeIndex(i, j - 1);
+			bound.SetGhostNodeIndex(ghostNodeIndex);
+			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
+			bound.SetNorm(boundNorm);
+			boundMap->AddBoundary("wall", bound);
+			j = yNodeNum;
+			nodeIndex = GetNodeIndex(i, j);
+			bound.SetNodeIndex(nodeIndex);
+			innerNodeIndex = GetNodeIndex(i, j - 1);
+			bound.SetInnerNodeIndex(innerNodeIndex);
+			ghostNodeIndex = GetNodeIndex(i, j + 1);
+			bound.SetGhostNodeIndex(ghostNodeIndex);
+			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
+			bound.SetNorm(boundNorm);
+			boundMap->AddBoundary("wall", bound);
 		}
 		gridList->AddGrid(grid);
 	}

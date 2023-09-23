@@ -5,8 +5,8 @@
 //*	License																		||
 //*	This file is part of ZaRan.													||
 //*																				||
-//*	@file	StructGrid.h														||
-//*	@brief	结构网格类，根据结构网格数据结构特点存储信息							||
+//*	@file	Grid_Struct_3D.h													||
+//*	@brief	三维结构网格类，根据结构网格数据结构特点存储信息							||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
@@ -14,10 +14,10 @@
 #include "NodeTopoInfoStruct.h"
 namespace zaran
 {
-	class StructGrid :public Grid
+	class Grid_Struct_3D :public Grid
 	{
 	public:
-		StructGrid()
+		Grid_Struct_3D()
 			:Grid(), m_ni(0), m_nj(0), m_nk(0)
 		{}
 	public:

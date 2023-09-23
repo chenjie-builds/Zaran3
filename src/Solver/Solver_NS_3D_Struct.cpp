@@ -140,9 +140,9 @@ namespace zaran
 		}
 	}
 
-	Ptr<StructGrid> Solver_NS_3D_Struct::Solver_NS_3D_Struct::GetGrid()
+	Ptr<Grid_Struct_3D> Solver_NS_3D_Struct::Solver_NS_3D_Struct::GetGrid()
 	{
-		return std::static_pointer_cast<StructGrid> (Solver::GetGrid());
+		return std::static_pointer_cast<Grid_Struct_3D> (Solver::GetGrid());
 	}
 	void Solver_NS_3D_Struct::InviscidFlux()
 	{

@@ -1,69 +1,68 @@
-#include "StructGrid.h"
+#include "Grid_Struct_3D.h"
 namespace zaran
 {
-
-	void StructGrid::SetNi(int ni)
+	void Grid_Struct_3D::SetNi(int ni)
 	{
 		m_ni = ni;
 	}
 
-	void StructGrid::SetNj(int nj)
+	void Grid_Struct_3D::SetNj(int nj)
 	{
 		m_nj = nj;
 	}
 
-	void StructGrid::SetNk(int nk)
+	void Grid_Struct_3D::SetNk(int nk)
 	{
 		m_nk = nk;
 	}
 
-	int StructGrid::GetNi()
+	int Grid_Struct_3D::GetNi()
 	{
 		return m_ni;
 	}
 
-	int StructGrid::GetNj()
+	int Grid_Struct_3D::GetNj()
 	{
 		return m_nj;
 	}
 
-	int StructGrid::GetNk()
+	int Grid_Struct_3D::GetNk()
 	{
 		return m_nk;
 	}
-	void StructGrid::SetNodeNum(int ni, int nj, int nk)
+	void Grid_Struct_3D::SetNodeNum(int ni, int nj, int nk)
 	{
 		SetNi(ni);
 		SetNj(nj);
 		SetNk(nk);
 	}
-	void StructGrid::GetNodeNum(int& ni, int& nj, int& nk)
+	void Grid_Struct_3D::GetNodeNum(int& ni, int& nj, int& nk)
 	{
 		ni = GetNi();
 		nj = GetNj();
 		nk = GetNk();
 	}
-	int StructGrid::GetNodeIndex(int i, int j, int k)
+	int Grid_Struct_3D::GetNodeIndex(int i, int j, int k)
 	{
 		return k * GetNi() * GetNj() + j * GetNi() + i;
 	}
-	void StructGrid::GetNodeIndex(int index, int& i, int& j, int& k)
+	void Grid_Struct_3D::GetNodeIndex(int index, int& i, int& j, int& k)
 	{
 		k = index / (GetNi() * GetNj());
 		j = (index - k * GetNi() * GetNj()) / GetNi();
 		i = index - k * GetNi() * GetNj() - j * GetNi();
 	}
-	int StructGrid::GetCellIndex(int i, int j, int k)
+	int Grid_Struct_3D::GetCellIndex(int i, int j, int k)
 	{
 		return k * (GetNi() - 1) * (GetNj() - 1) + j * (GetNi() - 1) + i;
 	}
-	void StructGrid::GetCellIndex(int index, int& i, int& j, int& k)
+	void Grid_Struct_3D::GetCellIndex(int index, int& i, int& j, int& k)
 	{
 		k = index / ((GetNi() - 1) * (GetNj() - 1));
 		j = (index - k * (GetNi() - 1) * (GetNj() - 1)) / (GetNi() - 1);
 		i = index - k * (GetNi() - 1) * (GetNj() - 1) - j * (GetNi() - 1);
 	}
-	void StructGrid::GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd)
+	void Grid_Struct_3D::GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd)
 	{
 		iStart = 1;
 		iEnd = GetNi() - 1;
