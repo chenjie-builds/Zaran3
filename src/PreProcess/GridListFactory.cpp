@@ -13,7 +13,8 @@ namespace zaran
 		{
 			//CreateByTest(gridList);
 			//CreateStructGrid3D(gridList);
-			CreateGridFNFDM2D(gridList);
+			//CreateGridFNFDM2D(gridList);
+			CreateStructGrid2D(gridList);
 		}
 		else
 		{
@@ -407,7 +408,7 @@ namespace zaran
 				bound.SetGhostNodeIndex(ghostNodeIndex);
 				boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 				bound.SetNorm(boundNorm);
-				boundMap->AddBoundary("wall", bound);
+				boundMap->AddBoundary("slipWall", bound);
 				j = yNodeNum;
 				nodeIndex = structNodeIndex[i][j][k];
 				bound.SetNodeIndex(nodeIndex);
@@ -417,7 +418,7 @@ namespace zaran
 				bound.SetGhostNodeIndex(ghostNodeIndex);
 				boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 				bound.SetNorm(boundNorm);
-				boundMap->AddBoundary("wall", bound);
+				boundMap->AddBoundary("slipWall", bound);
 			}
 
 			//j·½Ïò
@@ -432,7 +433,7 @@ namespace zaran
 				bound.SetGhostNodeIndex(ghostNodeIndex);
 				boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 				bound.SetNorm(boundNorm);
-				boundMap->AddBoundary("wall", bound);
+				boundMap->AddBoundary("slipWall", bound);
 				k = zNodeNum;
 				nodeIndex = structNodeIndex[i][j][k];
 				bound.SetNodeIndex(nodeIndex);
@@ -442,7 +443,7 @@ namespace zaran
 				bound.SetGhostNodeIndex(ghostNodeIndex);
 				boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 				bound.SetNorm(boundNorm);
-				boundMap->AddBoundary("wall", bound);
+				boundMap->AddBoundary("slipWall", bound);
 			}
 		}
 		gridList->AddGrid(testGrid);
@@ -830,7 +831,7 @@ namespace zaran
 		double dy = (yMax - yMin) / (yNodeNum - 1);
 		int i, j;
 		double x, y;
-		grid->SetTotalNodeNum((xNodeNum + 2) * (yNodeNum + 2));
+		grid->SetNodeNum((xNodeNum + 2), (yNodeNum + 2));
 		nodeCoord.resize((xNodeNum + 2) * (yNodeNum + 2));
 		auto& nodeType = nodeTopo->GetType();
 		nodeType.resize((xNodeNum + 2) * (yNodeNum + 2));
@@ -976,7 +977,7 @@ namespace zaran
 			bound.SetGhostNodeIndex(ghostNodeIndex);
 			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 			bound.SetNorm(boundNorm);
-			boundMap->AddBoundary("wall", bound);
+			boundMap->AddBoundary("slipWall", bound);
 			j = yNodeNum;
 			nodeIndex = GetNodeIndex(i, j);
 			bound.SetNodeIndex(nodeIndex);
@@ -986,7 +987,7 @@ namespace zaran
 			bound.SetGhostNodeIndex(ghostNodeIndex);
 			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 			bound.SetNorm(boundNorm);
-			boundMap->AddBoundary("wall", bound);
+			boundMap->AddBoundary("slipWall", bound);
 		}
 		gridList->AddGrid(grid);
 	}
@@ -1162,7 +1163,7 @@ namespace zaran
 			bound.SetGhostNodeIndex(ghostNodeIndex);
 			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 			bound.SetNorm(boundNorm);
-			boundMap->AddBoundary("wall", bound);
+			boundMap->AddBoundary("slipWall", bound);
 			j = yNodeNum;
 			nodeIndex = GetNodeIndex(i, j);
 			bound.SetNodeIndex(nodeIndex);
@@ -1172,7 +1173,7 @@ namespace zaran
 			bound.SetGhostNodeIndex(ghostNodeIndex);
 			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 			bound.SetNorm(boundNorm);
-			boundMap->AddBoundary("wall", bound);
+			boundMap->AddBoundary("slipWall", bound);
 		}
 		gridList->AddGrid(grid);
 	}

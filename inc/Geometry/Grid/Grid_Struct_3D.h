@@ -19,7 +19,9 @@ namespace zaran
 	public:
 		Grid_Struct_3D()
 			:Grid(), m_ni(0), m_nj(0), m_nk(0)
-		{}
+		{
+			SetDimension(Dimension::three);
+		}
 	public:
 		void SetNi(int ni);
 		void SetNj(int nj);

@@ -35,6 +35,7 @@ namespace zaran
 		SetNi(ni);
 		SetNj(nj);
 		SetNk(nk);
+		SetTotalNodeNum(ni * nj * nk);
 	}
 	void Grid_Struct_3D::GetNodeNum(int& ni, int& nj, int& nk)
 	{

@@ -61,7 +61,7 @@ namespace zaran {
 
 		auto& grid = *GetGrid();
 		int nTotalNodeNum = grid.GetTotalNodeNum();
-		DArray emptyData(nTotalNodeNum);
+ 		DArray emptyData(nTotalNodeNum);
 		auto& dataPtr = GetFieldData();
 		dataPtr = std::make_shared<FieldData>();
 		auto& data = *dataPtr;

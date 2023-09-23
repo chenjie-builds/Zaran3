@@ -27,6 +27,8 @@ namespace zaran
 		virtual void ComputeTimeStepLocal()override;
 		// 计算流动通量
 		virtual void InviscidFlux()override;
+		// 使用MUSCL格式计算流动通量
+		void InviscidFluxMUSCL();
 		// 计算限制器系数
 		virtual void ComputeLimiterCoef()override;
 	};

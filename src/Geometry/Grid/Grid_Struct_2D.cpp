@@ -21,6 +21,7 @@ namespace zaran
 	{
 		SetNi(ni);
 		SetNj(nj);
+		SetTotalNodeNum(ni * nj);
 	}
 	void Grid_Struct_2D::GetNodeNum(int& ni, int& nj)
 	{
