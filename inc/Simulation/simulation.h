@@ -20,7 +20,8 @@ namespace zaran
 	enum class SimulationTask
 	{
 		SOLVE_FIELD = 0,
-		CONVERT_GRID = 1
+		CONVERT_GRID = 1,
+		READ_MODEL = 2
 	};
 
 	//仿真类，用于控制计算流程

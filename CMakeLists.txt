@@ -43,6 +43,7 @@ endif()
 #VTK库
 find_package(VTK CONFIG REQUIRED)
 target_link_libraries(Zaran PRIVATE ${VTK_LIBRARIES})
+set(CMAKE_NINJA_FORCE_RESPONSE_FILE "ON" CACHE BOOL "Force Ninja to use response files.")
 
 #Eigen库
 find_package(Eigen3 CONFIG REQUIRED)

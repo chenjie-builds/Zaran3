@@ -5,6 +5,8 @@
 #include "GridListFactory.h"
 #include"FNFDM3D.h"
 #include"FNFDM2D.h"
+#include"ReadSTL.h"
+#include"PolyData.h"
 #include <filesystem>
 using namespace zaran;
 void Simulation::Start()
@@ -28,6 +30,24 @@ void Simulation::Start()
 	else if (task_ == SimulationTask::CONVERT_GRID)
 	{
 
+	}
+	else if (task_ == SimulationTask::READ_MODEL)
+	{
+		string modelFileName = GlobalData::GetString("modelFileName");
+		STLReader reader;
+		reader.ReadSTLFile(modelFileName.c_str());
+		PolyDataModel model;
+		model.SetPolyData(reader.GetMesh(), 1e-6);
+		model.ShowModel();
+		if (model.IsClosed())
+			ZaranLog::info("Import Model: {}, is closed!", modelFileName);
+		else
+			ZaranLog::info("Import Model: {}, is not closed!", modelFileName);
+	}
+	else
+	{
+		ZaranLog::warn("Unsupported Simulation Task! Please Check!");
+		system("pause");
 	}
 
 }
@@ -91,6 +111,10 @@ void Simulation::InitSimulationTask()
 	else if (simuTask == "CONVERT_GRID")
 	{
 		task_ = SimulationTask::CONVERT_GRID;
+	}
+	else if (simuTask == "READ_MODEL")
+	{
+		task_ = SimulationTask::READ_MODEL;
 	}
 	else
 	{
