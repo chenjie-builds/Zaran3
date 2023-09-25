@@ -820,8 +820,8 @@ namespace zaran
 		grid->SetType(GridType::NOTSET);
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
-		int xNodeNum = 31;
-		int yNodeNum = 31;
+		int xNodeNum = 101;
+		int yNodeNum = 101;
 		int nodeNum = 0;
 		double xMin = 0.0;
 		double yMin = 0.0;
@@ -977,7 +977,7 @@ namespace zaran
 			bound.SetGhostNodeIndex(ghostNodeIndex);
 			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 			bound.SetNorm(boundNorm);
-			boundMap->AddBoundary("slipWall", bound);
+			boundMap->AddBoundary("outlet", bound);
 			j = yNodeNum;
 			nodeIndex = GetNodeIndex(i, j);
 			bound.SetNodeIndex(nodeIndex);
@@ -987,7 +987,7 @@ namespace zaran
 			bound.SetGhostNodeIndex(ghostNodeIndex);
 			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 			bound.SetNorm(boundNorm);
-			boundMap->AddBoundary("slipWall", bound);
+			boundMap->AddBoundary("inlet", bound);
 		}
 		gridList->AddGrid(grid);
 	}

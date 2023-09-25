@@ -19,6 +19,7 @@ namespace zaran
 	public:
 		Solver_NS_2D_Struct() {}
 		~Solver_NS_2D_Struct() {}
+		virtual void InitField()override;
 		virtual void ComputeCoordTrans()override;
 		// 使用最小二乘求梯度
 		virtual void ComputeGradientWLS()override;
@@ -31,5 +32,11 @@ namespace zaran
 		void InviscidFluxMUSCL();
 		// 计算限制器系数
 		virtual void ComputeLimiterCoef()override;
+		// 超声速入口边界条件
+		virtual void ComputeInletBC(Boundary& bound);
+		// 超声速出口边界条件
+		virtual void ComputeOutletBC(Boundary& bound);
+		// 壁面边界条件
+		virtual void  ComputeWallBC(Boundary& bound) {};
 	};
 }

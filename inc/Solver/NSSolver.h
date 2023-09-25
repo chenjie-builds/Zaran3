@@ -89,11 +89,11 @@ namespace zaran
 	protected:
 		void BoundaryCondition()override;
 		// 超声速入口边界条件
-		void ComputeInletBC(Boundary& bound);
+		virtual void ComputeInletBC(Boundary& bound);
 		// 超声速出口边界条件
-		void ComputeOutletBC(Boundary& bound);
+		virtual void ComputeOutletBC(Boundary& bound);
 		// 壁面边界条件
-		void  ComputeWallBC(Boundary& bound);
+		virtual void  ComputeWallBC(Boundary& bound);
 		// 原始变量梯度
 		Array<DArray*> m_PrimGradX;
 		Array<DArray*> m_PrimGradY;

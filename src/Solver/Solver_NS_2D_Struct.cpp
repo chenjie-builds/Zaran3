@@ -3,6 +3,51 @@
 #include"MathBasic.h"
 namespace zaran
 {
+	void Solver_NS_2D_Struct::InitField()
+	{
+		GridPtr grid = GetGrid();
+		auto& rho = *m_Primtive[0];
+		auto& u = *m_Primtive[1];
+		auto& v = *m_Primtive[2];
+		auto& w = *m_Primtive[3];
+		auto& p = *m_Primtive[4];
+		auto& NodeTopo = grid->GetNodeTopo();
+		auto& nodeCoord = NodeTopo->GetCoordinate();
+		FlowSolverParaPtr para = GetPara();
+		int initType = para->GetInitFieldType();
+		DVector primInit = para->GetPrimitiveInflow();
+		int nTotalNodeNum = grid->GetTotalNodeNum();
+		double theta = 90 / 180.0 * PI;
+		double x, y, z;
+		primInit[0] = 5.4;
+		primInit[1] = 2.2222 * sin(theta);
+		primInit[2] = -2.22222 * cos(theta);
+		primInit[3] = 0;
+		primInit[4] = 10.3333;
+		para->SetPrimitiveInflow(primInit);
+		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		{
+			x = nodeCoord[iNode].x();
+			y = nodeCoord[iNode].y();
+			if (x >= 0.07 && y <= x * tan(theta) - 0.07 * tan(theta))
+			{
+				rho[iNode] = 1.4;
+				u[iNode] = 0.0;
+				v[iNode] = 0.0;
+				w[iNode] = 0.0;
+				p[iNode] = 1.0;
+			}
+			else
+			{
+				rho[iNode] = 5.4;
+				u[iNode] = 2.22222 * sin(theta);
+				v[iNode] = -2.22222 * cos(theta);
+				w[iNode] = 0.0;
+				p[iNode] = 10.33333;
+			}
+		}
+		Primitive2Conservative();
+	}
 	void Solver_NS_2D_Struct::ComputeCoordTrans()
 	{
 		auto& grid = GetGrid();
@@ -262,7 +307,74 @@ namespace zaran
 	}
 	void Solver_NS_2D_Struct::InviscidFluxMUSCL()
 	{
+		auto& grid = GetGrid();
+		auto& nodeTopo = grid->GetNodeTopo();
+		auto& nodeType = nodeTopo->GetType();
+		auto& nodeCoord = nodeTopo->GetCoordinate();
+		auto& prim = m_Primtive;
+		auto& cons = m_Conservative;
+		auto& limiterCoef = m_LimiterCoef;
+		auto& res = m_Residual;
+		auto& coordTrans = m_CoordTrans;
+		// 起始点和终止点的编号,s: start, e: end
+		int is, ie, js, je;
+		grid->GetRange(is, ie, js, je);
+		int iNode;
+		// grid->GetNodeIndex(i, j, k)的lamda表达式
+		auto NodeIndex = [&](int i, int j) {return grid->GetNodeIndex(i, j); };
+		Ptr<RiemannSolverPara >riemanPara = std::make_shared<RiemannSolverPara>();
+		riemanPara->gammaL = riemanPara->gammaR = 1.4;
+		for (int j = js; j < je; j++)
+		{
+			for (int i = is; i < ie; i++)
+			{
+				iNode = NodeIndex(i, j);
+				auto& jacobi = (*coordTrans[32])[iNode];
+				// i direction
+				riemanPara->norm(0) = (*coordTrans[16])[iNode];
+				riemanPara->norm(1) = (*coordTrans[17])[iNode];
+				riemanPara->norm(2) = (*coordTrans[18])[iNode];
+				riemanPara->nt = (*coordTrans[19])[iNode];
+				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+				{
+					riemanPara->primL(iVal) = (*prim[iVal])[iNode];
+					riemanPara->primR(iVal) = (*prim[iVal])[NodeIndex(i + 1, j)];
+				}
+				riemannSolver_->Solver(riemanPara);
+				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					(*res[iVal])[iNode] += riemanPara->flux[iVal] / jacobi;
+				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+				{
+					riemanPara->primR(iVal) = (*prim[iVal])[iNode];
+					riemanPara->primL(iVal) = (*prim[iVal])[NodeIndex(i - 1, j)];
+				}
+				riemannSolver_->Solver(riemanPara);
+				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					(*res[iVal])[iNode] -= riemanPara->flux[iVal] / jacobi;
 
+				// j direction
+				riemanPara->norm(0) = (*coordTrans[20])[iNode];
+				riemanPara->norm(1) = (*coordTrans[21])[iNode];
+				riemanPara->norm(2) = (*coordTrans[22])[iNode];
+				riemanPara->nt = (*coordTrans[23])[iNode];
+				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+				{
+					riemanPara->primL(iVal) = (*prim[iVal])[iNode];
+					riemanPara->primR(iVal) = (*prim[iVal])[NodeIndex(i + 1, j)];
+				}
+				riemannSolver_->Solver(riemanPara);
+				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					(*res[iVal])[iNode] += riemanPara->flux[iVal] / jacobi;
+				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+				{
+					riemanPara->primR(iVal) = (*prim[iVal])[iNode];
+					riemanPara->primL(iVal) = (*prim[iVal])[NodeIndex(i - 1, j)];
+				}
+				riemannSolver_->Solver(riemanPara);
+				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					(*res[iVal])[iNode] -= riemanPara->flux[iVal] / jacobi;
+			}
+		}
 	}
 	void Solver_NS_2D_Struct::ComputeLimiterCoef()
 	{
@@ -328,5 +440,50 @@ namespace zaran
 			}
 		}
 
+	}
+	void Solver_NS_2D_Struct::ComputeInletBC(Boundary& bound)
+	{
+		FlowSolverParaPtr para = GetPara();
+		int  ghostIndex = bound.GetGhostNodeIndex();
+		auto& rho = *m_Primtive[0];
+		auto& u = *m_Primtive[1];
+		auto& v = *m_Primtive[2];
+		auto& w = *m_Primtive[3];
+		auto& p = *m_Primtive[4];
+		auto& cons0 = *m_Conservative[0];
+		auto& cons1 = *m_Conservative[1];
+		auto& cons2 = *m_Conservative[2];
+		auto& cons3 = *m_Conservative[3];
+		auto& cons4 = *m_Conservative[4];
+		auto& inletPara = para->GetPrimitiveInflow();
+		rho[ghostIndex] = inletPara[0];
+		u[ghostIndex] = inletPara[1];
+		v[ghostIndex] = inletPara[2];
+		w[ghostIndex] = inletPara[3];
+		p[ghostIndex] = inletPara[4];
+		Primitive2Conservative(rho[ghostIndex], u[ghostIndex], v[ghostIndex], w[ghostIndex], p[ghostIndex],
+			cons0[ghostIndex], cons1[ghostIndex], cons2[ghostIndex], cons3[ghostIndex], cons4[ghostIndex]);
+	}
+	void Solver_NS_2D_Struct::ComputeOutletBC(Boundary& bound)
+	{
+		auto& rho = *m_Primtive[0];
+		auto& u = *m_Primtive[1];
+		auto& v = *m_Primtive[2];
+		auto& w = *m_Primtive[3];
+		auto& p = *m_Primtive[4];
+		auto& cons0 = *m_Conservative[0];
+		auto& cons1 = *m_Conservative[1];
+		auto& cons2 = *m_Conservative[2];
+		auto& cons3 = *m_Conservative[3];
+		auto& cons4 = *m_Conservative[4];
+		int boundIndex = bound.GetIndex();
+		int ghostIndex = bound.GetGhostNodeIndex();
+		rho[ghostIndex] = rho[boundIndex];
+		u[ghostIndex] = u[boundIndex];
+		v[ghostIndex] = v[boundIndex];
+		w[ghostIndex] = w[boundIndex];
+		p[ghostIndex] = p[boundIndex];
+		Primitive2Conservative(rho[ghostIndex], u[ghostIndex], v[ghostIndex], w[ghostIndex], p[ghostIndex],
+			cons0[ghostIndex], cons1[ghostIndex], cons2[ghostIndex], cons3[ghostIndex], cons4[ghostIndex]);
 	}
 }
