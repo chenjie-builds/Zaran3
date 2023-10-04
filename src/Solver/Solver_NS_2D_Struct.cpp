@@ -341,10 +341,10 @@ namespace zaran
 				{
 					riemanPara->primL(iVal) = Prim(iVal, i, j) +
 						0.25 * ((1 - k) * (limiter(Prim(iVal, i + 1, j) - Prim(iVal, i, j), Prim(iVal, i, j) - Prim(iVal, i - 1, j)) * (Prim(iVal, i, j) - Prim(iVal, i - 1, j)) +
-							(1 + k) * (limiter(Prim(iVal, i, j) - Prim(iVal, i - 1, j), Prim(iVal, i + 1, j) - Prim(iVal, i, j)) * (Prim(iVal, i + 1, j) - Prim(iVal, i, j)));
+							(1 + k) * (limiter(Prim(iVal, i, j) - Prim(iVal, i - 1, j), Prim(iVal, i + 1, j) - Prim(iVal, i, j)) * (Prim(iVal, i + 1, j) - Prim(iVal, i, j)))));
 					riemanPara->primR(iVal) = Prim(iVal, i + 1, j) +
 						0.25 * ((1 - k) * (limiter(Prim(iVal, i + 1, j) - Prim(iVal, i, j), Prim(iVal, i + 2, j) - Prim(iVal, i + 1, j)) * (Prim(iVal, i + 2, j) - Prim(iVal, i + 1, j)) +
-							(1 + k) * (limiter(Prim(iVal, i + 2, j) - Prim(iVal, i + 1, j), Prim(iVal, i + 1, j) - Prim(iVal, i, j)) * (Prim(iVal, i + 1, j) - Prim(iVal, i, j)));
+							(1 + k) * (limiter(Prim(iVal, i + 2, j) - Prim(iVal, i + 1, j), Prim(iVal, i + 1, j) - Prim(iVal, i, j)) * (Prim(iVal, i + 1, j) - Prim(iVal, i, j)))));
 				}
 				riemannSolver_->Solver(riemanPara);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -353,10 +353,10 @@ namespace zaran
 				{
 					riemanPara->primL(iVal) = Prim(iVal, i-1, j) +
 						0.25 * ((1 - k) * (limiter(Prim(iVal, i , j) - Prim(iVal, i-1, j), Prim(iVal, i-1, j) - Prim(iVal, i - 2, j)) * (Prim(iVal, i-1, j) - Prim(iVal, i - 2, j)) +
-							(1 + k) * (limiter(Prim(iVal, i-1, j) - Prim(iVal, i - 2, j), Prim(iVal, i , j) - Prim(iVal, i-1, j)) * (Prim(iVal, i , j) - Prim(iVal, i-1, j)));
+							(1 + k) * (limiter(Prim(iVal, i-1, j) - Prim(iVal, i - 2, j), Prim(iVal, i , j) - Prim(iVal, i-1, j)) * (Prim(iVal, i , j) - Prim(iVal, i-1, j)))));
 					riemanPara->primR(iVal) = Prim(iVal, i , j) +
 						0.25 * ((1 - k) * (limiter(Prim(iVal, i , j) - Prim(iVal, i-1, j), Prim(iVal, i + 1, j) - Prim(iVal, i, j)) * (Prim(iVal, i + 1, j) - Prim(iVal, i , j)) +
-							(1 + k) * (limiter(Prim(iVal, i + 1, j) - Prim(iVal, i , j), Prim(iVal, i , j) - Prim(iVal, i-1, j)) * (Prim(iVal, i , j) - Prim(iVal, i-1, j)));
+							(1 + k) * (limiter(Prim(iVal, i + 1, j) - Prim(iVal, i , j), Prim(iVal, i , j) - Prim(iVal, i-1, j)) * (Prim(iVal, i , j) - Prim(iVal, i-1, j)))));
 				}
 				riemannSolver_->Solver(riemanPara);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -371,10 +371,10 @@ namespace zaran
 				{
 					riemanPara->primL(iVal) = Prim(iVal, i, j) +
 						0.25 * ((1 - k) * (limiter(Prim(iVal, i + 1, j) - Prim(iVal, i, j), Prim(iVal, i, j) - Prim(iVal, i - 1, j)) * (Prim(iVal, i, j) - Prim(iVal, i - 1, j)) +
-							(1 + k) * (limiter(Prim(iVal, i, j) - Prim(iVal, i - 1, j), Prim(iVal, i + 1, j) - Prim(iVal, i, j)) * (Prim(iVal, i + 1, j) - Prim(iVal, i, j)));
+							(1 + k) * (limiter(Prim(iVal, i, j) - Prim(iVal, i - 1, j), Prim(iVal, i + 1, j) - Prim(iVal, i, j)) * (Prim(iVal, i + 1, j) - Prim(iVal, i, j)))));
 					riemanPara->primR(iVal) = Prim(iVal, i + 1, j) +
 						0.25 * ((1 - k) * (limiter(Prim(iVal, i + 1, j) - Prim(iVal, i, j), Prim(iVal, i + 2, j) - Prim(iVal, i + 1, j)) * (Prim(iVal, i + 2, j) - Prim(iVal, i + 1, j)) +
-							(1 + k) * (limiter(Prim(iVal, i + 2, j) - Prim(iVal, i + 1, j), Prim(iVal, i + 1, j) - Prim(iVal, i, j)) * (Prim(iVal, i + 1, j) - Prim(iVal, i, j)));
+							(1 + k) * (limiter(Prim(iVal, i + 2, j) - Prim(iVal, i + 1, j), Prim(iVal, i + 1, j) - Prim(iVal, i, j)) * (Prim(iVal, i + 1, j) - Prim(iVal, i, j)))));
 				}
 				riemannSolver_->Solver(riemanPara);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -383,10 +383,10 @@ namespace zaran
 				{
 					riemanPara->primL(iVal) = Prim(iVal, i - 1, j) +
 						0.25 * ((1 - k) * (limiter(Prim(iVal, i, j) - Prim(iVal, i - 1, j), Prim(iVal, i - 1, j) - Prim(iVal, i - 2, j)) * (Prim(iVal, i - 1, j) - Prim(iVal, i - 2, j)) +
-							(1 + k) * (limiter(Prim(iVal, i - 1, j) - Prim(iVal, i - 2, j), Prim(iVal, i, j) - Prim(iVal, i - 1, j)) * (Prim(iVal, i, j) - Prim(iVal, i - 1, j)));
+							(1 + k) * (limiter(Prim(iVal, i - 1, j) - Prim(iVal, i - 2, j), Prim(iVal, i, j) - Prim(iVal, i - 1, j)) * (Prim(iVal, i, j) - Prim(iVal, i - 1, j)))));
 					riemanPara->primR(iVal) = Prim(iVal, i, j) +
 						0.25 * ((1 - k) * (limiter(Prim(iVal, i, j) - Prim(iVal, i - 1, j), Prim(iVal, i + 1, j) - Prim(iVal, i, j)) * (Prim(iVal, i + 1, j) - Prim(iVal, i, j)) +
-							(1 + k) * (limiter(Prim(iVal, i + 1, j) - Prim(iVal, i, j), Prim(iVal, i, j) - Prim(iVal, i - 1, j)) * (Prim(iVal, i, j) - Prim(iVal, i - 1, j)));
+							(1 + k) * (limiter(Prim(iVal, i + 1, j) - Prim(iVal, i, j), Prim(iVal, i, j) - Prim(iVal, i - 1, j)) * (Prim(iVal, i, j) - Prim(iVal, i - 1, j)))));
 				}
 				riemannSolver_->Solver(riemanPara);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
