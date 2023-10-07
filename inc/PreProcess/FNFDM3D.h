@@ -20,6 +20,7 @@ namespace zaran
 		void Create(Ptr<GridList>& gridList) override;
 	private:
 		void ReadFile(Ptr<GridList>& gridList);
+		void SortNeiborNode(Ptr<GridList>& gridList);
 	private:
 		string m_fileName;
 		int m_NodeNum;

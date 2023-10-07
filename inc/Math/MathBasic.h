@@ -37,6 +37,8 @@ namespace zaran
 	void CircleFrom3Point(const double* pt1, const double* pt2, const double* pt3, double& radius, double* center);
 	//向量(x2,y2)逆时针到(x1,y1)的角度，0~2pi，默认(x2,y2)为x轴正方向
 	double AngleOfTwoArray(const double& x1, const double& y1, const double& x2 = 1, const double& y2 = 0);
+	//三维向量A和向量B的夹角，0~pi
+	double AngleOfTwoArray3D(const double* A, const double* B);
 	double test1();
 
 }

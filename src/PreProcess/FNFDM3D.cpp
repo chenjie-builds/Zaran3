@@ -1,205 +1,403 @@
 #include"FNFDM3D.h"
 #include"Log.h"
+#include"MathBasic.h"
 #include<set>
 #include<fstream>
-using namespace zaran;
-zaran::GridListFactoryFNFDM3D::GridListFactoryFNFDM3D()
+namespace zaran
 {
-	m_fileName = "sysu.dat";
-}
-void zaran::GridListFactoryFNFDM3D::Create(Ptr<GridList>& gridList)
-{
-	if (!gridList)
-		gridList = std::make_shared<GridList>();
-	ReadFile(gridList);
-}
 
-void zaran::GridListFactoryFNFDM3D::ReadFile(Ptr<GridList>& gridList)
-{
-	Ptr < Grid > grid = std::make_shared<Grid>();
-	grid->SetDimension(Dimension::three);
-	gridList->AddGrid(grid);
-	auto& nodeTopo = grid->GetNodeTopo();
-	std::ifstream fin(m_fileName);
-	//读取所有节点坐标
-	fin >> m_NodeNum;
-	grid->SetTotalNodeNum(m_NodeNum);
-	auto& nodeCoord = nodeTopo->GetCoordinate();
-	nodeCoord.resize(m_NodeNum);
-	for (size_t i = 0; i < m_NodeNum; i++)
+	GridListFactoryFNFDM3D::GridListFactoryFNFDM3D()
 	{
-		auto& currentCoord = nodeCoord[i];
-		fin >> currentCoord[0] >> currentCoord[1] >> currentCoord[2];
+		m_fileName = "sysu.dat";
 	}
-	//读取所有内部节点邻居节点
-	int innerNodeNum = 0;
-	fin >> innerNodeNum;
-	int innerNodeIndex;
-	IArray neiborNodeIndex(6);
-	auto& nodeType = nodeTopo->GetType();
-	nodeType.resize(m_NodeNum);
-	auto& temp_i = nodeTopo->GetTemplateI();
-	auto& temp_j = nodeTopo->GetTemplateJ();
-	auto& temp_k = nodeTopo->GetTemplateK();
-	temp_i.resize(m_NodeNum);
-	temp_j.resize(m_NodeNum);
-	temp_k.resize(m_NodeNum);
-	auto& nodeNeibor = nodeTopo->GetNeighborCloud();
-	nodeNeibor.resize(m_NodeNum);
-	for (size_t i = 0; i < innerNodeNum; i++)
+	void GridListFactoryFNFDM3D::Create(Ptr<GridList>& gridList)
 	{
-		fin >> innerNodeIndex;
-		fin >> neiborNodeIndex[0] >> neiborNodeIndex[1] >> neiborNodeIndex[2] >> neiborNodeIndex[3] >> neiborNodeIndex[4] >> neiborNodeIndex[5];
-		innerNodeIndex -= 1;
-		neiborNodeIndex[0] -= 1;
-		neiborNodeIndex[1] -= 1;
-		neiborNodeIndex[2] -= 1;
-		neiborNodeIndex[3] -= 1;
-		neiborNodeIndex[4] -= 1;
-		neiborNodeIndex[5] -= 1;
-		nodeType[innerNodeIndex] = NodeType::inner;
-		nodeNeibor[innerNodeIndex] = neiborNodeIndex;
-		temp_i[innerNodeIndex] = IArray{ neiborNodeIndex[0],innerNodeIndex,neiborNodeIndex[1] };
-		temp_j[innerNodeIndex] = IArray{ neiborNodeIndex[2],innerNodeIndex,neiborNodeIndex[3] };
-		temp_k[innerNodeIndex] = IArray{ neiborNodeIndex[4],innerNodeIndex,neiborNodeIndex[5] };
+		if (!gridList)
+			gridList = std::make_shared<GridList>();
+		ReadFile(gridList);
+		SortNeiborNode(gridList);
 	}
-	//读取所有边界节点邻居节点
-	auto& boundMap = grid->GetBoundaryMap();
-	m_BoundNodeNum = 0;
-	int nBound;
-	fin >> nBound;
-	m_BoundNodeNum += nBound;
-	int tempIndex1, tempIndex2;
-	int boundNodeIndex, connectNodeIndex;
-	Boundary tempBound;
-	for (size_t i = 0; i < nBound; i++)
+
+	void GridListFactoryFNFDM3D::ReadFile(Ptr<GridList>& gridList)
 	{
-		fin >> boundNodeIndex >> tempIndex1;
-		boundNodeIndex -= 1;
-		boundMap->AddBoundary("inlet", Boundary{ boundNodeIndex,0,0,DVector3D{} });
-		nodeType[boundNodeIndex] = NodeType::inlet;
-	}
-	fin >> nBound;
-	m_BoundNodeNum += nBound;
-	for (size_t i = 0; i < nBound; i++)
-	{
-		fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
-		boundNodeIndex -= 1;
-		connectNodeIndex -= 1;
-		boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
-		nodeType[boundNodeIndex] = NodeType::outlet;
-	}
-	fin >> nBound;
-	m_BoundNodeNum += nBound;
-	for (size_t i = 0; i < nBound; i++)
-	{
-		fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
-		boundNodeIndex -= 1;
-		connectNodeIndex -= 1;
-		boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
-		nodeType[boundNodeIndex] = NodeType::outlet;
-	}
-	fin >> nBound;
-	m_BoundNodeNum += nBound;
-	for (size_t i = 0; i < nBound; i++)
-	{
-		fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
-		boundNodeIndex -= 1;
-		connectNodeIndex -= 1;
-		boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
-		nodeType[boundNodeIndex] = NodeType::outlet;
-	}
-	fin >> nBound;
-	m_BoundNodeNum += nBound;
-	for (size_t i = 0; i < nBound; i++)
-	{
-		fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
-		boundNodeIndex -= 1;
-		connectNodeIndex -= 1;
-		boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
-		nodeType[boundNodeIndex] = NodeType::outlet;
-	}
-	fin >> nBound;
-	m_BoundNodeNum += nBound;
-	for (size_t i = 0; i < nBound; i++)
-	{
-		if (i == nBound - 1)
-			i = i;
-		fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
-		boundNodeIndex -= 1;
-		connectNodeIndex -= 1;
-		boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
-		nodeType[boundNodeIndex] = NodeType::outlet;
-	}
-	fin >> nBound;
-	m_BoundNodeNum += nBound;
-	for (size_t i = 0; i < nBound; i++)
-	{
-		fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
-		boundNodeIndex -= 1;
-		connectNodeIndex -= 1;
-		DVector3D wallNorm = nodeCoord[connectNodeIndex] - nodeCoord[boundNodeIndex];
-		boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,connectNodeIndex,0,wallNorm });
-		nodeType[boundNodeIndex] = NodeType::slipWall;
-	}
-	Array<std::set<int>> nodeNeiborSet(m_NodeNum);
-	for (int iNode = 0; iNode < m_NodeNum; iNode++)
-	{
-		if (nodeType[iNode] != NodeType::inner)
-			continue;
-		auto& currentNeibor = nodeNeibor[iNode];
-		auto& neiborSet = nodeNeiborSet[iNode];
-		for (auto& iNeibor : currentNeibor)
+		Ptr < Grid > grid = std::make_shared<Grid>();
+		grid->SetDimension(Dimension::three);
+		gridList->AddGrid(grid);
+		auto& nodeTopo = grid->GetNodeTopo();
+		std::ifstream fin(m_fileName);
+		//读取所有节点坐标
+		fin >> m_NodeNum;
+		grid->SetTotalNodeNum(m_NodeNum);
+		auto& nodeCoord = nodeTopo->GetCoordinate();
+		nodeCoord.resize(m_NodeNum);
+		for (size_t i = 0; i < m_NodeNum; i++)
 		{
-			neiborSet.insert(iNeibor);
+			auto& currentCoord = nodeCoord[i];
+			fin >> currentCoord[0] >> currentCoord[1] >> currentCoord[2];
 		}
-		for (auto& iNeibor : currentNeibor)
+		//读取所有内部节点邻居节点
+		int innerNodeNum = 0;
+		fin >> innerNodeNum;
+		int innerNodeIndex;
+		IArray neiborNodeIndex(6);
+		auto& nodeType = nodeTopo->GetType();
+		nodeType.resize(m_NodeNum);
+		auto& temp_i = nodeTopo->GetTemplateI();
+		auto& temp_j = nodeTopo->GetTemplateJ();
+		auto& temp_k = nodeTopo->GetTemplateK();
+		temp_i.resize(m_NodeNum);
+		temp_j.resize(m_NodeNum);
+		temp_k.resize(m_NodeNum);
+		auto& nodeNeibor = nodeTopo->GetNeighborCloud();
+		nodeNeibor.resize(m_NodeNum);
+		for (size_t i = 0; i < innerNodeNum; i++)
 		{
-			auto& neiborNeibor = nodeNeibor[iNeibor];
-			for (auto& iNeiborNeibor : neiborNeibor)
+			fin >> innerNodeIndex;
+			fin >> neiborNodeIndex[0] >> neiborNodeIndex[1] >> neiborNodeIndex[2] >> neiborNodeIndex[3] >> neiborNodeIndex[4] >> neiborNodeIndex[5];
+			innerNodeIndex -= 1;
+			neiborNodeIndex[0] -= 1;
+			neiborNodeIndex[1] -= 1;
+			neiborNodeIndex[2] -= 1;
+			neiborNodeIndex[3] -= 1;
+			neiborNodeIndex[4] -= 1;
+			neiborNodeIndex[5] -= 1;
+			nodeType[innerNodeIndex] = NodeType::inner;
+			nodeNeibor[innerNodeIndex] = neiborNodeIndex;
+			temp_i[innerNodeIndex] = IArray{ neiborNodeIndex[0],innerNodeIndex,neiborNodeIndex[1] };
+			temp_j[innerNodeIndex] = IArray{ neiborNodeIndex[2],innerNodeIndex,neiborNodeIndex[3] };
+			temp_k[innerNodeIndex] = IArray{ neiborNodeIndex[4],innerNodeIndex,neiborNodeIndex[5] };
+		}
+		//读取所有边界节点邻居节点
+		auto& boundMap = grid->GetBoundaryMap();
+		m_BoundNodeNum = 0;
+		int nBound;
+		fin >> nBound;
+		m_BoundNodeNum += nBound;
+		int tempIndex1, tempIndex2;
+		int boundNodeIndex, connectNodeIndex;
+		Boundary tempBound;
+		for (size_t i = 0; i < nBound; i++)
+		{
+			fin >> boundNodeIndex >> tempIndex1;
+			boundNodeIndex -= 1;
+			boundMap->AddBoundary("inlet", Boundary{ boundNodeIndex,0,0,DVector3D{} });
+			nodeType[boundNodeIndex] = NodeType::inlet;
+		}
+		fin >> nBound;
+		m_BoundNodeNum += nBound;
+		for (size_t i = 0; i < nBound; i++)
+		{
+			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
+			boundNodeIndex -= 1;
+			connectNodeIndex -= 1;
+			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+			nodeType[boundNodeIndex] = NodeType::outlet;
+		}
+		fin >> nBound;
+		m_BoundNodeNum += nBound;
+		for (size_t i = 0; i < nBound; i++)
+		{
+			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
+			boundNodeIndex -= 1;
+			connectNodeIndex -= 1;
+			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+			nodeType[boundNodeIndex] = NodeType::outlet;
+		}
+		fin >> nBound;
+		m_BoundNodeNum += nBound;
+		for (size_t i = 0; i < nBound; i++)
+		{
+			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
+			boundNodeIndex -= 1;
+			connectNodeIndex -= 1;
+			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+			nodeType[boundNodeIndex] = NodeType::outlet;
+		}
+		fin >> nBound;
+		m_BoundNodeNum += nBound;
+		for (size_t i = 0; i < nBound; i++)
+		{
+			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
+			boundNodeIndex -= 1;
+			connectNodeIndex -= 1;
+			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+			nodeType[boundNodeIndex] = NodeType::outlet;
+		}
+		fin >> nBound;
+		m_BoundNodeNum += nBound;
+		for (size_t i = 0; i < nBound; i++)
+		{
+			if (i == nBound - 1)
+				i = i;
+			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
+			boundNodeIndex -= 1;
+			connectNodeIndex -= 1;
+			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+			nodeType[boundNodeIndex] = NodeType::outlet;
+		}
+		fin >> nBound;
+		m_BoundNodeNum += nBound;
+		for (size_t i = 0; i < nBound; i++)
+		{
+			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
+			boundNodeIndex -= 1;
+			connectNodeIndex -= 1;
+			DVector3D wallNorm = nodeCoord[connectNodeIndex] - nodeCoord[boundNodeIndex];
+			boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,connectNodeIndex,0,wallNorm });
+			nodeType[boundNodeIndex] = NodeType::slipWall;
+		}
+		Array<std::set<int>> nodeNeiborSet(m_NodeNum);
+		for (int iNode = 0; iNode < m_NodeNum; iNode++)
+		{
+			if (nodeType[iNode] != NodeType::inner)
+				continue;
+			auto& currentNeibor = nodeNeibor[iNode];
+			auto& neiborSet = nodeNeiborSet[iNode];
+			for (auto& iNeibor : currentNeibor)
 			{
-				neiborSet.insert(iNeiborNeibor);
+				neiborSet.insert(iNeibor);
+			}
+			for (auto& iNeibor : currentNeibor)
+			{
+				auto& neiborNeibor = nodeNeibor[iNeibor];
+				for (auto& iNeiborNeibor : neiborNeibor)
+				{
+					neiborSet.insert(iNeiborNeibor);
+				}
+			}
+			neiborSet.erase(iNode);
+		}
+		for (int iNode = 0; iNode < m_NodeNum; iNode++)
+		{
+			if (nodeType[iNode] != NodeType::inner)
+				continue;
+			auto& currentNeibor = nodeNeibor[iNode];
+			auto& neiborSet = nodeNeiborSet[iNode];
+			currentNeibor.resize(neiborSet.size());
+			int i = 0;
+			for (auto& iNeibor : neiborSet)
+			{
+				currentNeibor[i] = iNeibor;
+				i++;
 			}
 		}
-		neiborSet.erase(iNode);
-	}
-	for (int iNode = 0; iNode < m_NodeNum; iNode++)
-	{
-		if (nodeType[iNode] != NodeType::inner)
-			continue;
-		auto& currentNeibor = nodeNeibor[iNode];
-		auto& neiborSet = nodeNeiborSet[iNode];
-		currentNeibor.resize(neiborSet.size());
-		int i = 0;
-		for (auto& iNeibor : neiborSet)
+		fin.close();
+		fin.open("cell.dat");
+		auto& cellTopo = grid->GetCellTopo();
+		int cellNum;
+		fin >> cellNum;
+		auto& cell_node = cellTopo->GetNodeIndex();
+		cell_node.resize(cellNum);
+		IArray cellNeiborNodeIndex(8);
+		for (int iCell = 0; iCell < cellNum; iCell++)
 		{
-			currentNeibor[i] = iNeibor;
-			i++;
+			fin >> cellNeiborNodeIndex[0] >> cellNeiborNodeIndex[1] >> cellNeiborNodeIndex[2] >> cellNeiborNodeIndex[3]
+				>> cellNeiborNodeIndex[4] >> cellNeiborNodeIndex[5] >> cellNeiborNodeIndex[6] >> cellNeiborNodeIndex[7];
+			cellNeiborNodeIndex[0] -= 1;
+			cellNeiborNodeIndex[1] -= 1;
+			cellNeiborNodeIndex[2] -= 1;
+			cellNeiborNodeIndex[3] -= 1;
+			cellNeiborNodeIndex[4] -= 1;
+			cellNeiborNodeIndex[5] -= 1;
+			cellNeiborNodeIndex[6] -= 1;
+			cellNeiborNodeIndex[7] -= 1;
+			cell_node[iCell] = cellNeiborNodeIndex;
 		}
-	}
-	fin.close();
-	fin.open("cell.dat");
-	auto& cellTopo = grid->GetCellTopo();
-	int cellNum;
-	fin >> cellNum;
-	auto& cell_node = cellTopo->GetNodeIndex();
-	cell_node.resize(cellNum);
-	IArray cellNeiborNodeIndex(8);
-	for (int iCell = 0; iCell < cellNum; iCell++)
-	{
-		fin >> cellNeiborNodeIndex[0] >> cellNeiborNodeIndex[1] >> cellNeiborNodeIndex[2] >> cellNeiborNodeIndex[3]
-			>> cellNeiborNodeIndex[4] >> cellNeiborNodeIndex[5] >> cellNeiborNodeIndex[6] >> cellNeiborNodeIndex[7];
-		cellNeiborNodeIndex[0] -= 1;
-		cellNeiborNodeIndex[1] -= 1;
-		cellNeiborNodeIndex[2] -= 1;
-		cellNeiborNodeIndex[3] -= 1;
-		cellNeiborNodeIndex[4] -= 1;
-		cellNeiborNodeIndex[5] -= 1;
-		cellNeiborNodeIndex[6] -= 1;
-		cellNeiborNodeIndex[7] -= 1;
-		cell_node[iCell] = cellNeiborNodeIndex;
-	}
-	fin.close();
+		fin.close();
 
+
+	}
+	void GridListFactoryFNFDM3D::SortNeiborNode(Ptr<GridList>& gridList)
+	{
+		auto& grid = gridList->GetGrid(0);
+		auto& nodeTopo = grid->GetNodeTopo();
+		auto& nodeCoord = nodeTopo->GetCoordinate();
+		auto& nodeNeibor = nodeTopo->GetNeighborCloud();
+		auto& nodeType = nodeTopo->GetType();
+		auto& temp_i = nodeTopo->GetTemplateI();
+		auto& temp_j = nodeTopo->GetTemplateJ();
+		auto& temp_k = nodeTopo->GetTemplateK();
+		struct node_pair
+		{
+			int node1, node2;
+		};
+		std::map<double, node_pair> node_pair_map;
+		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
+		{
+			node_pair_map.clear();
+			if (nodeType[iNode] != NodeType::inner)
+				continue;
+			auto& currentNodeCoord = nodeCoord[iNode];
+			auto& currentNeibor = nodeNeibor[iNode];
+			if (iNode == 1492)
+			{
+				ZaranLog::info("node before:{}\n", iNode);
+				ZaranLog::info("{} {} {}\n",  currentNodeCoord.x(), currentNodeCoord.y(), currentNodeCoord.z());
+				for (auto& i : currentNeibor)
+				{
+					ZaranLog::info("{} {} {}\n", nodeCoord[i].x(), nodeCoord[i].y(), nodeCoord[i].z());
+				}
+			}// 生成点对map
+			// 以点对与iNode连线的夹角为key
+			// 以点对为value
+			// 点对为所有与iNode相邻的点对
+			for (int i = 0; i < currentNeibor.size(); ++i)
+			{
+				for (int j = i + 1; j < currentNeibor.size(); ++j)
+				{
+					node_pair temp;
+					temp.node1 = currentNeibor[i];
+					temp.node2 = currentNeibor[j];
+					DVector3D vec1 = nodeCoord[temp.node1] - nodeCoord[iNode];
+					DVector3D vec2 = nodeCoord[temp.node2] - nodeCoord[iNode];
+					double angle = AngleOfTwoArray3D(vec1.data(), vec2.data());
+					node_pair_map[angle] = temp;
+				}
+			}
+			//取出map中最后一个点对，即夹角最大的点对
+			node_pair main_pair = node_pair_map.rbegin()->second;
+			//从邻居节点中删除这个点对
+			currentNeibor.erase(std::find(currentNeibor.begin(), currentNeibor.end(), main_pair.node1));
+			currentNeibor.erase(std::find(currentNeibor.begin(), currentNeibor.end(), main_pair.node2));
+			//主方向向量
+			DVector3D main_vec = nodeCoord[main_pair.node1] - nodeCoord[main_pair.node2];
+
+			//求出所有邻居节点在以主方向向量为法向量，经过当地节点的平面上的投影
+			map<int, DVector3D> node_proj_map;
+			for (int i = 0; i < currentNeibor.size(); ++i)
+			{
+				DVector3D vec = nodeCoord[currentNeibor[i]] - nodeCoord[iNode];
+				vec = vec - vec.dot(main_vec) * main_vec / (main_vec.norm() * main_vec.norm());
+				node_proj_map[currentNeibor[i]] = vec;
+			}
+			//以第一个邻居节点投影向量为基准向量，求出基准向量以法向量为旋转轴旋转到其他投影向量的角度, 0~2pi
+			map<double, int> node_angle_map;
+			for (int i = 0; i < currentNeibor.size(); ++i)
+			{
+				if (i == 0)
+				{
+					node_angle_map[0] = currentNeibor[i];
+					continue;
+				}
+				DVector3D vec = node_proj_map[currentNeibor[i]];
+				double angle = AngleOfTwoArray3D(node_proj_map[currentNeibor[0]].data(), vec.data());
+				if ((node_proj_map[currentNeibor[0]].cross(vec).dot(main_vec) < 0))
+					angle = 2 * PI - angle;
+				node_angle_map[angle] = currentNeibor[i];
+			}
+			//根据角度排序后的邻居节点
+			currentNeibor.clear();
+			for (auto& i : node_angle_map)
+			{
+				currentNeibor.push_back(i.second);
+			}
+			//求出邻居节点与当地节点之间的距离
+			map<int, double> node_dis_map;
+			for (int i = 0; i < currentNeibor.size(); ++i)
+			{
+				node_dis_map[currentNeibor[i]] = node_proj_map[currentNeibor[i]].norm();
+			}
+			node_pair_map.clear();
+			// 获取下一个点的lamda表达式
+			auto get_next_node = [&](int iNode, IArray neiborNode)-> int
+				{
+					if (iNode == neiborNode.size() - 1)
+						return 0;
+					else
+						return iNode + 1;
+				};
+			// 获取上一个点的lamda表达式
+			auto get_last_node = [&](int iNode, IArray neiborNode)-> int
+				{
+					if (iNode == 0)
+						return neiborNode.size() - 1;
+					else
+						return iNode - 1;
+				};
+
+			for (int i = 0; i < currentNeibor.size(); ++i)
+			{
+				node_pair temp;
+				temp.node1 = currentNeibor[i];
+				temp.node2 = currentNeibor[get_next_node(i, currentNeibor)];
+				DVector3D vec1, vec2;
+				vec1 = node_proj_map[temp.node1];
+				vec2 = node_proj_map[temp.node2];
+				double angle = AngleOfTwoArray3D(vec1.data(), vec2.data());
+				if (vec1.cross(vec2).dot(main_vec) < 0)
+					angle = 2 * PI - angle;
+				node_pair_map[angle] = temp;
+			}
+			//取出map中第一个点对，即夹角最小的点对
+			//删除这个点对中距离最大的点
+			while (currentNeibor.size() > 4)
+			{
+
+				auto& temp_pair = node_pair_map.begin()->second;
+				int remove_node, remove_index;
+				node_pair temp;
+				if (node_dis_map[temp_pair.node1] > node_dis_map[temp_pair.node2])
+				{
+					remove_node = temp_pair.node1;
+					remove_index = std::find(currentNeibor.begin(), currentNeibor.end(), remove_node) - currentNeibor.begin();
+					for (auto i : node_pair_map)
+					{
+						if (i.second.node1 == currentNeibor[get_last_node(remove_index, currentNeibor)] && i.second.node2 == currentNeibor[remove_index])
+						{
+							node_pair_map.erase(i.first);
+							break;
+						}
+					}
+				}
+				else
+				{
+					remove_node = temp_pair.node2;
+					remove_index = std::find(currentNeibor.begin(), currentNeibor.end(), remove_node) - currentNeibor.begin();
+					for (auto i : node_pair_map)
+					{
+						if (i.second.node1 == currentNeibor[remove_index] && i.second.node2 == currentNeibor[get_next_node(remove_index, currentNeibor)])
+						{
+							node_pair_map.erase(i.first);
+							break;
+						}
+					}
+				}
+				node_pair_map.erase(node_pair_map.begin());
+				temp.node1 = currentNeibor[get_last_node(remove_index, currentNeibor)];
+				temp.node2 = currentNeibor[get_next_node(remove_index, currentNeibor)];
+				currentNeibor.erase(std::find(currentNeibor.begin(), currentNeibor.end(), remove_node));
+				node_dis_map.erase(remove_node);
+				DVector3D vec1, vec2;
+				vec1 = node_proj_map[temp.node1];
+				vec2 = node_proj_map[temp.node2];
+				double angle = AngleOfTwoArray3D(vec1.data(), vec2.data());
+				if (vec1.cross(vec2).dot(main_vec) < 0)
+					angle = 2 * PI - angle;
+				node_pair_map[angle] = temp;
+			}
+			temp_k[iNode][0] = main_pair.node2;
+			temp_k[iNode][1] = iNode;
+			temp_k[iNode][2] = main_pair.node1;
+			temp_i[iNode][0] = currentNeibor[2];
+			temp_i[iNode][1] = iNode;
+			temp_i[iNode][2] = currentNeibor[0];
+			temp_j[iNode][0] = currentNeibor[3];
+			temp_j[iNode][1] = iNode;
+			temp_j[iNode][2] = currentNeibor[1];
+			currentNeibor.push_back(main_pair.node1);
+			currentNeibor.push_back(main_pair.node2);
+			if (iNode == 1660)
+			{
+				ZaranLog::info("node:{}\n", iNode);
+				ZaranLog::info("{} {} {}\n",  currentNodeCoord.x(), currentNodeCoord.y(), currentNodeCoord.z());
+				for (auto& i : currentNeibor)
+				{
+					ZaranLog::info("{} {} {}\n",  nodeCoord[i].x(), nodeCoord[i].y(), nodeCoord[i].z());
+				}
+			}
+		}
+
+
+	}
 
 }

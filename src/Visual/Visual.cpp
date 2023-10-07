@@ -8,7 +8,7 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 	int step = GlobalData::GetInt("step");
 	std::string filename = "result/" + std::to_string(step) + ".dat";
 	std::ofstream fout(filename);
-	fout << "variables=x,y,z,rho,u,v,w,p\n";
+	fout << "variables=x,y,z,rho,u,v,w,p,jacobi\n";
 	auto& grid = solver->GetGrid();
 	int nInnerNum = grid->GetInnerNodeNum();
 	int nBoundNum = grid->GetBoundNodeNum();
@@ -23,6 +23,7 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 	auto& v = data->GetData("v");
 	auto& w = data->GetData("w");
 	auto& p = data->GetData("p");
+	auto& jacobi = data->GetData("coordTransJ");
 	fout << "ZONE T= grid_" << grid->GetName() << std::endl;
 	fout << "N=" << grid->GetTotalNodeNum() << ", E= " << cell2node.size() << ", F=FEPOINT, ET=Brick" << std::endl;
 	fout << "solutiontime= " << GlobalData::GetDouble("globalTime") << std::endl;
@@ -30,7 +31,7 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 	{
 		auto& currentCoord = nodeCoord[iNode];
 		fout << currentCoord(0) << "  " << currentCoord(1) << "  " << currentCoord(2) << "  ";
-		fout << rho[iNode] << "  " << u[iNode] << "  " << v[iNode] << "  " << w[iNode] << "  " << p[iNode];
+		fout << rho[iNode] << "  " << u[iNode] << "  " << v[iNode] << "  " << w[iNode] << "  " << p[iNode] << "  " << jacobi[iNode];
 		fout << std::endl;
 	}
 	int nCell = cell2node.size();
@@ -71,7 +72,7 @@ void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
 	{
 		auto& currentCoord = nodeCoord[iNode];
 		fout << currentCoord(0) << "  " << currentCoord(1) << "  ";
-		fout << rho[iNode] << "  " << u[iNode] << "  " << v[iNode] << "  " <<w[iNode] << "  " << p[iNode];
+		fout << rho[iNode] << "  " << u[iNode] << "  " << v[iNode] << "  " << w[iNode] << "  " << p[iNode];
 		fout << std::endl;
 	}
 	int nCell = cell2node.size();
