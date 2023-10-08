@@ -15,7 +15,7 @@ namespace zaran
 		if (!gridList)
 			gridList = std::make_shared<GridList>();
 		ReadFile(gridList);
-		SortNeiborNode(gridList);
+	//	SortNeiborNode(gridList);
 	}
 
 	void GridListFactoryFNFDM3D::ReadFile(Ptr<GridList>& gridList)
@@ -229,15 +229,29 @@ namespace zaran
 				continue;
 			auto& currentNodeCoord = nodeCoord[iNode];
 			auto& currentNeibor = nodeNeibor[iNode];
-			if (iNode == 1492)
+			//ZaranLog::info("node:{}\n", iNode);
+			if (iNode == 15896)
 			{
-				ZaranLog::info("node before:{}\n", iNode);
-				ZaranLog::info("{} {} {}\n",  currentNodeCoord.x(), currentNodeCoord.y(), currentNodeCoord.z());
+				ZaranLog::info("node before:{}", iNode);
+				ZaranLog::info("{} {} {}", currentNodeCoord.x(), currentNodeCoord.y(), currentNodeCoord.z());
 				for (auto& i : currentNeibor)
 				{
-					ZaranLog::info("{} {} {}\n", nodeCoord[i].x(), nodeCoord[i].y(), nodeCoord[i].z());
+					ZaranLog::info("{} {} {}", nodeCoord[i].x(), nodeCoord[i].y(), nodeCoord[i].z());
 				}
-			}// 生成点对map
+			}
+			//删除邻居节点中与当地节点距离小于小量的节点
+			for (int i = 0; i < currentNeibor.size(); ++i)
+			{
+				if ((nodeCoord[currentNeibor[i]] - currentNodeCoord).norm() < 1e-6)
+				{
+					currentNeibor.erase(currentNeibor.begin() + i);
+					--i;
+				}
+
+			}
+
+
+			// 生成点对map
 			// 以点对与iNode连线的夹角为key
 			// 以点对为value
 			// 点对为所有与iNode相邻的点对
@@ -268,6 +282,13 @@ namespace zaran
 			{
 				DVector3D vec = nodeCoord[currentNeibor[i]] - nodeCoord[iNode];
 				vec = vec - vec.dot(main_vec) * main_vec / (main_vec.norm() * main_vec.norm());
+				//如果投影向量的模长小于1e-6，删除该邻居节点
+				if (vec.norm() < 1e-6)
+				{
+					currentNeibor.erase(currentNeibor.begin() + i);
+					--i;
+					continue;
+				}
 				node_proj_map[currentNeibor[i]] = vec;
 			}
 			//以第一个邻居节点投影向量为基准向量，求出基准向量以法向量为旋转轴旋转到其他投影向量的角度, 0~2pi
@@ -283,6 +304,21 @@ namespace zaran
 				double angle = AngleOfTwoArray3D(node_proj_map[currentNeibor[0]].data(), vec.data());
 				if ((node_proj_map[currentNeibor[0]].cross(vec).dot(main_vec) < 0))
 					angle = 2 * PI - angle;
+				//如果map中已经有这个角度，比较两个角度对应的邻居节点的距离，删除距离大的邻居节点
+				if (node_angle_map.find(angle) != node_angle_map.end())
+				{
+					if (node_proj_map[currentNeibor[i]].norm() > node_proj_map[node_angle_map[angle]].norm())
+					{
+						node_angle_map[angle] = currentNeibor[i];
+						currentNeibor.erase(std::find(currentNeibor.begin(), currentNeibor.end(), node_angle_map[angle]));
+					}
+					else
+					{
+						currentNeibor.erase(std::find(currentNeibor.begin(), currentNeibor.end(), currentNeibor[i]));
+					}
+					--i;
+					continue;
+				}
 				node_angle_map[angle] = currentNeibor[i];
 			}
 			//根据角度排序后的邻居节点
@@ -290,6 +326,15 @@ namespace zaran
 			for (auto& i : node_angle_map)
 			{
 				currentNeibor.push_back(i.second);
+			}
+			if (iNode == 15896)
+			{
+				ZaranLog::info("node after:{}", iNode);
+				ZaranLog::info("{} {} {}", currentNodeCoord.x(), currentNodeCoord.y(), currentNodeCoord.z());
+				for (auto& i : currentNeibor)
+				{
+					ZaranLog::info("{} {} {}", nodeCoord[i].x(), nodeCoord[i].y(), nodeCoord[i].z());
+				}
 			}
 			//求出邻居节点与当地节点之间的距离
 			map<int, double> node_dis_map;
@@ -323,11 +368,15 @@ namespace zaran
 				DVector3D vec1, vec2;
 				vec1 = node_proj_map[temp.node1];
 				vec2 = node_proj_map[temp.node2];
-				double angle = AngleOfTwoArray3D(vec1.data(), vec2.data());
+				double angle = AngleOfTwoArray3D(vec1.data(), vec2.data()) + GetRand(0.0, 1.0) * EPSILON_NUMBER;
 				if (vec1.cross(vec2).dot(main_vec) < 0)
 					angle = 2 * PI - angle;
 				node_pair_map[angle] = temp;
 			}
+
+
+			if (node_pair_map.size() != currentNeibor.size())
+				ZaranLog::info("node_pair_map.size()!=currentNeibor.size()");
 			//取出map中第一个点对，即夹角最小的点对
 			//删除这个点对中距离最大的点
 			while (currentNeibor.size() > 4)
@@ -370,7 +419,7 @@ namespace zaran
 				DVector3D vec1, vec2;
 				vec1 = node_proj_map[temp.node1];
 				vec2 = node_proj_map[temp.node2];
-				double angle = AngleOfTwoArray3D(vec1.data(), vec2.data());
+				double angle = AngleOfTwoArray3D(vec1.data(), vec2.data()) + GetRand(0.0, 1.0) * EPSILON_NUMBER;
 				if (vec1.cross(vec2).dot(main_vec) < 0)
 					angle = 2 * PI - angle;
 				node_pair_map[angle] = temp;
@@ -386,13 +435,13 @@ namespace zaran
 			temp_j[iNode][2] = currentNeibor[1];
 			currentNeibor.push_back(main_pair.node1);
 			currentNeibor.push_back(main_pair.node2);
-			if (iNode == 1660)
+			if (iNode == 15896)
 			{
-				ZaranLog::info("node:{}\n", iNode);
-				ZaranLog::info("{} {} {}\n",  currentNodeCoord.x(), currentNodeCoord.y(), currentNodeCoord.z());
+				ZaranLog::info("node after:{}", iNode);
+				ZaranLog::info("{} {} {}", currentNodeCoord.x(), currentNodeCoord.y(), currentNodeCoord.z());
 				for (auto& i : currentNeibor)
 				{
-					ZaranLog::info("{} {} {}\n",  nodeCoord[i].x(), nodeCoord[i].y(), nodeCoord[i].z());
+					ZaranLog::info("{} {} {}", nodeCoord[i].x(), nodeCoord[i].y(), nodeCoord[i].z());
 				}
 			}
 		}
