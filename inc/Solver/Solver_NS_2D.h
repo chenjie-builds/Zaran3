@@ -19,6 +19,7 @@ namespace zaran
 		Solver_NS_2D() {}
 		~Solver_NS_2D() {}
 		void ComputeCoordTrans()override;
+		void InitField()override;
 	protected:
 		void ComputeGradientWLS()override;
 		void ComputeTimeStepLocal() override;
@@ -29,7 +30,5 @@ namespace zaran
 		void ViscousFlux() override;
 		//º∆À„‘¥œÓ
 		void SourceFlux() override;
-
-
 	};
 }

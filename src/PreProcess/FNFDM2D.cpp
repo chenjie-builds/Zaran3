@@ -1,6 +1,7 @@
 #include "FNFDM2D.h"
 #include"Log.h"
 #include<fstream>
+#include<set>
 namespace zaran
 {
 	void GridListFactoryFNFDM2D::Create(Ptr<GridList>& gridList)
@@ -59,30 +60,29 @@ namespace zaran
 		int nBoundNode;
 		fin >> nBoundNode;
 		int boundNodeIndex, boundType, innerNodeIndex;
+		DVector3D boundNorm;
 		for (int iNode = 0; iNode < nBoundNode; iNode++)
 		{
-			fin >> boundNodeIndex >> boundType >> innerNodeIndex;
+			fin >> boundNodeIndex >> boundType >> innerNodeIndex >> boundNorm[0] >> boundNorm[1] >> boundNorm[2];
 			if (boundType == 0)
 			{
 				nodeType[boundNodeIndex] = NodeType::inlet;
-				boundMap->AddBoundary("inlet", Boundary{ boundNodeIndex,innerNodeIndex,0,DVector3D{} });
+				boundMap->AddBoundary("inlet", Boundary{ boundNodeIndex,innerNodeIndex,0,boundNorm });
 			}
 			else if (boundType == 1)
 			{
 				nodeType[boundNodeIndex] = NodeType::outlet;
-				boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,innerNodeIndex,0,DVector3D{} });
+				boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,innerNodeIndex,0,boundNorm });
 			}
 			else if (boundType == 2)
 			{
-				DVector3D wallNorm = nodeCoord[innerNodeIndex] - nodeCoord[boundNodeIndex];
 				nodeType[boundNodeIndex] = NodeType::slipWall;
-				boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,innerNodeIndex,0,wallNorm });
+				boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,innerNodeIndex,0,boundNorm });
 			}
-			else if(boundType==3)
+			else if (boundType == 3)
 			{
-				DVector3D wallNorm = nodeCoord[innerNodeIndex] - nodeCoord[boundNodeIndex];
 				nodeType[boundNodeIndex] = NodeType::hole;
-				boundMap->AddBoundary("hole", Boundary{ boundNodeIndex,innerNodeIndex,0,wallNorm });
+				boundMap->AddBoundary("hole", Boundary{ boundNodeIndex,innerNodeIndex,0,boundNorm });
 			}
 		}
 		int nCell;
@@ -97,6 +97,46 @@ namespace zaran
 			cell_node[iCell] = cellNeiborNodeIndex;
 		}
 		fin.close();
+
+		Array<std::set<int>> nodeNeiborSet(nNode);
+		for (int iNode = 0; iNode < nNode; iNode++)
+		{
+			if (nodeType[iNode] != NodeType::inner)
+				continue;
+			auto& currentNeibor = nodeNeibor[iNode];
+			auto& neiborSet = nodeNeiborSet[iNode];
+			for (auto& iNeibor : currentNeibor)
+			{
+				neiborSet.insert(iNeibor);
+			}
+			for (auto& iNeibor : currentNeibor)
+			{
+				auto& neiborNeibor = nodeNeibor[iNeibor];
+				for (auto& iNeiborNeibor : neiborNeibor)
+				{
+					neiborSet.insert(iNeiborNeibor);
+				}
+			}
+			neiborSet.erase(iNode);
+		}
+		for (int iNode = 0; iNode < nNode; iNode++)
+		{
+			if (nodeType[iNode] != NodeType::inner)
+				continue;
+			auto& currentNeibor = nodeNeibor[iNode];
+			auto& neiborSet = nodeNeiborSet[iNode];
+			currentNeibor.resize(neiborSet.size());
+			int i = 0;
+			for (auto& iNeibor : neiborSet)
+			{
+				currentNeibor[i] = iNeibor;
+				i++;
+			}
+		}
+
+
+
+
 	}
 
 }

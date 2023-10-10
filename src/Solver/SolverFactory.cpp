@@ -11,7 +11,7 @@ void SolverFactory::Create(Ptr<GridList>& gridList, Ptr<SolverVec>& solverVecPtr
 	}
 	for (int iSolver = 0; iSolver < gridList->GetGridNumber(); ++iSolver)
 	{
-		Ptr<Solver> newSolver = std::make_shared<Solver_NS_2D_Struct>();
+		Ptr<Solver> newSolver = std::make_shared<Solver_NS_2D>();
 		newSolver->SetGridList(gridList);
 		newSolver->SetGridIndex(iSolver);
 		newSolver->SetName("test");

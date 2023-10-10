@@ -1,6 +1,50 @@
 #include"Solver_NS_2D.h"
 namespace zaran
 {
+	void Solver_NS_2D::InitField()
+	{
+		GridPtr grid = GetGrid();
+		auto& rho = *m_Primtive[0];
+		auto& u = *m_Primtive[1];
+		auto& v = *m_Primtive[2];
+		auto& w = *m_Primtive[3];
+		auto& p = *m_Primtive[4];
+		auto& NodeTopo = grid->GetNodeTopo();
+		auto& nodeCoord = NodeTopo->GetCoordinate();
+		FlowSolverParaPtr para = GetPara();
+		int initType = para->GetInitFieldType();
+		DVector primInit = para->GetPrimitiveInflow();
+		primInit[0] = 6.4;
+		primInit[1] = 3.125;
+		primInit[2] = 0;
+		primInit[3] = 0;
+		primInit[4] = 18.5;
+		int nTotalNodeNum = grid->GetTotalNodeNum();
+		double x, y, z;
+		para->SetPrimitiveInflow(primInit);
+		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		{
+			x = nodeCoord[iNode].x();
+			y = nodeCoord[iNode].y();
+			if (x <= 0.1)
+			{
+				rho[iNode] = 6.45;
+				u[iNode] = 3.125;
+				v[iNode] = 0.0;
+				w[iNode] = 0.0;
+				p[iNode] = 18.5;
+			}
+			else
+			{
+				rho[iNode] = 1.4;
+				u[iNode] = 0;
+				v[iNode] = 0;
+				w[iNode] = 0.0;
+				p[iNode] = 1.0;
+			}
+		}
+		Primitive2Conservative();
+	}
 	void Solver_NS_2D::ComputeCoordTrans()
 	{
 		GridPtr grid = GetGrid();
@@ -15,9 +59,6 @@ namespace zaran
 		DVector3D xRight, xLeft, yRight, yLeft;
 		for (size_t iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
-			ZaranLog::info("Node: {}", iNode);
-			if(iNode==2601)
-				ZaranLog::info("Node: {}", iNode);
 			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
 				continue;
 			xLeft = nodeCoord[tempI[iNode][0]];
@@ -37,7 +78,7 @@ namespace zaran
 				tempI[iNode] = currentTempI;
 				tempJ[iNode] = currentTempJ;
 				coordTrans.CalcCoordTrans(int(grid->GetDimension()), xLeft, yLeft, xRight, yRight);
-				if (coordTrans.J() < 0) 
+				if (coordTrans.J() < 0)
 				{
 					tempJ[iNode] = IArray{ tempJ[iNode][2], tempJ[iNode][1], tempJ[iNode][0] };
 					coordTrans.CalcCoordTrans(int(grid->GetDimension()), xLeft, yLeft, yRight, xRight);
@@ -208,13 +249,13 @@ namespace zaran
 			{
 				grad(0) = (*primGradX[iVal])[iNode];
 				grad(1) = (*primGradY[iVal])[iNode];
-				riemanPara->primL(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+				riemanPara->primL(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r);
 			}
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
 				grad(0) = (*primGradX[iVal])[tempI[2]];
 				grad(1) = (*primGradY[iVal])[tempI[2]];
-				riemanPara->primR(iVal) = (*prim[iVal])[tempI[2]] /*- 0.5 * (*limiterCoef[iVal])[tempI[2]] * grad.dot(r)*/;
+				riemanPara->primR(iVal) = (*prim[iVal])[tempI[2]] - 0.5 * (*limiterCoef[iVal])[tempI[2]] * grad.dot(r);
 			}
 
 			riemannSolver_->Solver(riemanPara);
@@ -226,13 +267,13 @@ namespace zaran
 			{
 				grad(0) = (*primGradX[iVal])[tempI[0]];
 				grad(1) = (*primGradY[iVal])[tempI[0]];
-				riemanPara->primL(iVal) = (*prim[iVal])[tempI[0]]/* - 0.5 * (*limiterCoef[iVal])[tempI[0]] * grad.dot(r)*/;
+				riemanPara->primL(iVal) = (*prim[iVal])[tempI[0]] - 0.5 * (*limiterCoef[iVal])[tempI[0]] * grad.dot(r);
 			}
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
 				grad(0) = (*primGradX[iVal])[iNode];
 				grad(1) = (*primGradY[iVal])[iNode];
-				riemanPara->primR(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+				riemanPara->primR(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r);
 			}
 
 			riemannSolver_->Solver(riemanPara);
@@ -251,13 +292,13 @@ namespace zaran
 			{
 				grad(0) = (*primGradX[iVal])[iNode];
 				grad(1) = (*primGradY[iVal])[iNode];
-				riemanPara->primL(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+				riemanPara->primL(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r);
 			}
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
 				grad(0) = (*primGradX[iVal])[tempJ[2]];
 				grad(1) = (*primGradY[iVal])[tempJ[2]];
-				riemanPara->primR(iVal) = (*prim[iVal])[tempJ[2]]/* - 0.5 * (*limiterCoef[iVal])[tempJ[2]] * grad.dot(r)*/;
+				riemanPara->primR(iVal) = (*prim[iVal])[tempJ[2]] - 0.5 * (*limiterCoef[iVal])[tempJ[2]] * grad.dot(r);
 			}
 			riemannSolver_->Solver(riemanPara);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -268,17 +309,17 @@ namespace zaran
 			{
 				grad(0) = (*primGradX[iVal])[tempJ[0]];
 				grad(1) = (*primGradY[iVal])[tempJ[0]];
-				riemanPara->primL(iVal) = (*prim[iVal])[tempJ[0]] /*- 0.5 * (*limiterCoef[iVal])[tempJ[0]] * grad.dot(r)*/;
+				riemanPara->primL(iVal) = (*prim[iVal])[tempJ[0]] - 0.5 * (*limiterCoef[iVal])[tempJ[0]] * grad.dot(r);
 			}
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
 				grad(0) = (*primGradX[iVal])[iNode];
 				grad(1) = (*primGradY[iVal])[iNode];
-				riemanPara->primR(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+				riemanPara->primR(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r);
 			}
 
 			riemannSolver_->Solver(riemanPara);
-		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
 				(*res[iVal])[iNode] -= riemanPara->flux[iVal] / jacobi;
 				if (isnan((*res[iVal])[iNode]) || isinf((*res[iVal])[iNode]))
@@ -292,7 +333,7 @@ namespace zaran
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
-		auto&neibor= nodeTopo->GetNeighborCloud();
+		auto& neibor = nodeTopo->GetNeighborCloud();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& prim = m_Primtive;
 		auto& cons = m_Conservative;
