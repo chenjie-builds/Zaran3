@@ -24,6 +24,7 @@ namespace zaran
 		void ComputeTimeStepLocal() override;
 		// 计算流动通量
 		void InviscidFlux()override;
+		void HoleInviscidFlux();
 		//计算粘性通量
 		void ViscousFlux() override;
 		//计算源项

@@ -26,16 +26,18 @@ namespace zaran
 		gridPtr->SetTotalNodeNum(nNode);
 		auto& nodeTopo = gridPtr->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
+		auto& nodeType = nodeTopo->GetType();
+		nodeType.resize(nNode);
 		nodeCoord.resize(nNode);
 		for (int iNode = 0; iNode < nNode; iNode++)
 		{
 			fin >> nodeCoord[iNode][0] >> nodeCoord[iNode][1];
+			nodeType[iNode] = NodeType::undefined;
+
 		}
 		int nInnerNode;
 		fin >> nInnerNode;
 		IArray neiborNodeIndex(4);
-		auto& nodeType = nodeTopo->GetType();
-		nodeType.resize(nNode);
 		auto& temp_i = nodeTopo->GetTemplateI();
 		auto& temp_j = nodeTopo->GetTemplateJ();
 		temp_i.resize(nNode);
@@ -75,6 +77,12 @@ namespace zaran
 				DVector3D wallNorm = nodeCoord[innerNodeIndex] - nodeCoord[boundNodeIndex];
 				nodeType[boundNodeIndex] = NodeType::slipWall;
 				boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,innerNodeIndex,0,wallNorm });
+			}
+			else if(boundType==3)
+			{
+				DVector3D wallNorm = nodeCoord[innerNodeIndex] - nodeCoord[boundNodeIndex];
+				nodeType[boundNodeIndex] = NodeType::hole;
+				boundMap->AddBoundary("hole", Boundary{ boundNodeIndex,innerNodeIndex,0,wallNorm });
 			}
 		}
 		int nCell;

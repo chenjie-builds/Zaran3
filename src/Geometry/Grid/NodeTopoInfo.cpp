@@ -2,7 +2,6 @@
 using namespace zaran;
 NodeTopoInfo::NodeTopoInfo()
 {
-
 }
 
 NodeTopoInfo::~NodeTopoInfo()
