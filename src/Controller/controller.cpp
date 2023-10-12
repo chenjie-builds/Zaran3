@@ -108,6 +108,7 @@ void Controller::SolveField()
 		SolveFieldOneStep();
 		PostSolve();
 	}
+	SaveFieldData();
 }
 
 double Controller::CalcMaxAveResidual()
@@ -128,28 +129,28 @@ void Controller::SaveFieldData()
 
 bool Controller::IsStopSolve()
 {
-	//double endTime = GlobalData::GetDouble("endTime");
-	//double currentTime = physicTime_->GetCurrentPhysicsTime();
-	//int iterStep = GlobalData::GetInt("step");
-	//int calResidualStep = GlobalData::GetInt("calResidualStep");
-	//double minResidual = GlobalData::GetDouble("minResidual");
-	////达到要求的最小残差
-	//if (iterStep > calResidualStep && maxResidual_ < minResidual)
-	//{
-	//	ZaranLog::info("Max Residual is small than {}, stop compute!", minResidual);
-	//	return true;
-	//}
-	////达到最大计算时间
-	//if (currentTime > endTime || abs(currentTime - endTime) < SMALL_NUMBER)
-	//{
-	//	ZaranLog::info("Max time={}, stop compute!", endTime);
-	//	return true;
-	//}
+	double endTime = GlobalData::GetDouble("endTime");
+	int iterStep = GlobalData::GetInt("step");
+	int calResidualStep = GlobalData::GetInt("calResidualStep");
+	double minResidual = GlobalData::GetDouble("minResidual");
+	double currentTime = GlobalData::GetDouble("globalTime");
+	//达到要求的最小残差
+	if (iterStep>calResidualStep&& maxResidual_ < minResidual)
+	{
+		ZaranLog::info("Max Residual is small than {}, stop compute!", minResidual);
+		return true;
+	}
+	//达到最大计算时间
+	if (currentTime > endTime || abs(currentTime - endTime) < SMALL_NUMBER)
+	{
+		ZaranLog::info("Max time={}, stop compute!", endTime);
+		return true;
+	}
 	return false;
 }
 void Controller::SaveResidual()
 {
-	/*int step = GlobalData::GetInt("step");
+	int step = GlobalData::GetInt("step");
 	if (step == 0)
 	{
 		std::ofstream fout("res.dat");
@@ -159,9 +160,9 @@ void Controller::SaveResidual()
 	else
 	{
 		std::ofstream fout("res.dat", std::ios::app);
-		fout << step << "\t\t" << physicTime_->GetCurrentPhysicsTime() << "\t\t" << maxResidual_ << "\t\t" << aveResidual_ << endl;
+		fout << step << "\t\t" << GlobalData::GetDouble("globalTime") << "\t\t" << maxResidual_ << "\t\t" << aveResidual_ << std::endl;
 		fout.close();
-	}*/
+	}
 }
 
 void Controller::SolveFieldOneStep()
@@ -188,8 +189,8 @@ void Controller::PostSolve()
 	int writeFieldStep = GlobalData::GetInt("writeFieldStep");
 	if (iterStep % calResidualStep == 0)
 	{
-		double maxResidual = CalcMaxAveResidual();
-		ZaranLog::info("step={}, dt={:e}, maxRes={:e}", GlobalData::GetInt("step"), GlobalData::GetDouble("dt"), maxResidual);
+		maxResidual_ = CalcMaxAveResidual();
+		ZaranLog::info("step={}, dt={:e}, maxRes={:e}", GlobalData::GetInt("step"), GlobalData::GetDouble("dt"), maxResidual_);
 		SaveResidual();
 	}
 	if (iterStep % writeFieldStep == 0)

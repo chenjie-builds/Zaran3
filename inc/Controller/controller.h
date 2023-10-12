@@ -56,6 +56,8 @@ namespace zaran
 		shared_ptr<GridList> gridList_;
 		shared_ptr<SolverVec> solverVec_;
 		shared_ptr<Visual> visual_;
+		double maxResidual_;
+		double aveResidual_;
 	};
 
 }

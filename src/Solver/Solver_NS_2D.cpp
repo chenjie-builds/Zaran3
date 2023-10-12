@@ -326,13 +326,25 @@ namespace zaran
 					ZaranLog::error("inode={},NAN in Residual!", iNode);
 			}
 		}
-		HoleInviscidFlux();
 	}
-	void Solver_NS_2D::HoleInviscidFlux()
+
+	void Solver_NS_2D::SolveHoleNode()
+	{
+		string solverType = GlobalData::GetString("HoleSolverType");
+		if (solverType == "FNFDM")
+			SolveHoleNodeFNFDM();
+		else if (solverType == "IDW")
+			SolveHoleNodeIDW();
+		else
+			ZaranLog::error("HoleSolverType: {} is not defined!", solverType);
+	}
+	void Solver_NS_2D::SolveHoleNodeFNFDM()
 	{
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
+		auto& templateI = nodeTopo->GetTemplateI();
+		auto& templateJ = nodeTopo->GetTemplateJ();
 		auto& neibor = nodeTopo->GetNeighborCloud();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& prim = m_Primtive;
@@ -341,6 +353,7 @@ namespace zaran
 		auto& primGradY = m_PrimGradY;
 		auto& limiterCoef = m_LimiterCoef;
 		auto& res = m_Residual;
+		auto&dt=*m_TimeStep;
 		auto& coordTrans = m_CoordTrans;
 		int nInnerNode = grid->GetInnerNodeNum();
 		int nBoundNode = grid->GetBoundNodeNum();
@@ -357,20 +370,20 @@ namespace zaran
 			riemanPara->norm(1) = (*coordTrans[17])[iNode];
 			riemanPara->norm(2) = 0;
 			riemanPara->nt = (*coordTrans[19])[iNode];
-			IArray tempI = { neibor[iNode][2],iNode,neibor[iNode][0] };
+			IArray tempI = templateI[iNode];
 			r[0] = nodeCoord[tempI[2]][0] - nodeCoord[iNode][0];
 			r[1] = nodeCoord[tempI[2]][1] - nodeCoord[iNode][1];
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
 				grad(0) = (*primGradX[iVal])[iNode];
 				grad(1) = (*primGradY[iVal])[iNode];
-				riemanPara->primL(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+				riemanPara->primL(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r);
 			}
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
 				grad(0) = (*primGradX[iVal])[tempI[2]];
 				grad(1) = (*primGradY[iVal])[tempI[2]];
-				riemanPara->primR(iVal) = (*prim[iVal])[tempI[2]] /*- 0.5 * (*limiterCoef[iVal])[tempI[2]] * grad.dot(r)*/;
+				riemanPara->primR(iVal) = (*prim[iVal])[tempI[2]] - 0.5 * (*limiterCoef[iVal])[tempI[2]] * grad.dot(r);
 			}
 
 			riemannSolver_->Solver(riemanPara);
@@ -382,13 +395,13 @@ namespace zaran
 			{
 				grad(0) = (*primGradX[iVal])[tempI[0]];
 				grad(1) = (*primGradY[iVal])[tempI[0]];
-				riemanPara->primL(iVal) = (*prim[iVal])[tempI[0]]/* - 0.5 * (*limiterCoef[iVal])[tempI[0]] * grad.dot(r)*/;
+				riemanPara->primL(iVal) = (*prim[iVal])[tempI[0]] - 0.5 * (*limiterCoef[iVal])[tempI[0]] * grad.dot(r);
 			}
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
 				grad(0) = (*primGradX[iVal])[iNode];
 				grad(1) = (*primGradY[iVal])[iNode];
-				riemanPara->primR(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+				riemanPara->primR(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r);
 			}
 
 			riemannSolver_->Solver(riemanPara);
@@ -400,20 +413,20 @@ namespace zaran
 			riemanPara->norm(1) = (*coordTrans[21])[iNode];
 			riemanPara->norm(2) = 0;
 			riemanPara->nt = (*coordTrans[23])[iNode];
-			IArray tempJ = { neibor[iNode][3],iNode,neibor[iNode][1] };
+			IArray tempJ = templateJ[iNode];
 			r[0] = nodeCoord[tempJ[2]][0] - nodeCoord[iNode][0];
 			r[1] = nodeCoord[tempJ[2]][1] - nodeCoord[iNode][1];
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
 				grad(0) = (*primGradX[iVal])[iNode];
 				grad(1) = (*primGradY[iVal])[iNode];
-				riemanPara->primL(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+				riemanPara->primL(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r);
 			}
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
 				grad(0) = (*primGradX[iVal])[tempJ[2]];
 				grad(1) = (*primGradY[iVal])[tempJ[2]];
-				riemanPara->primR(iVal) = (*prim[iVal])[tempJ[2]]/* - 0.5 * (*limiterCoef[iVal])[tempJ[2]] * grad.dot(r)*/;
+				riemanPara->primR(iVal) = (*prim[iVal])[tempJ[2]] - 0.5 * (*limiterCoef[iVal])[tempJ[2]] * grad.dot(r);
 			}
 			riemannSolver_->Solver(riemanPara);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -424,13 +437,13 @@ namespace zaran
 			{
 				grad(0) = (*primGradX[iVal])[tempJ[0]];
 				grad(1) = (*primGradY[iVal])[tempJ[0]];
-				riemanPara->primL(iVal) = (*prim[iVal])[tempJ[0]] /*- 0.5 * (*limiterCoef[iVal])[tempJ[0]] * grad.dot(r)*/;
+				riemanPara->primL(iVal) = (*prim[iVal])[tempJ[0]] - 0.5 * (*limiterCoef[iVal])[tempJ[0]] * grad.dot(r);
 			}
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
 				grad(0) = (*primGradX[iVal])[iNode];
 				grad(1) = (*primGradY[iVal])[iNode];
-				riemanPara->primR(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+				riemanPara->primR(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r);
 			}
 
 			riemannSolver_->Solver(riemanPara);
@@ -439,8 +452,59 @@ namespace zaran
 				(*res[iVal])[iNode] -= riemanPara->flux[iVal] / jacobi;
 				if (isnan((*res[iVal])[iNode]) || isinf((*res[iVal])[iNode]))
 					ZaranLog::error("inode={},NAN in Residual!", iNode);
+				(*cons[iVal])[iNode] -= (*res[iVal])[iNode]*dt[iNode]* (*coordTrans[32])[iNode];
 			}
 		}
+	}
+	void Solver_NS_2D::SolveHoleNodeIDW()
+	{
+		GridPtr grid = GetGrid();
+		auto& nodeTopo = grid->GetNodeTopo();
+		auto& nodeType = nodeTopo->GetType();
+		auto& neibor = nodeTopo->GetNeighborCloud();
+		auto& nodeCoord = nodeTopo->GetCoordinate();
+		auto& templateI = nodeTopo->GetTemplateI();
+		auto& templateJ = nodeTopo->GetTemplateJ();
+		auto& prim = m_Primtive;
+		auto& cons = m_Conservative;
+		auto& primGradX = m_PrimGradX;
+		auto& primGradY = m_PrimGradY;
+		auto& res = m_Residual;
+		Array<int> neiborNode;
+		DArray weight, distance;
+		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
+		{
+			if (nodeType[iNode] != NodeType::hole)
+				continue;
+			auto& tempI = templateI[iNode];
+			auto& tempJ = templateJ[iNode];
+			neiborNode = { tempI[0],tempI[2],tempJ[0],tempJ[2] };
+			weight.resize(neiborNode.size());
+			distance.resize(neiborNode.size());
+			double sum = 0;
+			for (int iNeib = 0; iNeib < neiborNode.size(); ++iNeib)
+			{
+				distance[iNeib] = DistanceOfTwoPoints(nodeCoord[iNode].data(), nodeCoord[neiborNode[iNeib]].data());
+				sum += 1.0 / distance[iNeib];
+			}
+			for (int iNeib = 0; iNeib < neiborNode.size(); ++iNeib)
+				weight[iNeib] = 1.0 / distance[iNeib] / sum;
+			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			{
+				(*prim[iVal])[iNode] = 0;
+				(*res[iVal])[iNode] = 0;
+				for (int iNeib = 0; iNeib < neiborNode.size(); ++iNeib)
+				{
+					(*prim[iVal])[iNode] += (*prim[iVal])[neiborNode[iNeib]] * weight[iNeib];
+				}
+			}
+			Primitive2Conservative((*prim[0])[iNode], (*prim[1])[iNode], (*prim[2])[iNode], (*prim[3])[iNode], (*prim[4])[iNode], (*cons[0])[iNode], (*cons[1])[iNode], (*cons[2])[iNode], (*cons[3])[iNode], (*cons[4])[iNode]);
+		}
+	}
+	void Solver_NS_2D::BoundaryCondition()
+	{
+		NSSolver::BoundaryCondition();
+		SolveHoleNode();
 	}
 	void Solver_NS_2D::ViscousFlux()
 	{

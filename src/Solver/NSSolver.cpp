@@ -61,7 +61,7 @@ namespace zaran {
 
 		auto& grid = *GetGrid();
 		int nTotalNodeNum = grid.GetTotalNodeNum();
- 		DArray emptyData(nTotalNodeNum);
+		DArray emptyData(nTotalNodeNum);
 		auto& dataPtr = GetFieldData();
 		dataPtr = std::make_shared<FieldData>();
 		auto& data = *dataPtr;
@@ -223,9 +223,9 @@ namespace zaran {
 		ComputeTimeStep();
 		ComputePrimtiveGradient();
 		ComputeLimiterCoef();
+		BoundaryCondition();
 		TimeAdvance();
 		UpdateField();
-		BoundaryCondition();
 	}
 	double NSSolver::ComputeMaxResidual()
 	{
@@ -250,7 +250,14 @@ namespace zaran {
 		{
 			double globlaTimeStep = GlobalData::GetDouble("dt");
 			double globalTime = GlobalData::GetDouble("globalTime");
-			globalTime += globlaTimeStep;
+			double endTime = GlobalData::GetDouble("endTime");
+			if (globalTime + globlaTimeStep > endTime)
+			{
+				globlaTimeStep = endTime - globalTime;
+				globalTime = endTime;
+			}
+			else
+				globalTime += globlaTimeStep;
 			GlobalData::Update("globalTime", globalTime);
 			SnycTimeStepWithGlobal(globlaTimeStep);
 		}
@@ -285,6 +292,7 @@ namespace zaran {
 		auto& inletletBound = boundaryMap["inlet"];
 		for (int iBound = 0; iBound < inletletBound.size(); ++iBound)
 			ComputeInletBC(inletletBound[iBound]);
+
 	}
 
 

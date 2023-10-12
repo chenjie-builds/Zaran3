@@ -39,6 +39,4 @@ namespace zaran
 	double AngleOfTwoArray(const double& x1, const double& y1, const double& x2 = 1, const double& y2 = 0);
 	//三维向量A和向量B的夹角，0~pi
 	double AngleOfTwoArray3D(const double* A, const double* B);
-	double test1();
-
 }

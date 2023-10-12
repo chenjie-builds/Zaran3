@@ -25,7 +25,10 @@ namespace zaran
 		void ComputeTimeStepLocal() override;
 		// 计算流动通量
 		void InviscidFlux()override;
-		void HoleInviscidFlux();
+		void SolveHoleNode();
+		void SolveHoleNodeFNFDM();//使用自由节点有限差分法
+		void SolveHoleNodeIDW();//逆距离加权法
+		void BoundaryCondition()override;
 		//计算粘性通量
 		void ViscousFlux() override;
 		//计算源项

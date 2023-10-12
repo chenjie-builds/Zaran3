@@ -49,6 +49,10 @@ namespace zaran
 		for (int iNode = 0; iNode < nInnerNode; iNode++)
 		{
 			fin >> nodeIndex;
+			if (nodeIndex == 3389)
+			{
+				int a = 0;
+			}
 			nodeNeibor[nodeIndex].resize(4);
 			fin >> neiborNodeIndex[0] >> neiborNodeIndex[1] >> neiborNodeIndex[2] >> neiborNodeIndex[3];
 			nodeType[nodeIndex] = NodeType::inner;

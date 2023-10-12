@@ -1,85 +1,84 @@
 #include<cmath>
 #include"MathBasic.h"
 #include "CommonPara.h"
-double zaran::DistanceOfTwoPoints(const double* pt1, const double* pt2)
+namespace zaran
 {
-	return sqrt((pt1[0] - pt2[0]) * (pt1[0] - pt2[0]) +
-		(pt1[1] - pt2[1]) * (pt1[1] - pt2[1]) +
-		(pt1[2] - pt2[2]) * (pt1[2] - pt2[2]));
-}
 
-template < typename T >
-bool zaran::IsErrorData(T data)
-{
+	double DistanceOfTwoPoints(const double* pt1, const double* pt2)
+	{
+		return sqrt((pt1[0] - pt2[0]) * (pt1[0] - pt2[0]) +
+			(pt1[1] - pt2[1]) * (pt1[1] - pt2[1]) +
+			(pt1[2] - pt2[2]) * (pt1[2] - pt2[2]));
+	}
+
+	template < typename T >
+	bool IsErrorData(T data)
+	{
 #ifdef WIN32
-	if (!_isnan(data) || Abs(data) < SMALL_NUMBER)
-	{
-		return false;
-	}
+		if (!_isnan(data) || Abs(data) < SMALL_NUMBER)
+		{
+			return false;
+		}
 #else
-	if (Abs(data) < LARGE_NUMBER && (std::isnormal(data) || Abs(data) < SMALL_NUMBER))
-	{
-		return false;
-	}
+		if (Abs(data) < LARGE_NUMBER && (std::isnormal(data) || Abs(data) < SMALL_NUMBER))
+		{
+			return false;
+		}
 #endif
-	return true;
-}
-double zaran::GetRand(const double& range_low, const double& range_high)
-{
-	return rand() / double(RAND_MAX) * (range_high - range_low) + range_low;
-}
-//southerland公式
-double zaran::Southerland(double T, double mu0, double T0, double Ts)
-{
-	return mu0 * pow(T / T0, 1.5) * (T0 + Ts) / (T + Ts);
-}
-
-void zaran::CircleFrom3Point(const double* pt1, const double* pt2, const double* pt3, double& radius, double* center)
-{
-	double x1 = pt1[0], x2 = pt2[0], x3 = pt3[0];
-	double y1 = pt1[1], y2 = pt2[1], y3 = pt3[1];
-	double a = x1 - x2;
-	double b = y1 - y2;
-	double c = x1 - x3;
-	double d = y1 - y3;
-	double e = ((x1 * x1 - x2 * x2) + (y1 * y1 - y2 * y2)) / 2.0;
-	double f = ((x1 * x1 - x3 * x3) + (y1 * y1 - y3 * y3)) / 2.0;
-	double det = b * c - a * d;
-	if (abs(det) < SMALL_NUMBER)
-	{
-		radius = LARGE_NUMBER;
-		center[0] = center[1] = 0;
-		return;
+		return true;
 	}
-	double x0 = -(d * e - b * f) / det;
-	double y0 = -(a * f - c * e) / det;
-	center[0] = x0;
-	center[1] = y0;
+	double GetRand(const double& range_low, const double& range_high)
+	{
+		return rand() / double(RAND_MAX) * (range_high - range_low) + range_low;
+	}
+	//southerland公式
+	double Southerland(double T, double mu0, double T0, double Ts)
+	{
+		return mu0 * pow(T / T0, 1.5) * (T0 + Ts) / (T + Ts);
+	}
 
-	radius = zaran::DistanceOfTwoPoints(pt1, center);
-}
-double zaran::AngleOfTwoArray(const double& x1, const double& y1, const double& x2, const double& y2)
-{
-	double dot = x2 * x1 + y2 * y1;
-	double cross = x2 * y1 - y2 * x1;
-	double angle = atan2(cross, dot);
-	if (angle < 0)
-		angle += 2 * PI;
-	return angle;
-}
-double zaran::AngleOfTwoArray3D(const double* A, const double* B)
-{
-	double dot = A[0] * B[0] + A[1] * B[1] + A[2] * B[2];
-	double cross[3];
-	cross[0] = A[1] * B[2] - A[2] * B[1];
-	cross[1] = A[2] * B[0] - A[0] * B[2];
-	cross[2] = A[0] * B[1] - A[1] * B[0];
-	double cross_norm = sqrt(cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]);
-	double angle = atan2(cross_norm, dot);
-	return angle;
-}
-double zaran::test1()
-{
-	double a = 1.0;
-	return a;
+	void CircleFrom3Point(const double* pt1, const double* pt2, const double* pt3, double& radius, double* center)
+	{
+		double x1 = pt1[0], x2 = pt2[0], x3 = pt3[0];
+		double y1 = pt1[1], y2 = pt2[1], y3 = pt3[1];
+		double a = x1 - x2;
+		double b = y1 - y2;
+		double c = x1 - x3;
+		double d = y1 - y3;
+		double e = ((x1 * x1 - x2 * x2) + (y1 * y1 - y2 * y2)) / 2.0;
+		double f = ((x1 * x1 - x3 * x3) + (y1 * y1 - y3 * y3)) / 2.0;
+		double det = b * c - a * d;
+		if (abs(det) < SMALL_NUMBER)
+		{
+			radius = LARGE_NUMBER;
+			center[0] = center[1] = 0;
+			return;
+		}
+		double x0 = -(d * e - b * f) / det;
+		double y0 = -(a * f - c * e) / det;
+		center[0] = x0;
+		center[1] = y0;
+
+		radius = zaran::DistanceOfTwoPoints(pt1, center);
+	}
+	double AngleOfTwoArray(const double& x1, const double& y1, const double& x2, const double& y2)
+	{
+		double dot = x2 * x1 + y2 * y1;
+		double cross = x2 * y1 - y2 * x1;
+		double angle = atan2(cross, dot);
+		if (angle < 0)
+			angle += 2 * PI;
+		return angle;
+	}
+	double AngleOfTwoArray3D(const double* A, const double* B)
+	{
+		double dot = A[0] * B[0] + A[1] * B[1] + A[2] * B[2];
+		double cross[3];
+		cross[0] = A[1] * B[2] - A[2] * B[1];
+		cross[1] = A[2] * B[0] - A[0] * B[2];
+		cross[2] = A[0] * B[1] - A[1] * B[0];
+		double cross_norm = sqrt(cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]);
+		double angle = atan2(cross_norm, dot);
+		return angle;
+	}
 }
