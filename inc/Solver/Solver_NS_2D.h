@@ -20,6 +20,9 @@ namespace zaran
 		~Solver_NS_2D() {}
 		void ComputeCoordTrans()override;
 		void InitField()override;
+		void InitFieldFarField();//初始化为来流
+		void InitFieldNoFlow();//初始化为静止流场
+		void InitFieldIsentropicVortex();
 	protected:
 		void ComputeGradientWLS()override;
 		void ComputeTimeStepLocal() override;
@@ -28,6 +31,10 @@ namespace zaran
 		void SolveHoleNode();
 		void SolveHoleNodeFNFDM();//使用自由节点有限差分法
 		void SolveHoleNodeIDW();//逆距离加权法
+		//自定义边界
+		void SolveUserDefinedBoundary();
+
+
 		void BoundaryCondition()override;
 		//计算粘性通量
 		void ViscousFlux() override;

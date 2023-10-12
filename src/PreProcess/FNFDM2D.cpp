@@ -88,6 +88,15 @@ namespace zaran
 				nodeType[boundNodeIndex] = NodeType::hole;
 				boundMap->AddBoundary("hole", Boundary{ boundNodeIndex,innerNodeIndex,0,boundNorm });
 			}
+			else if (boundType == 4)
+			{
+				nodeType[boundNodeIndex] = NodeType::userDefined;
+				boundMap->AddBoundary("userDefined", Boundary{ boundNodeIndex,innerNodeIndex,0,boundNorm });
+			}
+			else
+			{
+				ZaranLog::info("Boundary Type:{} is NOT exist! Please Check!", boundType);
+			}
 		}
 		int nCell;
 		fin >> nCell;

@@ -27,6 +27,7 @@ namespace zaran
 		farfield,//远场
 		corner,//角点
 		ghost,//ghonst point
+		userDefined,//用户自定义
 		undefined//未定义
 	};
 	class NodeTopoInfo

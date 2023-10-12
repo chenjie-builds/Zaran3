@@ -555,7 +555,7 @@ namespace zaran {
 		double maxVal, minVal;
 		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 		{
-			if (nodeType[iNode] != NodeType::inner)
+			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
 				continue;
 			auto& neighborNode = nodeNeighbor[iNode];
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -615,7 +615,7 @@ namespace zaran {
 		double venkatCoeff = 1.0e-5;
 		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 		{
-			if (nodeType[iNode] != NodeType::inner)
+			if (nodeType[iNode] != NodeType::inner&& nodeType[iNode] != NodeType::hole)
 				continue;
 			auto& neighborNode = nodeNeighbor[iNode];
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)

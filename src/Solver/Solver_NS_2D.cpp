@@ -1,7 +1,12 @@
 #include"Solver_NS_2D.h"
+#include"SpecialField.h"
 namespace zaran
 {
 	void Solver_NS_2D::InitField()
+	{
+		InitFieldIsentropicVortex();
+	}
+	void Solver_NS_2D::InitFieldFarField()
 	{
 		GridPtr grid = GetGrid();
 		auto& rho = *m_Primtive[0];
@@ -14,34 +19,67 @@ namespace zaran
 		FlowSolverParaPtr para = GetPara();
 		int initType = para->GetInitFieldType();
 		DVector primInit = para->GetPrimitiveInflow();
-		primInit[0] = 6.4;
-		primInit[1] = 3.125;
-		primInit[2] = 0;
-		primInit[3] = 0;
-		primInit[4] = 18.5;
 		int nTotalNodeNum = grid->GetTotalNodeNum();
 		double x, y, z;
-		para->SetPrimitiveInflow(primInit);
+		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		{
+			rho[iNode] = primInit[0];
+			u[iNode] = primInit[1];
+			v[iNode] = primInit[2];
+			w[iNode] = primInit[3];
+			p[iNode] = primInit[4];
+		}
+		Primitive2Conservative();
+	}
+	void Solver_NS_2D::InitFieldNoFlow()
+	{
+		GridPtr grid = GetGrid();
+		auto& rho = *m_Primtive[0];
+		auto& u = *m_Primtive[1];
+		auto& v = *m_Primtive[2];
+		auto& w = *m_Primtive[3];
+		auto& p = *m_Primtive[4];
+		auto& NodeTopo = grid->GetNodeTopo();
+		auto& nodeCoord = NodeTopo->GetCoordinate();
+		FlowSolverParaPtr para = GetPara();
+		int initType = para->GetInitFieldType();
+		DVector primInit = para->GetPrimitiveInflow();
+		int nTotalNodeNum = grid->GetTotalNodeNum();
+		double x, y, z;
+		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		{
+			rho[iNode] = primInit[0];
+			u[iNode] = 0;
+			v[iNode] = 0;
+			w[iNode] = 0;
+			p[iNode] = primInit[4];
+		}
+		Primitive2Conservative();
+	}
+	void Solver_NS_2D::InitFieldIsentropicVortex()
+	{
+		GridPtr grid = GetGrid();
+		auto& rho = *m_Primtive[0];
+		auto& u = *m_Primtive[1];
+		auto& v = *m_Primtive[2];
+		auto& w = *m_Primtive[3];
+		auto& p = *m_Primtive[4];
+		auto& NodeTopo = grid->GetNodeTopo();
+		auto& nodeCoord = NodeTopo->GetCoordinate();
+		int nTotalNodeNum = grid->GetTotalNodeNum();
+		double x, y, z;
+		DVector prim;
+		double beta = 5;
 		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 		{
 			x = nodeCoord[iNode].x();
 			y = nodeCoord[iNode].y();
-			if (x <= 0.1)
-			{
-				rho[iNode] = 6.45;
-				u[iNode] = 3.125;
-				v[iNode] = 0.0;
-				w[iNode] = 0.0;
-				p[iNode] = 18.5;
-			}
-			else
-			{
-				rho[iNode] = 1.4;
-				u[iNode] = 0;
-				v[iNode] = 0;
-				w[iNode] = 0.0;
-				p[iNode] = 1.0;
-			}
+			CalcIsentropicVortex(x, y, 5, prim);
+			rho[iNode] = prim[0];
+			u[iNode] = prim[1];
+			v[iNode] = prim[2];
+			w[iNode] = prim[3];
+			p[iNode] = prim[4];
 		}
 		Primitive2Conservative();
 	}
@@ -353,7 +391,7 @@ namespace zaran
 		auto& primGradY = m_PrimGradY;
 		auto& limiterCoef = m_LimiterCoef;
 		auto& res = m_Residual;
-		auto&dt=*m_TimeStep;
+		auto& dt = *m_TimeStep;
 		auto& coordTrans = m_CoordTrans;
 		int nInnerNode = grid->GetInnerNodeNum();
 		int nBoundNode = grid->GetBoundNodeNum();
@@ -452,7 +490,7 @@ namespace zaran
 				(*res[iVal])[iNode] -= riemanPara->flux[iVal] / jacobi;
 				if (isnan((*res[iVal])[iNode]) || isinf((*res[iVal])[iNode]))
 					ZaranLog::error("inode={},NAN in Residual!", iNode);
-				(*cons[iVal])[iNode] -= (*res[iVal])[iNode]*dt[iNode]* (*coordTrans[32])[iNode];
+				(*cons[iVal])[iNode] -= (*res[iVal])[iNode] * dt[iNode] * (*coordTrans[32])[iNode];
 			}
 		}
 	}
@@ -505,6 +543,38 @@ namespace zaran
 	{
 		NSSolver::BoundaryCondition();
 		SolveHoleNode();
+		SolveUserDefinedBoundary();
+	}
+	void Solver_NS_2D::SolveUserDefinedBoundary()
+	{
+		GridPtr grid = GetGrid();
+		auto& nodeTopo = grid->GetNodeTopo();
+		auto& nodeType = nodeTopo->GetType();
+		auto& neibor = nodeTopo->GetNeighborCloud();
+		auto& nodeCoord = nodeTopo->GetCoordinate();
+		auto& templateI = nodeTopo->GetTemplateI();
+		auto& templateJ = nodeTopo->GetTemplateJ();
+		auto& prim = m_Primtive;
+		auto& cons = m_Conservative;
+		auto& primGradX = m_PrimGradX;
+		auto& primGradY = m_PrimGradY;
+		auto& res = m_Residual;
+		double x, y;
+		DVector prim_ideal(5);
+		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
+		{
+			if (nodeType[iNode] != NodeType::userDefined)
+				continue;
+			x = nodeCoord[iNode].x();
+			y = nodeCoord[iNode].y();
+			CalcIsentropicVortex(x, y, 5.0, prim_ideal);
+			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			{
+				(*prim[iVal])[iNode] = prim_ideal(iVal);
+				(*res[iVal])[iNode] = 0;
+			}
+			Primitive2Conservative((*prim[0])[iNode], (*prim[1])[iNode], (*prim[2])[iNode], (*prim[3])[iNode], (*prim[4])[iNode], (*cons[0])[iNode], (*cons[1])[iNode], (*cons[2])[iNode], (*cons[3])[iNode], (*cons[4])[iNode]);
+		}
 	}
 	void Solver_NS_2D::ViscousFlux()
 	{
