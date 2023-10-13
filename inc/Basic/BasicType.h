@@ -25,5 +25,4 @@ namespace zaran
 	using IVector = Eigen::VectorXi;//int vector
 	using DVector2D = Eigen::Vector2d;//double vector2d
 	using DVector3D = Eigen::Vector3d;//double vector3d
-
 }

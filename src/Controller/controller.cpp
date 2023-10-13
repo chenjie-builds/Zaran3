@@ -3,6 +3,7 @@
 #include <fstream>
 #include"FlowSolver.h"
 #include"MathBasic.h"
+#include "SpecialField.h"
 using namespace zaran;
 Controller::Controller(Ptr<GridList>& gridList, Ptr<SolverVec>& solverVec)
 {
@@ -108,7 +109,7 @@ void Controller::SolveField()
 		SolveFieldOneStep();
 		PostSolve();
 	}
-	SaveFieldData();
+	PostSolve();
 }
 
 double Controller::CalcMaxAveResidual()
@@ -120,6 +121,35 @@ double Controller::CalcMaxAveResidual()
 		maxResidual = Max(maxResidual, currentSolver->ComputeMaxResidual());
 	}
 	return maxResidual;
+}
+
+void zaran::Controller::CalcResidual()
+{
+	for (size_t iSolver = 0; iSolver < solverVec_->GetSolverNumber(); iSolver++)
+	{
+		auto& currentSolver = std::dynamic_pointer_cast<FlowSolver>(solverVec_->GetSolverPtr(iSolver));
+		auto& currentGrid = currentSolver->GetGrid();
+		auto& fieldData = currentSolver->GetFieldData();
+		auto& rho = fieldData->GetData("rho");
+		auto& nodeTopo = currentGrid->GetNodeTopo();
+		auto& nodeCoord = nodeTopo->GetCoordinate();
+		auto& nodeNum = currentGrid->GetTotalNodeNum();
+		auto& nodeType = nodeTopo->GetType();
+		double x, y;
+		DVector prim;
+		double thoericalRho;
+		maxResidual_ = aveResidual_ = 0.0;
+		for (int iNode = 0;iNode < nodeNum;++iNode)
+		{
+			x = nodeCoord[iNode].x();
+			y = nodeCoord[iNode].y();
+			CalcIsentropicVortex(x, y, 5.0, prim);
+			thoericalRho = prim[0];
+			maxResidual_ = Max(maxResidual_, abs(rho[iNode] - thoericalRho));
+			aveResidual_ += abs(rho[iNode] - thoericalRho);
+		}
+		aveResidual_ /= nodeNum;
+	}
 }
 
 void Controller::SaveFieldData()
@@ -135,7 +165,7 @@ bool Controller::IsStopSolve()
 	double minResidual = GlobalData::GetDouble("minResidual");
 	double currentTime = GlobalData::GetDouble("globalTime");
 	//达到要求的最小残差
-	if (iterStep>calResidualStep&& maxResidual_ < minResidual)
+	if (iterStep > calResidualStep && maxResidual_ < minResidual)
 	{
 		ZaranLog::info("Max Residual is small than {}, stop compute!", minResidual);
 		return true;
@@ -187,13 +217,13 @@ void Controller::PostSolve()
 	int iterStep = GlobalData::GetInt("step");
 	int calResidualStep = GlobalData::GetInt("calResidualStep");
 	int writeFieldStep = GlobalData::GetInt("writeFieldStep");
-	if (iterStep % calResidualStep == 0)
+	if (iterStep % calResidualStep == 0||IsStopSolve())
 	{
-		maxResidual_ = CalcMaxAveResidual();
-		ZaranLog::info("step={}, dt={:e}, maxRes={:e}", GlobalData::GetInt("step"), GlobalData::GetDouble("dt"), maxResidual_);
+		CalcResidual();
+		ZaranLog::info("step={}, dt={:e}, maxRes={:e}, aveRes={:e}", GlobalData::GetInt("step"), GlobalData::GetDouble("dt"), maxResidual_, aveResidual_);
 		SaveResidual();
 	}
-	if (iterStep % writeFieldStep == 0)
+	if (iterStep % writeFieldStep == 0||IsStopSolve())
 	{
 		SaveFieldData();
 		SaveWallNode();

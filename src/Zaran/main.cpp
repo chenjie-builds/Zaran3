@@ -1,6 +1,7 @@
 #include"Simulation.h"
 #include "log.h"
 #include"BasicType.h"
+
 int main()
 {
 	using namespace zaran;

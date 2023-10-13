@@ -26,8 +26,14 @@
           "name": "USE_OMP",
           "value": "True",
           "type": "BOOL"
+        },
+        {
+          "name": "CMAKE_NINJA_FORCE_RESPONSE_FILE",
+          "value": "False",
+          "type": "BOOL"
         }
-      ]
+      ],
+      "intelliSenseMode": "windows-msvc-x64"
     }
   ]
 }

@@ -37,6 +37,8 @@ namespace zaran
 		void Initialize();
 		//计算流场中的最大和最小残差
 		double CalcMaxAveResidual();
+		// 计算残差
+		void CalcResidual();
 		// 交互插值节点信息
 		void CommInterNodeData();
 		// 是否停止计算

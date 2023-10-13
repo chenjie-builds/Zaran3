@@ -17,6 +17,7 @@
 #include "GridList.h"
 namespace zaran
 {
+
 	enum class SimulationTask
 	{
 		SOLVE_FIELD = 0,

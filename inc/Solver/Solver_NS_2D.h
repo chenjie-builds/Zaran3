@@ -34,7 +34,6 @@ namespace zaran
 		//自定义边界
 		void SolveUserDefinedBoundary();
 
-
 		void BoundaryCondition()override;
 		//计算粘性通量
 		void ViscousFlux() override;
