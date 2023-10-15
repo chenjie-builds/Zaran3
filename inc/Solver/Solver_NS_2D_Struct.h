@@ -38,5 +38,8 @@ namespace zaran
 		virtual void ComputeOutletBC(Boundary& bound);
 		// 壁面边界条件
 		virtual void  ComputeWallBC(Boundary& bound) {};
+	private:
+		//限制器函数指针
+		double (*limiter)(const double&, const double&);
 	};
 }

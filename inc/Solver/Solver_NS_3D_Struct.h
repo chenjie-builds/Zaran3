@@ -30,5 +30,7 @@ namespace zaran
 		// 计算限制器系数
 		virtual void ComputeLimiterCoef()override;
 	private:
+			//限制器函数指针
+		double (*limiter)(const double&, const double&);
 	};
 }

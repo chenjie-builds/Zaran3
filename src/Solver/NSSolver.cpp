@@ -53,7 +53,6 @@ namespace zaran {
 		std::string riemannSolverType = GlobalData::GetString("riemannSolver");
 		RiemannSolverFactory riemannSolverFactory;
 		riemannSolverFactory.Create(riemannSolver_, riemannSolverType);
-		CreateLimiter();
 	}
 
 	void NSSolver::CreateFieldData()
@@ -329,7 +328,7 @@ namespace zaran {
 		{
 			auto& boundName = boundary.first;
 			auto& bound = boundary.second;
-			if(boundName =="hole")
+			if (boundName == "hole")
 				continue;
 			for (int iBound = 0; iBound < bound.size(); ++iBound)
 			{
@@ -541,62 +540,17 @@ namespace zaran {
 
 	void NSSolver::ComputeLimiterCoef()
 	{
-		// ComputeLimiterCoefVK();
-		// return;
-		GridPtr grid = GetGrid();
-		auto& nodeTopo = grid->GetNodeTopo();
-		auto& nodeType = nodeTopo->GetType();
-		auto& nodeCoord = nodeTopo->GetCoordinate();
-		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
-		auto& prim = m_Primtive;
-		auto& limiterCoef = m_LimiterCoef;
-		auto& primGradX = m_PrimGradX;
-		auto& primGradY = m_PrimGradY;
-		auto& primGradZ = m_PrimGradZ;
-		int nTotalNodeNum = grid->GetTotalNodeNum();
-		double maxVal, minVal;
-		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
-		{
-			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
-				continue;
-			auto& neighborNode = nodeNeighbor[iNode];
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-			{
-				maxVal = (*prim[iVal])[iNode];
-				minVal = (*prim[iVal])[iNode];
-				for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
-				{
-					maxVal = Max(maxVal, (*prim[iVal])[neighborNode[iNeighbor]]);
-					minVal = Min(minVal, (*prim[iVal])[neighborNode[iNeighbor]]);
-				}
-				double gradx = (*primGradX[iVal])[iNode];
-				double grady = (*primGradY[iVal])[iNode];
-				double gradz = (*primGradZ[iVal])[iNode];
-				double deltaMax = maxVal - (*prim[iVal])[iNode];
-				double deltaMin = minVal - (*prim[iVal])[iNode];
-				double tempCoef = LARGE_NUMBER;
-				(*limiterCoef[iVal])[iNode] = LARGE_NUMBER;
-				for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
-				{
-					auto current2Neighbor = nodeCoord[neighborNode[iNeighbor]] - nodeCoord[iNode];
-					double delta2 = current2Neighbor(0) * gradx + current2Neighbor(1) * grady + current2Neighbor(2) * gradz;
-					delta2 *= 0.5;
-					if (delta2 > 0)
-					{
-						tempCoef = limiter(maxVal - (*prim[iVal])[iNode], delta2);
-					}
-					else if (delta2 < 0)
-					{
-						tempCoef = limiter(minVal - (*prim[iVal])[iNode], delta2);
-					}
-					else
-					{
-						tempCoef = 1.0;
-					}
-					(*limiterCoef[iVal])[iNode] = Min((*limiterCoef[iVal])[iNode], tempCoef);
-				}
-			}
-		}
+		string limiterType = GlobalData::GetString("limiterType");
+		if (limiterType == "vk")
+			ComputeLimiterCoefVK();
+		else if (limiterType == "barth")
+			ComputeLimiterCoefBJ();
+		else if (limiterType == "noLimiter")
+			ComputeLimiterCoefNoLimiter();
+		else if (limiterType == "oneOrder")
+			ComputeLimiterCoefOneOrder();
+		else
+			ZaranLog::warn("Unsupported Limiter Type: {}", limiterType);
 		ComputeBoundaryLimiterCoef();
 	}
 	void NSSolver::ComputeLimiterCoefVK()
@@ -617,7 +571,7 @@ namespace zaran {
 		double venkatCoeff = 1.0e-5;
 		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 		{
-			if (nodeType[iNode] != NodeType::inner&& nodeType[iNode] != NodeType::hole)
+			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
 				continue;
 			auto& neighborNode = nodeNeighbor[iNode];
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -658,10 +612,106 @@ namespace zaran {
 					}
 					(*limiterCoef[iVal])[iNode] = Min((*limiterCoef[iVal])[iNode], tempCoef);
 				}
-
 			}
 		}
-		ComputeBoundaryLimiterCoef();
+	}
+	void NSSolver::ComputeLimiterCoefBJ()
+	{
+		GridPtr grid = GetGrid();
+		auto& nodeTopo = grid->GetNodeTopo();
+		auto& nodeType = nodeTopo->GetType();
+		auto& nodeCoord = nodeTopo->GetCoordinate();
+		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
+		auto& prim = m_Primtive;
+		auto& limiterCoef = m_LimiterCoef;
+		auto& primGradX = m_PrimGradX;
+		auto& primGradY = m_PrimGradY;
+		auto& primGradZ = m_PrimGradZ;
+		int nTotalNodeNum = grid->GetTotalNodeNum();
+		double maxVal, minVal;
+		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		{
+			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
+				continue;
+			auto& neighborNode = nodeNeighbor[iNode];
+			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			{
+				maxVal = (*prim[iVal])[iNode];
+				minVal = (*prim[iVal])[iNode];
+				for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
+				{
+					maxVal = Max(maxVal, (*prim[iVal])[neighborNode[iNeighbor]]);
+					minVal = Min(minVal, (*prim[iVal])[neighborNode[iNeighbor]]);
+				}
+				double gradx = (*primGradX[iVal])[iNode];
+				double grady = (*primGradY[iVal])[iNode];
+				double gradz = (*primGradZ[iVal])[iNode];
+				double deltaMax = maxVal - (*prim[iVal])[iNode];
+				double deltaMin = minVal - (*prim[iVal])[iNode];
+				double tempCoef = LARGE_NUMBER;
+				(*limiterCoef[iVal])[iNode] = LARGE_NUMBER;
+				for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
+				{
+					auto current2Neighbor = nodeCoord[neighborNode[iNeighbor]] - nodeCoord[iNode];
+					double delta2 = current2Neighbor(0) * gradx + current2Neighbor(1) * grady + current2Neighbor(2) * gradz;
+					delta2 *= 0.5;
+					if (delta2 > 0)
+					{
+						tempCoef = Barth(maxVal - (*prim[iVal])[iNode], delta2);
+					}
+					else if (delta2 < 0)
+					{
+						tempCoef = Barth(minVal - (*prim[iVal])[iNode], delta2);
+					}
+					else
+					{
+						tempCoef = 1.0;
+					}
+					(*limiterCoef[iVal])[iNode] = Min((*limiterCoef[iVal])[iNode], tempCoef);
+				}
+			}
+		}
+	}
+	void NSSolver::ComputeLimiterCoefNoLimiter()
+	{
+		GridPtr grid = GetGrid();
+		auto& nodeTopo = grid->GetNodeTopo();
+		auto& nodeType = nodeTopo->GetType();
+		auto& limiterCoef = m_LimiterCoef;
+		int nTotalNodeNum = grid->GetTotalNodeNum();
+		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		{
+			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
+				continue;
+			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			{
+				(*limiterCoef[iVal])[iNode] = 1.0;
+			}
+		}
+	}
+	void NSSolver::ComputeLimiterCoefOneOrder()
+	{
+		GridPtr grid = GetGrid();
+		auto& nodeTopo = grid->GetNodeTopo();
+		auto& nodeType = nodeTopo->GetType();
+		auto& nodeCoord = nodeTopo->GetCoordinate();
+		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
+		auto& prim = m_Primtive;
+		auto& limiterCoef = m_LimiterCoef;
+		auto& primGradX = m_PrimGradX;
+		auto& primGradY = m_PrimGradY;
+		auto& primGradZ = m_PrimGradZ;
+		int nTotalNodeNum = grid->GetTotalNodeNum();
+		double maxVal, minVal;
+		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		{
+			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
+				continue;
+			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			{
+				(*limiterCoef[iVal])[iNode] = 0.0;
+			}
+		}
 	}
 	void NSSolver::ComputeBoundaryLimiterCoef()
 	{
@@ -673,7 +723,7 @@ namespace zaran {
 		{
 			auto& boundName = boundary.first;
 			auto& bound = boundary.second;
-			if(boundName=="hole")
+			if (boundName == "hole")
 				continue;
 			for (int iBound = 0; iBound < bound.size(); ++iBound)
 			{
@@ -687,34 +737,6 @@ namespace zaran {
 			}
 		}
 	}
-	void NSSolver::CreateLimiter()
-	{
-		FlowSolverParaPtr& para = GetPara();
-		LimiterType limiterType = para->GetLimiterType();
-		if (limiterType == LimiterType::minmod)
-			limiter = MinMod;
-		else if (limiterType == LimiterType::vanleer)
-			limiter = VanLeer;
-		else if (limiterType == LimiterType::vanalbada)
-			limiter = VanAlbada;
-		else if (limiterType == LimiterType::mixminmodvanleer)
-			limiter = MixMinModVanLeer;
-		else if (limiterType == LimiterType::nolimit)
-			limiter = NoLimiter;
-		else if (limiterType == LimiterType::oneorder)
-		{
-			limiter = OneOrder;
-		}
-		else if (limiterType == LimiterType::barth)
-		{
-			limiter = Barth;
-		}
-		else
-		{
-			ZaranLog::error("Limiter Type Error!");
-		}
-	}
-
 	void NSSolver::NoGradient()
 	{
 		// do nothing

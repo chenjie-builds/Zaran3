@@ -14,13 +14,10 @@ namespace zaran
 {
 	enum class LimiterType//限制器类型
 	{
-		minmod,
-		vanleer,
-		vanalbada,
-		mixminmodvanleer,
 		nolimit,
 		barth,
-		oneorder
+		oneorder,
+		vk
 	};
 	double NoLimiter(const double& x, const double& y);
 	double MinMod(const double& x, const double& y);

@@ -69,29 +69,21 @@ void FlowSolverPara::Init()
 	}
 
 	std::string limiterType = GlobalData::GetString("limiterType");
-	if (limiterType == "minmod")
-	{
-		limiterType_ = LimiterType::minmod;
-	}
-	else if (limiterType == "vanleer")
-	{
-		limiterType_ = LimiterType::vanleer;
-	}
-	else if (limiterType == "vanalbada")
-	{
-		limiterType_ = LimiterType::vanalbada;
-	}
-	else if (limiterType == "nolimit")
+	if (limiterType == "noLimiter")
 	{
 		limiterType_ = LimiterType::nolimit;
 	}
-	else if (limiterType == "oneorder")
+	else if (limiterType == "oneOrder")
 	{
 		limiterType_ = LimiterType::oneorder;
 	}
 	else if (limiterType == "barth")
 	{
 		limiterType_ = LimiterType::barth;
+	}
+	else if (limiterType == "vk")
+	{
+		limiterType_ = LimiterType::vk;
 	}
 	else
 	{

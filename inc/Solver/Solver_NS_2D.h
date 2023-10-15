@@ -22,6 +22,7 @@ namespace zaran
 		void InitField()override;
 		void InitFieldFarField();//初始化为来流
 		void InitFieldNoFlow();//初始化为静止流场
+		void InitFieldShockReflection();//初始化为激波反射
 		void InitFieldIsentropicVortex();
 	protected:
 		void ComputeGradientWLS()override;

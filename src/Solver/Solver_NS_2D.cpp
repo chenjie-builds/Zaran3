@@ -4,7 +4,8 @@ namespace zaran
 {
 	void Solver_NS_2D::InitField()
 	{
-		InitFieldIsentropicVortex();
+		InitFieldShockReflection();
+		// InitFieldIsentropicVortex();
 	}
 	void Solver_NS_2D::InitFieldFarField()
 	{
@@ -53,6 +54,50 @@ namespace zaran
 			v[iNode] = 0;
 			w[iNode] = 0;
 			p[iNode] = primInit[4];
+		}
+		Primitive2Conservative();
+	}
+	void Solver_NS_2D::InitFieldShockReflection()
+	{
+		GridPtr grid = GetGrid();
+		auto& rho = *m_Primtive[0];
+		auto& u = *m_Primtive[1];
+		auto& v = *m_Primtive[2];
+		auto& w = *m_Primtive[3];
+		auto& p = *m_Primtive[4];
+		auto& NodeTopo = grid->GetNodeTopo();
+		auto& nodeCoord = NodeTopo->GetCoordinate();
+		FlowSolverParaPtr para = GetPara();
+		int initType = para->GetInitFieldType();
+		DVector primInit = para->GetPrimitiveInflow();
+		primInit[0] = 6.4;
+		primInit[1] = 3.125;
+		primInit[2] = 0;
+		primInit[3] = 0;
+		primInit[4] = 18.5;
+		int nTotalNodeNum = grid->GetTotalNodeNum();
+		double x, y, z;
+		para->SetPrimitiveInflow(primInit);
+		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		{
+			x = nodeCoord[iNode].x();
+			y = nodeCoord[iNode].y();
+			if (x <= 0.1)
+			{
+				rho[iNode] = primInit[0];
+				u[iNode] = primInit[1];
+				v[iNode] = primInit[2];
+				w[iNode] = primInit[3];
+				p[iNode] = primInit[4];
+			}
+			else
+			{
+				rho[iNode] = 1.4;
+				u[iNode] = 0;
+				v[iNode] = 0;
+				w[iNode] = 0;
+				p[iNode] = 1.0;
+			}
 		}
 		Primitive2Conservative();
 	}

@@ -32,7 +32,7 @@ namespace zaran
 		void UpdateField()override;
 		void CreateFieldData()override;
 		void RegisterFieldData()override;
-		virtual void ComputeCoordTrans()=0;
+		virtual void ComputeCoordTrans() = 0;
 		double ComputeMaxResidual()override;
 		/*
 		* 梯度计算函数
@@ -42,7 +42,7 @@ namespace zaran
 		void ComputePrimtiveGradient()override;
 		void ComputeBoundaryPrimtiveGradient();
 		// 使用最小二乘求梯度
-		virtual void ComputeGradientWLS()=0;
+		virtual void ComputeGradientWLS() = 0;
 		// 使用非结构有限差分法求梯度
 		virtual void ComputeGradientUFDM();
 		void NoGradient();
@@ -54,7 +54,7 @@ namespace zaran
 		void SnycTimeStepWithGlobal(double& dt)override;
 		void TimeAdvance()override;
 		// 计算当地时间步
-		virtual void ComputeTimeStepLocal()=0;
+		virtual void ComputeTimeStepLocal() = 0;
 		//龙格库塔法
 		virtual void RungeKutta();
 		/**
@@ -68,20 +68,21 @@ namespace zaran
 		void Conservative2Primitive();
 		void Conservative2Primitive(double& cons0, double& cons1, double& cons2, double& cons3, double& cons4, double& rho, double& u, double& v, double& w, double& p);
 		// 计算流动通量
-		virtual void InviscidFlux()=0;
+		virtual void InviscidFlux() = 0;
 		//计算粘性通量
-		virtual void ViscousFlux()=0;
+		virtual void ViscousFlux() = 0;
 		//计算源项
-		virtual void SourceFlux()=0;
+		virtual void SourceFlux() = 0;
 		// 计算流场残差，即右端项
 		virtual void ComputeResidual();
 		// 计算限制器系数
 		virtual void ComputeLimiterCoef();
 		void ComputeLimiterCoefVK();
 		void ComputeLimiterCoefBJ();
+		void ComputeLimiterCoefNoLimiter();
+		void ComputeLimiterCoefOneOrder();
+
 		void ComputeBoundaryLimiterCoef();
-		// 创建限制器
-		void CreateLimiter();
 
 		/**
 		* 边界条件处理
@@ -100,7 +101,5 @@ namespace zaran
 		Array<DArray*> m_PrimGradZ;
 		//通量求解器
 		Ptr<RiemannSolver> riemannSolver_;
-		//限制器函数指针
-		double (*limiter)(const double&, const double&);
 	};
 }
