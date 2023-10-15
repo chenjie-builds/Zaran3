@@ -114,8 +114,8 @@ namespace zaran
 		Array<std::set<int>> nodeNeiborSet(nNode);
 		for (int iNode = 0; iNode < nNode; iNode++)
 		{
-			if (nodeType[iNode] != NodeType::inner)
-				continue;
+			// if (nodeType[iNode] != NodeType::inner)
+			// 	continue;
 			auto& currentNeibor = nodeNeibor[iNode];
 			auto& neiborSet = nodeNeiborSet[iNode];
 			for (auto& iNeibor : currentNeibor)
@@ -134,8 +134,8 @@ namespace zaran
 		}
 		for (int iNode = 0; iNode < nNode; iNode++)
 		{
-			if (nodeType[iNode] != NodeType::inner)
-				continue;
+			// if (nodeType[iNode] != NodeType::inner)
+			// 	continue;
 			auto& currentNeibor = nodeNeibor[iNode];
 			auto& neiborSet = nodeNeiborSet[iNode];
 			currentNeibor.resize(neiborSet.size());

@@ -50,7 +50,7 @@ void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
 	int step = GlobalData::GetInt("step");
 	std::string filename = "result/" + std::to_string(step) + ".dat";
 	std::ofstream fout(filename);
-	fout << "variables=x,y,rho,u,v,w,p\n";
+	fout << "variables=x,y,rho,u,v,w,p,J,lim0,lim1,lim2,lim3,lim4\n";
 	auto& grid = solver->GetGrid();
 	int nInnerNum = grid->GetInnerNodeNum();
 	int nBoundNum = grid->GetBoundNodeNum();
@@ -65,6 +65,12 @@ void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
 	auto& v = data->GetData("v");
 	auto& w = data->GetData("w");
 	auto& p = data->GetData("p");
+	auto& jacobi = data->GetData("coordTransJ");
+	auto&limiterCoef0 = data->GetData("limiterCoef0");
+	auto& limiterCoef1 = data->GetData("limiterCoef1");
+	auto& limiterCoef2 = data->GetData("limiterCoef2");
+	auto& limiterCoef3 = data->GetData("limiterCoef3");
+	auto& limiterCoef4 = data->GetData("limiterCoef4");
 	fout << "ZONE T= grid_" << grid->GetName() << std::endl;
 	fout << "N=" << grid->GetTotalNodeNum() << ", E= " << cell2node.size() << ", F=FEPOINT, ET=QUADRILATERAL" << std::endl;
 	fout << "solutiontime= " << GlobalData::GetDouble("globalTime") << std::endl;
@@ -73,6 +79,8 @@ void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
 		auto& currentCoord = nodeCoord[iNode];
 		fout << currentCoord(0) << "  " << currentCoord(1) << "  ";
 		fout << rho[iNode] << "  " << u[iNode] << "  " << v[iNode] << "  " << w[iNode] << "  " << p[iNode];
+		fout << "  " << jacobi[iNode];
+		fout << "  " << limiterCoef0[iNode] << "  " << limiterCoef1[iNode] << "  " << limiterCoef2[iNode] << "  " << limiterCoef3[iNode] << "  " << limiterCoef4[iNode];
 		fout << std::endl;
 	}
 	int nCell = cell2node.size();

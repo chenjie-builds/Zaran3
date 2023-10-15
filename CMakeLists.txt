@@ -83,7 +83,7 @@ set(CMAKE_NINJA_FORCE_RESPONSE_FILE "ON" CACHE BOOL "Force Ninja to use response
 #Eigen库
 find_package(spdlog CONFIG REQUIRED)
 target_link_libraries(Zaran PRIVATE spdlog::spdlog spdlog::spdlog_header_only)
-#target_compile_options(Zaran PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj> $<$<CXX_COMPILER_ID:GNU>:-Wa,-mbig-obj>)
+target_compile_options(Zaran PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj> $<$<CXX_COMPILER_ID:GNU>:-Wa,-mbig-obj>)
 
 #可执行文件后缀
 set_target_properties(Zaran PROPERTIES DEBUG_POSTFIX ${PROJECT_VERSION})

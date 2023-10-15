@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.rh": "cpp",
+        "chrono": "cpp",
+        "xstring": "cpp",
+        "*.tcc": "cpp"
+    }
+}

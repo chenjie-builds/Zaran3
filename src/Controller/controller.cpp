@@ -146,9 +146,10 @@ void zaran::Controller::CalcResidual()
 			CalcIsentropicVortex(x, y, 5.0, prim);
 			thoericalRho = prim[0];
 			maxResidual_ = Max(maxResidual_, abs(rho[iNode] - thoericalRho));
-			aveResidual_ += abs(rho[iNode] - thoericalRho);
+			aveResidual_ += pow(rho[iNode] - thoericalRho, 2);
 		}
 		aveResidual_ /= nodeNum;
+		aveResidual_ = sqrt(aveResidual_);
 	}
 }
 
@@ -217,13 +218,13 @@ void Controller::PostSolve()
 	int iterStep = GlobalData::GetInt("step");
 	int calResidualStep = GlobalData::GetInt("calResidualStep");
 	int writeFieldStep = GlobalData::GetInt("writeFieldStep");
-	if (iterStep % calResidualStep == 0||IsStopSolve())
+	if (iterStep % calResidualStep == 0 || IsStopSolve())
 	{
 		CalcResidual();
 		ZaranLog::info("step={}, dt={:e}, maxRes={:e}, aveRes={:e}", GlobalData::GetInt("step"), GlobalData::GetDouble("dt"), maxResidual_, aveResidual_);
 		SaveResidual();
 	}
-	if (iterStep % writeFieldStep == 0||IsStopSolve())
+	if (iterStep % writeFieldStep == 0 || IsStopSolve())
 	{
 		SaveFieldData();
 		SaveWallNode();

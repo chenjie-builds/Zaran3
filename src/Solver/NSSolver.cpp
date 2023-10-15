@@ -329,6 +329,8 @@ namespace zaran {
 		{
 			auto& boundName = boundary.first;
 			auto& bound = boundary.second;
+			if(boundName =="hole")
+				continue;
 			for (int iBound = 0; iBound < bound.size(); ++iBound)
 			{
 				auto& boundIndex = bound[iBound].GetIndex();
@@ -539,8 +541,8 @@ namespace zaran {
 
 	void NSSolver::ComputeLimiterCoef()
 	{
-		ComputeLimiterCoefVK();
-		return;
+		// ComputeLimiterCoefVK();
+		// return;
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
@@ -671,6 +673,8 @@ namespace zaran {
 		{
 			auto& boundName = boundary.first;
 			auto& bound = boundary.second;
+			if(boundName=="hole")
+				continue;
 			for (int iBound = 0; iBound < bound.size(); ++iBound)
 			{
 				auto& boundIndex = bound[iBound].GetIndex();
