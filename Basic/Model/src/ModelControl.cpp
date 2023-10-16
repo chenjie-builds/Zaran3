@@ -17,7 +17,7 @@ void ModelControl::SetFileName(string filename)
 void ModelControl::Input()
 {
 	double x, y;
-	vector<DVector3D>vertex;
+	Array<DVector3D>vertex;
 
 	std::ifstream fin(m_filename);
 	//ÓÃÓÚÔúÈ¾ÑİÊ¾

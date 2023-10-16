@@ -55,9 +55,9 @@ namespace zaran
 		// 输出流场为Tecplot格式
 		void SaveDataTecplot();
 	private:
-		shared_ptr<GridList> gridList_;
-		shared_ptr<SolverVec> solverVec_;
-		shared_ptr<Visual> visual_;
+		Ptr<GridList> gridList_;
+		Ptr<SolverVec> solverVec_;
+		Ptr<Visual> visual_;
 		double maxResidual_;
 		double aveResidual_;
 	};

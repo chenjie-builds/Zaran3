@@ -38,9 +38,9 @@ int StarCDGrid::GetBoundFaceNum() const
 {
 	return boundFace_.size();
 }
-vector<IArray> StarCDGrid::GetNodeInBoundFaceIndex() const
+Array<IArray> StarCDGrid::GetNodeInBoundFaceIndex() const
 {
-	vector<IArray> nodeVec(boundFace_.size());
+	Array<IArray> nodeVec(boundFace_.size());
 	for (size_t iFace = 0; iFace < boundFace_.size(); ++iFace)
 	{
 		nodeVec[iFace] = boundFace_[iFace].GetNodeIndexVec();
@@ -48,10 +48,10 @@ vector<IArray> StarCDGrid::GetNodeInBoundFaceIndex() const
 	return nodeVec;
 
 }
-vector<IArray> StarCDGrid::GetNodeInElementIndex() const
+Array<IArray> StarCDGrid::GetNodeInElementIndex() const
 {
 
-	vector<IArray> nodeVec(element_.size());
+	Array<IArray> nodeVec(element_.size());
 	for (size_t iElem = 0; iElem < element_.size(); ++iElem)
 	{
 		nodeVec[iElem] = element_[iElem].GetNodeIndexVec();

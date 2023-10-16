@@ -38,8 +38,8 @@ namespace zaran
 		void SetNodeTopo(NodeTopoInfo& nodeTopo);
 		void SetFaceTopo(FaceTopoInfo& faceTopo);
 		void SetCellTopo(CellTopoInfo& cellTopo);
-		void SetInterNodeInfo(shared_ptr<InterNodeInfo> interNodeInfo);
-		void SetBoundaryMap(shared_ptr<BoundaryMap> boundaryMap);
+		void SetInterNodeInfo(Ptr<InterNodeInfo> interNodeInfo);
+		void SetBoundaryMap(Ptr<BoundaryMap> boundaryMap);
 	public:
 		const int& GetLevel()const;
 		const int& GetTotalNodeNum()const;

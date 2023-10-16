@@ -11,7 +11,7 @@ SolverVec::~SolverVec()
 
 }
 
-void SolverVec::AddSolver(shared_ptr<Solver>& solver)
+void SolverVec::AddSolver(Ptr<Solver>& solver)
 {
 	solverVec_.emplace_back(solver);
 }
@@ -28,7 +28,7 @@ void SolverVec::CheckSolver()
 	}
 }
 
-shared_ptr<Solver>& SolverVec::GetSolverPtr(const int index)
+Ptr<Solver>& SolverVec::GetSolverPtr(const int index)
 {
 	return solverVec_[index];
 }

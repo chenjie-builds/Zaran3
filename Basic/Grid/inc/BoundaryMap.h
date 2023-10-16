@@ -19,9 +19,9 @@ namespace zaran
 	public:
 		void AddBoundary(const string& name, Boundary& bound);
 		int GetBoundaryTypeName() { return boundaryMap_.size(); }
-		vector<Boundary>& GetBoundary(const string& name);
-		map<string, vector<Boundary>>& GetBoundaryMap() { return boundaryMap_; }
+		Array<Boundary>& GetBoundary(const string& name);
+		map<string, Array<Boundary>>& GetBoundaryMap() { return boundaryMap_; }
 	private:
-		map<string, vector<Boundary>>boundaryMap_;
+		map<string, Array<Boundary>>boundaryMap_;
 	};
 }
