@@ -3,6 +3,7 @@
         "*.rh": "cpp",
         "chrono": "cpp",
         "xstring": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "vector": "cpp"
     }
 }
