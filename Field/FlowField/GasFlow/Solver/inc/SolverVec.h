@@ -24,7 +24,7 @@ namespace zaran
 		//检查网格的index是否和网格集合中匹配
 		void CheckSolver();
 		//返回一个网格
-		Ptr<Solver>& GetSolverPtr(const int index);
+		Ptr<Solver>& GetSolver(const int index);
 		//返回网格的个数
 		int GetSolverNumber() { return solverVec_.size(); }
 	private:

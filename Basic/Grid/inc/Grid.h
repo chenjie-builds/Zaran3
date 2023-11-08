@@ -50,7 +50,7 @@ namespace zaran
 		Ptr<NodeTopoInfo>& GetNodeTopo();
 		InterNodeInfoPtr& GetInterNode();
 		BoundaryMapPtr& GetBoundaryMap();
-	private:
+	protected:
 		/// 网格的级别
 		int m_level;
 		/// 内部节点，正常计算的点

@@ -28,7 +28,7 @@ void SolverVec::CheckSolver()
 	}
 }
 
-Ptr<Solver>& SolverVec::GetSolverPtr(const int index)
+Ptr<Solver>& SolverVec::GetSolver(const int index)
 {
 	return solverVec_[index];
 }

@@ -5,28 +5,24 @@
 //*	License																		||
 //*	This file is part of ZaRan.													||
 //*																				||
-//*	@file	NSSolverUnstruct.h													||
-//*	@brief	非结构网格NS方程求解器												||
+//*	@file	Create_Zaran_3D.h													||
+//*	@brief	鐢熸垚鎵庢煋涓夌淮缃戞牸           											 ||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include "NSSolver.h"
-#include "UnstructGrid.h"
+#include "GridListFactory.h"
 namespace zaran
 {
-	class NSSolverUnstruct :public NSSolver
-	{
-	public:
-		void InitField()override;
-		void InitSolver()override;
-		void Post()override;
-		void ComputeTimeStep()override;
-		void TimeAdvance()override;
-		void BoundaryCondition()override;
-		void ComputePrimtiveGradient()override;
-	protected:
-		Ptr<UnstructGrid> GetGrid();
-		void ComputeTimeStepLocal() override;
-	private:
-	};
+    class GridListFactoryZaran3D :public GridListFactory
+    {
+    public:
+        GridListFactoryZaran3D() {};
+        void Create(Ptr<GridList>& gridList) override;
+    private:
+        void CreateStructPart(Ptr<GridList>& gridList);
+        void TagCell(Ptr<GridList>& gridList);
+        void CrateBoundPatch(Ptr<GridList>& gridList);
+    private:
+
+    };
 }

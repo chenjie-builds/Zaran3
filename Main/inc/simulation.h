@@ -31,10 +31,12 @@ namespace zaran
 	public:
 		Simulation() :
 			globalDataFileName_("zaran.ini"),
-			programVersion_("V3.2.1_alpha"),
-			lastModifyDate_("2023/10/15"),
-			minSupportContrlFileVersion_("V3.2.1_alpha")
-		{ GlobalData::Init(); }
+			programVersion_("V3.3.1_alpha"),
+			lastModifyDate_("2023/11/08"),
+			minSupportContrlFileVersion_("V3.3.1_alpha")
+		{
+			GlobalData::Init();
+		}
 		~Simulation() {};
 		void Start();
 	protected:

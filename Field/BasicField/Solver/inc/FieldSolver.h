@@ -15,6 +15,15 @@
 #include"FieldData.h"
 namespace zaran
 {
+	enum class FieldSolverType
+	{
+		NS_2D,
+		NS_2D_Struct,
+		NS_3D,
+		NS_3D_Struct,
+		NS_ZaRan_2D,
+		NS_ZaRan_3D
+	};
 	class FieldSolver :public Solver
 	{
 	public:
@@ -31,6 +40,7 @@ namespace zaran
 
 		// 获取求解器求解方程的个数
 		int GetNumberOfEquations() { return m_NumberOfEquations; }
+		void SetFieldData(Ptr<FieldData>& fieldData) { m_FieldData = fieldData; }
 		// 获取Fieldata
 		Ptr<FieldData>& GetFieldData() { return m_FieldData; }
 	protected:

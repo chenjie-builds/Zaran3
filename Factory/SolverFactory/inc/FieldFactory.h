@@ -6,10 +6,11 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	SolverFactory.h														||
-//*	@brief	«ÛΩ‚∆˜π§≥ß¿‡, …˙≥…«ÛΩ‚∆˜												||
+//*	@brief	Ê±ÇËß£Âô®Â∑•ÂéÇÁ±ª, ÁîüÊàêÊ±ÇËß£Âô®												||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
+#include "BasicType.h"
 #include "SolverVec.h"
 #include "solver.h"
 #include "flowsolver.h"
@@ -18,13 +19,18 @@
 #include"Solver_NS_2D.h"
 #include "Solver_NS_3D_Struct.h"
 #include "Solver_NS_2D_Struct.h"
+#include "Field.h"
 namespace zaran
 {
-	class SolverFactory
-	{
-	public:
-		void Create(Ptr<GridList>& gridList, Ptr<SolverVec>& solverVecPtr, FieldSolverType& solverType);
-	private:
-		Ptr<SolverVec> m_solverVec;
-	};
+    class FieldFactory
+    {
+    public:
+        FieldFactory(GridType grid_type, FieldSolverType solver_type):m_grid_type(grid_type),m_solver_type(solver_type) {};
+        void Create();
+        Array<Ptr<Field>>& GetField() { return m_field_array; }
+    private:
+        Array<Ptr<Field>> m_field_array;
+        GridType m_grid_type;
+        FieldSolverType m_solver_type;
+    };
 }

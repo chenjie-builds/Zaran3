@@ -2,9 +2,7 @@
 #include"simulation.h"
 #include "GlobalData.h"
 #include "log.h"
-#include "GridListFactory.h"
-#include"FNFDM3D.h"
-#include"FNFDM2D.h"
+#include"FieldFactory.h"
 #include"ReadSTL.h"
 #include"PolyData.h"
 #include <filesystem>
@@ -16,15 +14,52 @@ void Simulation::Start()
 	ShowInfo();
 	if (task_ == SimulationTask::SOLVE_FIELD)
 	{
-		Ptr<GridList> gridList;
-		// gridListFatory_ = std::make_shared<GridListFactoryFNFDM3D>();
-		gridListFatory_ = std::make_shared<GridListFactoryFNFDM2D>();
-		//gridListFatory_ = std::make_shared<GridListFactory>();
-		gridListFatory_->Create(gridList);
-		Ptr<SolverVec> solverVec = std::make_shared<SolverVec>();
-		solverFactory_ = std::make_shared<SolverFactory>();
-		solverFactory_->Create(gridList, solverVec);
-		Ptr<Controller> controller = std::make_shared<Controller>(gridList, solverVec);
+		GridType grid_type;
+		FieldSolverType solver_type;
+		string grid_type_name = GlobalData::GetString("gridType");
+		string solver_type_name = GlobalData::GetString("solverType");
+		if (solver_type_name == "NS")
+		{
+			if (grid_type_name == "Structured_2D")
+			{
+				grid_type = GridType::Structured_2D;
+				solver_type = FieldSolverType::NS_2D_Struct;
+			}
+			else if (grid_type_name == "Structured_3D")
+			{
+				grid_type = GridType::Structured_3D;
+				solver_type = FieldSolverType::NS_3D_Struct;
+			}
+			else if (grid_type_name == "Flesible_2D")
+			{
+				grid_type = GridType::Flesible_2D;
+				solver_type = FieldSolverType::NS_2D;
+			}
+			else if (grid_type_name == "Flesible_3D")
+			{
+				grid_type = GridType::Flesible_3D;
+				solver_type = FieldSolverType::NS_3D;
+			}
+			else if (grid_type_name == "Zaran_3D")
+			{
+				grid_type = GridType::Zaran_3D;
+				solver_type = FieldSolverType::NS_3D;
+			}
+			else
+			{
+				ZaranLog::warn("Unsupported Grid Type! Please Check!");
+				system("pause");
+			}
+		}
+		else
+		{
+			ZaranLog::warn("Unsupported Solver Type! Please Check!");
+			system("pause");
+		}
+		Ptr<FieldFactory> fieldFactory = std::make_shared<FieldFactory>(grid_type, solver_type);
+		fieldFactory->Create();
+		auto& field = fieldFactory->GetField();
+		Ptr<Controller> controller = std::make_shared<Controller>(field);
 		controller->SolveField();
 	}
 	else if (task_ == SimulationTask::CONVERT_GRID)

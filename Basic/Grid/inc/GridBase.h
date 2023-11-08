@@ -14,12 +14,16 @@
 #include "CommonPara.h"
 namespace zaran
 {
-	enum class GridType
-	{
-		STRUCT = 0,
-		UNSTRUCT = 1,
-		NOTSET = 100
-	};
+    enum class GridType
+    {
+        Structured_2D,
+        Structured_3D,
+        Flesible_2D,
+        Flesible_3D,
+        Zaran_2D,
+        Zaran_3D,
+		NOTSET
+    };
 	class GridBase
 	{
 	public:

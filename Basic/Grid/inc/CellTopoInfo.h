@@ -5,7 +5,7 @@
 //*	License																		||
 //*	This file is part of ZaRan.													||
 //*																				||
-//*	@file	CelTopoInfo.h														||
+//*	@file	CellTopoInfo.h														||
 //*	@brief	Cell Topology setting												||
 //*	@author	Chen Jie.															||
 //==============================================================================||
