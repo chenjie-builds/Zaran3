@@ -15,7 +15,7 @@ namespace zaran
 		if (!gridList)
 			gridList = std::make_shared<GridList>();
 		ReadFile(gridList);
-	//	SortNeiborNode(gridList);
+		//	SortNeiborNode(gridList);
 	}
 
 	void GridListFactoryFNFDM3D::ReadFile(Ptr<GridList>& gridList)
@@ -66,6 +66,42 @@ namespace zaran
 			temp_i[innerNodeIndex] = IArray{ neiborNodeIndex[0],innerNodeIndex,neiborNodeIndex[1] };
 			temp_j[innerNodeIndex] = IArray{ neiborNodeIndex[2],innerNodeIndex,neiborNodeIndex[3] };
 			temp_k[innerNodeIndex] = IArray{ neiborNodeIndex[4],innerNodeIndex,neiborNodeIndex[5] };
+
+			IArray neibor_index = { temp_i[innerNodeIndex][0], temp_i[innerNodeIndex][2], temp_j[innerNodeIndex][0], temp_j[innerNodeIndex][2], temp_k[innerNodeIndex][0], temp_k[innerNodeIndex][2] };
+			Array<DVector3D> vec(6);
+			DArray angle(3);
+			for (int i = 0;i < 6;++i)
+			{
+				vec[i] = nodeCoord[neibor_index[i]] - nodeCoord[innerNodeIndex];
+			}
+			for (int i = 0; i < 3; ++i)
+			{
+				angle[i] = AngleOfTwoArray3D(vec[2].data(), vec[i + 3].data());
+			}
+			double max_angle = 0;
+			int max_index = 0;
+			for (int i = 0; i < 3; ++i)
+			{
+				max_angle = Max(max_angle, angle[i]);
+				if (abs(max_angle - angle[i]) < SMALL_NUMBER)
+					max_index = i;
+			}
+			if (max_index == 1)
+			{
+				neibor_index = { temp_i[innerNodeIndex][0], temp_i[innerNodeIndex][2], temp_j[innerNodeIndex][0], temp_k[innerNodeIndex][0], temp_j[innerNodeIndex][2], temp_k[innerNodeIndex][2] };
+			}
+			else if (max_index == 2)
+			{
+				neibor_index = { temp_i[innerNodeIndex][0], temp_i[innerNodeIndex][2], temp_j[innerNodeIndex][0], temp_k[innerNodeIndex][2],temp_k[innerNodeIndex][0],  temp_j[innerNodeIndex][2] };
+			}
+			for (int i = 0;i < 6;++i)
+			{
+				vec[i] = nodeCoord[neibor_index[i]] - nodeCoord[innerNodeIndex];
+			}
+			if (vec[3].cross(vec[5]).dot(vec[2]) < 0)
+				std::swap(neibor_index[2], neibor_index[3]);
+			temp_j[innerNodeIndex] = IArray{ neibor_index[2],innerNodeIndex,neibor_index[3] };
+			temp_k[innerNodeIndex] = IArray{ neibor_index[4],innerNodeIndex,neibor_index[5] };
 		}
 		//读取所有边界节点邻居节点
 		auto& boundMap = grid->GetBoundaryMap();
@@ -146,6 +182,7 @@ namespace zaran
 			boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,connectNodeIndex,0,wallNorm });
 			nodeType[boundNodeIndex] = NodeType::slipWall;
 		}
+		//扩展内部节点邻居节点，用于计算梯度
 		Array<std::set<int>> nodeNeiborSet(m_NodeNum);
 		for (int iNode = 0; iNode < m_NodeNum; iNode++)
 		{
@@ -157,16 +194,23 @@ namespace zaran
 			{
 				neiborSet.insert(iNeibor);
 			}
+			double max_distance = 0;
 			for (auto& iNeibor : currentNeibor)
 			{
-				auto& neiborNeibor = nodeNeibor[iNeibor];
-				for (auto& iNeiborNeibor : neiborNeibor)
+				max_distance = Max(max_distance, (nodeCoord[iNeibor] - nodeCoord[iNode]).norm());
+			}
+			while (neiborSet.size() < 20)
+			{
+				for (int jNode = 0;jNode < m_NodeNum;++jNode)
 				{
-					neiborSet.insert(iNeiborNeibor);
+					if ((nodeCoord[jNode] - nodeCoord[iNode]).norm() < max_distance)
+						neiborSet.insert(jNode);
 				}
+				max_distance *= 1.5;
 			}
 			neiborSet.erase(iNode);
 		}
+
 		for (int iNode = 0; iNode < m_NodeNum; iNode++)
 		{
 			if (nodeType[iNode] != NodeType::inner)

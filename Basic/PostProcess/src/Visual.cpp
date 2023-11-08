@@ -50,7 +50,7 @@ void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
 	int step = GlobalData::GetInt("step");
 	std::string filename = "result/" + std::to_string(step) + ".dat";
 	std::ofstream fout(filename);
-	fout << "variables=x,y,rho,u,v,w,p,J,lim0,lim1,lim2,lim3,lim4\n";
+	fout << "variables=x,y,rho,u,v,w,p,J,lim0,lim1,lim2,lim3,lim4,rhoGradX,rhoGradY,uGradX,uGradY,vGradX,vGradY,pGradX,pGradY\n";
 	auto& grid = solver->GetGrid();
 	int nInnerNum = grid->GetInnerNodeNum();
 	int nBoundNum = grid->GetBoundNodeNum();
@@ -66,7 +66,15 @@ void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
 	auto& w = data->GetData("w");
 	auto& p = data->GetData("p");
 	auto& jacobi = data->GetData("coordTransJ");
-	auto&limiterCoef0 = data->GetData("limiterCoef0");
+	auto& rhoGradX = data->GetData("rhoGradX");
+	auto& rhoGradY = data->GetData("rhoGradY");
+	auto& uGradX = data->GetData("uGradX");
+	auto& uGradY = data->GetData("uGradY");
+	auto& vGradX = data->GetData("vGradX");
+	auto& vGradY = data->GetData("vGradY");
+	auto& pGradX = data->GetData("pGradX");
+	auto& pGradY = data->GetData("pGradY");
+	auto& limiterCoef0 = data->GetData("limiterCoef0");
 	auto& limiterCoef1 = data->GetData("limiterCoef1");
 	auto& limiterCoef2 = data->GetData("limiterCoef2");
 	auto& limiterCoef3 = data->GetData("limiterCoef3");
@@ -81,6 +89,10 @@ void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
 		fout << rho[iNode] << "  " << u[iNode] << "  " << v[iNode] << "  " << w[iNode] << "  " << p[iNode];
 		fout << "  " << jacobi[iNode];
 		fout << "  " << limiterCoef0[iNode] << "  " << limiterCoef1[iNode] << "  " << limiterCoef2[iNode] << "  " << limiterCoef3[iNode] << "  " << limiterCoef4[iNode];
+		fout << "  " << rhoGradX[iNode] << "  " << rhoGradY[iNode];
+		fout << "  " << uGradX[iNode] << "  " << uGradY[iNode];
+		fout << "  " << vGradX[iNode] << "  " << vGradY[iNode];
+		fout << "  " << pGradX[iNode] << "  " << pGradY[iNode];
 		fout << std::endl;
 	}
 	int nCell = cell2node.size();

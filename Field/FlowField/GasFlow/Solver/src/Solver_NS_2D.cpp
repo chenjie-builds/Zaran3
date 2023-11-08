@@ -5,7 +5,8 @@ namespace zaran
 	void Solver_NS_2D::InitField()
 	{
 		// InitFieldShockReflection();
-		InitFieldIsentropicVortex();
+		// InitFieldIsentropicVortex();
+		InitFieldNoFlow();
 	}
 	void Solver_NS_2D::InitFieldFarField()
 	{
@@ -215,6 +216,7 @@ namespace zaran
 	{
 		GridPtr grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
+		auto& node_type = node_topo->GetType();
 		auto& coord = node_topo->GetCoordinate();
 		auto& neighbor = node_topo->GetNeighborCloud();
 		auto& prim = m_Primtive;
@@ -231,6 +233,8 @@ namespace zaran
 		double delta_x, delta_y;
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
+			if(node_type[iNode]==NodeType::undefined)
+				continue;
 			auto& current_coord = coord[iNode];
 			auto& current_neighbor = neighbor[iNode];
 			for (size_t iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -279,7 +283,7 @@ namespace zaran
 		{
 
 			double gamma = 1.4;
-			if (node_type[iNode] != NodeType::inner)
+			if (node_type[iNode] != NodeType::inner&&node_type[iNode] != NodeType::hole)
 				continue;
 			double c = sqrt(gamma * p[iNode] / rho[iNode]);
 			double normXi = sqrt((*coord_trans_coef[16])[iNode] * (*coord_trans_coef[16])[iNode] + (*coord_trans_coef[17])[iNode] * (*coord_trans_coef[17])[iNode] + (*coord_trans_coef[18])[iNode] * (*coord_trans_coef[19])[iNode]);
@@ -373,7 +377,7 @@ namespace zaran
 			{
 				(*res[iVal])[iNode] -= riemann_para->flux[iVal] / jacobi;
 				if (isnan((*res[iVal])[iNode]) || isinf((*res[iVal])[iNode]))
-					ZaranLog::error("inode={},NAN in Residual!", iNode);
+					ZaranLog::error("step={}, iNode={},NAN in Residual!",GlobalData::GetInt("step"), iNode);
 			}
 		}
 	}

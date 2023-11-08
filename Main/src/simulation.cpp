@@ -17,7 +17,7 @@ void Simulation::Start()
 	if (task_ == SimulationTask::SOLVE_FIELD)
 	{
 		Ptr<GridList> gridList;
-		//gridListFatory_ = std::make_shared<GridListFactoryFNFDM3D>();
+		// gridListFatory_ = std::make_shared<GridListFactoryFNFDM3D>();
 		gridListFatory_ = std::make_shared<GridListFactoryFNFDM2D>();
 		//gridListFatory_ = std::make_shared<GridListFactory>();
 		gridListFatory_->Create(gridList);

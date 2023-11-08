@@ -1,5 +1,6 @@
 #include "FNFDM2D.h"
 #include"Log.h"
+#include "MathBasic.h"
 #include<fstream>
 #include<set>
 namespace zaran
@@ -114,20 +115,49 @@ namespace zaran
 		Array<std::set<int>> nodeNeiborSet(nNode);
 		for (int iNode = 0; iNode < nNode; iNode++)
 		{
-			// if (nodeType[iNode] != NodeType::inner)
-			// 	continue;
+			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
+				continue;
 			auto& currentNeibor = nodeNeibor[iNode];
 			auto& neiborSet = nodeNeiborSet[iNode];
 			for (auto& iNeibor : currentNeibor)
 			{
 				neiborSet.insert(iNeibor);
 			}
-			for (auto& iNeibor : currentNeibor)
+			if (nodeType[iNode] != NodeType::hole)
 			{
-				auto& neiborNeibor = nodeNeibor[iNeibor];
-				for (auto& iNeiborNeibor : neiborNeibor)
+				for (auto& iNeibor : currentNeibor)
 				{
-					neiborSet.insert(iNeiborNeibor);
+					auto& neiborNeibor = nodeNeibor[iNeibor];
+					for (auto& iNeiborNeibor : neiborNeibor)
+					{
+						neiborSet.insert(iNeiborNeibor);
+					}
+				}
+			}
+			else
+			{
+				double max_dis = 0;
+				for (auto& iNeibor : currentNeibor)
+				{
+					auto& neiborNeibor = nodeNeibor[iNeibor];
+					max_dis = std::max(max_dis, DistanceOfTwoPoints(nodeCoord[iNode].data(), nodeCoord[iNeibor].data()));
+				}
+				if (max_dis > 0.05)
+					max_dis = 0.05;
+				while (neiborSet.size() < 15)
+				{
+					// ZaranLog::info("Node:{}, neibor size: {}", iNode,neiborSet.size());
+					for (int jNode = 0;jNode < nNode;jNode++)
+					{
+						if (nodeType[jNode] == NodeType::undefined)
+							continue;
+						double dis = DistanceOfTwoPoints(nodeCoord[iNode].data(), nodeCoord[jNode].data());
+						if (dis < max_dis && dis>SMALL_NUMBER)
+						{
+							neiborSet.insert(jNode);
+						}
+					}
+					max_dis *= 1.1;
 				}
 			}
 			neiborSet.erase(iNode);
