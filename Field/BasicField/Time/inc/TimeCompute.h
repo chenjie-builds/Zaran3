@@ -15,7 +15,7 @@ class TimeCompute
 public:
 	TimeCompute();
 	TimeCompute(const double& start, const double& end) :start_(start), end_(end),delta_(0),current_(0) {};
-	void Upadate(const double& delta_t);
+	void Update(const double& delta_t);
 	double GetCurrentPhysicsTime()const { return current_; }
 	const double& GetDeltaT()const { return delta_; }
 	double GetEndTime()const { return end_; }

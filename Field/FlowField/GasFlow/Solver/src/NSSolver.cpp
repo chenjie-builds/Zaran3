@@ -10,11 +10,11 @@ namespace zaran {
 	void NSSolver::InitField()
 	{
 		GridPtr grid = GetGrid();
-		auto& rho = *m_Primtive[0];
-		auto& u = *m_Primtive[1];
-		auto& v = *m_Primtive[2];
-		auto& w = *m_Primtive[3];
-		auto& p = *m_Primtive[4];
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
 		FlowSolverParaPtr para = GetPara();
 		int initType = para->GetInitFieldType();
 		DVector primInit = para->GetPrimitiveInflow();
@@ -142,11 +142,11 @@ namespace zaran {
 	void NSSolver::RegisterFieldData()
 	{
 		auto& data = *GetFieldData();
-		m_Primtive.push_back(&data.GetData("rho"));
-		m_Primtive.push_back(&data.GetData("u"));
-		m_Primtive.push_back(&data.GetData("v"));
-		m_Primtive.push_back(&data.GetData("w"));
-		m_Primtive.push_back(&data.GetData("p"));
+		m_Primitive.push_back(&data.GetData("rho"));
+		m_Primitive.push_back(&data.GetData("u"));
+		m_Primitive.push_back(&data.GetData("v"));
+		m_Primitive.push_back(&data.GetData("w"));
+		m_Primitive.push_back(&data.GetData("p"));
 		m_Conservative.push_back(&data.GetData("cons0"));
 		m_Conservative.push_back(&data.GetData("cons1"));
 		m_Conservative.push_back(&data.GetData("cons2"));
@@ -220,7 +220,7 @@ namespace zaran {
 	void NSSolver::Solve()
 	{
 		ComputeTimeStep();
-		ComputePrimtiveGradient();
+		ComputePrimitiveGradient();
 		ComputeLimiterCoef();
 		BoundaryCondition();
 		TimeAdvance();
@@ -295,7 +295,7 @@ namespace zaran {
 	}
 
 
-	void NSSolver::ComputePrimtiveGradient()
+	void NSSolver::ComputePrimitiveGradient()
 	{
 		FlowSolverParaPtr para = GetPara();
 		if (para->GetGradScheme() == GradScheme::wls)
@@ -383,11 +383,11 @@ namespace zaran {
 	{
 		double gamma = 1.4;
 		GridPtr grid = GetGrid();
-		auto& rho = *m_Primtive[0];
-		auto& u = *m_Primtive[1];
-		auto& v = *m_Primtive[2];
-		auto& w = *m_Primtive[3];
-		auto& p = *m_Primtive[4];
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
 		auto& cons0 = *m_Conservative[0];
 		auto& cons1 = *m_Conservative[1];
 		auto& cons2 = *m_Conservative[2];
@@ -413,11 +413,11 @@ namespace zaran {
 	{
 
 		GridPtr grid = GetGrid();
-		auto& rho = *m_Primtive[0];
-		auto& u = *m_Primtive[1];
-		auto& v = *m_Primtive[2];
-		auto& w = *m_Primtive[3];
-		auto& p = *m_Primtive[4];
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
 		auto& cons0 = *m_Conservative[0];
 		auto& cons1 = *m_Conservative[1];
 		auto& cons2 = *m_Conservative[2];
@@ -464,11 +464,11 @@ namespace zaran {
 	{
 		FlowSolverParaPtr para = GetPara();
 		int boundIndex = bound.GetIndex();
-		auto& rho = *m_Primtive[0];
-		auto& u = *m_Primtive[1];
-		auto& v = *m_Primtive[2];
-		auto& w = *m_Primtive[3];
-		auto& p = *m_Primtive[4];
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
 		auto& cons0 = *m_Conservative[0];
 		auto& cons1 = *m_Conservative[1];
 		auto& cons2 = *m_Conservative[2];
@@ -486,11 +486,11 @@ namespace zaran {
 
 	void NSSolver::ComputeOutletBC(Boundary& bound)
 	{
-		auto& rho = *m_Primtive[0];
-		auto& u = *m_Primtive[1];
-		auto& v = *m_Primtive[2];
-		auto& w = *m_Primtive[3];
-		auto& p = *m_Primtive[4];
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
 		auto& cons0 = *m_Conservative[0];
 		auto& cons1 = *m_Conservative[1];
 		auto& cons2 = *m_Conservative[2];
@@ -513,11 +513,11 @@ namespace zaran {
 	{
 		int& innerIndex = bound.GetInnerNodeIndex();
 		int boundIndex = bound.GetIndex();
-		auto& rho = *m_Primtive[0];
-		auto& u = *m_Primtive[1];
-		auto& v = *m_Primtive[2];
-		auto& w = *m_Primtive[3];
-		auto& p = *m_Primtive[4];
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
 		auto& cons0 = *m_Conservative[0];
 		auto& cons1 = *m_Conservative[1];
 		auto& cons2 = *m_Conservative[2];
@@ -560,7 +560,7 @@ namespace zaran {
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
-		auto& prim = m_Primtive;
+		auto& prim = m_Primitive;
 		auto& limiterCoef = m_LimiterCoef;
 		auto& primGradX = m_PrimGradX;
 		auto& primGradY = m_PrimGradY;
@@ -622,7 +622,7 @@ namespace zaran {
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
-		auto& prim = m_Primtive;
+		auto& prim = m_Primitive;
 		auto& limiterCoef = m_LimiterCoef;
 		auto& primGradX = m_PrimGradX;
 		auto& primGradY = m_PrimGradY;
@@ -696,7 +696,7 @@ namespace zaran {
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
-		auto& prim = m_Primtive;
+		auto& prim = m_Primitive;
 		auto& limiterCoef = m_LimiterCoef;
 		auto& primGradX = m_PrimGradX;
 		auto& primGradY = m_PrimGradY;

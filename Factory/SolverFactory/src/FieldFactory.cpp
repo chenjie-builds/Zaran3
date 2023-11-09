@@ -20,11 +20,11 @@ namespace zaran
         // {
         //     grid_list_factory=std::make_shared<GridListFactoryStruct3D>();
         // }
-        else if (m_grid_type == GridType::Flesible_2D)
+        else if (m_grid_type == GridType::Flexible_2D)
         {
             grid_list_factory = std::make_shared<GridListFactoryFNFDM2D>();
         }
-        else if (m_grid_type == GridType::Flesible_3D)
+        else if (m_grid_type == GridType::Flexible_3D)
         {
             grid_list_factory = std::make_shared<GridListFactoryFNFDM3D>();
         }

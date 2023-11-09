@@ -30,14 +30,14 @@ void Simulation::Start()
 				grid_type = GridType::Structured_3D;
 				solver_type = FieldSolverType::NS_3D_Struct;
 			}
-			else if (grid_type_name == "Flesible_2D")
+			else if (grid_type_name == "Flexible_2D")
 			{
-				grid_type = GridType::Flesible_2D;
+				grid_type = GridType::Flexible_2D;
 				solver_type = FieldSolverType::NS_2D;
 			}
-			else if (grid_type_name == "Flesible_3D")
+			else if (grid_type_name == "Flexible_3D")
 			{
-				grid_type = GridType::Flesible_3D;
+				grid_type = GridType::Flexible_3D;
 				solver_type = FieldSolverType::NS_3D;
 			}
 			else if (grid_type_name == "Zaran_3D")
@@ -105,10 +105,10 @@ void Simulation::ReadGlobalData()
 		std::string separator = " =\r\n\t#$,;\"";
 		if (line.empty())
 			continue;
-		//注释行
-		if (line[0] == '!' || line[0] == '！' || line[0] == '#' || line[0] == '/')
+		//comments
+		if (line[0] == '!' || line[0] == '#' || line[0] == '/')
 			continue;
-		//删除前方空格
+		//delete space
 		size_t id = line.find_first_not_of(' ');
 		line.erase(line.begin(), line.begin() + id);
 		id = line.find_first_of(separator);
@@ -130,7 +130,7 @@ void Simulation::ReadGlobalData()
 			GlobalData::Update(dataName, stoi(dataValue));
 		else
 		{
-			ZaranLog::warn("Unspported Data Type:{}, Name:{}, Value:{}", dataType, dataName, dataValue);
+			ZaranLog::warn("Unsupported Data Type:{}, Name:{}, Value:{}", dataType, dataName, dataValue);
 		}
 	}
 }
@@ -164,10 +164,10 @@ void Simulation::ShowInfo()
 	ZaranLog::info(">>>>>>>>Software Version: {}", programVersion_);
 	ZaranLog::info(">>>>>>>>Software Last Modify Date: {}", lastModifyDate_);
 	ZaranLog::info(">>>>>>>>Control File Version: {}", GlobalData::GetString("version"));
-	if (minSupportContrlFileVersion_ > GlobalData::GetString("version"))
+	if (minSupportCtrlFileVersion_ > GlobalData::GetString("version"))
 	{
 		ZaranLog::warn(">>>>>>>>Control File is too old, please use new Control File!");
-		ZaranLog::warn(">>>>>>>>The mininus version Control File is:{}", minSupportContrlFileVersion_);
+		ZaranLog::warn(">>>>>>>>The minus version Control File is:{}", minSupportCtrlFileVersion_);
 		system("pause");
 	}
 	ZaranLog::info(">>>>>>>>Simulation Task: {}", GlobalData::GetString("simulationTask"));

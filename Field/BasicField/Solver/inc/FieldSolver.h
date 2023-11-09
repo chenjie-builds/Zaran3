@@ -41,7 +41,7 @@ namespace zaran
 		// 获取求解器求解方程的个数
 		int GetNumberOfEquations() { return m_NumberOfEquations; }
 		void SetFieldData(Ptr<FieldData>& fieldData) { m_FieldData = fieldData; }
-		// 获取Fieldata
+		// 获取Field Data
 		Ptr<FieldData>& GetFieldData() { return m_FieldData; }
 	protected:
 		void SetNumberOfEquations(int n) { m_NumberOfEquations = n; }

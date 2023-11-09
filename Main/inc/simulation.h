@@ -33,7 +33,7 @@ namespace zaran
 			globalDataFileName_("zaran.ini"),
 			programVersion_("V3.3.1_alpha"),
 			lastModifyDate_("2023/11/08"),
-			minSupportContrlFileVersion_("V3.3.1_alpha")
+			minSupportCtrlFileVersion_("V3.3.1_alpha")
 		{
 			GlobalData::Init();
 		}
@@ -58,7 +58,7 @@ namespace zaran
 		string lastModifyDate_;
 		//程序支持的最小控制文件版本号, 如果读取的版本号低于此版本, 将不进行计算
 		//作用: 防止程序更新后，需要更多的控制文件信息，老版本控制文件未添加导致计算失败
-		string minSupportContrlFileVersion_;
+		string minSupportCtrlFileVersion_;
 	};
 
 }

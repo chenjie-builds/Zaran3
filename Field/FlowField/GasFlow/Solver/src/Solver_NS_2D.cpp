@@ -11,11 +11,11 @@ namespace zaran
 	void Solver_NS_2D::InitFieldFarField()
 	{
 		GridPtr grid = GetGrid();
-		auto& rho = *m_Primtive[0];
-		auto& u = *m_Primtive[1];
-		auto& v = *m_Primtive[2];
-		auto& w = *m_Primtive[3];
-		auto& p = *m_Primtive[4];
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
 		auto& node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		FlowSolverParaPtr para = GetPara();
@@ -35,11 +35,11 @@ namespace zaran
 	void Solver_NS_2D::InitFieldNoFlow()
 	{
 		GridPtr grid = GetGrid();
-		auto& rho = *m_Primtive[0];
-		auto& u = *m_Primtive[1];
-		auto& v = *m_Primtive[2];
-		auto& w = *m_Primtive[3];
-		auto& p = *m_Primtive[4];
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
 		auto& node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		FlowSolverParaPtr para = GetPara();
@@ -59,11 +59,11 @@ namespace zaran
 	void Solver_NS_2D::InitFieldShockReflection()
 	{
 		GridPtr grid = GetGrid();
-		auto& rho = *m_Primtive[0];
-		auto& u = *m_Primtive[1];
-		auto& v = *m_Primtive[2];
-		auto& w = *m_Primtive[3];
-		auto& p = *m_Primtive[4];
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
 		auto& node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		FlowSolverParaPtr para = GetPara();
@@ -103,11 +103,11 @@ namespace zaran
 	void Solver_NS_2D::InitFieldIsentropicVortex()
 	{
 		GridPtr grid = GetGrid();
-		auto& rho = *m_Primtive[0];
-		auto& u = *m_Primtive[1];
-		auto& v = *m_Primtive[2];
-		auto& w = *m_Primtive[3];
-		auto& p = *m_Primtive[4];
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
 		auto& node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		int total_node_num = grid->GetTotalNodeNum();
@@ -219,7 +219,7 @@ namespace zaran
 		auto& node_type = node_topo->GetType();
 		auto& coord = node_topo->GetCoordinate();
 		auto& neighbor = node_topo->GetNeighborCloud();
-		auto& prim = m_Primtive;
+		auto& prim = m_Primitive;
 		auto& limiter_coef = m_LimiterCoef;
 		auto& prim_grad_x = m_PrimGradX;
 		auto& prim_grad_y = m_PrimGradY;
@@ -269,11 +269,11 @@ namespace zaran
 		auto& node_topo = grid->GetNodeTopo();
 		auto& node_type = node_topo->GetType();
 		FlowSolverParaPtr para = GetPara();
-		auto& rho = *m_Primtive[0];
-		auto& u = *m_Primtive[1];
-		auto& v = *m_Primtive[2];
-		auto& w = *m_Primtive[3];
-		auto& p = *m_Primtive[4];
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
 		auto& dt = *m_TimeStep;
 		auto& coord_trans_coef = m_CoordTrans;
 		double cfl = para->GetCflNumber();
@@ -305,7 +305,7 @@ namespace zaran
 		auto& template_i = node_topo->GetTemplateI();
 		auto& template_j = node_topo->GetTemplateJ();
 		auto& coord = node_topo->GetCoordinate();
-		auto& prim = m_Primtive;
+		auto& prim = m_Primitive;
 		auto& cons = m_Conservative;
 		auto& prim_grad_x = m_PrimGradX;
 		auto& prim_grad_y = m_PrimGradY;
@@ -401,7 +401,7 @@ namespace zaran
 		auto& template_j = node_topo->GetTemplateJ();
 		auto& neibor = node_topo->GetNeighborCloud();
 		auto& coord = node_topo->GetCoordinate();
-		auto& prim = m_Primtive;
+		auto& prim = m_Primitive;
 		auto& cons = m_Conservative;
 		auto& prim_grad_x = m_PrimGradX;
 		auto& prim_grad_y = m_PrimGradY;
@@ -489,7 +489,7 @@ namespace zaran
 		auto& coord = node_topo->GetCoordinate();
 		auto& template_i = node_topo->GetTemplateI();
 		auto& template_j = node_topo->GetTemplateJ();
-		auto& prim = m_Primtive;
+		auto& prim = m_Primitive;
 		auto& cons = m_Conservative;
 		auto& prim_grad_x = m_PrimGradX;
 		auto& prim_grad_y = m_PrimGradY;
@@ -540,7 +540,7 @@ namespace zaran
 		auto& coord = node_topo->GetCoordinate();
 		auto& template_i = node_topo->GetTemplateI();
 		auto& template_j = node_topo->GetTemplateJ();
-		auto& prim = m_Primtive;
+		auto& prim = m_Primitive;
 		auto& cons = m_Conservative;
 		auto& prim_grad_x = m_PrimGradX;
 		auto& prim_grad_y = m_PrimGradY;

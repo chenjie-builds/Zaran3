@@ -43,9 +43,9 @@ namespace zaran
 		// 时间推进
 		virtual void TimeAdvance() = 0;
 		// 计算变量梯度
-		virtual void ComputePrimtiveGradient() = 0;
+		virtual void ComputePrimitiveGradient() = 0;
 	protected:
-		Array<DArray*> m_Primtive;
+		Array<DArray*> m_Primitive;
 		Array<DArray*> m_Conservative;
 		Array<DArray*> m_CoordTrans;
 		DArray* m_TimeStep;

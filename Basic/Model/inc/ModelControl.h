@@ -5,7 +5,7 @@
 //*	License																		||
 //*	This file is part of ZaRan.													||
 //*																				||
-//*	@file	ModelContol.h														||
+//*	@file	ModelControl.h														||
 //*	@brief	模型控制类： 输入控制模型的参数，并对模型进行修改						||
 //*	@author	Chen Jie.															||
 //==============================================================================||

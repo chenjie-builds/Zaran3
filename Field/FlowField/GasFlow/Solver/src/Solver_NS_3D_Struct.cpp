@@ -71,7 +71,7 @@ namespace zaran
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		FlowSolverParaPtr para = GetPara();
-		auto& prim = m_Primtive;
+		auto& prim = m_Primitive;
 		auto& limiterCoef = m_LimiterCoef;
 		auto& primGradX = m_PrimGradX;
 		auto& primGradY = m_PrimGradY;
@@ -150,7 +150,7 @@ namespace zaran
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
-		auto& prim = m_Primtive;
+		auto& prim = m_Primitive;
 		auto& cons = m_Conservative;
 		auto& primGradX = m_PrimGradX;
 		auto& primGradY = m_PrimGradY;
@@ -293,11 +293,11 @@ namespace zaran
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		FlowSolverParaPtr para = GetPara();
-		auto& rho = *m_Primtive[0];
-		auto& u = *m_Primtive[1];
-		auto& v = *m_Primtive[2];
-		auto& w = *m_Primtive[3];
-		auto& p = *m_Primtive[4];
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
 		auto& coordTrans = m_CoordTrans;
 		auto& dt = *m_TimeStep;
 		double cfl = para->GetCflNumber();
@@ -337,7 +337,7 @@ namespace zaran
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
-		auto& prim = m_Primtive;
+		auto& prim = m_Primitive;
 		auto& limiterCoef = m_LimiterCoef;
 		auto& primGradX = m_PrimGradX;
 		auto& primGradY = m_PrimGradY;

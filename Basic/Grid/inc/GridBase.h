@@ -18,20 +18,20 @@ namespace zaran
     {
         Structured_2D,
         Structured_3D,
-        Flesible_2D,
-        Flesible_3D,
+        Flexible_2D,
+        Flexible_3D,
         Zaran_2D,
         Zaran_3D,
-		NOTSET
+		Unkown,
     };
 	class GridBase
 	{
 	public:
-		GridBase() :name_(), index_(0), dim_(), type_(GridType::NOTSET) {}
+		GridBase() :name_(), index_(0), dim_(), type_(GridType::Unkown) {}
 		void SetName(const std::string& name) { name_ = name; }
 		void SetIndex(const size_t& index) { index_ = index; }
 		void SetDimension(const Dimension& dim) { dim_ = dim; }
-		void SetType(GridType type = GridType::NOTSET) { type_ = type; };
+		void SetType(GridType type = GridType::Unkown) { type_ = type; };
 	public:
 		const string& GetName()const { return name_; }
 		const size_t& GetIndex()const { return index_; }

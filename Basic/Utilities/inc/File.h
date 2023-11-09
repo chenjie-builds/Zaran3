@@ -13,4 +13,4 @@
 //判断文件存在
 bool IsFileExist(const std::string& fileName);
 //判断文件夹是否存在
-bool IsFloderExist(const std::string& floderName);
+bool IsFolderExist(const std::string& folderName);

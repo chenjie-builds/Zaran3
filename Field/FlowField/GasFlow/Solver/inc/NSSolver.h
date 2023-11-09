@@ -39,7 +39,7 @@ namespace zaran
 		* 目前包括最小二乘法、非结构有限差分法
 		*/
 	protected:
-		void ComputePrimtiveGradient()override;
+		void ComputePrimitiveGradient()override;
 		void ComputeBoundaryPrimtiveGradient();
 		// 使用最小二乘求梯度
 		virtual void ComputeGradientWLS() = 0;

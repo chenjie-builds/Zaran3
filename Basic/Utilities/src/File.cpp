@@ -8,7 +8,7 @@ bool IsFileExist(const std::string& fileName)
 		return true;
 	return false;
 }
-bool IsFloderExist(const std::string& floderName)
+bool IsFolderExist(const std::string& floderName)
 {
 	return IsFileExist(floderName);
 }

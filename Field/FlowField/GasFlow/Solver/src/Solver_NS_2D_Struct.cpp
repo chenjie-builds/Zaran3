@@ -6,11 +6,11 @@ namespace zaran
 	void Solver_NS_2D_Struct::InitField()
 	{
 		GridPtr grid = GetGrid();
-		auto& rho = *m_Primtive[0];
-		auto& u = *m_Primtive[1];
-		auto& v = *m_Primtive[2];
-		auto& w = *m_Primtive[3];
-		auto& p = *m_Primtive[4];
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
 		auto& NodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = NodeTopo->GetCoordinate();
 		FlowSolverParaPtr para = GetPara();
@@ -110,7 +110,7 @@ namespace zaran
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		FlowSolverParaPtr para = GetPara();
-		auto& prim = m_Primtive;
+		auto& prim = m_Primitive;
 		auto& limiterCoef = m_LimiterCoef;
 		auto& primGradX = m_PrimGradX;
 		auto& primGradY = m_PrimGradY;
@@ -173,11 +173,11 @@ namespace zaran
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		FlowSolverParaPtr para = GetPara();
-		auto& rho = *m_Primtive[0];
-		auto& u = *m_Primtive[1];
-		auto& v = *m_Primtive[2];
-		auto& w = *m_Primtive[3];
-		auto& p = *m_Primtive[4];
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
 		auto& coordTrans = m_CoordTrans;
 		auto& dt = *m_TimeStep;
 		double cfl = para->GetCflNumber();
@@ -212,7 +212,7 @@ namespace zaran
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
-		auto& prim = m_Primtive;
+		auto& prim = m_Primitive;
 		auto& cons = m_Conservative;
 		auto& primGradX = m_PrimGradX;
 		auto& primGradY = m_PrimGradY;
@@ -311,7 +311,7 @@ namespace zaran
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
-		auto& prim = m_Primtive;
+		auto& prim = m_Primitive;
 		auto& cons = m_Conservative;
 		auto& limiterCoef = m_LimiterCoef;
 		auto& res = m_Residual;
@@ -322,7 +322,7 @@ namespace zaran
 		int iNode;
 		// grid->GetNodeIndex(i, j, k)的lamda表达式
 		auto NodeIndex = [&](int i, int j) {return grid->GetNodeIndex(i, j); };
-		auto Prim = [&](int iVal, int i, int j) {return (*m_Primtive[iVal])[NodeIndex(i, j)]; };
+		auto Prim = [&](int iVal, int i, int j) {return (*m_Primitive[iVal])[NodeIndex(i, j)]; };
 		Ptr<RiemannSolverPara >riemanPara = std::make_shared<RiemannSolverPara>();
 		riemanPara->gammaL = riemanPara->gammaR = 1.4;
 		double k = GlobalData::GetDouble("muscl_k");
@@ -400,7 +400,7 @@ namespace zaran
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
-		auto& prim = m_Primtive;
+		auto& prim = m_Primitive;
 		auto& limiterCoef = m_LimiterCoef;
 		auto& primGradX = m_PrimGradX;
 		auto& primGradY = m_PrimGradY;
@@ -463,11 +463,11 @@ namespace zaran
 	{
 		FlowSolverParaPtr para = GetPara();
 		int  ghostIndex = bound.GetGhostNodeIndex();
-		auto& rho = *m_Primtive[0];
-		auto& u = *m_Primtive[1];
-		auto& v = *m_Primtive[2];
-		auto& w = *m_Primtive[3];
-		auto& p = *m_Primtive[4];
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
 		auto& cons0 = *m_Conservative[0];
 		auto& cons1 = *m_Conservative[1];
 		auto& cons2 = *m_Conservative[2];
@@ -484,11 +484,11 @@ namespace zaran
 	}
 	void Solver_NS_2D_Struct::ComputeOutletBC(Boundary& bound)
 	{
-		auto& rho = *m_Primtive[0];
-		auto& u = *m_Primtive[1];
-		auto& v = *m_Primtive[2];
-		auto& w = *m_Primtive[3];
-		auto& p = *m_Primtive[4];
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
 		auto& cons0 = *m_Conservative[0];
 		auto& cons1 = *m_Conservative[1];
 		auto& cons2 = *m_Conservative[2];
