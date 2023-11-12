@@ -19,7 +19,7 @@ namespace ZaranLog = spdlog;
 class Log
 {
 public:
-	static Log& Satrt();
+	static Log& Start();
 private:
 	Log();
 	~Log();
