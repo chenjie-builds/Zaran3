@@ -20,5 +20,6 @@ namespace zaran
 		void WriteTecplot2D(Ptr<FieldSolver>& solver);
 		void WriteTecplotPoint(Ptr<FieldSolver>& solver);
 		void WriteVTK(Ptr<FieldSolver>& solver);
+		void WriteTecplotZaran3D(Ptr<FieldSolver>& solver);
 	};
 }

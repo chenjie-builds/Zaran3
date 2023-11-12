@@ -29,7 +29,7 @@ namespace zaran
 	{
 		m_tolerance = tol;
 	}
-	void PolyDataModel::SetPolyData(vtkPolyData* polyData, double tolerance)
+	void PolyDataModel::SetPolyData(vtkSmartPointer<vtkPolyData>& polyData, double tolerance)
 	{
 		m_polyData = polyData;
 		m_tolerance = tolerance;
@@ -43,7 +43,7 @@ namespace zaran
 	bool PolyDataModel::InModel(const DVector3D& pt)const
 	{
 		int inside = m_cell_locator->InsideOrOutside(pt.data());
-		if (inside == 1)
+		if (inside == -1)
 			return true;
 		else
 			return false;

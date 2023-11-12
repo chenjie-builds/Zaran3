@@ -4,6 +4,8 @@
 #include"PolyData.h"
 #include "Log.h"
 #include"CellTopoInfoZaran.h"
+#include <vtkImplicitPolyDataDistance.h>
+#include<vtkCellLocator.h>
 #include<fstream>
 void zaran::GridListFactoryZaran3D::Create(Ptr<GridList>& gridList)
 {
@@ -12,6 +14,7 @@ void zaran::GridListFactoryZaran3D::Create(Ptr<GridList>& gridList)
 		gridList = std::make_shared<GridList>();
 	}
 	CreateStructPart(gridList);
+	ReadModel();
 	TagCell(gridList);
 	CrateBoundPatch(gridList);
 }
@@ -383,9 +386,9 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 	string modelFileName = GlobalData::GetString("modelFileName");
 	STLReader reader;
 	reader.ReadSTLFile(modelFileName.c_str());
-	PolyDataModel model;
-	model.SetPolyData(reader.GetMesh(), 1e-6);
-	if (model.IsClosed())
+	m_polyDataModel = std::make_shared<PolyDataModel>();
+	m_polyDataModel->SetPolyData(reader.GetMesh(), 1e-6);
+	if (m_polyDataModel->IsClosed())
 		ZaranLog::info("Import Model: {}, is closed!", modelFileName);
 	else
 		ZaranLog::info("Import Model: {}, is not closed!", modelFileName);
@@ -402,26 +405,86 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 	double dy = (y_max - y_min) / (nj - 1);
 	double dz = (z_max - z_min) / (nk - 1);
 	DVector3D cell_center;
+	DArray dist_cell_to_model;//单元中心到模型的距离
+	dist_cell_to_model.resize((cell_type.size()));
+	IArray cell_in_model;//单元中心是否在模型内
+	cell_in_model.resize((cell_type.size()));
+	ZaranLog::info("Start tag cell type");
+	auto poly_data = m_polyDataModel->GetPolyData();
+	vtkSmartPointer<vtkImplicitPolyDataDistance> implicitPolyDataDistance = vtkSmartPointer<vtkImplicitPolyDataDistance>::New();
+	implicitPolyDataDistance->SetInput(poly_data);
+#pragma omp parallel for private(i,j,k,cell_center)
 	for (int iCell = 0;iCell < cell_type.size();++iCell)
 	{
 		grid->GetCellIndex(iCell, i, j, k);
-		if (cell_type[iCell] == CellType::Solid)
-		{
-			std::cout << "debug" << std::endl;
-		}
 		cell_center[0] = (i + 0.5) * dx + x_min;
-
 		cell_center[1] = (j + 0.5) * dy + y_min;
 		cell_center[2] = (k + 0.5) * dz + z_min;
-		if (model.InModel(cell_center))
+		dist_cell_to_model[iCell] = abs(implicitPolyDataDistance->FunctionValue(cell_center.data()));
+	}
+	double tol = 0.5 * sqrt(dx * dx + dy * dy + dz * dz);
+	for (int iCell = 0;iCell < cell_type.size();++iCell)
+	{
+		if (dist_cell_to_model[iCell] < tol)
 		{
 			cell_type[iCell] = CellType::Solid;
 		}
 		else
 		{
-			cell_type[iCell] = CellType::Fluid;
+			cell_type[iCell] = CellType::Unknown;
 		}
 	}
+	int nFluid = 1;
+	cell_type[0] = CellType::Fluid;
+	while (nFluid != 0)
+	{
+		nFluid = 0;
+		for (int iCell = 0;iCell < cell_type.size();++iCell)
+		{
+			if (cell_type[iCell] == CellType::Fluid)
+			{
+				grid->GetCellIndex(iCell, i, j, k);
+				if (i > 0 && cell_type[grid->GetCellIndex(i - 1, j, k)] == CellType::Unknown)
+				{
+					cell_type[grid->GetCellIndex(i - 1, j, k)] = CellType::Fluid;
+					nFluid++;
+				}
+				if (i < ni - 2 && cell_type[grid->GetCellIndex(i + 1, j, k)] == CellType::Unknown)
+				{
+					cell_type[grid->GetCellIndex(i + 1, j, k)] = CellType::Fluid;
+					nFluid++;
+				}
+				if (j > 0 && cell_type[grid->GetCellIndex(i, j - 1, k)] == CellType::Unknown)
+				{
+					cell_type[grid->GetCellIndex(i, j - 1, k)] = CellType::Fluid;
+					nFluid++;
+				}
+				if (j < nj - 2 && cell_type[grid->GetCellIndex(i, j + 1, k)] == CellType::Unknown)
+				{
+					cell_type[grid->GetCellIndex(i, j + 1, k)] = CellType::Fluid;
+					nFluid++;
+				}
+				if (k > 0 && cell_type[grid->GetCellIndex(i, j, k - 1)] == CellType::Unknown)
+				{
+					cell_type[grid->GetCellIndex(i, j, k - 1)] = CellType::Fluid;
+					nFluid++;
+				}
+				if (k < nk - 2 && cell_type[grid->GetCellIndex(i, j, k + 1)] == CellType::Unknown)
+				{
+					cell_type[grid->GetCellIndex(i, j, k + 1)] = CellType::Fluid;
+					nFluid++;
+				}
+			}
+		}
+		ZaranLog::info("nFluid: {}", nFluid);
+	}
+	for (int iCell = 0;iCell < cell_type.size();++iCell)
+	{
+		if (cell_type[iCell] == CellType::Unknown)
+			cell_type[iCell] = CellType::Solid;
+	}
+	ZaranLog::info("Tag cell type finished");
+	ZaranLog::info("Start find fluid-solid interface");
 	for (int iCell = 0;iCell < cell_type.size();++iCell)
 	{
 		grid->GetCellIndex(iCell, i, j, k);
@@ -432,7 +495,7 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 				cell_type[iCell] = CellType::FluidSolid;
 				continue;
 			}
-			if (i < ni && cell_type[grid->GetCellIndex(i + 1, j, k)] == CellType::Solid)
+			if (i < ni - 2 && cell_type[grid->GetCellIndex(i + 1, j, k)] == CellType::Solid)
 			{
 				cell_type[iCell] = CellType::FluidSolid;
 				continue;
@@ -442,7 +505,7 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 				cell_type[iCell] = CellType::FluidSolid;
 				continue;
 			}
-			if (j < nj && cell_type[grid->GetCellIndex(i, j + 1, k)] == CellType::Solid)
+			if (j < nj - 2 && cell_type[grid->GetCellIndex(i, j + 1, k)] == CellType::Solid)
 			{
 				cell_type[iCell] = CellType::FluidSolid;
 				continue;
@@ -452,26 +515,189 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 				cell_type[iCell] = CellType::FluidSolid;
 				continue;
 			}
-			if (k < nk && cell_type[grid->GetCellIndex(i, j, k + 1)] == CellType::Solid)
+			if (k < nk - 2 && cell_type[grid->GetCellIndex(i, j, k + 1)] == CellType::Solid)
 			{
 				cell_type[iCell] = CellType::FluidSolid;
 				continue;
 			}
 		}
 	}
-	std::ofstream fout("cell_type.dat");
+	int n_bad_cell = 0;
 	for (int iCell = 0;iCell < cell_type.size();++iCell)
 	{
-		grid->GetCellIndex(iCell, i, j, k);
-		cell_center[0] = (i + 0.5) * dx + x_min;
-		cell_center[1] = (j + 0.5) * dy + y_min;
-		cell_center[2] = (k + 0.5) * dz + z_min;
-		if (i == 25 || j == 25 || k == 25)
-			fout << cell_center[0] << " " << cell_center[1] << " " << cell_center[2] << " " << int(cell_type[iCell]) << std::endl;
+		if (cell_type[iCell] != CellType::FluidSolid)
+			continue;
+		if (i > 0 && i < ni - 2)
+		{
+			if (cell_type[grid->GetCellIndex(i - 1, j, k)] == CellType::Solid && cell_type[grid->GetCellIndex(i + 1, j, k)] == CellType::Solid)
+			{
+				n_bad_cell++;
+				continue;
+			}
+		}
+		if (j > 0 && j < nj - 2)
+		{
+			if (cell_type[grid->GetCellIndex(i, j - 1, k)] == CellType::Solid && cell_type[grid->GetCellIndex(i, j + 1, k)] == CellType::Solid)
+			{
+				n_bad_cell++;
+				continue;
+			}
+		}
+		if (k > 0 && k < nk - 2)
+		{
+			if (cell_type[grid->GetCellIndex(i, j, k - 1)] == CellType::Solid && cell_type[grid->GetCellIndex(i, j, k + 1)] == CellType::Solid)
+			{
+				n_bad_cell++;
+				continue;
+			}
+		}
 	}
+	ZaranLog::info("n_bad_cell: {}", n_bad_cell);
+	ZaranLog::info("Find fluid-solid interface finished");
+	ZaranLog::info("Output cell type");
+	std::ofstream fout("cell_type.dat");
+	fout << "variables=x,y,z,label\n";
+	fout << "ZONE T= grid_" << grid->GetName() << std::endl;
+	fout << "I=" << ni << ", J=" << nj << ", K=" << nk << ", DATAPACKING=BLOCK, VARLOCATION=([4]=CELLCENTERED)" << std::endl;
+	int count = 0;
+	for (int k = 0; k < nk; ++k)
+	{
+		for (int j = 0; j < nj; ++j)
+		{
+			for (int i = 0; i < ni; ++i)
+			{
+				fout << x_min + i * dx << " ";
+				if (++count % 10 == 0)
+				{
+					count = 0;
+					fout << std::endl;
+				}
+			}
+		}
+	}
+	for (int k = 0; k < nk; ++k)
+	{
+		for (int j = 0; j < nj; ++j)
+		{
+			for (int i = 0; i < ni; ++i)
+			{
+				fout << y_min + j * dy << " ";
+				if (++count % 10 == 0)
+				{
+					count = 0;
+					fout << std::endl;
+				}
+			}
+		}
+	}
+	for (int k = 0; k < nk; ++k)
+	{
+		for (int j = 0; j < nj; ++j)
+		{
+			for (int i = 0; i < ni; ++i)
+			{
+				fout << z_min + k * dz << " ";
+				if (++count % 10 == 0)
+				{
+					count = 0;
+					fout << std::endl;
+				}
+			}
+		}
+	}
+	for (int k = 0; k < nk - 1; ++k)
+	{
+		for (int j = 0; j < nj - 1; ++j)
+		{
+			for (int i = 0; i < ni - 1; ++i)
+			{
+				fout << int(cell_type[grid->GetCellIndex(i, j, k)]) << " ";
+				// fout << dist_cell_to_model[grid->GetCellIndex(i, j, k)] << " ";
+
+				if (++count % 10 == 0)
+				{
+					count = 0;
+					fout << std::endl;
+				}
+			}
+		}
+	}
+	fout.close();
+	ZaranLog::info("Output cell type finished");
 
 }
 
 void zaran::GridListFactoryZaran3D::CrateBoundPatch(Ptr<GridList>& gridList)
 {
+	Ptr<zaran::Grid_Zaran_3D> grid = std::static_pointer_cast<Grid_Zaran_3D>(gridList->GetGrid(0));
+	auto cellTopo = std::static_pointer_cast<CellTopoInfoZaran>(grid->GetCellTopo());
+	auto& cell_type = cellTopo->GetType();
+	int ni, nj, nk;
+	grid->GetNodeNum(ni, nj, nk);
+	int i, j, k;
+	double x_min, x_max, y_min, y_max, z_min, z_max;
+	grid->GetBox(x_min, x_max, y_min, y_max, z_min, z_max);
+	double dx = (x_max - x_min) / (ni - 1);
+	double dy = (y_max - y_min) / (nj - 1);
+	double dz = (z_max - z_min) / (nk - 1);
+	auto poly_data = m_polyDataModel->GetPolyData();
+	vtkNew<vtkCellLocator> cellLocator;
+	cellLocator->SetDataSet(poly_data);
+	cellLocator->BuildLocator();
+	ZaranBoundPatch& bound_patch = grid->GetBoundPatch();
+	int n_bound_patch = 0;
+	for (int iCell = 0;iCell < cell_type.size();iCell++)
+	{
+		if (cell_type[iCell] == CellType::FluidSolid)
+			n_bound_patch++;
+	}
+	auto& mid_index = bound_patch.GetIndex();
+	auto& bound_coord = bound_patch.GetCoordinate();
+	auto& bound_norm = bound_patch.GetNormal();
+	mid_index.resize(n_bound_patch);
+	bound_coord.resize(n_bound_patch);
+	bound_norm.resize(n_bound_patch);
+	double closestPoint[3];   // the coordinates of the closest point will be
+	// returned here
+	double closestPointDist2; // the squared distance to the closest point will be
+	// returned here
+	vtkIdType cellId; // the cell id of the cell containing the closest point will
+	// be returned here
+	int subId;        // this is rarely used (in triangle strips only, I believe)
+	double cell_center[3];
+	int iBound = 0;
+	for (int iCell = 0;iCell < cell_type.size();iCell++)
+	{
+		if (cell_type[iCell] != CellType::FluidSolid)
+			continue;
+		grid->GetCellIndex(iCell, i, j, k);
+		cell_center[0] = (i + 0.5) * dx + x_min;
+		cell_center[1] = (j + 0.5) * dy + y_min;
+		cell_center[2] = (k + 0.5) * dz + z_min;
+		cellLocator->FindClosestPoint(cell_center, closestPoint, cellId, subId,
+			closestPointDist2);
+		mid_index[iBound] = { i,j,k };
+		bound_coord[iBound] = { closestPoint[0],closestPoint[1],closestPoint[2] };
+		bound_norm[iBound] = { cell_center[0] - closestPoint[0],cell_center[1] - closestPoint[1],cell_center[2] - closestPoint[2] };
+		bound_norm[iBound].normalize();
+		iBound++;
+	}
+	std::ofstream fout("bound_patch.dat");
+	fout << "variables=x,y,z\n";
+	for (int iBound = 0;iBound < n_bound_patch;++iBound)
+	{
+		fout << bound_coord[iBound][0] << " " << bound_coord[iBound][1] << " " << bound_coord[iBound][2] << std::endl;
+	}
+}
+void zaran::GridListFactoryZaran3D::ReadModel()
+{
+	string modelFileName = GlobalData::GetString("modelFileName");
+	STLReader reader;
+	reader.ReadSTLFile(modelFileName.c_str());
+	m_polyDataModel = std::make_shared<PolyDataModel>();
+	m_polyDataModel->SetPolyData(reader.GetMesh(), 1e-6);
+	if (m_polyDataModel->IsClosed())
+		ZaranLog::info("Import Model: {}, is closed!", modelFileName);
+	else
+		ZaranLog::info("Import Model: {}, is not closed!", modelFileName);
 }

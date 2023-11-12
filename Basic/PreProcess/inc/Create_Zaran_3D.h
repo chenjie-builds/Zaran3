@@ -11,6 +11,10 @@
 //==============================================================================||
 #pragma once
 #include "GridListFactory.h"
+#include"ReadSTL.h"
+#include"PolyData.h"
+#include <vtkImplicitPolyDataDistance.h>
+#include<vtkSelectEnclosedPoints.h>
 namespace zaran
 {
     class GridListFactoryZaran3D :public GridListFactory
@@ -22,7 +26,8 @@ namespace zaran
         void CreateStructPart(Ptr<GridList>& gridList);
         void TagCell(Ptr<GridList>& gridList);
         void CrateBoundPatch(Ptr<GridList>& gridList);
+        void ReadModel();
     private:
-
+        Ptr<PolyDataModel> m_polyDataModel;
     };
 }

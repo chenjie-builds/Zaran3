@@ -19,11 +19,10 @@ namespace zaran
 		reader->Update();
 		m_mesh = vtkSmartPointer<vtkPolyData>::New();
 		m_mesh = reader->GetOutput();
-		vtkSmartPointer<vtkPolyData> polydata = reader->GetOutput();
-		vtkIdType numberOfCells = polydata->GetNumberOfCells();
-		auto numberOfPoints = polydata->GetNumberOfPoints();
-		auto numberOfFaces = polydata->GetNumberOfLines();
-		auto numberOfEdges = polydata->GetNumberOfStrips();
+		vtkIdType numberOfCells = m_mesh->GetNumberOfCells();
+		auto numberOfPoints = m_mesh->GetNumberOfPoints();
+		auto numberOfFaces = m_mesh->GetNumberOfLines();
+		auto numberOfEdges = m_mesh->GetNumberOfStrips();
 		std::cout << "Number of points: " << numberOfPoints << std::endl;
 		std::cout << "Number of cells: " << numberOfCells << std::endl;
 	}

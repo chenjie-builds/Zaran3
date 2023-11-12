@@ -1,5 +1,6 @@
 #include "Visual.h"
 #include "GlobalData.h"
+#include "Grid_Zaran_3D.h"
 #include <fstream>
 #include <string>
 using namespace zaran;
@@ -244,5 +245,89 @@ void zaran::Visual::WriteTecplotPoint(Ptr<FieldSolver>& solver)
 void Visual::WriteVTK(Ptr<FieldSolver>& solver)
 {
 	// TO DO
+}
+
+void zaran::Visual::WriteTecplotZaran3D(Ptr<FieldSolver>& solver)
+{
+	int step = GlobalData::GetInt("step");
+	std::string filename = "result/" + std::to_string(step) + ".dat";
+	std::ofstream fout(filename);
+	fout << "variables=x,y,z,label\n";
+	Ptr<Grid_Zaran_3D>& grid = std::static_pointer_cast<Grid_Zaran_3D>(solver->GetGrid());
+	auto cellTopo = std::static_pointer_cast<CellTopoInfoZaran>(grid->GetCellTopo());
+	auto cell_type = cellTopo->GetType();
+	int ni, nj, nk;
+	grid->GetNodeNum(ni, nj, nk);
+	double x_min, x_max, y_min, y_max, z_min, z_max;
+	grid->GetBox(x_min, x_max, y_min, y_max, z_min, z_max);
+	double dx = (x_max - x_min) / (ni - 1);
+	double dy = (y_max - y_min) / (nj - 1);
+	double dz = (z_max - z_min) / (nk - 1);
+	fout << "ZONE T= grid_" << grid->GetName() << std::endl;
+	fout << "I=" << ni << ", J=" << nj << ", K=" << nk << ", DATAPACKING=BLOCK, VARLOCATION=([4]CELLCENTERED)" << std::endl;
+	fout << "solutiontime= " << GlobalData::GetDouble("globalTime") << std::endl;
+	int count = 0;
+	for (int k = 0; k < nk - 1; ++k)
+	{
+		for (int j = 0; j < nj - 1; ++j)
+		{
+			for (int i = 0; i < ni - 1; ++i)
+			{
+				fout << x_min + i * dx + 0.5 * dx << " ";
+				if (++count % 10 == 0)
+				{
+					count = 0;
+					fout << std::endl;
+				}
+			}
+		}
+	}
+	for (int k = 0; k < nk - 1; ++k)
+	{
+		for (int j = 0; j < nj - 1; ++j)
+		{
+			for (int i = 0; i < ni - 1; ++i)
+			{
+				fout << y_min + j * dy + 0.5 * dy << " ";
+				if (++count % 10 == 0)
+				{
+					count = 0;
+					fout << std::endl;
+				}
+			}
+		}
+	}
+	for (int k = 0; k < nk - 1; ++k)
+	{
+		for (int j = 0; j < nj - 1; ++j)
+		{
+			for (int i = 0; i < ni - 1; ++i)
+			{
+				fout << z_min + k * dz + 0.5 * dz << " ";
+				if (++count % 10 == 0)
+				{
+					count = 0;
+					fout << std::endl;
+				}
+			}
+		}
+	}
+	for (int k = 0; k < nk - 1; ++k)
+	{
+		for (int j = 0; j < nj - 1; ++j)
+		{
+			for (int i = 0; i < ni - 1; ++i)
+			{
+				fout << int(cell_type[grid->GetCellIndex(i, j, k)]) << " ";
+				if (++count % 10 == 0)
+				{
+					count = 0;
+					fout << std::endl;
+				}
+			}
+		}
+	}
+	fout.close();
+
 }
 

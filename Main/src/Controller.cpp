@@ -138,16 +138,16 @@ void zaran::Controller::CalcResidual()
         auto& nodeType = nodeTopo->GetType();
         double x, y;
         DVector prim;
-        double thoericalRho;
+        double theory_rho;
         maxResidual_ = aveResidual_ = 0.0;
         for (int iNode = 0;iNode < nodeNum;++iNode)
         {
             x = nodeCoord[iNode].x();
             y = nodeCoord[iNode].y();
             CalcIsentropicVortex(x, y, 5.0, prim);
-            thoericalRho = prim[0];
-            maxResidual_ = Max(maxResidual_, abs(rho[iNode] - thoericalRho));
-            aveResidual_ += pow(rho[iNode] - thoericalRho, 2);
+            theory_rho = prim[0];
+            maxResidual_ = Max(maxResidual_, abs(rho[iNode] - theory_rho));
+            aveResidual_ += pow(rho[iNode] - theory_rho, 2);
         }
         aveResidual_ /= nodeNum;
         aveResidual_ = sqrt(aveResidual_);

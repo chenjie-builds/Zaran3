@@ -34,7 +34,7 @@ namespace zaran
 		testGrid->SetIndex(0);
 		testGrid->SetLevel(0);
 		testGrid->SetName("noname");
-		testGrid->SetType(GridType::NOTSET);
+		testGrid->SetType(GridType::Unkown);
 		gridList->AddGrid(testGrid);
 	}
 
@@ -49,7 +49,7 @@ namespace zaran
 		testGrid->SetIndex(0);
 		testGrid->SetLevel(0);
 		testGrid->SetName("noname");
-		testGrid->SetType(GridType::NOTSET);
+		testGrid->SetType(GridType::Unkown);
 		auto& nodeTopo = testGrid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		int xNodeNum = 31;
@@ -461,7 +461,7 @@ namespace zaran
 		grid->SetIndex(0);
 		grid->SetLevel(0);
 		grid->SetName("noname");
-		grid->SetType(GridType::NOTSET);
+		grid->SetType(GridType::Unkown);
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		int xNodeNum = 31;
@@ -817,7 +817,7 @@ namespace zaran
 		grid->SetIndex(0);
 		grid->SetLevel(0);
 		grid->SetName("fnfdm-structred-grid-2d");
-		grid->SetType(GridType::NOTSET);
+		grid->SetType(GridType::Unkown);
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		int xNodeNum = 101;
@@ -1003,7 +1003,7 @@ namespace zaran
 		grid->SetIndex(0);
 		grid->SetLevel(0);
 		grid->SetName("fnfdm-structred-grid");
-		grid->SetType(GridType::NOTSET);
+		grid->SetType(GridType::Unkown);
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		int xNodeNum = 31;

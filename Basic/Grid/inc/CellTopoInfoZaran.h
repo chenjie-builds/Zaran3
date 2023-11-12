@@ -19,6 +19,7 @@ namespace zaran
         Solid=2,//固体单元
         FluidSolid=3,//流体单元，邻居单元有固体单元
         SolidFluid=4,//固体单元，邻居单元有流体单元
+        Unknown=5,//未知单元
 
     };
     class CellTopoInfoZaran : public CellTopoInfo

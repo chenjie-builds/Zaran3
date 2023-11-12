@@ -23,7 +23,7 @@ namespace zaran
         void SetNormal(const Array<DVector3D>& normal) { m_normal = normal; }
         Array<IArray>& GetIndex() { return m_index; }
         Array<DVector3D>& GetCoordinate() { return m_coordinate; }
-        const Array<DVector3D>& GetNormal() const { return m_normal; }
+         Array<DVector3D>& GetNormal()  { return m_normal; }
         ~ZaranBoundPatch() {}
     private:
         // 过渡节点编号

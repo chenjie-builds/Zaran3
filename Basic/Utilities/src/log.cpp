@@ -1,7 +1,7 @@
 #include "log.h"
 #include <cstdio>
 #include <chrono>
-Log& Log::Satrt()
+Log& Log::Start()
 {
 	static Log log;
 	return log;

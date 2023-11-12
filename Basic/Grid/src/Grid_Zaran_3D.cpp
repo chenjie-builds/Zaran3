@@ -101,7 +101,7 @@ void Grid_Zaran_3D::GetNodeIndex(int index, int& i, int& j, int& k)
 
 int Grid_Zaran_3D::GetCellIndex(int i, int j, int k)
 {
-    return i + j * (m_ni - 1) + k * (m_ni - 1) * (m_nj - 1);
+     return i + j * (m_ni - 1) + k * (m_ni - 1) * (m_nj - 1);
 }
 
 void Grid_Zaran_3D::GetCellIndex(int index, int& i, int& j, int& k)
