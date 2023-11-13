@@ -252,28 +252,34 @@ void zaran::Visual::WriteTecplotZaran3D(Ptr<FieldSolver>& solver)
 	int step = GlobalData::GetInt("step");
 	std::string filename = "result/" + std::to_string(step) + ".dat";
 	std::ofstream fout(filename);
-	fout << "variables=x,y,z,label\n";
+	fout << "variables=x,y,z,rho,u,v,w,p\n";
+	auto& data = solver->GetFieldData();
+	auto& rho = data->GetData("rho");
+	auto& u = data->GetData("u");
+	auto& v = data->GetData("v");
+	auto& w = data->GetData("w");
+	auto& p = data->GetData("p");
 	Ptr<Grid_Zaran_3D>& grid = std::static_pointer_cast<Grid_Zaran_3D>(solver->GetGrid());
-	auto cellTopo = std::static_pointer_cast<CellTopoInfoZaran>(grid->GetCellTopo());
-	auto cell_type = cellTopo->GetType();
-	int ni, nj, nk;
-	grid->GetNodeNum(ni, nj, nk);
-	double x_min, x_max, y_min, y_max, z_min, z_max;
-	grid->GetBox(x_min, x_max, y_min, y_max, z_min, z_max);
-	double dx = (x_max - x_min) / (ni - 1);
-	double dy = (y_max - y_min) / (nj - 1);
-	double dz = (z_max - z_min) / (nk - 1);
+	auto& cellTopo = grid->GetCellTopo();
+	auto& cell_type = cellTopo->GetType();
+	auto& cell_center = cellTopo->GetCenterCoord();
+	auto& node_topo = grid->GetNodeTopo();
+	auto& node_coord = node_topo->GetCoordinate();
+	int is, ie, js, je, ks, ke;
+	grid->GetRange(is, ie, js, je, ks, ke);
 	fout << "ZONE T= grid_" << grid->GetName() << std::endl;
-	fout << "I=" << ni << ", J=" << nj << ", K=" << nk << ", DATAPACKING=BLOCK, VARLOCATION=([4]CELLCENTERED)" << std::endl;
+	fout << "I=" << ie - is << ", J=" << je - js << ", K=" << ke - ks << ", DATAPACKING=BLOCK, VARLOCATION=([4-8]=CELLCENTERED)" << std::endl;
 	fout << "solutiontime= " << GlobalData::GetDouble("globalTime") << std::endl;
+	auto CellIndex = [&](int i, int j, int k) {return grid->GetCellIndex(i, j, k); };
+	int iCell = 0;
 	int count = 0;
-	for (int k = 0; k < nk - 1; ++k)
+	for (int k = ks; k < ke; ++k)
 	{
-		for (int j = 0; j < nj - 1; ++j)
+		for (int j = js; j < je; ++j)
 		{
-			for (int i = 0; i < ni - 1; ++i)
+			for (int i = is; i < ie; ++i)
 			{
-				fout << x_min + i * dx + 0.5 * dx << " ";
+				fout<<node_coord[grid->GetNodeIndex(i, j, k)].x()<<" ";
 				if (++count % 10 == 0)
 				{
 					count = 0;
@@ -282,13 +288,13 @@ void zaran::Visual::WriteTecplotZaran3D(Ptr<FieldSolver>& solver)
 			}
 		}
 	}
-	for (int k = 0; k < nk - 1; ++k)
+	for (int k = ks; k < ke; ++k)
 	{
-		for (int j = 0; j < nj - 1; ++j)
+		for (int j = js; j < je; ++j)
 		{
-			for (int i = 0; i < ni - 1; ++i)
+			for (int i = is; i < ie; ++i)
 			{
-				fout << y_min + j * dy + 0.5 * dy << " ";
+				fout<<node_coord[grid->GetNodeIndex(i, j, k)].y()<<" ";
 				if (++count % 10 == 0)
 				{
 					count = 0;
@@ -297,13 +303,13 @@ void zaran::Visual::WriteTecplotZaran3D(Ptr<FieldSolver>& solver)
 			}
 		}
 	}
-	for (int k = 0; k < nk - 1; ++k)
+	for (int k = ks; k < ke; ++k)
 	{
-		for (int j = 0; j < nj - 1; ++j)
+		for (int j = js; j < je; ++j)
 		{
-			for (int i = 0; i < ni - 1; ++i)
+			for (int i = is; i < ie; ++i)
 			{
-				fout << z_min + k * dz + 0.5 * dz << " ";
+				fout<<node_coord[grid->GetNodeIndex(i, j, k)].z()<<" ";
 				if (++count % 10 == 0)
 				{
 					count = 0;
@@ -312,13 +318,78 @@ void zaran::Visual::WriteTecplotZaran3D(Ptr<FieldSolver>& solver)
 			}
 		}
 	}
-	for (int k = 0; k < nk - 1; ++k)
+	for (int k = ks; k < ke - 1; ++k)
 	{
-		for (int j = 0; j < nj - 1; ++j)
+		for (int j = js; j < je - 1; ++j)
 		{
-			for (int i = 0; i < ni - 1; ++i)
+			for (int i = is; i < ie - 1; ++i)
 			{
-				fout << int(cell_type[grid->GetCellIndex(i, j, k)]) << " ";
+				iCell = CellIndex(i, j, k);
+				fout << rho[iCell] << " ";
+				if (++count % 10 == 0)
+				{
+					count = 0;
+					fout << std::endl;
+				}
+			}
+		}
+	}
+	for (int k = ks; k < ke - 1; ++k)
+	{
+		for (int j = js; j < je - 1; ++j)
+		{
+			for (int i = is; i < ie - 1; ++i)
+			{
+				iCell = CellIndex(i, j, k);
+				fout << u[iCell] << " ";
+				if (++count % 10 == 0)
+				{
+					count = 0;
+					fout << std::endl;
+				}
+			}
+		}
+	}
+	for (int k = ks; k < ke - 1; ++k)
+	{
+		for (int j = js; j < je - 1; ++j)
+		{
+			for (int i = is; i < ie - 1; ++i)
+			{
+				iCell = CellIndex(i, j, k);
+				fout << v[iCell] << " ";
+				if (++count % 10 == 0)
+				{
+					count = 0;
+					fout << std::endl;
+				}
+			}
+		}
+	}
+	for (int k = ks; k < ke - 1; ++k)
+	{
+		for (int j = js; j < je - 1; ++j)
+		{
+			for (int i = is; i < ie - 1; ++i)
+			{
+				iCell = CellIndex(i, j, k);
+				fout << w[iCell] << " ";
+				if (++count % 10 == 0)
+				{
+					count = 0;
+					fout << std::endl;
+				}
+			}
+		}
+	}
+	for (int k = ks; k < ke - 1; ++k)
+	{
+		for (int j = js; j < je - 1; ++j)
+		{
+			for (int i = is; i < ie - 1; ++i)
+			{
+				iCell = CellIndex(i, j, k);
+				fout << p[iCell] << " ";
 				if (++count % 10 == 0)
 				{
 					count = 0;

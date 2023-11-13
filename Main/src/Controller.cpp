@@ -52,7 +52,8 @@ void Controller::SaveDataTecplot()
     {
         auto& currentSolver = m_field[iField]->GetSolver();
         // visual_->WriteTecplot(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
-        m_visual->WriteTecplot2D(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
+        // m_visual->WriteTecplot2D(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
+         m_visual->WriteTecplotZaran3D(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
     }
 }
 void Controller::SaveDataVTK(std::ostream& os)
@@ -134,13 +135,13 @@ void zaran::Controller::CalcResidual()
         auto& rho = fieldData->GetData("rho");
         auto& nodeTopo = currentGrid->GetNodeTopo();
         auto& nodeCoord = nodeTopo->GetCoordinate();
-        auto& nodeNum = currentGrid->GetTotalNodeNum();
         auto& nodeType = nodeTopo->GetType();
         double x, y;
         DVector prim;
         double theory_rho;
         maxResidual_ = aveResidual_ = 0.0;
-        for (int iNode = 0;iNode < nodeNum;++iNode)
+        int n_data = rho.size();
+        for (int iNode = 0;iNode < n_data;++iNode)
         {
             x = nodeCoord[iNode].x();
             y = nodeCoord[iNode].y();
@@ -149,7 +150,7 @@ void zaran::Controller::CalcResidual()
             maxResidual_ = Max(maxResidual_, abs(rho[iNode] - theory_rho));
             aveResidual_ += pow(rho[iNode] - theory_rho, 2);
         }
-        aveResidual_ /= nodeNum;
+        aveResidual_ /= n_data;
         aveResidual_ = sqrt(aveResidual_);
     }
 }

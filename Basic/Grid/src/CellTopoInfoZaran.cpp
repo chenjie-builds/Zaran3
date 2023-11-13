@@ -4,7 +4,8 @@ namespace zaran
 
     CellTopoInfoZaran::CellTopoInfoZaran()
     {
-
+        CellTopoInfo::CellTopoInfo();
+        m_cellType.resize(0);
     }
 
     CellTopoInfoZaran::~CellTopoInfoZaran()

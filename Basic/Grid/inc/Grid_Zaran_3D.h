@@ -46,6 +46,7 @@ namespace zaran
         void SetBoundPatch(const ZaranBoundPatch& bound_patch);
         void SetBox(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax);
         void GetBox(double& xmin, double& xmax, double& ymin, double& ymax, double& zmin, double& zmax);
+        Ptr<CellTopoInfoZaran> GetCellTopo();
     public:
         ZaranBoundPatch& GetBoundPatch();
         void GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd);

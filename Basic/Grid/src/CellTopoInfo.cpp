@@ -4,7 +4,9 @@ namespace zaran
 
 	CellTopoInfo::CellTopoInfo()
 	{
-
+		m_center.resize(0);
+		m_face_index.resize(0);
+		m_node_index.resize(0);
 	}
 
 	CellTopoInfo::~CellTopoInfo()
@@ -28,5 +30,9 @@ namespace zaran
 	Array<IArray>& CellTopoInfo::GetFaceIndex()
 	{
 		return m_face_index;
+	}
+	Array<DVector3D>& CellTopoInfo::GetCenterCoord()
+	{
+		return m_center;
 	}
 }

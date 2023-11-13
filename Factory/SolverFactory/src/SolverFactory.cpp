@@ -20,6 +20,8 @@ void SolverFactory::Create(Ptr<GridList>& gridList, Ptr<SolverVec>& solverVecPtr
 			newSolver = std::make_shared<Solver_NS_2D_Struct>();
 		else if (solverType == FieldSolverType::NS_3D_Struct)
 			newSolver = std::make_shared<Solver_NS_3D_Struct>();
+		else if (solverType == FieldSolverType::NS_ZaRan_3D)
+			newSolver = std::make_shared<Solver_NS_3D_Zaran>();
 		else
 		{
 			ZaranLog::warn("Unsupported Solver Type! Please Check!");

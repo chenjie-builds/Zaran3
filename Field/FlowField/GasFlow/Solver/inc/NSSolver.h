@@ -77,12 +77,12 @@ namespace zaran
 		virtual void ComputeResidual();
 		// 计算限制器系数
 		virtual void ComputeLimiterCoef();
-		void ComputeLimiterCoefVK();
-		void ComputeLimiterCoefBJ();
-		void ComputeLimiterCoefNoLimiter();
-		void ComputeLimiterCoefOneOrder();
+		virtual void ComputeLimiterCoefVK();
+		virtual void ComputeLimiterCoefBJ();
+		virtual void ComputeLimiterCoefNoLimiter();
+		virtual void ComputeLimiterCoefOneOrder();
 
-		void ComputeBoundaryLimiterCoef();
+		virtual void ComputeBoundaryLimiterCoef();
 
 		/**
 		* 边界条件处理

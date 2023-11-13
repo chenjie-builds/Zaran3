@@ -33,9 +33,9 @@ namespace zaran {
 			ZaranLog::warn("初始化流场参数设置错误:{}", initType);
 			exit(0);
 		}
-		int nTotalNodeNum = grid->GetTotalNodeNum();
+		int n_data = rho.size();
 		double x, y, z;
-		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		for (int iNode = 0; iNode < n_data; ++iNode)
 		{
 			rho[iNode] = primInit(0);
 			u[iNode] = primInit(1);
@@ -141,82 +141,101 @@ namespace zaran {
 	}
 	void NSSolver::RegisterFieldData()
 	{
+
 		auto& data = *GetFieldData();
-		m_Primitive.push_back(&data.GetData("rho"));
-		m_Primitive.push_back(&data.GetData("u"));
-		m_Primitive.push_back(&data.GetData("v"));
-		m_Primitive.push_back(&data.GetData("w"));
-		m_Primitive.push_back(&data.GetData("p"));
-		m_Conservative.push_back(&data.GetData("cons0"));
-		m_Conservative.push_back(&data.GetData("cons1"));
-		m_Conservative.push_back(&data.GetData("cons2"));
-		m_Conservative.push_back(&data.GetData("cons3"));
-		m_Conservative.push_back(&data.GetData("cons4"));
-		m_Residual.push_back(&data.GetData("res0"));
-		m_Residual.push_back(&data.GetData("res1"));
-		m_Residual.push_back(&data.GetData("res2"));
-		m_Residual.push_back(&data.GetData("res3"));
-		m_Residual.push_back(&data.GetData("res4"));
+
+		// 预分配内存
+		m_Primitive.reserve(5);
+		m_Conservative.reserve(5);
+		m_Residual.reserve(5);
+		m_LimiterCoef.reserve(5);
+		m_PrimGradX.reserve(5);
+		m_PrimGradY.reserve(5);
+		m_PrimGradZ.reserve(5);
+		m_ConservativeRK.reserve(5);
+		m_CoordTrans.reserve(36);
+
+		auto addDataToVector = [&data](Array<DArray*>& vec, const std::string& name) {
+			vec.push_back(&data.GetData(name));
+			};
+
+		addDataToVector(m_Primitive, "rho");
+		addDataToVector(m_Primitive, "u");
+		addDataToVector(m_Primitive, "v");
+		addDataToVector(m_Primitive, "w");
+		addDataToVector(m_Primitive, "p");
+		addDataToVector(m_Conservative, "cons0");
+		addDataToVector(m_Conservative, "cons1");
+		addDataToVector(m_Conservative, "cons2");
+		addDataToVector(m_Conservative, "cons3");
+		addDataToVector(m_Conservative, "cons4");
+		addDataToVector(m_Residual, "res0");
+		addDataToVector(m_Residual, "res1");
+		addDataToVector(m_Residual, "res2");
+		addDataToVector(m_Residual, "res3");
+		addDataToVector(m_Residual, "res4");
+		addDataToVector(m_LimiterCoef, "limiterCoef0");
+		addDataToVector(m_LimiterCoef, "limiterCoef1");
+		addDataToVector(m_LimiterCoef, "limiterCoef2");
+		addDataToVector(m_LimiterCoef, "limiterCoef3");
+		addDataToVector(m_LimiterCoef, "limiterCoef4");
+		addDataToVector(m_PrimGradX, "rhoGradX");
+		addDataToVector(m_PrimGradX, "uGradX");
+		addDataToVector(m_PrimGradX, "vGradX");
+		addDataToVector(m_PrimGradX, "wGradX");
+		addDataToVector(m_PrimGradX, "pGradX");
+		addDataToVector(m_PrimGradY, "rhoGradY");
+		addDataToVector(m_PrimGradY, "uGradY");
+		addDataToVector(m_PrimGradY, "vGradY");
+		addDataToVector(m_PrimGradY, "wGradY");
+		addDataToVector(m_PrimGradY, "pGradY");
+		addDataToVector(m_PrimGradZ, "rhoGradZ");
+		addDataToVector(m_PrimGradZ, "uGradZ");
+		addDataToVector(m_PrimGradZ, "vGradZ");
+		addDataToVector(m_PrimGradZ, "wGradZ");
+		addDataToVector(m_PrimGradZ, "pGradZ");
+		addDataToVector(m_ConservativeRK, "consRK0");
+		addDataToVector(m_ConservativeRK, "consRK1");
+		addDataToVector(m_ConservativeRK, "consRK2");
+		addDataToVector(m_ConservativeRK, "consRK3");
+		addDataToVector(m_ConservativeRK, "consRK4");
+		addDataToVector(m_CoordTrans, "coordTransXXi");
+		addDataToVector(m_CoordTrans, "coordTransXEta");
+		addDataToVector(m_CoordTrans, "coordTransXZeta");
+		addDataToVector(m_CoordTrans, "coordTransXTau");
+		addDataToVector(m_CoordTrans, "coordTransYXi");
+		addDataToVector(m_CoordTrans, "coordTransYEta");
+		addDataToVector(m_CoordTrans, "coordTransYZeta");
+		addDataToVector(m_CoordTrans, "coordTransYTau");
+		addDataToVector(m_CoordTrans, "coordTransZXi");
+		addDataToVector(m_CoordTrans, "coordTransZEta");
+		addDataToVector(m_CoordTrans, "coordTransZZeta");
+		addDataToVector(m_CoordTrans, "coordTransZTau");
+		addDataToVector(m_CoordTrans, "coordTransTXi");
+		addDataToVector(m_CoordTrans, "coordTransTEta");
+		addDataToVector(m_CoordTrans, "coordTransTZeta");
+		addDataToVector(m_CoordTrans, "coordTransTTau");
+		addDataToVector(m_CoordTrans, "coordTransXiX");
+		addDataToVector(m_CoordTrans, "coordTransXiY");
+		addDataToVector(m_CoordTrans, "coordTransXiZ");
+		addDataToVector(m_CoordTrans, "coordTransXiT");
+		addDataToVector(m_CoordTrans, "coordTransEtaX");
+		addDataToVector(m_CoordTrans, "coordTransEtaY");
+		addDataToVector(m_CoordTrans, "coordTransEtaZ");
+		addDataToVector(m_CoordTrans, "coordTransEtaT");
+		addDataToVector(m_CoordTrans, "coordTransZetaX");
+		addDataToVector(m_CoordTrans, "coordTransZetaY");
+		addDataToVector(m_CoordTrans, "coordTransZetaZ");
+		addDataToVector(m_CoordTrans, "coordTransZetaT");
+		addDataToVector(m_CoordTrans, "coordTransTauX");
+		addDataToVector(m_CoordTrans, "coordTransTauY");
+		addDataToVector(m_CoordTrans, "coordTransTauZ");
+		addDataToVector(m_CoordTrans, "coordTransTauT");
+		addDataToVector(m_CoordTrans, "coordTransJ");
 		m_TimeStep = &data.GetData("dt");
-		m_LimiterCoef.push_back(&data.GetData("limiterCoef0"));
-		m_LimiterCoef.push_back(&data.GetData("limiterCoef1"));
-		m_LimiterCoef.push_back(&data.GetData("limiterCoef2"));
-		m_LimiterCoef.push_back(&data.GetData("limiterCoef3"));
-		m_LimiterCoef.push_back(&data.GetData("limiterCoef4"));
-		m_PrimGradX.push_back(&data.GetData("rhoGradX"));
-		m_PrimGradX.push_back(&data.GetData("uGradX"));
-		m_PrimGradX.push_back(&data.GetData("vGradX"));
-		m_PrimGradX.push_back(&data.GetData("wGradX"));
-		m_PrimGradX.push_back(&data.GetData("pGradX"));
-		m_PrimGradY.push_back(&data.GetData("rhoGradY"));
-		m_PrimGradY.push_back(&data.GetData("uGradY"));
-		m_PrimGradY.push_back(&data.GetData("vGradY"));
-		m_PrimGradY.push_back(&data.GetData("wGradY"));
-		m_PrimGradY.push_back(&data.GetData("pGradY"));
-		m_PrimGradZ.push_back(&data.GetData("rhoGradZ"));
-		m_PrimGradZ.push_back(&data.GetData("uGradZ"));
-		m_PrimGradZ.push_back(&data.GetData("vGradZ"));
-		m_PrimGradZ.push_back(&data.GetData("wGradZ"));
-		m_PrimGradZ.push_back(&data.GetData("pGradZ"));
-		m_ConservativeRK.push_back(&data.GetData("consRK0"));
-		m_ConservativeRK.push_back(&data.GetData("consRK1"));
-		m_ConservativeRK.push_back(&data.GetData("consRK2"));
-		m_ConservativeRK.push_back(&data.GetData("consRK3"));
-		m_ConservativeRK.push_back(&data.GetData("consRK4"));
-		m_CoordTrans.push_back(&data.GetData("coordTransXXi"));
-		m_CoordTrans.push_back(&data.GetData("coordTransXEta"));
-		m_CoordTrans.push_back(&data.GetData("coordTransXZeta"));
-		m_CoordTrans.push_back(&data.GetData("coordTransXTau"));
-		m_CoordTrans.push_back(&data.GetData("coordTransYXi"));
-		m_CoordTrans.push_back(&data.GetData("coordTransYEta"));
-		m_CoordTrans.push_back(&data.GetData("coordTransYZeta"));
-		m_CoordTrans.push_back(&data.GetData("coordTransYTau"));
-		m_CoordTrans.push_back(&data.GetData("coordTransZXi"));
-		m_CoordTrans.push_back(&data.GetData("coordTransZEta"));
-		m_CoordTrans.push_back(&data.GetData("coordTransZZeta"));
-		m_CoordTrans.push_back(&data.GetData("coordTransZTau"));
-		m_CoordTrans.push_back(&data.GetData("coordTransTXi"));
-		m_CoordTrans.push_back(&data.GetData("coordTransTEta"));
-		m_CoordTrans.push_back(&data.GetData("coordTransTZeta"));
-		m_CoordTrans.push_back(&data.GetData("coordTransTTau"));
-		m_CoordTrans.push_back(&data.GetData("coordTransXiX"));
-		m_CoordTrans.push_back(&data.GetData("coordTransXiY"));
-		m_CoordTrans.push_back(&data.GetData("coordTransXiZ"));
-		m_CoordTrans.push_back(&data.GetData("coordTransXiT"));
-		m_CoordTrans.push_back(&data.GetData("coordTransEtaX"));
-		m_CoordTrans.push_back(&data.GetData("coordTransEtaY"));
-		m_CoordTrans.push_back(&data.GetData("coordTransEtaZ"));
-		m_CoordTrans.push_back(&data.GetData("coordTransEtaT"));
-		m_CoordTrans.push_back(&data.GetData("coordTransZetaX"));
-		m_CoordTrans.push_back(&data.GetData("coordTransZetaY"));
-		m_CoordTrans.push_back(&data.GetData("coordTransZetaZ"));
-		m_CoordTrans.push_back(&data.GetData("coordTransZetaT"));
-		m_CoordTrans.push_back(&data.GetData("coordTransTauX"));
-		m_CoordTrans.push_back(&data.GetData("coordTransTauY"));
-		m_CoordTrans.push_back(&data.GetData("coordTransTauZ"));
-		m_CoordTrans.push_back(&data.GetData("coordTransTauT"));
-		m_CoordTrans.push_back(&data.GetData("coordTransJ"));
+
 	}
+
 	void NSSolver::Solve()
 	{
 		ComputeTimeStep();
@@ -266,9 +285,9 @@ namespace zaran {
 	{
 		GridPtr grid = GetGrid();
 		FlowSolverParaPtr para = GetPara();
-		for (int iNode = 0; iNode < m_TimeStep->size(); ++iNode)
+		for (auto var : *m_TimeStep)
 		{
-			(*m_TimeStep)[iNode] = dt;
+			(*m_TimeStep)[var] = dt;
 		}
 	}
 
@@ -393,8 +412,8 @@ namespace zaran {
 		auto& cons2 = *m_Conservative[2];
 		auto& cons3 = *m_Conservative[3];
 		auto& cons4 = *m_Conservative[4];
-		int nTotalNode = grid->GetTotalNodeNum();
-		for (int iNode = 0; iNode < nTotalNode; ++iNode)
+		int n_data = rho.size();
+		for (int iNode = 0; iNode < n_data; ++iNode)
 			Primitive2Conservative(rho[iNode], u[iNode], v[iNode], w[iNode], p[iNode], cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode]);
 	}
 
@@ -424,8 +443,7 @@ namespace zaran {
 		auto& cons3 = *m_Conservative[3];
 		auto& cons4 = *m_Conservative[4];
 		auto& inflowPrim = GetPara()->GetPrimitiveInflow();
-		int nTotalNode = grid->GetTotalNodeNum();
-		for (int iNode = 0; iNode < nTotalNode; ++iNode)
+		for (int iNode = 0; iNode < rho.size(); ++iNode)
 		{
 			Conservative2Primitive(cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode], rho[iNode], u[iNode], v[iNode], w[iNode], p[iNode]);
 		}

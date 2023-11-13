@@ -43,7 +43,7 @@ void Simulation::Start()
 			else if (grid_type_name == "Zaran_3D")
 			{
 				grid_type = GridType::Zaran_3D;
-				solver_type = FieldSolverType::NS_3D;
+				solver_type = FieldSolverType::NS_ZaRan_3D;
 			}
 			else
 			{

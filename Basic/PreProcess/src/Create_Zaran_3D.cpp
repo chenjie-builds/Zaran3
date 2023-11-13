@@ -13,9 +13,14 @@ void zaran::GridListFactoryZaran3D::Create(Ptr<GridList>& gridList)
 	{
 		gridList = std::make_shared<GridList>();
 	}
+	ZaranLog::info("Start create grid");
 	CreateStructPart(gridList);
+	ZaranLog::info("Create grid finished");
+	ZaranLog::info("Start read model");
 	ReadModel();
+	ZaranLog::info("Start tag cell type");
 	TagCell(gridList);
+	ZaranLog::info("Tag cell type finished");
 	CrateBoundPatch(gridList);
 }
 
@@ -53,25 +58,22 @@ void zaran::GridListFactoryZaran3D::CreateStructPart(Ptr<GridList>& gridList)
 	double dz = (zMax - zMin) / (zNodeNum - 1);
 	int i, j, k;
 	double x, y, z;
-	grid->SetNodeNum((xNodeNum + 2), (yNodeNum + 2), (zNodeNum + 2));
-	nodeCoord.resize((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
+	xNodeNum += 2;
+	yNodeNum += 2;
+	zNodeNum += 2;
+	grid->SetNodeNum((xNodeNum), (yNodeNum), (zNodeNum));
+	nodeCoord.resize((xNodeNum) * (yNodeNum) * (zNodeNum));
 
 	auto& nodeType = nodeTopo->GetType();
-	nodeType.resize((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
-	auto& tempI = nodeTopo->GetTemplateI();
-	auto& tempJ = nodeTopo->GetTemplateJ();
-	auto& tempK = nodeTopo->GetTemplateK();
-	tempI.resize((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
-	tempJ.resize((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
-	tempK.resize((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
+	nodeType.resize((xNodeNum) * (yNodeNum) * (zNodeNum));
 	int iNode = 0;
-	for (k = 0; k < zNodeNum + 2; ++k)
+	for (k = 0; k < zNodeNum; ++k)
 	{
 		z = k * dz + zMin - dz;
-		for (j = 0; j < yNodeNum + 2; ++j)
+		for (j = 0; j < yNodeNum; ++j)
 		{
 			y = j * dy + yMin - dy;
-			for (i = 0; i < xNodeNum + 2; ++i)
+			for (i = 0; i < xNodeNum; ++i)
 			{
 				x = i * dx + xMin - dx;
 				iNode = grid->GetNodeIndex(i, j, k);
@@ -85,313 +87,52 @@ void zaran::GridListFactoryZaran3D::CreateStructPart(Ptr<GridList>& gridList)
 				{
 					nodeType[iNode] = NodeType::inlet;
 				}
-				tempI[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i, j, k), grid->GetNodeIndex(i + 1, j, k) };
-				tempJ[iNode] = { grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j, k), grid->GetNodeIndex(i, j + 1, k) };
-				tempK[iNode] = { grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k), grid->GetNodeIndex(i, j, k + 1) };
 			}
 		}
 	}
-	auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
-	nodeNeighbor.resize((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
-	for (k = 0; k < zNodeNum + 2; ++k)
-	{
-		for (j = 0; j < yNodeNum + 2; ++j)
-		{
-			for (i = 0; i < xNodeNum + 2; ++i)
-			{
-				iNode = grid->GetNodeIndex(i, j, k);
-				if (i == 0)
-				{
-					if (j == 0)
-					{
-						if (k == 0)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k),  grid->GetNodeIndex(i, j + 1, k),  grid->GetNodeIndex(i, j, k + 1) };
-						}
-						else if (k == zNodeNum + 1)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k),  grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1) };
-						}
-						else
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k),  grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
-						}
-					}
-					else if (j == yNodeNum + 1)
-					{
-						if (k == 0)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j, k + 1) };
-
-						}
-						else if (k == zNodeNum + 1)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k),  grid->GetNodeIndex(i, j, k - 1) };
-
-
-						}
-						else
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k),  grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
-
-						}
-					}
-					else
-					{
-						if (k == 0)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k),  grid->GetNodeIndex(i, j, k + 1) };
-
-						}
-						else if (k == zNodeNum + 1)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1) };
-
-						}
-						else
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
-						}
-					}
-				}
-				else if (i == xNodeNum + 1)
-				{
-					if (j == 0)
-					{
-						if (k == 0)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k),  grid->GetNodeIndex(i, j + 1, k),  grid->GetNodeIndex(i, j, k + 1) };
-
-						}
-						else if (k == zNodeNum + 1)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k),  grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1) };
-						}
-						else
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k),  grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
-						}
-					}
-					else if (j == yNodeNum + 1)
-					{
-						if (k == 0)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j, k + 1) };
-
-
-						}
-						else if (k == zNodeNum + 1)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i, j - 1, k),  grid->GetNodeIndex(i, j, k - 1) };
-
-						}
-						else
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i, j - 1, k),  grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
-
-						}
-					}
-					else
-					{
-						if (k == 0)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k),  grid->GetNodeIndex(i, j, k + 1) };
-
-						}
-						else if (k == zNodeNum + 1)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1) };
-
-						}
-						else
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
-
-						}
-					}
-				}
-				else
-				{
-					if (j == 0)
-					{
-						if (k == 0)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j + 1, k),  grid->GetNodeIndex(i, j, k + 1) };
-
-						}
-						else if (k == zNodeNum + 1)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1) };
-
-						}
-						else
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k),  grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
-
-						}
-					}
-					else if (j == yNodeNum + 1)
-					{
-						if (k == 0)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k),   grid->GetNodeIndex(i, j, k + 1) };
-
-						}
-						else if (k == zNodeNum + 1)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k),  grid->GetNodeIndex(i, j, k - 1) };
-
-						}
-						else
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k),  grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
-
-						}
-					}
-					else
-					{
-						if (k == 0)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k),  grid->GetNodeIndex(i, j, k + 1) };
-						}
-						else if (k == zNodeNum + 1)
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1) };
-
-						}
-						else
-						{
-							nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
-						}
-					}
-				}
-			}
-		}
-	}
-	grid->SetInnerNodeNum((xNodeNum - 2) * (yNodeNum - 2) * (zNodeNum - 2));
-	grid->SetTotalNodeNum((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
+	ZaranLog::info("Start create cell topo1");
+	grid->SetInnerNodeNum((xNodeNum - 4) * (yNodeNum - 4) * (zNodeNum - 4));
+	grid->SetTotalNodeNum((xNodeNum) * (yNodeNum) * (zNodeNum));
 	grid->SetBoundNodeNum(xNodeNum * yNodeNum * zNodeNum - grid->GetInnerNodeNum());
 	grid->SetInterNodeInfo(std::make_shared<InterNodeInfo>());
 	grid->SetBoundaryMap(std::make_shared<BoundaryMap>());
-
-	auto& cellTopo = grid->GetCellTopo();
+	ZaranLog::info("Start create cell topo2");
+	Ptr<CellTopoInfoZaran>& cellTopo = grid->GetCellTopo();
+	ZaranLog::info("Start create cell topo2");
 	auto& cell2node = cellTopo->GetNodeIndex();
-	cell2node.resize((xNodeNum + 1) * (yNodeNum + 1) * (zNodeNum + 1));
+	auto& cell_center = cellTopo->GetCenterCoord();
+	ZaranLog::info("Start create cell topo");
+	ZaranLog::info("cell2node size: {}", cell2node.size());
+	ZaranLog::info("cell_center size: {}", cell_center.size());
+	ZaranLog::info("xNodeNum: {}, yNodeNum: {}, zNodeNum: {}", xNodeNum, yNodeNum, zNodeNum);
+	cell2node.resize((xNodeNum - 1) * (yNodeNum - 1) * (zNodeNum - 1));
+	cell_center.resize((xNodeNum - 1) * (yNodeNum - 1) * (zNodeNum - 1));
 	int iCell;
-	for (k = 0; k < zNodeNum + 1; ++k)
+	ZaranLog::info("Start create cell topo");
+	for (k = 0; k < zNodeNum - 1; ++k)
 	{
-		for (j = 0; j < yNodeNum + 1; ++j)
+		for (j = 0; j < yNodeNum - 1; ++j)
 		{
-
-			for (i = 0; i < xNodeNum + 1; ++i)
+			for (i = 0; i < xNodeNum - 1; ++i)
 			{
 				iCell = grid->GetCellIndex(i, j, k);
 				cell2node[iCell] = (IArray{ grid->GetNodeIndex(i, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i + 1, j + 1, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k + 1), grid->GetNodeIndex(i + 1, j, k + 1), grid->GetNodeIndex(i + 1, j + 1, k + 1), grid->GetNodeIndex(i, j + 1, k + 1) });
+				cell_center[iCell][0] = (i - 0.5) * dx + xMin;
+				cell_center[iCell][1] = (j - 0.5) * dy + yMin;
+				cell_center[iCell][2] = (k - 0.5) * dz + zMin;
 			}
 		}
 	}
-
+	ZaranLog::info("Create cell topo finished");
 	auto boundMap = grid->GetBoundaryMap();
 	int nodeIndex, innerNodeIndex, ghostNodeIndex;
 	DVector3D boundNorm;
 	Boundary bound;
-	//i方向两个面分别为入口和出口
-	for (k = 1; k < zNodeNum + 1; ++k)
-	{
-
-		for (j = 1; j < yNodeNum + 1; ++j)
-		{
-			i = 1;
-			nodeIndex = grid->GetNodeIndex(i, j, k);
-			bound.SetNodeIndex(nodeIndex);
-			innerNodeIndex = grid->GetNodeIndex(i + 1, j, k);
-			bound.SetInnerNodeIndex(innerNodeIndex);
-			ghostNodeIndex = grid->GetNodeIndex(i - 1, j, k);
-			bound.SetGhostNodeIndex(ghostNodeIndex);
-			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
-			bound.SetNorm(boundNorm);
-			boundMap->AddBoundary("inlet", bound);
-
-			i = xNodeNum;
-			nodeIndex = grid->GetNodeIndex(i, j, k);
-			bound.SetNodeIndex(nodeIndex);
-			innerNodeIndex = grid->GetNodeIndex(i - 1, j, k);
-			bound.SetInnerNodeIndex(innerNodeIndex);
-			ghostNodeIndex = grid->GetNodeIndex(i + 1, j, k);
-			bound.SetGhostNodeIndex(ghostNodeIndex);
-			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
-			bound.SetNorm(boundNorm);
-			boundMap->AddBoundary("outlet", bound);
-		}
-	}
-
-	//其余四个面均为壁面
-	for (i = 1; i < xNodeNum + 1; ++i)
-	{
-		//j方向
-		for (k = 1; k < zNodeNum + 1; ++k)
-		{
-			j = 1;
-			nodeIndex = grid->GetNodeIndex(i, j, k);
-			bound.SetNodeIndex(nodeIndex);
-			innerNodeIndex = grid->GetNodeIndex(i, j + 1, k);
-			bound.SetInnerNodeIndex(innerNodeIndex);
-			ghostNodeIndex = grid->GetNodeIndex(i, j - 1, k);
-			bound.SetGhostNodeIndex(ghostNodeIndex);
-			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
-			bound.SetNorm(boundNorm);
-			boundMap->AddBoundary("wall", bound);
-			j = yNodeNum;
-			nodeIndex = grid->GetNodeIndex(i, j, k);
-			bound.SetNodeIndex(nodeIndex);
-			innerNodeIndex = grid->GetNodeIndex(i, j - 1, k);
-			bound.SetInnerNodeIndex(innerNodeIndex);
-			ghostNodeIndex = grid->GetNodeIndex(i, j + 1, k);
-			bound.SetGhostNodeIndex(ghostNodeIndex);
-			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
-			bound.SetNorm(boundNorm);
-			boundMap->AddBoundary("wall", bound);
-		}
-
-		//j方向
-		for (j = 1; j < yNodeNum + 1; ++j)
-		{
-			k = 1;
-			nodeIndex = grid->GetNodeIndex(i, j, k);
-			bound.SetNodeIndex(nodeIndex);
-			innerNodeIndex = grid->GetNodeIndex(i, j, k + 1);
-			bound.SetInnerNodeIndex(innerNodeIndex);
-			ghostNodeIndex = grid->GetNodeIndex(i, j, k - 1);
-			bound.SetGhostNodeIndex(ghostNodeIndex);
-			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
-			bound.SetNorm(boundNorm);
-			boundMap->AddBoundary("wall", bound);
-			k = zNodeNum;
-			nodeIndex = grid->GetNodeIndex(i, j, k);
-			bound.SetNodeIndex(nodeIndex);
-			innerNodeIndex = grid->GetNodeIndex(i, j, k - 1);
-			bound.SetInnerNodeIndex(innerNodeIndex);
-			ghostNodeIndex = grid->GetNodeIndex(i, j, k + 1);
-			bound.SetGhostNodeIndex(ghostNodeIndex);
-			boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
-			bound.SetNorm(boundNorm);
-			boundMap->AddBoundary("wall", bound);
-		}
-	}
 	gridList->AddGrid(grid);
 }
 
 void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 {
-	string modelFileName = GlobalData::GetString("modelFileName");
-	STLReader reader;
-	reader.ReadSTLFile(modelFileName.c_str());
-	m_polyDataModel = std::make_shared<PolyDataModel>();
-	m_polyDataModel->SetPolyData(reader.GetMesh(), 1e-6);
-	if (m_polyDataModel->IsClosed())
-		ZaranLog::info("Import Model: {}, is closed!", modelFileName);
-	else
-		ZaranLog::info("Import Model: {}, is not closed!", modelFileName);
 	Ptr<zaran::Grid_Zaran_3D> grid = std::static_pointer_cast<Grid_Zaran_3D>(gridList->GetGrid(0));
 	auto cellTopo = std::static_pointer_cast<CellTopoInfoZaran>(grid->GetCellTopo());
 	auto& cell_type = cellTopo->GetType();

@@ -26,89 +26,94 @@ namespace zaran
         zmax = m_zmax;
     }
 
+    Ptr<CellTopoInfoZaran> Grid_Zaran_3D::GetCellTopo()
+    {
+        return std::static_pointer_cast<CellTopoInfoZaran>(m_cell_topo);
+    }
+
     ZaranBoundPatch& Grid_Zaran_3D::GetBoundPatch()
     {
         return *m_bound_patch;
     }
 
-void Grid_Zaran_3D::GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd)
+    void Grid_Zaran_3D::GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd)
     {
-        iStart = 0;
+        iStart = 1;
         iEnd = m_ni - 1;
-        jStart = 0;
+        jStart = 1;
         jEnd = m_nj - 1;
-        kStart = 0;
+        kStart = 1;
         kEnd = m_nk - 1;
     }
 
 
-    
-void Grid_Zaran_3D::SetNi(int ni)
-{
-    m_ni = ni;
-}
 
-void Grid_Zaran_3D::SetNj(int nj)
-{
-    m_nj = nj;
-}
+    void Grid_Zaran_3D::SetNi(int ni)
+    {
+        m_ni = ni;
+    }
 
-void Grid_Zaran_3D::SetNk(int nk)
-{
-    m_nk = nk;
-}
+    void Grid_Zaran_3D::SetNj(int nj)
+    {
+        m_nj = nj;
+    }
 
-int Grid_Zaran_3D::GetNi()
-{
-    return m_ni;
-}
+    void Grid_Zaran_3D::SetNk(int nk)
+    {
+        m_nk = nk;
+    }
 
-int Grid_Zaran_3D::GetNj()
-{
-    return m_nj;
-}
+    int Grid_Zaran_3D::GetNi()
+    {
+        return m_ni;
+    }
 
-int Grid_Zaran_3D::GetNk()
-{
-    return m_nk;
-}
+    int Grid_Zaran_3D::GetNj()
+    {
+        return m_nj;
+    }
 
-void Grid_Zaran_3D::SetNodeNum(int ni, int nj, int nk)
-{
-    m_ni = ni;
-    m_nj = nj;
-    m_nk = nk;
-}
+    int Grid_Zaran_3D::GetNk()
+    {
+        return m_nk;
+    }
 
-void Grid_Zaran_3D::GetNodeNum(int& ni, int& nj, int& nk)
-{
-    ni = m_ni;
-    nj = m_nj;
-    nk = m_nk;
-}
+    void Grid_Zaran_3D::SetNodeNum(int ni, int nj, int nk)
+    {
+        m_ni = ni;
+        m_nj = nj;
+        m_nk = nk;
+    }
 
-int Grid_Zaran_3D::GetNodeIndex(int i, int j, int k)
-{
-    return i + j * m_ni + k * m_ni * m_nj;
-}
+    void Grid_Zaran_3D::GetNodeNum(int& ni, int& nj, int& nk)
+    {
+        ni = m_ni;
+        nj = m_nj;
+        nk = m_nk;
+    }
 
-void Grid_Zaran_3D::GetNodeIndex(int index, int& i, int& j, int& k)
-{
-    i = index % m_ni;
-    j = (index / m_ni) % m_nj;
-    k = index / (m_ni * m_nj);
-}
+    int Grid_Zaran_3D::GetNodeIndex(int i, int j, int k)
+    {
+        return i + j * m_ni + k * m_ni * m_nj;
+    }
 
-int Grid_Zaran_3D::GetCellIndex(int i, int j, int k)
-{
-     return i + j * (m_ni - 1) + k * (m_ni - 1) * (m_nj - 1);
-}
+    void Grid_Zaran_3D::GetNodeIndex(int index, int& i, int& j, int& k)
+    {
+        i = index % m_ni;
+        j = (index / m_ni) % m_nj;
+        k = index / (m_ni * m_nj);
+    }
 
-void Grid_Zaran_3D::GetCellIndex(int index, int& i, int& j, int& k)
-{
-    i = index % (m_ni - 1);
-    j = (index / (m_ni - 1)) % (m_nj - 1);
-    k = index / ((m_ni - 1) * (m_nj - 1));
-}
+    int Grid_Zaran_3D::GetCellIndex(int i, int j, int k)
+    {
+        return i + j * (m_ni - 1) + k * (m_ni - 1) * (m_nj - 1);
+    }
+
+    void Grid_Zaran_3D::GetCellIndex(int index, int& i, int& j, int& k)
+    {
+        i = index % (m_ni - 1);
+        j = (index / (m_ni - 1)) % (m_nj - 1);
+        k = index / ((m_ni - 1) * (m_nj - 1));
+    }
 
 } // namespace zaran
