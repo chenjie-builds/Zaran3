@@ -125,9 +125,92 @@ void zaran::GridListFactoryZaran3D::CreateStructPart(Ptr<GridList>& gridList)
 	}
 	ZaranLog::info("Create cell topo finished");
 	auto boundMap = grid->GetBoundaryMap();
-	int nodeIndex, innerNodeIndex, ghostNodeIndex;
+	int cellIndex, innerNodeIndex, ghostNodeIndex;
 	DVector3D boundNorm;
 	Boundary bound;
+	//i方向两个面分别为入口和出口
+	for (k = 1; k < zNodeNum - 1; ++k)
+	{
+
+		for (j = 1; j < yNodeNum - 1; ++j)
+		{
+			i = 1;
+			cellIndex = grid->GetCellIndex(i, j, k);
+			bound.SetNodeIndex(cellIndex);
+			innerNodeIndex = grid->GetCellIndex(i + 1, j, k);
+			bound.SetInnerIndex(innerNodeIndex);
+			ghostNodeIndex = grid->GetCellIndex(i - 1, j, k);
+			bound.SetGhostIndex(ghostNodeIndex);
+			boundNorm = cell_center[ghostNodeIndex] - cell_center[cellIndex];
+			bound.SetNorm(boundNorm);
+			boundMap->AddBoundary("inlet", bound);
+
+			i = xNodeNum - 3;
+			cellIndex = grid->GetCellIndex(i, j, k);
+			bound.SetNodeIndex(cellIndex);
+			innerNodeIndex = grid->GetCellIndex(i - 1, j, k);
+			bound.SetInnerIndex(innerNodeIndex);
+			ghostNodeIndex = grid->GetCellIndex(i + 1, j, k);
+			bound.SetGhostIndex(ghostNodeIndex);
+			boundNorm = cell_center[ghostNodeIndex] - cell_center[cellIndex];
+			bound.SetNorm(boundNorm);
+			boundMap->AddBoundary("outlet", bound);
+		}
+	}
+
+	//其余四个面均为壁面
+	for (i = 1; i < xNodeNum - 1; ++i)
+	{
+		//j方向
+		for (k = 1; k < zNodeNum - 1; ++k)
+		{
+			j = 1;
+			cellIndex = grid->GetCellIndex(i, j, k);
+			bound.SetNodeIndex(cellIndex);
+			innerNodeIndex = grid->GetCellIndex(i, j + 1, k);
+			bound.SetInnerIndex(innerNodeIndex);
+			ghostNodeIndex = grid->GetCellIndex(i, j - 1, k);
+			bound.SetGhostIndex(ghostNodeIndex);
+			boundNorm = cell_center[ghostNodeIndex] - cell_center[cellIndex];
+			bound.SetNorm(boundNorm);
+			boundMap->AddBoundary("wall", bound);
+			j = yNodeNum - 3;
+			cellIndex = grid->GetCellIndex(i, j, k);
+			bound.SetNodeIndex(cellIndex);
+			innerNodeIndex = grid->GetCellIndex(i, j - 1, k);
+			bound.SetInnerIndex(innerNodeIndex);
+			ghostNodeIndex = grid->GetCellIndex(i, j + 1, k);
+			bound.SetGhostIndex(ghostNodeIndex);
+			boundNorm = cell_center[ghostNodeIndex] - cell_center[cellIndex];
+			bound.SetNorm(boundNorm);
+			boundMap->AddBoundary("wall", bound);
+		}
+
+		//j方向
+		for (j = 1; j < yNodeNum - 1; ++j)
+		{
+			k = 1;
+			cellIndex = grid->GetCellIndex(i, j, k);
+			bound.SetNodeIndex(cellIndex);
+			innerNodeIndex = grid->GetCellIndex(i, j, k + 1);
+			bound.SetInnerIndex(innerNodeIndex);
+			ghostNodeIndex = grid->GetCellIndex(i, j, k - 1);
+			bound.SetGhostIndex(ghostNodeIndex);
+			boundNorm = cell_center[ghostNodeIndex] - cell_center[cellIndex];
+			bound.SetNorm(boundNorm);
+			boundMap->AddBoundary("wall", bound);
+			k = zNodeNum - 3;
+			cellIndex = grid->GetCellIndex(i, j, k);
+			bound.SetNodeIndex(cellIndex);
+			innerNodeIndex = grid->GetCellIndex(i, j, k - 1);
+			bound.SetInnerIndex(innerNodeIndex);
+			ghostNodeIndex = grid->GetCellIndex(i, j, k + 1);
+			bound.SetGhostIndex(ghostNodeIndex);
+			boundNorm = cell_center[ghostNodeIndex] - cell_center[cellIndex];
+			bound.SetNorm(boundNorm);
+			boundMap->AddBoundary("wall", bound);
+		}
+	}
 	gridList->AddGrid(grid);
 }
 
@@ -224,6 +307,36 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 		if (cell_type[iCell] == CellType::Unknown)
 			cell_type[iCell] = CellType::Solid;
 	}
+	int n_new_solid = 1;
+	int iCell = 0;
+	while (n_new_solid != 0)
+	{
+		n_new_solid = 0;
+		for ( k = 1; k < nk - 1; ++k)
+		{
+			for ( j = 1; j < nj - 1; ++j)
+			{
+				for ( i = 1; i < ni - 1; ++i)
+				{
+					iCell= grid->GetCellIndex(i, j, k);
+					if (cell_type[iCell] != CellType::Fluid)
+						continue;
+					if (cell_type[grid->GetCellIndex(i - 1, j, k)] == CellType::Solid &&
+						cell_type[grid->GetCellIndex(i + 1, j, k)] == CellType::Solid ||
+						cell_type[grid->GetCellIndex(i, j - 1, k)] == CellType::Solid &&
+						cell_type[grid->GetCellIndex(i, j + 1, k)] == CellType::Solid ||
+						cell_type[grid->GetCellIndex(i, j, k - 1)] == CellType::Solid &&
+						cell_type[grid->GetCellIndex(i, j, k + 1)] == CellType::Solid)
+					{
+						cell_type[iCell] = CellType::Solid;
+						n_new_solid++;
+					}
+				}
+			}
+		}
+		ZaranLog::info("n_new_solid: {}", n_new_solid);
+	}
+
 	ZaranLog::info("Tag cell type finished");
 	ZaranLog::info("Start find fluid-solid interface");
 	for (int iCell = 0;iCell < cell_type.size();++iCell)
@@ -301,11 +414,11 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 	fout << "ZONE T= grid_" << grid->GetName() << std::endl;
 	fout << "I=" << ni << ", J=" << nj << ", K=" << nk << ", DATAPACKING=BLOCK, VARLOCATION=([4]=CELLCENTERED)" << std::endl;
 	int count = 0;
-	for (int k = 0; k < nk; ++k)
+	for ( k = 0; k < nk; ++k)
 	{
-		for (int j = 0; j < nj; ++j)
+		for ( j = 0; j < nj; ++j)
 		{
-			for (int i = 0; i < ni; ++i)
+			for ( i = 0; i < ni; ++i)
 			{
 				fout << x_min + i * dx << " ";
 				if (++count % 10 == 0)
@@ -316,11 +429,11 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 			}
 		}
 	}
-	for (int k = 0; k < nk; ++k)
+	for ( k = 0; k < nk; ++k)
 	{
-		for (int j = 0; j < nj; ++j)
+		for ( j = 0; j < nj; ++j)
 		{
-			for (int i = 0; i < ni; ++i)
+			for ( i = 0; i < ni; ++i)
 			{
 				fout << y_min + j * dy << " ";
 				if (++count % 10 == 0)
@@ -331,11 +444,11 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 			}
 		}
 	}
-	for (int k = 0; k < nk; ++k)
+	for ( k = 0; k < nk; ++k)
 	{
-		for (int j = 0; j < nj; ++j)
+		for ( j = 0; j < nj; ++j)
 		{
-			for (int i = 0; i < ni; ++i)
+			for ( i = 0; i < ni; ++i)
 			{
 				fout << z_min + k * dz << " ";
 				if (++count % 10 == 0)
@@ -346,11 +459,11 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 			}
 		}
 	}
-	for (int k = 0; k < nk - 1; ++k)
+	for ( k = 0; k < nk - 1; ++k)
 	{
-		for (int j = 0; j < nj - 1; ++j)
+		for ( j = 0; j < nj - 1; ++j)
 		{
-			for (int i = 0; i < ni - 1; ++i)
+			for ( i = 0; i < ni - 1; ++i)
 			{
 				fout << int(cell_type[grid->GetCellIndex(i, j, k)]) << " ";
 				// fout << dist_cell_to_model[grid->GetCellIndex(i, j, k)] << " ";

@@ -259,6 +259,7 @@ void zaran::Visual::WriteTecplotZaran3D(Ptr<FieldSolver>& solver)
 	auto& v = data->GetData("v");
 	auto& w = data->GetData("w");
 	auto& p = data->GetData("p");
+	auto& jacobi=data->GetData("coordTransJ");
 	Ptr<Grid_Zaran_3D>& grid = std::static_pointer_cast<Grid_Zaran_3D>(solver->GetGrid());
 	auto& cellTopo = grid->GetCellTopo();
 	auto& cell_type = cellTopo->GetType();
@@ -389,7 +390,7 @@ void zaran::Visual::WriteTecplotZaran3D(Ptr<FieldSolver>& solver)
 			for (int i = is; i < ie - 1; ++i)
 			{
 				iCell = CellIndex(i, j, k);
-				fout << p[iCell] << " ";
+				fout << jacobi[iCell] << " ";
 				if (++count % 10 == 0)
 				{
 					count = 0;

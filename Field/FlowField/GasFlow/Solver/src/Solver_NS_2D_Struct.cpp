@@ -462,7 +462,7 @@ namespace zaran
 	void Solver_NS_2D_Struct::ComputeInletBC(Boundary& bound)
 	{
 		FlowSolverParaPtr para = GetPara();
-		int  ghostIndex = bound.GetGhostNodeIndex();
+		int  ghostIndex = bound.GetGhostIndex();
 		auto& rho = *m_Primitive[0];
 		auto& u = *m_Primitive[1];
 		auto& v = *m_Primitive[2];
@@ -495,7 +495,7 @@ namespace zaran
 		auto& cons3 = *m_Conservative[3];
 		auto& cons4 = *m_Conservative[4];
 		int boundIndex = bound.GetIndex();
-		int ghostIndex = bound.GetGhostNodeIndex();
+		int ghostIndex = bound.GetGhostIndex();
 		rho[ghostIndex] = rho[boundIndex];
 		u[ghostIndex] = u[boundIndex];
 		v[ghostIndex] = v[boundIndex];

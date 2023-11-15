@@ -38,7 +38,7 @@ namespace zaran
         void ComputeLimiterCoefOneOrder()override;
         void ComputeBoundaryLimiterCoef()override;
 
-      void RungeKutta()override;
+        void RungeKutta()override;
     protected:
         void ComputeCoordTransStruct();//计算结构网格部分的坐标变换系数
         void ComputeCoordTransMid();//计算过渡网格部分的坐标变换系数
@@ -53,16 +53,17 @@ namespace zaran
         void SourceFluxStruct();//计算结构网格部分的源项
         void SourceFluxMid();//计算过渡网格部分的源项
 
-        protected:
+    protected:
         void BoundaryCondition()override;
+
     private:
         Ptr<Grid_Zaran_3D> GetGrid() { return std::static_pointer_cast<Grid_Zaran_3D>(gridList_->GetGrid(gridIndex_)); }
     private:
-    Array<DArray*> m_prim_bound;
-    Array<DArray*> m_prim_bound_gradX;
-    Array<DArray*> m_prim_bound_gradY;
-    Array<DArray*> m_prim_bound_gradZ;
-    Array<DArray*> m_limiter_bound;//边界节点限制器系数
-    
+        Array<DArray*> m_prim_bound;
+        Array<DArray*> m_prim_bound_gradX;
+        Array<DArray*> m_prim_bound_gradY;
+        Array<DArray*> m_prim_bound_gradZ;
+        Array<DArray*> m_limiter_bound;//边界节点限制器系数
+
     };
 }

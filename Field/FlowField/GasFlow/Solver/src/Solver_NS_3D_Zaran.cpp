@@ -243,7 +243,7 @@ namespace zaran
         auto& dt = *m_TimeStep;
         auto& res = m_Residual;
         auto& coordTrans = m_CoordTrans;
-        int n_data = cons.size();
+        int n_data = cons[0]->size();
         for (int iStage = 0; iStage < rkStage; ++iStage)
         {
             ComputeResidual();
@@ -353,7 +353,7 @@ namespace zaran
             neighbor_node_index[5] = CellIndex(i, j, k - 1);
             for (int iNeighbor = 0;iNeighbor < 6;iNeighbor++)
             {
-                if (cell_type[neighbor_node_index[iNeighbor]] == CellType::Fluid)
+                if (cell_type[neighbor_node_index[iNeighbor]] != CellType::Solid)
                     neighbor_node_coord[iNeighbor] = &cell_center_coord[neighbor_node_index[iNeighbor]];
                 else
                     neighbor_node_coord[iNeighbor] = &bound_node_coord[iPatch];
@@ -392,6 +392,8 @@ namespace zaran
             (*coord_trans_coef[30])[iCell] = coordTrans.GetTau()[2];
             (*coord_trans_coef[31])[iCell] = coordTrans.GetTau()[3];
             (*coord_trans_coef[32])[iCell] = coordTrans.J();
+            if(isinf(coordTrans.J()))
+            ZaranLog::error("i:{},j:{},k:{},J:{}", i, j, k, coordTrans.J());
         }
     }
 
@@ -505,7 +507,7 @@ namespace zaran
                         grad(0) = (*primGradX[iVal])[left_index];
                         grad(1) = (*primGradY[iVal])[left_index];
                         grad(2) = (*primGradZ[iVal])[left_index];
-                        riemann_para->primL(iVal) = (*prim[iVal])[iCell] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
+                        riemann_para->primL(iVal) = (*prim[iVal])[left_index] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
                         grad(0) = (*primGradX[iVal])[right_index];
                         grad(1) = (*primGradY[iVal])[right_index];
                         grad(2) = (*primGradZ[iVal])[right_index];
@@ -527,7 +529,7 @@ namespace zaran
                         grad(0) = (*primGradX[iVal])[left_index];
                         grad(1) = (*primGradY[iVal])[left_index];
                         grad(2) = (*primGradZ[iVal])[left_index];
-                        riemann_para->primL(iVal) = (*prim[iVal])[iCell] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
+                        riemann_para->primL(iVal) = (*prim[iVal])[left_index] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
                         grad(0) = (*primGradX[iVal])[right_index];
                         grad(1) = (*primGradY[iVal])[right_index];
                         grad(2) = (*primGradZ[iVal])[right_index];
@@ -553,7 +555,7 @@ namespace zaran
                         grad(0) = (*primGradX[iVal])[left_index];
                         grad(1) = (*primGradY[iVal])[left_index];
                         grad(2) = (*primGradZ[iVal])[left_index];
-                        riemann_para->primL(iVal) = (*prim[iVal])[iCell] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
+                        riemann_para->primL(iVal) = (*prim[iVal])[left_index] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
                         grad(0) = (*primGradX[iVal])[right_index];
                         grad(1) = (*primGradY[iVal])[right_index];
                         grad(2) = (*primGradZ[iVal])[right_index];
@@ -575,7 +577,7 @@ namespace zaran
                         grad(0) = (*primGradX[iVal])[left_index];
                         grad(1) = (*primGradY[iVal])[left_index];
                         grad(2) = (*primGradZ[iVal])[left_index];
-                        riemann_para->primL(iVal) = (*prim[iVal])[iCell] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
+                        riemann_para->primL(iVal) = (*prim[iVal])[left_index] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
                         grad(0) = (*primGradX[iVal])[right_index];
                         grad(1) = (*primGradY[iVal])[right_index];
                         grad(2) = (*primGradZ[iVal])[right_index];
@@ -601,7 +603,7 @@ namespace zaran
                         grad(0) = (*primGradX[iVal])[left_index];
                         grad(1) = (*primGradY[iVal])[left_index];
                         grad(2) = (*primGradZ[iVal])[left_index];
-                        riemann_para->primL(iVal) = (*prim[iVal])[iCell] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
+                        riemann_para->primL(iVal) = (*prim[iVal])[left_index] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
                         grad(0) = (*primGradX[iVal])[right_index];
                         grad(1) = (*primGradY[iVal])[right_index];
                         grad(2) = (*primGradZ[iVal])[right_index];
@@ -623,7 +625,7 @@ namespace zaran
                         grad(0) = (*primGradX[iVal])[left_index];
                         grad(1) = (*primGradY[iVal])[left_index];
                         grad(2) = (*primGradZ[iVal])[left_index];
-                        riemann_para->primL(iVal) = (*prim[iVal])[iCell] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
+                        riemann_para->primL(iVal) = (*prim[iVal])[left_index] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
                         grad(0) = (*primGradX[iVal])[right_index];
                         grad(1) = (*primGradY[iVal])[right_index];
                         grad(2) = (*primGradZ[iVal])[right_index];
@@ -680,8 +682,6 @@ namespace zaran
         riemann_para->gammaL = riemann_para->gammaR = 1.4;
         for (int iPatch = 0;iPatch < bound_patch.GetPatchNum();iPatch++)
         {
-            if (iPatch == 2087)
-                ZaranLog::debug("iPatch = {}", iPatch);
             i = bound_node_index[iPatch][0];
             j = bound_node_index[iPatch][1];
             k = bound_node_index[iPatch][2];
@@ -1060,8 +1060,20 @@ namespace zaran
 
     void Solver_NS_3D_Zaran::BoundaryCondition()
     {
-        //TODO
+		auto& grid = GetGrid();
+		BoundaryMapPtr& boundaryMapPtr = grid->GetBoundaryMap();
+		auto& boundaryMap = boundaryMapPtr->GetBoundaryMap();
+		auto& wallBound = boundaryMap["slipWall"];
+		for (int iBound = 0; iBound < wallBound.size(); ++iBound)
+			ComputeWallBC(wallBound[iBound]);
+		auto& outletBound = boundaryMap["outlet"];
+		for (int iBound = 0; iBound < outletBound.size(); ++iBound)
+			ComputeOutletBC(outletBound[iBound]);
+		auto& inletBound = boundaryMap["inlet"];
+		for (int iBound = 0; iBound < inletBound.size(); ++iBound)
+			ComputeInletBC(inletBound[iBound]);
     }
+
 
 } // namespace zaran
 

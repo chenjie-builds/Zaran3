@@ -307,9 +307,9 @@ namespace zaran {
 		auto& outletBound = boundaryMap["outlet"];
 		for (int iBound = 0; iBound < outletBound.size(); ++iBound)
 			ComputeOutletBC(outletBound[iBound]);
-		auto& inletletBound = boundaryMap["inlet"];
-		for (int iBound = 0; iBound < inletletBound.size(); ++iBound)
-			ComputeInletBC(inletletBound[iBound]);
+		auto& inletBound = boundaryMap["inlet"];
+		for (int iBound = 0; iBound < inletBound.size(); ++iBound)
+			ComputeInletBC(inletBound[iBound]);
 
 	}
 
@@ -352,7 +352,7 @@ namespace zaran {
 			for (int iBound = 0; iBound < bound.size(); ++iBound)
 			{
 				auto& boundIndex = bound[iBound].GetIndex();
-				auto& innerIndex = bound[iBound].GetInnerNodeIndex();
+				auto& innerIndex = bound[iBound].GetInnerIndex();
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
 					(*primGradX[iVal])[boundIndex] = 0;
@@ -515,7 +515,7 @@ namespace zaran {
 		auto& cons3 = *m_Conservative[3];
 		auto& cons4 = *m_Conservative[4];
 		int boundIndex = bound.GetIndex();
-		int innerIndex = bound.GetInnerNodeIndex();
+		int innerIndex = bound.GetInnerIndex();
 		rho[boundIndex] = rho[innerIndex];
 		u[boundIndex] = u[innerIndex];
 		v[boundIndex] = v[innerIndex];
@@ -529,7 +529,7 @@ namespace zaran {
 
 	void NSSolver::ComputeWallBC(Boundary& bound)
 	{
-		int& innerIndex = bound.GetInnerNodeIndex();
+		int& innerIndex = bound.GetInnerIndex();
 		int boundIndex = bound.GetIndex();
 		auto& rho = *m_Primitive[0];
 		auto& u = *m_Primitive[1];
@@ -746,7 +746,7 @@ namespace zaran {
 			for (int iBound = 0; iBound < bound.size(); ++iBound)
 			{
 				auto& boundIndex = bound[iBound].GetIndex();
-				auto& innerIndex = bound[iBound].GetInnerNodeIndex();
+				auto& innerIndex = bound[iBound].GetInnerIndex();
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
 					(*limiterCoef[iVal])[boundIndex] = 0;
