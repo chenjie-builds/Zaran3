@@ -55,6 +55,10 @@ namespace zaran
 
     protected:
         void BoundaryCondition()override;
+        void ComputeOutletBC(Boundary& bound)override;
+        void ComputeInletBC(Boundary& bound)override;
+        void ComputeWallBC(Boundary& bound)override;
+        void ComputeBoundPatchBC();
 
     private:
         Ptr<Grid_Zaran_3D> GetGrid() { return std::static_pointer_cast<Grid_Zaran_3D>(gridList_->GetGrid(gridIndex_)); }

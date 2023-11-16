@@ -392,8 +392,8 @@ namespace zaran
             (*coord_trans_coef[30])[iCell] = coordTrans.GetTau()[2];
             (*coord_trans_coef[31])[iCell] = coordTrans.GetTau()[3];
             (*coord_trans_coef[32])[iCell] = coordTrans.J();
-            if(isinf(coordTrans.J()))
-            ZaranLog::error("i:{},j:{},k:{},J:{}", i, j, k, coordTrans.J());
+            if (isinf(coordTrans.J()))
+                ZaranLog::error("i:{},j:{},k:{},J:{}", i, j, k, coordTrans.J());
         }
     }
 
@@ -1060,18 +1060,143 @@ namespace zaran
 
     void Solver_NS_3D_Zaran::BoundaryCondition()
     {
-		auto& grid = GetGrid();
-		BoundaryMapPtr& boundaryMapPtr = grid->GetBoundaryMap();
-		auto& boundaryMap = boundaryMapPtr->GetBoundaryMap();
-		auto& wallBound = boundaryMap["slipWall"];
-		for (int iBound = 0; iBound < wallBound.size(); ++iBound)
-			ComputeWallBC(wallBound[iBound]);
-		auto& outletBound = boundaryMap["outlet"];
-		for (int iBound = 0; iBound < outletBound.size(); ++iBound)
-			ComputeOutletBC(outletBound[iBound]);
-		auto& inletBound = boundaryMap["inlet"];
-		for (int iBound = 0; iBound < inletBound.size(); ++iBound)
-			ComputeInletBC(inletBound[iBound]);
+        auto& grid = GetGrid();
+        BoundaryMapPtr& boundaryMapPtr = grid->GetBoundaryMap();
+        auto& boundaryMap = boundaryMapPtr->GetBoundaryMap();
+        auto& wallBound = boundaryMap["slipWall"];
+        for (int iBound = 0; iBound < wallBound.size(); ++iBound)
+            ComputeWallBC(wallBound[iBound]);
+        auto& outletBound = boundaryMap["outlet"];
+        for (int iBound = 0; iBound < outletBound.size(); ++iBound)
+            ComputeOutletBC(outletBound[iBound]);
+        auto& inletBound = boundaryMap["inlet"];
+        for (int iBound = 0; iBound < inletBound.size(); ++iBound)
+            ComputeInletBC(inletBound[iBound]);
+        ComputeBoundPatchBC();
+    }
+
+    void Solver_NS_3D_Zaran::ComputeOutletBC(Boundary& bound)
+    {
+        auto& rho = *m_Primitive[0];
+        auto& u = *m_Primitive[1];
+        auto& v = *m_Primitive[2];
+        auto& w = *m_Primitive[3];
+        auto& p = *m_Primitive[4];
+        auto& cons0 = *m_Conservative[0];
+        auto& cons1 = *m_Conservative[1];
+        auto& cons2 = *m_Conservative[2];
+        auto& cons3 = *m_Conservative[3];
+        auto& cons4 = *m_Conservative[4];
+        int boundIndex = bound.GetIndex();
+        int innerIndex = bound.GetInnerIndex();
+        int ghost_index = bound.GetGhostIndex();
+        rho[ghost_index] = rho[innerIndex];
+        u[ghost_index] = u[innerIndex];
+        v[ghost_index] = v[innerIndex];
+        w[ghost_index] = w[innerIndex];
+        p[ghost_index] = p[innerIndex];
+        Primitive2Conservative(rho[ghost_index], u[ghost_index], v[ghost_index], w[ghost_index], p[ghost_index],
+            cons0[ghost_index], cons1[ghost_index], cons2[ghost_index], cons3[ghost_index], cons4[ghost_index]);
+
+    }
+
+    void Solver_NS_3D_Zaran::ComputeInletBC(Boundary& bound)
+    {
+        FlowSolverParaPtr para = GetPara();
+        auto& rho = *m_Primitive[0];
+        auto& u = *m_Primitive[1];
+        auto& v = *m_Primitive[2];
+        auto& w = *m_Primitive[3];
+        auto& p = *m_Primitive[4];
+        auto& cons0 = *m_Conservative[0];
+        auto& cons1 = *m_Conservative[1];
+        auto& cons2 = *m_Conservative[2];
+        auto& cons3 = *m_Conservative[3];
+        auto& cons4 = *m_Conservative[4];
+        int ghost_index = bound.GetGhostIndex();
+        auto& inlet_para = para->GetPrimitiveInflow();
+        rho[ghost_index] = inlet_para[0];
+        u[ghost_index] = inlet_para[1];
+        v[ghost_index] = inlet_para[2];
+        w[ghost_index] = inlet_para[3];
+        p[ghost_index] = inlet_para[4];
+        Primitive2Conservative(rho[ghost_index], u[ghost_index], v[ghost_index], w[ghost_index], p[ghost_index],
+            cons0[ghost_index], cons1[ghost_index], cons2[ghost_index], cons3[ghost_index], cons4[ghost_index]);
+    }
+
+    void Solver_NS_3D_Zaran::ComputeWallBC(Boundary& bound)
+    {
+        int& inner_index = bound.GetInnerIndex();
+        int bound_index = bound.GetIndex();
+        auto& rho = *m_Primitive[0];
+        auto& u = *m_Primitive[1];
+        auto& v = *m_Primitive[2];
+        auto& w = *m_Primitive[3];
+        auto& p = *m_Primitive[4];
+        auto& cons0 = *m_Conservative[0];
+        auto& cons1 = *m_Conservative[1];
+        auto& cons2 = *m_Conservative[2];
+        auto& cons3 = *m_Conservative[3];
+        auto& cons4 = *m_Conservative[4];
+        auto& bound_norm = bound.GetNorm();
+        rho[bound_index] = rho[inner_index];
+        u[bound_index] = u[inner_index];
+        v[bound_index] = v[inner_index];
+        w[bound_index] = w[inner_index];
+        p[bound_index] = p[inner_index];
+        DVector3D inner_vel(u[inner_index], v[inner_index], w[inner_index]);
+        DVector3D bound_vel = inner_vel - (inner_vel.dot(bound_norm)) * bound_norm / (bound_norm.norm() * bound_norm.norm());
+        u[bound_index] = bound_vel(0);
+        v[bound_index] = bound_vel(1);
+        w[bound_index] = bound_vel(2);
+        Primitive2Conservative(rho[bound_index], u[bound_index], v[bound_index], w[bound_index], p[bound_index],
+            cons0[bound_index], cons1[bound_index], cons2[bound_index], cons3[bound_index], cons4[bound_index]);
+    }
+
+    void Solver_NS_3D_Zaran::ComputeBoundPatchBC()
+    {
+        auto& grid = GetGrid();
+        auto& cell_topo = grid->GetCellTopo();
+        auto& cell_type = cell_topo->GetType();
+        auto& cell_center_coord = cell_topo->GetCenterCoord();
+        auto& bound_patch = grid->GetBoundPatch();
+        auto& bound_node_index = bound_patch.GetIndex();
+        auto& bound_node_coord = bound_patch.GetCoordinate();
+        auto& bound_norm = bound_patch.GetNormal();
+
+        auto& prim = m_Primitive;
+        auto& cons = m_Conservative;
+        auto& primGradX = m_PrimGradX;
+        auto& primGradY = m_PrimGradY;
+        auto& primGradZ = m_PrimGradZ;
+        auto& limiterCoef = m_LimiterCoef;
+        auto& res = m_Residual;
+        auto& coordTrans = m_CoordTrans;
+
+        auto& prim_bound = m_prim_bound;
+        auto& prim_bound_gradX = m_prim_bound_gradX;
+        auto& prim_bound_gradY = m_prim_bound_gradY;
+        auto& prim_bound_gradZ = m_prim_bound_gradZ;
+        int i, j, k, iCell;
+        auto CellIndex = [&](int i, int j, int k) {return grid->GetCellIndex(i, j, k); };
+        DVector3D inner_vel, bound_vel;
+        for (int iPatch = 0;iPatch < bound_patch.GetPatchNum();iPatch++)
+        {
+            i = bound_node_index[iPatch][0];
+            j = bound_node_index[iPatch][1];
+            k = bound_node_index[iPatch][2];
+            iCell = CellIndex(i, j, k);
+            (*prim_bound[0])[iPatch] = (*prim[0])[iCell];
+            (*prim_bound[1])[iPatch] = (*prim[1])[iCell];
+            (*prim_bound[2])[iPatch] = (*prim[2])[iCell];
+            (*prim_bound[3])[iPatch] = (*prim[3])[iCell];
+            (*prim_bound[4])[iPatch] = (*prim[4])[iCell];
+            inner_vel = { (*prim[1])[iCell],(*prim[2])[iCell],(*prim[3])[iCell] };
+            bound_vel = inner_vel - (inner_vel.dot(bound_norm[iPatch])) * bound_norm[iPatch] / (bound_norm[iPatch].norm() * bound_norm[iPatch].norm());
+            (*prim_bound[1])[iPatch] = bound_vel(0);
+            (*prim_bound[2])[iPatch] = bound_vel(1);
+            (*prim_bound[3])[iPatch] = bound_vel(2);
+        }
     }
 
 

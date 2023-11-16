@@ -173,7 +173,7 @@ void zaran::GridListFactoryZaran3D::CreateStructPart(Ptr<GridList>& gridList)
 			bound.SetGhostIndex(ghostNodeIndex);
 			boundNorm = cell_center[ghostNodeIndex] - cell_center[cellIndex];
 			bound.SetNorm(boundNorm);
-			boundMap->AddBoundary("wall", bound);
+			boundMap->AddBoundary("outlet", bound);
 			j = yNodeNum - 3;
 			cellIndex = grid->GetCellIndex(i, j, k);
 			bound.SetNodeIndex(cellIndex);
@@ -183,7 +183,7 @@ void zaran::GridListFactoryZaran3D::CreateStructPart(Ptr<GridList>& gridList)
 			bound.SetGhostIndex(ghostNodeIndex);
 			boundNorm = cell_center[ghostNodeIndex] - cell_center[cellIndex];
 			bound.SetNorm(boundNorm);
-			boundMap->AddBoundary("wall", bound);
+			boundMap->AddBoundary("outlet", bound);
 		}
 
 		//j方向
@@ -198,7 +198,7 @@ void zaran::GridListFactoryZaran3D::CreateStructPart(Ptr<GridList>& gridList)
 			bound.SetGhostIndex(ghostNodeIndex);
 			boundNorm = cell_center[ghostNodeIndex] - cell_center[cellIndex];
 			bound.SetNorm(boundNorm);
-			boundMap->AddBoundary("wall", bound);
+			boundMap->AddBoundary("outlet", bound);
 			k = zNodeNum - 3;
 			cellIndex = grid->GetCellIndex(i, j, k);
 			bound.SetNodeIndex(cellIndex);
@@ -208,7 +208,7 @@ void zaran::GridListFactoryZaran3D::CreateStructPart(Ptr<GridList>& gridList)
 			bound.SetGhostIndex(ghostNodeIndex);
 			boundNorm = cell_center[ghostNodeIndex] - cell_center[cellIndex];
 			bound.SetNorm(boundNorm);
-			boundMap->AddBoundary("wall", bound);
+			boundMap->AddBoundary("outlet", bound);
 		}
 	}
 	gridList->AddGrid(grid);
