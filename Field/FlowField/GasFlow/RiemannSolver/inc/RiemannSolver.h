@@ -17,6 +17,6 @@ namespace zaran
 	class RiemannSolver
 	{
 	public:
-		virtual void Solver(Ptr<RiemannSolverPara>& para) = 0;
+		virtual void Solver(RiemannSolverPara& para) = 0;
 	};
 }

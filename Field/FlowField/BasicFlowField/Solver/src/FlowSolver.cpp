@@ -32,13 +32,15 @@ double FlowSolver::ComputeCFL()
 
 void FlowSolver::ZeroResidual()
 {
-	for (auto& res : m_Residual)
+	for (int i = 0;i < m_Residual.size();i++)
 	{
-		for (auto& resData : *res)
+#pragma omp parallel for
+		for (int j = 0;j < m_Residual[i]->size();j++)
 		{
-			resData = 0.0;
+			(*m_Residual[i])[j] = 0.0;
 		}
 	}
+
 }
 
 FlowSolverParaPtr FlowSolver::GetPara()

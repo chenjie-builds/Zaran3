@@ -12,11 +12,13 @@ set(CMAKE_CXX_STANDARD 17)
 function(include_sub_directories_recursively root_dir)
     if(IS_DIRECTORY ${root_dir}) # 当前路径是一个目录吗，是的话就加入到包含目录
         if(${root_dir} MATCHES "inc")
-        #   include_directories(${root_dir})
-          set(inc_dir1 ${root_dir} PARENT_SCOPE)    
+            # include_directories(${root_dir})
+            set(inc_dir1 ${root_dir} PARENT_SCOPE)
         endif()
     endif()
+
     file(GLOB ALL_SUB RELATIVE ${root_dir} ${root_dir}/*) # 获得当前目录下的所有文件，让如ALL_SUB列表中
+
     foreach(sub ${ALL_SUB})
         if(IS_DIRECTORY ${root_dir}/${sub})
             include_sub_directories_recursively(${root_dir}/${sub}) # 对子目录递归调用，包含
@@ -24,6 +26,7 @@ function(include_sub_directories_recursively root_dir)
         endif()
     endforeach()
 endfunction()
+
 include_sub_directories_recursively(${PROJECT_SOURCE_DIR})
 add_executable(Zaran)
 file(GLOB_RECURSE
@@ -35,14 +38,16 @@ file(GLOB_RECURSE
 message(STATUS "source files:" ${src_file})
 target_sources(Zaran PRIVATE ${src_file})
 target_include_directories(Zaran PRIVATE ${inc_dir})
+
 # 程序包含路径
 
 # 程序输出路径
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 
 # OMP并行
-option(USE_OMP "ON to use OMP, OFF to serial" ON)
+option(USE_OMP "ON to use OMP, OFF to serial" OFF)
 
+target_link_libraries(Zaran PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/tecio/lib/tecio.lib)
 if(USE_OMP)
     add_definitions(-DUSE_OMP)
     find_package(OpenMP REQUIRED)

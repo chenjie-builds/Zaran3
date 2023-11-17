@@ -316,6 +316,7 @@ namespace zaran {
 
 	void NSSolver::ComputePrimitiveGradient()
 	{
+		return;
 		FlowSolverParaPtr para = GetPara();
 		if (para->GetGradScheme() == GradScheme::wls)
 		{
@@ -413,6 +414,7 @@ namespace zaran {
 		auto& cons3 = *m_Conservative[3];
 		auto& cons4 = *m_Conservative[4];
 		int n_data = rho.size();
+#pragma omp parallel for
 		for (int iNode = 0; iNode < n_data; ++iNode)
 			Primitive2Conservative(rho[iNode], u[iNode], v[iNode], w[iNode], p[iNode], cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode]);
 	}
@@ -443,6 +445,7 @@ namespace zaran {
 		auto& cons3 = *m_Conservative[3];
 		auto& cons4 = *m_Conservative[4];
 		auto& inflowPrim = GetPara()->GetPrimitiveInflow();
+#pragma omp parallel for
 		for (int iNode = 0; iNode < rho.size(); ++iNode)
 		{
 			Conservative2Primitive(cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode], rho[iNode], u[iNode], v[iNode], w[iNode], p[iNode]);
@@ -558,6 +561,7 @@ namespace zaran {
 
 	void NSSolver::ComputeLimiterCoef()
 	{
+		return;
 		string limiterType = GlobalData::GetString("limiterType");
 		if (limiterType == "vk")
 			ComputeLimiterCoefVK();

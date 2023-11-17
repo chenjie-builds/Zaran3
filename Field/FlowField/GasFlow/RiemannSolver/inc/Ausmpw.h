@@ -16,6 +16,6 @@ namespace zaran
 	class Ausmpw :public RiemannSolver
 	{
 	public:
-		void Solver(Ptr<RiemannSolverPara>& para)override;
+		void Solver(RiemannSolverPara& para)override;
 	};
 }
