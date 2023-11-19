@@ -74,7 +74,7 @@ void Vanleer::Solver(RiemannSolverPara& para)
 			+ 2 * para.cR * para.cR / (para.gammaR * para.gammaR - 1)
 			+ 0.5 * para.v2R - para.nt * (-para.vnR / deltaNorm - 2 * para.cR) / para.gammaR);
 	}
-	if(isnan(para.flux[0]) || isnan(para.flux[1]) || isnan(para.flux[2]) || isnan(para.flux[3]) || isnan(para.flux[4]))
+	if (isnan(para.flux[0]) || isnan(para.flux[1]) || isnan(para.flux[2]) || isnan(para.flux[3]) || isnan(para.flux[4]))
 	{
 
 		ZaranLog::info("Vanleer solver");
@@ -82,7 +82,9 @@ void Vanleer::Solver(RiemannSolverPara& para)
 		ZaranLog::info("rhoR:{},uR:{},vR:{},wR:{},pR:{}", rhoR, uR, vR, wR, pR);
 		ZaranLog::info("norm:{},{},{}", para.norm[0], para.norm[1], para.norm[2]);
 		ZaranLog::info("nt:{}", para.nt);
-		ZaranLog::info("cpu_index:{}",omp_get_thread_num());
+#ifdef USE_OMP
+		ZaranLog::info("cpu_index:{}", omp_get_thread_num());
+#endif // DEBUG
 		ZaranLog::info("flux:{},{},{},{},{}", para.flux[0], para.flux[1], para.flux[2], para.flux[3], para.flux[4]);
 		ZaranLog::info("cL:{},cR:{}", para.cL, para.cR);
 		ZaranLog::info("v2L:{},v2R:{}", para.v2L, para.v2R);
@@ -92,4 +94,5 @@ void Vanleer::Solver(RiemannSolverPara& para)
 		ZaranLog::info("gammaL:{},gammaR:{}", para.gammaL, para.gammaR);
 		ZaranLog::info("deltaNorm:{}", deltaNorm);
 	}
+
 }

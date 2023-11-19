@@ -6,6 +6,7 @@
 #include"CellTopoInfoZaran.h"
 #include <vtkImplicitPolyDataDistance.h>
 #include<vtkCellLocator.h>
+#include "MathBasic.h"
 #include<fstream>
 void zaran::GridListFactoryZaran3D::Create(Ptr<GridList>& gridList)
 {
@@ -219,6 +220,7 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 	Ptr<zaran::Grid_Zaran_3D> grid = std::static_pointer_cast<Grid_Zaran_3D>(gridList->GetGrid(0));
 	auto cellTopo = std::static_pointer_cast<CellTopoInfoZaran>(grid->GetCellTopo());
 	auto& cell_type = cellTopo->GetType();
+	auto& cell_center = cellTopo->GetCenterCoord();
 	int ni, nj, nk;
 	grid->GetNodeNum(ni, nj, nk);
 	cell_type.resize((ni - 1) * (nj - 1) * (nk - 1));
@@ -228,7 +230,6 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 	double dx = (x_max - x_min) / (ni - 1);
 	double dy = (y_max - y_min) / (nj - 1);
 	double dz = (z_max - z_min) / (nk - 1);
-	DVector3D cell_center;
 	DArray dist_cell_to_model;//单元中心到模型的距离
 	dist_cell_to_model.resize((cell_type.size()));
 	IArray cell_in_model;//单元中心是否在模型内
@@ -237,14 +238,10 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 	auto poly_data = m_polyDataModel->GetPolyData();
 	vtkSmartPointer<vtkImplicitPolyDataDistance> implicitPolyDataDistance = vtkSmartPointer<vtkImplicitPolyDataDistance>::New();
 	implicitPolyDataDistance->SetInput(poly_data);
-#pragma omp parallel for private(i,j,k,cell_center)
+#pragma omp parallel for
 	for (int iCell = 0;iCell < cell_type.size();++iCell)
 	{
-		grid->GetCellIndex(iCell, i, j, k);
-		cell_center[0] = (i + 0.5) * dx + x_min;
-		cell_center[1] = (j + 0.5) * dy + y_min;
-		cell_center[2] = (k + 0.5) * dz + z_min;
-		dist_cell_to_model[iCell] = abs(implicitPolyDataDistance->FunctionValue(cell_center.data()));
+		dist_cell_to_model[iCell] = abs(implicitPolyDataDistance->FunctionValue(cell_center[iCell].data()));
 	}
 	double tol = 0.5 * sqrt(dx * dx + dy * dy + dz * dz);
 	for (int iCell = 0;iCell < cell_type.size();++iCell)
@@ -312,13 +309,13 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 	while (n_new_solid != 0)
 	{
 		n_new_solid = 0;
-		for ( k = 1; k < nk - 1; ++k)
+		for (k = 1; k < nk - 1; ++k)
 		{
-			for ( j = 1; j < nj - 1; ++j)
+			for (j = 1; j < nj - 1; ++j)
 			{
-				for ( i = 1; i < ni - 1; ++i)
+				for (i = 1; i < ni - 1; ++i)
 				{
-					iCell= grid->GetCellIndex(i, j, k);
+					iCell = grid->GetCellIndex(i, j, k);
 					if (cell_type[iCell] != CellType::Fluid)
 						continue;
 					if (cell_type[grid->GetCellIndex(i - 1, j, k)] == CellType::Solid &&
@@ -414,11 +411,11 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 	fout << "ZONE T= grid_" << grid->GetName() << std::endl;
 	fout << "I=" << ni << ", J=" << nj << ", K=" << nk << ", DATAPACKING=BLOCK, VARLOCATION=([4]=CELLCENTERED)" << std::endl;
 	int count = 0;
-	for ( k = 0; k < nk; ++k)
+	for (k = 0; k < nk; ++k)
 	{
-		for ( j = 0; j < nj; ++j)
+		for (j = 0; j < nj; ++j)
 		{
-			for ( i = 0; i < ni; ++i)
+			for (i = 0; i < ni; ++i)
 			{
 				fout << x_min + i * dx << " ";
 				if (++count % 10 == 0)
@@ -429,11 +426,11 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 			}
 		}
 	}
-	for ( k = 0; k < nk; ++k)
+	for (k = 0; k < nk; ++k)
 	{
-		for ( j = 0; j < nj; ++j)
+		for (j = 0; j < nj; ++j)
 		{
-			for ( i = 0; i < ni; ++i)
+			for (i = 0; i < ni; ++i)
 			{
 				fout << y_min + j * dy << " ";
 				if (++count % 10 == 0)
@@ -444,11 +441,11 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 			}
 		}
 	}
-	for ( k = 0; k < nk; ++k)
+	for (k = 0; k < nk; ++k)
 	{
-		for ( j = 0; j < nj; ++j)
+		for (j = 0; j < nj; ++j)
 		{
-			for ( i = 0; i < ni; ++i)
+			for (i = 0; i < ni; ++i)
 			{
 				fout << z_min + k * dz << " ";
 				if (++count % 10 == 0)
@@ -459,11 +456,11 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 			}
 		}
 	}
-	for ( k = 0; k < nk - 1; ++k)
+	for (k = 0; k < nk - 1; ++k)
 	{
-		for ( j = 0; j < nj - 1; ++j)
+		for (j = 0; j < nj - 1; ++j)
 		{
-			for ( i = 0; i < ni - 1; ++i)
+			for (i = 0; i < ni - 1; ++i)
 			{
 				fout << int(cell_type[grid->GetCellIndex(i, j, k)]) << " ";
 				// fout << dist_cell_to_model[grid->GetCellIndex(i, j, k)] << " ";
@@ -486,6 +483,7 @@ void zaran::GridListFactoryZaran3D::CrateBoundPatch(Ptr<GridList>& gridList)
 	Ptr<zaran::Grid_Zaran_3D> grid = std::static_pointer_cast<Grid_Zaran_3D>(gridList->GetGrid(0));
 	auto cellTopo = std::static_pointer_cast<CellTopoInfoZaran>(grid->GetCellTopo());
 	auto& cell_type = cellTopo->GetType();
+	auto& cell_center = cellTopo->GetCenterCoord();
 	int ni, nj, nk;
 	grid->GetNodeNum(ni, nj, nk);
 	int i, j, k;
@@ -518,21 +516,20 @@ void zaran::GridListFactoryZaran3D::CrateBoundPatch(Ptr<GridList>& gridList)
 	vtkIdType cellId; // the cell id of the cell containing the closest point will
 	// be returned here
 	int subId;        // this is rarely used (in triangle strips only, I believe)
-	double cell_center[3];
 	int iBound = 0;
+	double tol = 0.5 * sqrt(dx * dx + dy * dy + dz * dz);
+	double dist;
 	for (int iCell = 0;iCell < cell_type.size();iCell++)
 	{
 		if (cell_type[iCell] != CellType::FluidSolid)
 			continue;
 		grid->GetCellIndex(iCell, i, j, k);
-		cell_center[0] = (i + 0.5) * dx + x_min;
-		cell_center[1] = (j + 0.5) * dy + y_min;
-		cell_center[2] = (k + 0.5) * dz + z_min;
-		cellLocator->FindClosestPoint(cell_center, closestPoint, cellId, subId,
+		cellLocator->FindClosestPoint(cell_center[iCell].data(), closestPoint, cellId, subId,
 			closestPointDist2);
 		mid_index[iBound] = { i,j,k };
 		bound_coord[iBound] = { closestPoint[0],closestPoint[1],closestPoint[2] };
-		bound_norm[iBound] = { cell_center[0] - closestPoint[0],cell_center[1] - closestPoint[1],cell_center[2] - closestPoint[2] };
+		bound_norm[iBound] = { cell_center[iCell][0] - closestPoint[0],cell_center[iCell][1] - closestPoint[1],cell_center[iCell][2] - closestPoint[2] };
+		dist = sqrt(bound_norm[iBound][0] * bound_norm[iBound][0] + bound_norm[iBound][1] * bound_norm[iBound][1] + bound_norm[iBound][2] * bound_norm[iBound][2]);
 		bound_norm[iBound].normalize();
 		iBound++;
 	}

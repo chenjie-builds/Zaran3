@@ -45,7 +45,7 @@ target_include_directories(Zaran PRIVATE ${inc_dir})
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 
 # OMP并行
-option(USE_OMP "ON to use OMP, OFF to serial" OFF)
+option(USE_OMP "ON to use OMP, OFF to serial" ON)
 
 target_link_libraries(Zaran PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/tecio/lib/tecio.lib)
 if(USE_OMP)

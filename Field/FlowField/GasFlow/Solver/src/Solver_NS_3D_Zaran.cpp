@@ -248,7 +248,7 @@ namespace zaran
         for (int iStage = 0; iStage < rkStage; ++iStage)
         {
             ComputeResidual();
-             #pragma omp parallel for
+#pragma omp parallel for
             for (int iNode = 0; iNode < n_data; ++iNode)
             {
                 for (int iVal = 0; iVal < 5; ++iVal)
@@ -440,7 +440,7 @@ namespace zaran
                 for (int i = is; i < ie - 1; i++)
                 {
                     iCell = CellIndex(i, j, k);
-                    if (cell_type[iCell] != CellType::Fluid)
+                    if (cell_type[iCell] != CellType::Fluid && cell_type[iCell] != CellType::FluidSolid)
                         continue;
                     double c = sqrt(gamma * p[iCell] / rho[iCell]);
                     double normXi = sqrt((*coordTrans[16])[iCell] * (*coordTrans[16])[iCell] + (*coordTrans[17])[iCell] * (*coordTrans[17])[iCell] + (*coordTrans[18])[iCell] * (*coordTrans[19])[iCell]);
@@ -644,11 +644,14 @@ namespace zaran
 
                     if (isnan((*res[0])[iCell]) || isnan((*res[1])[iCell]) || isnan((*res[2])[iCell]) || isnan((*res[3])[iCell]) || isnan((*res[4])[iCell]))
                     {
+#ifdef USE_OMP
+
                         ZaranLog::error("i:{},j:{},k:{},cpu_index:{}", i, j, k, omp_get_thread_num());
+#endif // DEBUG
                         ZaranLog::error("primL:{},{},{},{},{}", riemann_para.primL(0), riemann_para.primL(1), riemann_para.primL(2), riemann_para.primL(3), riemann_para.primL(4));
                         ZaranLog::error("primR:{},{},{},{},{}", riemann_para.primR(0), riemann_para.primR(1), riemann_para.primR(2), riemann_para.primR(3), riemann_para.primR(4));
                         ZaranLog::error("flux:{},{},{},{},{}", riemann_para.flux(0), riemann_para.flux(1), riemann_para.flux(2), riemann_para.flux(3), riemann_para.flux(4));
-                        ZaranLog::error("norm:{},{},{}", riemann_para.norm(0), riemann_para.norm(1), riemann_para.norm(2)); 
+                        ZaranLog::error("norm:{},{},{}", riemann_para.norm(0), riemann_para.norm(1), riemann_para.norm(2));
                         exit(0);
                     }
                 }
@@ -712,12 +715,11 @@ namespace zaran
             coord_left = cell_center_coord[left_index];
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
-                prim_left[iVal] = (*prim[iVal])[iCell];
+                prim_left[iVal] = (*prim[iVal])[left_index];
                 prim_left_gradX[iVal] = (*primGradX[iVal])[left_index];
                 prim_left_gradY[iVal] = (*primGradY[iVal])[left_index];
                 prim_left_gradZ[iVal] = (*primGradZ[iVal])[left_index];
                 limiterCoef_left[iVal] = (*limiterCoef[iVal])[left_index];
-
             }
             if (cell_type[right_index] == CellType::Solid)
             {
@@ -765,7 +767,7 @@ namespace zaran
 
             left_index = CellIndex(i - 1, j, k);
             right_index = CellIndex(i, j, k);
-            coord_right = cell_center_coord[left_index];
+            coord_right = cell_center_coord[right_index];
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
                 prim_right[iVal] = (*prim[iVal])[right_index];
@@ -828,7 +830,7 @@ namespace zaran
             coord_left = cell_center_coord[left_index];
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
-                prim_left[iVal] = (*prim[iVal])[iCell];
+                prim_left[iVal] = (*prim[iVal])[left_index];
                 prim_left_gradX[iVal] = (*primGradX[iVal])[left_index];
                 prim_left_gradY[iVal] = (*primGradY[iVal])[left_index];
                 prim_left_gradZ[iVal] = (*primGradZ[iVal])[left_index];
@@ -881,7 +883,7 @@ namespace zaran
 
             left_index = CellIndex(i, j - 1, k);
             right_index = CellIndex(i, j, k);
-            coord_right = cell_center_coord[left_index];
+            coord_right = cell_center_coord[right_index];
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
                 prim_right[iVal] = (*prim[iVal])[right_index];
@@ -944,7 +946,7 @@ namespace zaran
             coord_left = cell_center_coord[left_index];
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
-                prim_left[iVal] = (*prim[iVal])[iCell];
+                prim_left[iVal] = (*prim[iVal])[left_index];
                 prim_left_gradX[iVal] = (*primGradX[iVal])[left_index];
                 prim_left_gradY[iVal] = (*primGradY[iVal])[left_index];
                 prim_left_gradZ[iVal] = (*primGradZ[iVal])[left_index];
@@ -997,7 +999,7 @@ namespace zaran
 
             left_index = CellIndex(i, j, k - 1);
             right_index = CellIndex(i, j, k);
-            coord_right = cell_center_coord[left_index];
+            coord_right = cell_center_coord[right_index];
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
                 prim_right[iVal] = (*prim[iVal])[right_index];
@@ -1105,11 +1107,11 @@ namespace zaran
         int boundIndex = bound.GetIndex();
         int innerIndex = bound.GetInnerIndex();
         int ghost_index = bound.GetGhostIndex();
-        rho[ghost_index] = rho[innerIndex];
-        u[ghost_index] = u[innerIndex];
-        v[ghost_index] = v[innerIndex];
-        w[ghost_index] = w[innerIndex];
-        p[ghost_index] = p[innerIndex];
+        rho[ghost_index] = rho[boundIndex];
+        u[ghost_index] = u[boundIndex];
+        v[ghost_index] = v[boundIndex];
+        w[ghost_index] = w[boundIndex];
+        p[ghost_index] = p[boundIndex];
         Primitive2Conservative(rho[ghost_index], u[ghost_index], v[ghost_index], w[ghost_index], p[ghost_index],
             cons0[ghost_index], cons1[ghost_index], cons2[ghost_index], cons3[ghost_index], cons4[ghost_index]);
 
@@ -1195,13 +1197,15 @@ namespace zaran
         int i, j, k, iCell;
         auto CellIndex = [&](int i, int j, int k) {return grid->GetCellIndex(i, j, k); };
         DVector3D inner_vel, bound_vel;
-#pragma omp parallel for private(iCell, i, j, k, inner_vel, bound_vel)
+        // #pragma omp parallel for private(iCell, i, j, k, inner_vel, bound_vel)
         for (int iPatch = 0;iPatch < bound_patch.GetPatchNum();iPatch++)
         {
+
             i = bound_node_index[iPatch][0];
             j = bound_node_index[iPatch][1];
             k = bound_node_index[iPatch][2];
             iCell = CellIndex(i, j, k);
+            // ZaranLog::info("iPatch:{},iCell:{},inner prim:{},{},{},{},{}", iPatch, iCell, (*prim[0])[iCell], (*prim[1])[iCell], (*prim[2])[iCell], (*prim[3])[iCell], (*prim[4])[iCell]);
             (*prim_bound[0])[iPatch] = (*prim[0])[iCell];
             (*prim_bound[1])[iPatch] = (*prim[1])[iCell];
             (*prim_bound[2])[iPatch] = (*prim[2])[iCell];
@@ -1209,6 +1213,9 @@ namespace zaran
             (*prim_bound[4])[iPatch] = (*prim[4])[iCell];
             inner_vel = { (*prim[1])[iCell],(*prim[2])[iCell],(*prim[3])[iCell] };
             bound_vel = inner_vel - (inner_vel.dot(bound_norm[iPatch])) * bound_norm[iPatch] / (bound_norm[iPatch].norm() * bound_norm[iPatch].norm());
+            (*prim_bound[1])[iPatch] = bound_vel(0);
+            (*prim_bound[2])[iPatch] = bound_vel(1);
+            (*prim_bound[3])[iPatch] = bound_vel(2);
             (*prim_bound[1])[iPatch] = bound_vel(0);
             (*prim_bound[2])[iPatch] = bound_vel(1);
             (*prim_bound[3])[iPatch] = bound_vel(2);

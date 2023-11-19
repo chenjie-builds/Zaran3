@@ -425,10 +425,11 @@ void zaran::Visual::WriteTecplotZaran3DBinary(Ptr<FieldSolver>& solver)
 	int n_node = (ie - is) * (je - js) * (ke - ks);
 	int n_cell = (ie - is - 1) * (je - js - 1) * (ke - ks - 1);
 	DArray x(n_node), y(n_node), z(n_node), density(n_cell), x_vel(n_cell), y_vel(n_cell), z_vel(n_cell), pressure(n_cell);
+	IArray cell_type_array(n_cell);
 	int step = GlobalData::GetInt("step");
 	std::string file_name = "result/" + std::to_string(step) + ".plt";
 	string zone_name = "grid_" + grid->GetName();
-	string var_name = "x y z rho u v w p";
+	string var_name = "x y z rho u v w p cell_type";
 	double solution_time = GlobalData::GetDouble("globalTime");
 	int node_index = 0;
 	for (int k = ks; k < ke; ++k)
@@ -457,11 +458,12 @@ void zaran::Visual::WriteTecplotZaran3DBinary(Ptr<FieldSolver>& solver)
 				y_vel[cell_index] = v[grid->GetCellIndex(i, j, k)];
 				z_vel[cell_index] = w[grid->GetCellIndex(i, j, k)];
 				pressure[cell_index] = p[grid->GetCellIndex(i, j, k)];
+				cell_type_array[cell_index] = (int)cell_type[grid->GetCellIndex(i, j, k)];
 			}
 		}
 	}
 
-	int value_location[8] = { 1,1,1,0,0,0,0,0 };
+	int value_location[9] = { 1,1,1,0,0,0,0,0,0 };
 	INTEGER4 file_format = 0;
 	INTEGER4 Debug = 0;
 	INTEGER4 VIsDouble = 1;
@@ -521,7 +523,8 @@ void zaran::Visual::WriteTecplotZaran3DBinary(Ptr<FieldSolver>& solver)
 	i = TECDAT142(&n_cell, y_vel.data(), &VIsDouble);
 	i = TECDAT142(&n_cell, z_vel.data(), &VIsDouble);
 	i = TECDAT142(&n_cell, pressure.data(), &VIsDouble);
-
+	VIsDouble = 0;
+	i = TECDAT142(&n_cell, cell_type_array.data(), &VIsDouble);
 	i = TECEND142();
 }
 
