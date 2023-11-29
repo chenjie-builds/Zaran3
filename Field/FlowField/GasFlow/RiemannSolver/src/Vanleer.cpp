@@ -15,7 +15,7 @@ void Vanleer::Solver(RiemannSolverPara& para)
 	double& wR = para.primR(3);
 	double& pR = para.primR(4);
 	double deltaNorm = para.norm.norm();
-	//º∆À„FL+
+	//FL+
 	para.cL = sqrt(para.gammaL * pL / rhoL);
 	para.v2L = uL * uL + vL * vL + wL * wL;
 	para.vnL = uL * para.norm(0) + vL * para.norm(1) + wL * para.norm(2) + para.nt;
@@ -45,7 +45,7 @@ void Vanleer::Solver(RiemannSolverPara& para)
 			+ 2 * para.cL * para.cL / (para.gammaL * para.gammaL - 1)
 			+ 0.5 * para.v2L - para.nt * (-para.vnL / deltaNorm + 2 * para.cL) / para.gammaL);
 	}
-	//º∆À„FR-
+	//FR-
 	para.cR = sqrt(para.gammaR * pR / rhoR);
 	para.v2R = uR * uR + vR * vR + wR * wR;
 	para.vnR = uR * para.norm(0) + vR * para.norm(1) + wR * para.norm(2) + para.nt;
@@ -73,26 +73,6 @@ void Vanleer::Solver(RiemannSolverPara& para)
 		para.flux[4] += fluxMass * deltaNorm * (para.vnR / deltaNorm * (-para.vnR / deltaNorm - 2 * para.cR) / (para.gammaR + 1)
 			+ 2 * para.cR * para.cR / (para.gammaR * para.gammaR - 1)
 			+ 0.5 * para.v2R - para.nt * (-para.vnR / deltaNorm - 2 * para.cR) / para.gammaR);
-	}
-	if (isnan(para.flux[0]) || isnan(para.flux[1]) || isnan(para.flux[2]) || isnan(para.flux[3]) || isnan(para.flux[4]))
-	{
-
-		ZaranLog::info("Vanleer solver");
-		ZaranLog::info("rhoL:{},uL:{},vL:{},wL:{},pL:{}", rhoL, uL, vL, wL, pL);
-		ZaranLog::info("rhoR:{},uR:{},vR:{},wR:{},pR:{}", rhoR, uR, vR, wR, pR);
-		ZaranLog::info("norm:{},{},{}", para.norm[0], para.norm[1], para.norm[2]);
-		ZaranLog::info("nt:{}", para.nt);
-#ifdef USE_OMP
-		ZaranLog::info("cpu_index:{}", omp_get_thread_num());
-#endif // DEBUG
-		ZaranLog::info("flux:{},{},{},{},{}", para.flux[0], para.flux[1], para.flux[2], para.flux[3], para.flux[4]);
-		ZaranLog::info("cL:{},cR:{}", para.cL, para.cR);
-		ZaranLog::info("v2L:{},v2R:{}", para.v2L, para.v2R);
-		ZaranLog::info("vnL:{},vnR:{}", para.vnL, para.vnR);
-		ZaranLog::info("machL:{},machR:{}", para.machL, para.machR);
-		ZaranLog::info("eL:{},eR:{}", para.eL, para.eR);
-		ZaranLog::info("gammaL:{},gammaR:{}", para.gammaL, para.gammaR);
-		ZaranLog::info("deltaNorm:{}", deltaNorm);
 	}
 
 }

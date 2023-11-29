@@ -48,8 +48,8 @@ namespace zaran
 		int total_node_num = grid->GetTotalNodeNum();
 		for (int iNode = 0; iNode < total_node_num; ++iNode)
 		{
-			rho[iNode] = prim_init[0];
-			u[iNode] = 0;
+			rho[iNode] = 1+0.2*coord[iNode].y();
+			u[iNode] = 3.0;
 			v[iNode] = 0;
 			w[iNode] = 0;
 			p[iNode] = prim_init[4];

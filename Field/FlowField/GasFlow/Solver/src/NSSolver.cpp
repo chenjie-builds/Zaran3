@@ -29,8 +29,8 @@ namespace zaran {
 		}
 		else
 		{
-			ZaranLog::warn("流场初始化失败!");
-			ZaranLog::warn("初始化流场参数设置错误:{}", initType);
+			ZaranLog::warn("Initialize Failed!");
+			ZaranLog::warn("Wrong Flow field init parameter:{}", initType);
 			exit(0);
 		}
 		int n_data = rho.size();
@@ -144,7 +144,7 @@ namespace zaran {
 
 		auto& data = *GetFieldData();
 
-		// 预分配内存
+		// 预锟斤拷锟斤拷锟节达拷
 		m_Primitive.reserve(5);
 		m_Conservative.reserve(5);
 		m_Residual.reserve(5);
@@ -262,7 +262,7 @@ namespace zaran {
 	{
 		GlobalData::Update("dt", LARGE_NUMBER);
 		ComputeTimeStepLocal();
-		//是否使用全局时间步
+		//锟角凤拷使锟斤拷全锟斤拷时锟戒步
 		int useGlobalTimeStep = GlobalData::GetInt("useGlobalTimeStep");
 		if (useGlobalTimeStep == 1)
 		{
@@ -316,7 +316,6 @@ namespace zaran {
 
 	void NSSolver::ComputePrimitiveGradient()
 	{
-		return;
 		FlowSolverParaPtr para = GetPara();
 		if (para->GetGradScheme() == GradScheme::wls)
 		{
@@ -561,7 +560,6 @@ namespace zaran {
 
 	void NSSolver::ComputeLimiterCoef()
 	{
-		return;
 		string limiterType = GlobalData::GetString("limiterType");
 		if (limiterType == "vk")
 			ComputeLimiterCoefVK();

@@ -34,7 +34,9 @@ file(GLOB_RECURSE
     Factory/*.cpp
     Basic/*.cpp
     Field/*.cpp
-    Main/*.cpp)
+    Main/*.cpp
+    Test/*.cpp
+    )
 message(STATUS "source files:" ${src_file})
 target_sources(Zaran PRIVATE ${src_file})
 target_include_directories(Zaran PRIVATE ${inc_dir})

@@ -52,9 +52,9 @@ void Controller::SaveDataTecplot()
     {
         auto& currentSolver = m_field[iField]->GetSolver();
         // visual_->WriteTecplot(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
-        // m_visual->WriteTecplot2D(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
+        m_visual->WriteTecplot2D(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
         //  m_visual->WriteTecplotZaran3D(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
-        m_visual->WriteTecplotZaran3DBinary(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
+        // m_visual->WriteTecplotZaran3DBinary(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
     }
 }
 void Controller::SaveDataVTK(std::ostream& os)
