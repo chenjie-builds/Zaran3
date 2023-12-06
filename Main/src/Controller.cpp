@@ -51,8 +51,8 @@ void Controller::SaveDataTecplot()
     for (size_t iField = 0; iField < m_field.size(); iField++)
     {
         auto& currentSolver = m_field[iField]->GetSolver();
-        // visual_->WriteTecplot(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
-        m_visual->WriteTecplot2D(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
+        m_visual->WriteTecplot(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
+        // m_visual->WriteTecplot2D(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
         //  m_visual->WriteTecplotZaran3D(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
         // m_visual->WriteTecplotZaran3DBinary(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
     }
