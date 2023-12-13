@@ -296,6 +296,60 @@ namespace zaran {
 		RungeKutta();
 	}
 
+	void NSSolver::MidPointReconstruct(int index_left, int index_right, double* value_rec_left, double* value_rec_right)
+	{
+		GridPtr grid = GetGrid();
+		auto& nodeTopo = grid->GetNodeTopo();
+		auto& nodeCoord = nodeTopo->GetCoordinate();
+		auto& prim = m_Primitive;
+		auto& cons = m_Conservative;
+		auto& primGradX = m_PrimGradX;
+		auto& primGradY = m_PrimGradY;
+		auto& primGradZ = m_PrimGradZ;
+		auto& limiterCoef = m_LimiterCoef;
+		DVector3D r = nodeCoord[index_right] - nodeCoord[index_left];
+		for (int iVal = 0;iVal < GetNumberOfEquations();++iVal)
+		{
+			value_rec_left[iVal] = (*prim[iVal])[index_left] +
+				0.5 * (*limiterCoef[iVal])[index_left] *
+				(r.x() * (*primGradX[iVal])[index_left] +
+					r.y() * (*primGradY[iVal])[index_left] +
+					r.z() * (*primGradZ[iVal])[index_left]);
+			value_rec_right[iVal] = (*prim[iVal])[index_right] -
+				0.5 * (*limiterCoef[iVal])[index_right] *
+				(r.x() * (*primGradX[iVal])[index_right] +
+					r.y() * (*primGradY[iVal])[index_right] +
+					r.z() * (*primGradZ[iVal])[index_right]);
+		}
+#if 1
+		//check negative pressure and density
+		for (int iVal = 0;iVal < GetNumberOfEquations();++iVal)
+		{
+			if (value_rec_left[0] < 0)
+			{
+				ZaranLog::warn("Negative density at node {}", index_left);
+				value_rec_left[0] = (*prim[0])[index_left];
+			}
+			if (value_rec_right[0] < 0)
+			{
+				ZaranLog::warn("Negative density at node {}", index_right);
+				value_rec_right[0] = (*prim[0])[index_right];
+			}
+			if (value_rec_left[4] < 0)
+			{
+				ZaranLog::warn("Negative pressure at node {}", index_left);
+				value_rec_left[4] = (*prim[4])[index_left];
+			}
+			if (value_rec_right[4] < 0)
+			{
+				ZaranLog::warn("Negative pressure at node {}", index_right);
+				value_rec_right[4] = (*prim[4])[index_right];
+			}
+		}
+#endif
+
+	}
+
 	void NSSolver::BoundaryCondition()
 	{
 		GridPtr& grid = GetGrid();

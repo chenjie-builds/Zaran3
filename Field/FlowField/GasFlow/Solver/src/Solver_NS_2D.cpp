@@ -48,7 +48,7 @@ namespace zaran
 		int total_node_num = grid->GetTotalNodeNum();
 		for (int iNode = 0; iNode < total_node_num; ++iNode)
 		{
-			rho[iNode] = 1+0.2*coord[iNode].y();
+			rho[iNode] = 1 + 0.2 * coord[iNode].y();
 			u[iNode] = 3.0;
 			v[iNode] = 0;
 			w[iNode] = 0;
@@ -233,7 +233,7 @@ namespace zaran
 		double delta_x, delta_y;
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
-			if(node_type[iNode]==NodeType::undefined)
+			if (node_type[iNode] == NodeType::undefined)
 				continue;
 			auto& current_coord = coord[iNode];
 			auto& current_neighbor = neighbor[iNode];
@@ -283,7 +283,7 @@ namespace zaran
 		{
 
 			double gamma = 1.4;
-			if (node_type[iNode] != NodeType::inner&&node_type[iNode] != NodeType::hole)
+			if (node_type[iNode] != NodeType::inner && node_type[iNode] != NodeType::hole)
 				continue;
 			double c = sqrt(gamma * p[iNode] / rho[iNode]);
 			double normXi = sqrt((*coord_trans_coef[16])[iNode] * (*coord_trans_coef[16])[iNode] + (*coord_trans_coef[17])[iNode] * (*coord_trans_coef[17])[iNode] + (*coord_trans_coef[18])[iNode] * (*coord_trans_coef[19])[iNode]);
@@ -302,83 +302,43 @@ namespace zaran
 		GridPtr grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
 		auto& node_type = node_topo->GetType();
+		auto& node_coord = node_topo->GetCoordinate();
 		auto& template_i = node_topo->GetTemplateI();
 		auto& template_j = node_topo->GetTemplateJ();
-		auto& coord = node_topo->GetCoordinate();
-		auto& prim = m_Primitive;
-		auto& cons = m_Conservative;
-		auto& prim_grad_x = m_PrimGradX;
-		auto& prim_grad_y = m_PrimGradY;
-		auto& limiter_coef = m_LimiterCoef;
 		auto& res = m_Residual;
-		auto& coord_trans_coef = m_CoordTrans;
-		int inner_node_num = grid->GetInnerNodeNum();
-		int bound_node_num = grid->GetBoundNodeNum();
-		DVector2D r, grad;
 		RiemannSolverPara riemann_para;
 		riemann_para.gammaL = riemann_para.gammaR = 1.4;
 		for (size_t iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
 			if (node_type[iNode] != NodeType::inner)
 				continue;
-			auto& jacobi = (*coord_trans_coef[32])[iNode];
+			auto& jacobi = (*m_CoordTrans[32])[iNode];
 			// i direction
-			riemann_para.norm(0) = (*coord_trans_coef[16])[iNode];
-			riemann_para.norm(1) = (*coord_trans_coef[17])[iNode];
-			riemann_para.norm(2) = 0;
-			riemann_para.nt = (*coord_trans_coef[19])[iNode];
-			auto& tempI = template_i[iNode];
-			r[0] = coord[tempI[2]][0] - coord[iNode][0];
-			r[1] = coord[tempI[2]][1] - coord[iNode][1];
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-			{
-				riemann_para.primL(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiter_coef[iVal])[iNode] * (r[0] * (*prim_grad_x[iVal])[iNode] + r[1] * (*prim_grad_y[iVal])[iNode]);
-				riemann_para.primR(iVal) = (*prim[iVal])[tempI[2]] - 0.5 * (*limiter_coef[iVal])[tempI[2]] * (r[0] * (*prim_grad_x[iVal])[tempI[2]] + r[1] * (*prim_grad_y[iVal])[tempI[2]]);
-			}
+			riemann_para.norm(0) = (*m_CoordTrans[16])[iNode];
+			riemann_para.norm(1) = (*m_CoordTrans[17])[iNode];
+			riemann_para.norm(2) = (*m_CoordTrans[18])[iNode];
+			riemann_para.nt = (*m_CoordTrans[19])[iNode];
+			MidPointReconstruct(template_i[iNode][1], template_i[iNode][2], &riemann_para.primL(0), &riemann_para.primR(0));
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				(*res[iVal])[iNode] += riemann_para.flux[iVal] / jacobi;
-			r[0] = coord[tempI[0]][0] - coord[iNode][0];
-			r[1] = coord[tempI[0]][1] - coord[iNode][1];
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-			{
-				riemann_para.primL(iVal) = (*prim[iVal])[tempI[0]] - 0.5 * (*limiter_coef[iVal])[tempI[0]] * (r[0] * (*prim_grad_x[iVal])[tempI[0]] + r[1] * (*prim_grad_y[iVal])[tempI[0]]);
-				riemann_para.primR(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiter_coef[iVal])[iNode] * (r[0] * (*prim_grad_x[iVal])[iNode] + r[1] * (*prim_grad_y[iVal])[iNode]);
-			}
+			MidPointReconstruct(template_i[iNode][0], template_i[iNode][1], &riemann_para.primL(0), &riemann_para.primR(0));
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				(*res[iVal])[iNode] -= riemann_para.flux[iVal] / jacobi;
-
 			// j direction
-			riemann_para.norm(0) = (*coord_trans_coef[20])[iNode];
-			riemann_para.norm(1) = (*coord_trans_coef[21])[iNode];
-			riemann_para.norm(2) = 0;
-			riemann_para.nt = (*coord_trans_coef[23])[iNode];
-			auto& tempJ = template_j[iNode];
-			r[0] = coord[tempJ[2]][0] - coord[iNode][0];
-			r[1] = coord[tempJ[2]][1] - coord[iNode][1];
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-			{
-				riemann_para.primL(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiter_coef[iVal])[iNode] * (r[0] * (*prim_grad_x[iVal])[iNode] + r[1] * (*prim_grad_y[iVal])[iNode]);
-				riemann_para.primR(iVal) = (*prim[iVal])[tempJ[2]] - 0.5 * (*limiter_coef[iVal])[tempJ[2]] * (r[0] * (*prim_grad_x[iVal])[tempJ[2]] + r[1] * (*prim_grad_y[iVal])[tempJ[2]]);
-			}
+			riemann_para.norm(0) = (*m_CoordTrans[20])[iNode];
+			riemann_para.norm(1) = (*m_CoordTrans[21])[iNode];
+			riemann_para.norm(2) = (*m_CoordTrans[22])[iNode];
+			riemann_para.nt = (*m_CoordTrans[23])[iNode];
+			MidPointReconstruct(template_j[iNode][1], template_j[iNode][2], &riemann_para.primL(0), &riemann_para.primR(0));
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				(*res[iVal])[iNode] += riemann_para.flux[iVal] / jacobi;
-			r[0] = coord[tempJ[0]][0] - coord[iNode][0];
-			r[1] = coord[tempJ[0]][1] - coord[iNode][1];
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-			{
-				riemann_para.primL(iVal) = (*prim[iVal])[tempJ[0]] - 0.5 * (*limiter_coef[iVal])[tempJ[0]] * (r[0] * (*prim_grad_x[iVal])[tempJ[0]] + r[1] * (*prim_grad_y[iVal])[tempJ[0]]);
-				riemann_para.primR(iVal) = (*prim[iVal])[iNode] + 0.5 * (*limiter_coef[iVal])[iNode] * (r[0] * (*prim_grad_x[iVal])[iNode] + r[1] * (*prim_grad_y[iVal])[iNode]);
-			}
+			MidPointReconstruct(template_j[iNode][0], template_j[iNode][1], &riemann_para.primL(0), &riemann_para.primR(0));
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-			{
 				(*res[iVal])[iNode] -= riemann_para.flux[iVal] / jacobi;
-				if (isnan((*res[iVal])[iNode]) || isinf((*res[iVal])[iNode]))
-					ZaranLog::error("step={}, iNode={},NAN in Residual!",GlobalData::GetInt("step"), iNode);
-			}
 		}
 	}
 
@@ -412,7 +372,7 @@ namespace zaran
 		int inner_node_num = grid->GetInnerNodeNum();
 		int bound_node_num = grid->GetBoundNodeNum();
 		DVector2D r;
-		RiemannSolverPara riemann_para ;
+		RiemannSolverPara riemann_para;
 		riemann_para.gammaL = riemann_para.gammaR = 1.4;
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{

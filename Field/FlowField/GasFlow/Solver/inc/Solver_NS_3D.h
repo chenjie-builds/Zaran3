@@ -18,17 +18,18 @@ namespace zaran
 	public:
 		Solver_NS_3D() {}
 		~Solver_NS_3D() {}
-		 void ComputeCoordTrans()override;
+		void ComputeCoordTrans()override;
 	protected:
-		 void ComputeGradientWLS()override;
-		 void ComputeTimeStepLocal() override;
+		void ComputeGradientWLS()override;
+		void ComputeTimeStepLocal() override;
 		// 计算流动通量
-		 void InviscidFlux()override;
+		void InviscidFlux()override;
 		//计算粘性通量
-		 void ViscousFlux() override;
+		void ViscousFlux() override;
 		//计算源项
-		 void SourceFlux() override;
-
+		void SourceFlux() override;
+		void InviscidFluxNew();
+		
 
 	};
 }

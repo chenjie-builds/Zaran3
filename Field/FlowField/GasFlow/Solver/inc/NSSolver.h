@@ -83,10 +83,12 @@ namespace zaran
 		virtual void ComputeLimiterCoefOneOrder();
 
 		virtual void ComputeBoundaryLimiterCoef();
-
-		/**
-		* 边界条件处理
-		*/
+		/// @brief mid point value reconstruct
+		/// @param index_left left node index
+		/// @param index_right right node index 
+		/// @param value_rec_left reconstructed value of left side at mid point
+		/// @param value_rec_right reconstructed value of right side at mid point
+		void MidPointReconstruct(int index_left, int index_right,double* value_rec_left, double* value_rec_right);
 	protected:
 		void BoundaryCondition()override;
 		// 超声速入口边界条件
