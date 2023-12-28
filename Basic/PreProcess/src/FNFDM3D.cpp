@@ -39,7 +39,7 @@ namespace zaran
 		int innerNodeNum = 0;
 		fin >> innerNodeNum;
 		int innerNodeIndex;
-		IArray neiborNodeIndex(6);
+		IArray neibor_index(6);
 		auto& nodeType = nodeTopo->GetType();
 		nodeType.resize(m_NodeNum);
 		auto& temp_i = nodeTopo->GetTemplateI();
@@ -53,55 +53,52 @@ namespace zaran
 		for (size_t i = 0; i < innerNodeNum; i++)
 		{
 			fin >> innerNodeIndex;
-			fin >> neiborNodeIndex[0] >> neiborNodeIndex[1] >> neiborNodeIndex[2] >> neiborNodeIndex[3] >> neiborNodeIndex[4] >> neiborNodeIndex[5];
+			fin >> neibor_index[0] >> neibor_index[1] >> neibor_index[2] >> neibor_index[3] >> neibor_index[4] >> neibor_index[5];
 			innerNodeIndex -= 1;
-			neiborNodeIndex[0] -= 1;
-			neiborNodeIndex[1] -= 1;
-			neiborNodeIndex[2] -= 1;
-			neiborNodeIndex[3] -= 1;
-			neiborNodeIndex[4] -= 1;
-			neiborNodeIndex[5] -= 1;
+			neibor_index[0] -= 1;
+			neibor_index[1] -= 1;
+			neibor_index[2] -= 1;
+			neibor_index[3] -= 1;
+			neibor_index[4] -= 1;
+			neibor_index[5] -= 1;
 			nodeType[innerNodeIndex] = NodeType::inner;
-			nodeNeibor[innerNodeIndex] = neiborNodeIndex;
-			temp_i[innerNodeIndex] = IArray{ neiborNodeIndex[0],innerNodeIndex,neiborNodeIndex[1] };
-			temp_j[innerNodeIndex] = IArray{ neiborNodeIndex[2],innerNodeIndex,neiborNodeIndex[3] };
-			temp_k[innerNodeIndex] = IArray{ neiborNodeIndex[4],innerNodeIndex,neiborNodeIndex[5] };
+			nodeNeibor[innerNodeIndex] = neibor_index;
 
-			IArray neibor_index = { temp_i[innerNodeIndex][0], temp_i[innerNodeIndex][2], temp_j[innerNodeIndex][0], temp_j[innerNodeIndex][2], temp_k[innerNodeIndex][0], temp_k[innerNodeIndex][2] };
-			Array<DVector3D> vec(6);
-			DArray angle(3);
-			for (int i = 0;i < 6;++i)
+			Array<DVector3D> vec(3);
+			vec[0] = nodeCoord[neibor_index[1]] - nodeCoord[neibor_index[0]];
+			vec[1] = nodeCoord[neibor_index[3]] - nodeCoord[neibor_index[2]];
+			vec[2] = nodeCoord[neibor_index[5]] - nodeCoord[neibor_index[4]];
+			double angle = AngleOfTwoArray3D(vec[0].data(), vec[1].data());
+			//i,j方向平行
+			if (abs(angle) < EPSILON_NUMBER || abs(angle - PI) < EPSILON_NUMBER)
 			{
-				vec[i] = nodeCoord[neibor_index[i]] - nodeCoord[innerNodeIndex];
+				std::swap(neibor_index[1], neibor_index[0]);
 			}
-			for (int i = 0; i < 3; ++i)
+			angle = AngleOfTwoArray3D(vec[0].data(), vec[2].data());
+			//i,k方向平行
+			if (abs(angle) < EPSILON_NUMBER || abs(angle - PI) < EPSILON_NUMBER)
 			{
-				angle[i] = AngleOfTwoArray3D(vec[2].data(), vec[i + 3].data());
+				std::swap(neibor_index[2], neibor_index[0]);
 			}
-			double max_angle = 0;
-			int max_index = 0;
-			for (int i = 0; i < 3; ++i)
+			angle = AngleOfTwoArray3D(vec[1].data(), vec[2].data());
+			//j,k方向平行
+			if (abs(angle) < EPSILON_NUMBER || abs(angle - PI) < EPSILON_NUMBER)
 			{
-				max_angle = Max(max_angle, angle[i]);
-				if (abs(max_angle - angle[i]) < SMALL_NUMBER)
-					max_index = i;
+				std::swap(neibor_index[4], neibor_index[3]);
 			}
-			if (max_index == 1)
+			//检查是否是右手坐标系
+			vec[0] = nodeCoord[neibor_index[1]] - nodeCoord[neibor_index[0]];
+			vec[1] = nodeCoord[neibor_index[3]] - nodeCoord[neibor_index[2]];
+			vec[2] = nodeCoord[neibor_index[5]] - nodeCoord[neibor_index[4]];
+			if (vec[0].cross(vec[1]).dot(vec[2]) < 0)
 			{
-				neibor_index = { temp_i[innerNodeIndex][0], temp_i[innerNodeIndex][2], temp_j[innerNodeIndex][0], temp_k[innerNodeIndex][0], temp_j[innerNodeIndex][2], temp_k[innerNodeIndex][2] };
+				std::swap(neibor_index[5], neibor_index[6]);
 			}
-			else if (max_index == 2)
-			{
-				neibor_index = { temp_i[innerNodeIndex][0], temp_i[innerNodeIndex][2], temp_j[innerNodeIndex][0], temp_k[innerNodeIndex][2],temp_k[innerNodeIndex][0],  temp_j[innerNodeIndex][2] };
-			}
-			for (int i = 0;i < 6;++i)
-			{
-				vec[i] = nodeCoord[neibor_index[i]] - nodeCoord[innerNodeIndex];
-			}
-			if (vec[3].cross(vec[5]).dot(vec[2]) < 0)
-				std::swap(neibor_index[2], neibor_index[3]);
+			temp_i[innerNodeIndex] = IArray{ neibor_index[0],innerNodeIndex,neibor_index[1] };
 			temp_j[innerNodeIndex] = IArray{ neibor_index[2],innerNodeIndex,neibor_index[3] };
 			temp_k[innerNodeIndex] = IArray{ neibor_index[4],innerNodeIndex,neibor_index[5] };
+
+
 		}
 		//读取所有边界节点邻居节点
 		auto& boundMap = grid->GetBoundaryMap();
@@ -112,15 +109,18 @@ namespace zaran
 		int tempIndex1, tempIndex2;
 		int boundNodeIndex, connectNodeIndex;
 		Boundary tempBound;
+		ZaranLog::info("x- num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
-			fin >> boundNodeIndex >> tempIndex1;
+			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
 			boundNodeIndex -= 1;
-			boundMap->AddBoundary("inlet", Boundary{ boundNodeIndex,0,0,DVector3D{} });
+			connectNodeIndex -= 1;
+			boundMap->AddBoundary("inlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
 			nodeType[boundNodeIndex] = NodeType::inlet;
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
+		ZaranLog::info("x+ num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -131,6 +131,7 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
+		ZaranLog::info("y- num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -141,6 +142,7 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
+		ZaranLog::info("y+ num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -151,6 +153,7 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
+		ZaranLog::info("z- num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -161,10 +164,9 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
+		ZaranLog::info("z+ num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
-			if (i == nBound - 1)
-				i = i;
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
 			boundNodeIndex -= 1;
 			connectNodeIndex -= 1;
@@ -173,6 +175,7 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
+		ZaranLog::info("wall num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -195,13 +198,13 @@ namespace zaran
 				auto& neighbor_neighbor = nodeNeibor[currentNeibor[iNeibor]];
 				for (int jNeibor = 0;jNeibor < neighbor_neighbor.size();jNeibor++)
 				{
-					if(neighbor_neighbor[jNeibor]==iNode)
-					find_current=true;
+					if (neighbor_neighbor[jNeibor] == iNode)
+						find_current = true;
 				}
-				if(find_current==false)
+				if (find_current == false)
 				{
 					neighbor_neighbor.push_back(iNode);
-					ZaranLog::info("Add node:{} into {}'s neighbor!",iNode,currentNeibor[iNeibor]);
+					ZaranLog::info("Add node:{} into {}'s neighbor!", iNode, currentNeibor[iNeibor]);
 				}
 			}
 		}

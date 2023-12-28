@@ -47,6 +47,7 @@ namespace zaran
 			// check coordinate
 			if (coordTrans.J() > 1e15 || coordTrans.J() < 0)
 			{
+				ZaranLog::warn("jacobi is too large or negative: {}", coordTrans.J());
 				ZaranLog::warn("Node {}: {},{},{}", iNode, nodeCoord[iNode].x(), nodeCoord[iNode].y(), nodeCoord[iNode].z());
 				ZaranLog::info("xLeft index={}: {},{},{}", tempI[iNode][0], xLeft.x(), xLeft.y(), xLeft.z());
 				ZaranLog::info("xRight index={}: {},{},{}", tempI[iNode][2], xRight.x(), xRight.y(), xRight.z());
@@ -54,7 +55,6 @@ namespace zaran
 				ZaranLog::info("yRight index={}: {},{},{}", tempJ[iNode][2], yRight.x(), yRight.y(), yRight.z());
 				ZaranLog::info("zLeft index={}: {},{},{}", tempK[iNode][0], zLeft.x(), zLeft.y(), zLeft.z());
 				ZaranLog::info("zRight index={}: {},{},{}", tempK[iNode][2], zRight.x(), zRight.y(), zRight.z());
-
 			}
 
 			(*coordTransCoef[0])[iNode] = coordTrans.GetX()[0];

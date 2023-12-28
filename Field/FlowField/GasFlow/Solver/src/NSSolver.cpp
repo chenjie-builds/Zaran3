@@ -392,6 +392,7 @@ namespace zaran {
 	void NSSolver::ComputeBoundaryPrimtiveGradient()
 	{
 		auto& grid = GetGrid();
+		auto& nodeTopo = grid->GetNodeTopo();
 		BoundaryMapPtr& boundaryMapPtr = grid->GetBoundaryMap();
 		auto& boundaryMap = boundaryMapPtr->GetBoundaryMap();
 		auto& primGradX = m_PrimGradX;
@@ -407,14 +408,17 @@ namespace zaran {
 			{
 				auto& boundIndex = bound[iBound].GetIndex();
 				auto& innerIndex = bound[iBound].GetInnerIndex();
+				int boundNeighborNum = nodeTopo->GetNeighborCloud()[boundIndex].size();
+				// if (boundNeighborNum <= 6)
+				// 	ZaranLog::info("Boundary {} has {} neighbors", boundIndex, boundNeighborNum);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
 					(*primGradX[iVal])[boundIndex] = 0;
 					(*primGradY[iVal])[boundIndex] = 0;
 					(*primGradZ[iVal])[boundIndex] = 0;
-					//(*primGradX[iVal])[boundIndex] = (*primGradX[iVal])[innerIndex];
-					//(*primGradY[iVal])[boundIndex] = (*primGradY[iVal])[innerIndex];
-					//(*primGradZ[iVal])[boundIndex] = (*primGradZ[iVal])[innerIndex];
+					// (*primGradX[iVal])[boundIndex] = (*primGradX[iVal])[innerIndex];
+					// (*primGradY[iVal])[boundIndex] = (*primGradY[iVal])[innerIndex];
+					// (*primGradZ[iVal])[boundIndex] = (*primGradZ[iVal])[innerIndex];
 				}
 			}
 		}
@@ -625,7 +629,7 @@ namespace zaran {
 			ComputeLimiterCoefOneOrder();
 		else
 			ZaranLog::warn("Unsupported Limiter Type: {}", limiterType);
-		ComputeBoundaryLimiterCoef();
+		//ComputeBoundaryLimiterCoef();
 	}
 	void NSSolver::ComputeLimiterCoefVK()
 	{
