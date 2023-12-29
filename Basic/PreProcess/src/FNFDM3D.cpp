@@ -92,7 +92,7 @@ namespace zaran
 			vec[2] = nodeCoord[neibor_index[5]] - nodeCoord[neibor_index[4]];
 			if (vec[0].cross(vec[1]).dot(vec[2]) < 0)
 			{
-				std::swap(neibor_index[5], neibor_index[6]);
+				std::swap(neibor_index[4], neibor_index[5]);
 			}
 			temp_i[innerNodeIndex] = IArray{ neibor_index[0],innerNodeIndex,neibor_index[1] };
 			temp_j[innerNodeIndex] = IArray{ neibor_index[2],innerNodeIndex,neibor_index[3] };

@@ -45,7 +45,7 @@ namespace zaran
 			}
 
 			// check coordinate
-			if (coordTrans.J() > 1e15 || coordTrans.J() < 0)
+			if (coordTrans.J() > 1e15 || coordTrans.J() < 0|| isnan(coordTrans.J()) || isinf(coordTrans.J()))
 			{
 				ZaranLog::warn("jacobi is too large or negative: {}", coordTrans.J());
 				ZaranLog::warn("Node {}: {},{},{}", iNode, nodeCoord[iNode].x(), nodeCoord[iNode].y(), nodeCoord[iNode].z());
@@ -259,6 +259,6 @@ namespace zaran
 	{
 	}
 
-	
+
 
 }
