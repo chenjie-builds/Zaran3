@@ -134,6 +134,7 @@ void zaran::Controller::CalcResidual()
         auto& currentGrid = m_field[iField]->GetGrid();
         auto& fieldData = m_field[iField]->GetFieldData();
         auto& rho = fieldData->GetData("rho");
+        auto&rhs0=fieldData->GetData("rhs0");
         auto& nodeTopo = currentGrid->GetNodeTopo();
         auto& nodeCoord = nodeTopo->GetCoordinate();
         auto& nodeType = nodeTopo->GetType();
@@ -144,12 +145,8 @@ void zaran::Controller::CalcResidual()
         int n_data = rho.size();
         for (int iNode = 0;iNode < n_data;++iNode)
         {
-            x = nodeCoord[iNode].x();
-            y = nodeCoord[iNode].y();
-            CalcIsentropicVortex(x, y, 5.0, prim);
-            theory_rho = prim[0];
-            maxResidual_ = Max(maxResidual_, abs(rho[iNode] - theory_rho));
-            aveResidual_ += pow(rho[iNode] - theory_rho, 2);
+            maxResidual_ = Max(maxResidual_, abs(rhs0[iNode]));
+            aveResidual_ += pow(rhs0[iNode], 2);
         }
         aveResidual_ /= n_data;
         aveResidual_ = sqrt(aveResidual_);
