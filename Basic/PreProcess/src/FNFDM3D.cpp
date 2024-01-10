@@ -8,7 +8,9 @@ namespace zaran
 
 	GridListFactoryFNFDM3D::GridListFactoryFNFDM3D()
 	{
-		m_fileName = "sysu.dat";
+		m_node_file_name = "node.dat";
+		m_ele_file_name = "cell.dat";
+		m_bnd_file_name = "bnd.dat";
 	}
 	void GridListFactoryFNFDM3D::Create(Ptr<GridList>& gridList)
 	{
@@ -24,9 +26,10 @@ namespace zaran
 		grid->SetDimension(Dimension::three);
 		gridList->AddGrid(grid);
 		auto& nodeTopo = grid->GetNodeTopo();
-		std::ifstream fin(m_fileName);
+		std::ifstream fin(m_node_file_name);
 		//读取所有节点坐标
 		fin >> m_NodeNum;
+		ZaranLog::info("Total node num:{}", m_NodeNum);
 		grid->SetTotalNodeNum(m_NodeNum);
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		nodeCoord.resize(m_NodeNum);
@@ -38,6 +41,7 @@ namespace zaran
 		//读取所有内部节点邻居节点
 		int innerNodeNum = 0;
 		fin >> innerNodeNum;
+		ZaranLog::info("Inner node num:{}", innerNodeNum);
 		int innerNodeIndex;
 		IArray neibor_index(6);
 		auto& nodeType = nodeTopo->GetType();
@@ -109,7 +113,7 @@ namespace zaran
 		int tempIndex1, tempIndex2;
 		int boundNodeIndex, connectNodeIndex;
 		Boundary tempBound;
-		ZaranLog::info("x- num:{}", nBound);
+		ZaranLog::info("x- boundary node num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -120,7 +124,7 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
-		ZaranLog::info("x+ num:{}", nBound);
+		ZaranLog::info("x+ boundary node num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -131,7 +135,7 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
-		ZaranLog::info("y- num:{}", nBound);
+		ZaranLog::info("y- boundary node num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -142,7 +146,7 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
-		ZaranLog::info("y+ num:{}", nBound);
+		ZaranLog::info("y+ boundary node num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -153,7 +157,7 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
-		ZaranLog::info("z- num:{}", nBound);
+		ZaranLog::info("z- boundary node num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -164,7 +168,7 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
-		ZaranLog::info("z+ num:{}", nBound);
+		ZaranLog::info("z+ boundary node num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -175,7 +179,7 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
-		ZaranLog::info("wall num:{}", nBound);
+		ZaranLog::info("wall boundary node num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -258,28 +262,7 @@ namespace zaran
 		// 	}
 		// }
 		fin.close();
-		fin.open("cell.dat");
-		auto& cellTopo = grid->GetCellTopo();
-		int cellNum;
-		fin >> cellNum;
-		auto& cell_node = cellTopo->GetNodeIndex();
-		cell_node.resize(cellNum);
-		IArray cellNeiborNodeIndex(8);
-		for (int iCell = 0; iCell < cellNum; iCell++)
-		{
-			fin >> cellNeiborNodeIndex[0] >> cellNeiborNodeIndex[1] >> cellNeiborNodeIndex[2] >> cellNeiborNodeIndex[3]
-				>> cellNeiborNodeIndex[4] >> cellNeiborNodeIndex[5] >> cellNeiborNodeIndex[6] >> cellNeiborNodeIndex[7];
-			cellNeiborNodeIndex[0] -= 1;
-			cellNeiborNodeIndex[1] -= 1;
-			cellNeiborNodeIndex[2] -= 1;
-			cellNeiborNodeIndex[3] -= 1;
-			cellNeiborNodeIndex[4] -= 1;
-			cellNeiborNodeIndex[5] -= 1;
-			cellNeiborNodeIndex[6] -= 1;
-			cellNeiborNodeIndex[7] -= 1;
-			cell_node[iCell] = cellNeiborNodeIndex;
-		}
-		fin.close();
+		
 
 
 	}
@@ -524,5 +507,39 @@ namespace zaran
 
 
 	}
+
+    void GridListFactoryFNFDM3D::ReadCellFile(Ptr<GridList>& gridList)
+    {
+		auto& grid = gridList->GetGrid(0);
+		std::ifstream fin;
+		fin.open("cell.dat");
+		auto& cellTopo = grid->GetCellTopo();
+		int cellNum;
+		fin >> cellNum;
+		auto& cell_node = cellTopo->GetNodeIndex();
+		cell_node.resize(cellNum);
+		IArray cellNeiborNodeIndex(8);
+		for (int iCell = 0; iCell < cellNum; iCell++)
+		{
+			fin >> cellNeiborNodeIndex[0] >> cellNeiborNodeIndex[1] >> cellNeiborNodeIndex[2] >> cellNeiborNodeIndex[3]
+				>> cellNeiborNodeIndex[4] >> cellNeiborNodeIndex[5] >> cellNeiborNodeIndex[6] >> cellNeiborNodeIndex[7];
+			cellNeiborNodeIndex[0] -= 1;
+			cellNeiborNodeIndex[1] -= 1;
+			cellNeiborNodeIndex[2] -= 1;
+			cellNeiborNodeIndex[3] -= 1;
+			cellNeiborNodeIndex[4] -= 1;
+			cellNeiborNodeIndex[5] -= 1;
+			cellNeiborNodeIndex[6] -= 1;
+			cellNeiborNodeIndex[7] -= 1;
+			cell_node[iCell] = cellNeiborNodeIndex;
+		}
+		fin.close();
+    }
+
+    void GridListFactoryFNFDM3D::ReadBoundFile(Ptr<GridList>& gridList)
+    {
+		auto& grid = gridList->GetGrid(0);
+		//TODO:读取边界文件
+    }
 
 }

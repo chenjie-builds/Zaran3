@@ -347,7 +347,6 @@ namespace zaran {
 			}
 		}
 #endif
-
 	}
 
 	void NSSolver::BoundaryCondition()

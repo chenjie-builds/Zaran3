@@ -21,8 +21,12 @@ namespace zaran
 	private:
 		void ReadFile(Ptr<GridList>& gridList);
 		void SortNeiborNode(Ptr<GridList>& gridList);
+		void ReadCellFile(Ptr<GridList>& gridList);
+		void ReadBoundFile(Ptr<GridList>& gridList);
 	private:
-		string m_fileName;
+		string m_node_file_name;
+		string m_ele_file_name;
+		string m_bnd_file_name;
 		int m_NodeNum;
 		int m_BoundNodeNum;
 		DArray m_NodeX, m_NodeY, m_NodeZ;
