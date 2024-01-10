@@ -190,6 +190,7 @@ namespace zaran
 			nodeType[boundNodeIndex] = NodeType::slipWall;
 		}
 		//查找邻居节点，看自身是否是其邻居，如不是，则加进去
+		ZaranLog::info("Add self to neibor node's neibor node");
 		bool find_current;
 		for (int iNode = 0;iNode < m_NodeNum;iNode++)
 		{
@@ -208,7 +209,6 @@ namespace zaran
 				if (find_current == false)
 				{
 					neighbor_neighbor.push_back(iNode);
-					ZaranLog::info("Add node:{} into {}'s neighbor!", iNode, currentNeibor[iNeibor]);
 				}
 			}
 		}
@@ -262,7 +262,8 @@ namespace zaran
 		// 	}
 		// }
 		fin.close();
-		
+
+		ReadCellFile(gridList);
 
 
 	}
@@ -508,14 +509,15 @@ namespace zaran
 
 	}
 
-    void GridListFactoryFNFDM3D::ReadCellFile(Ptr<GridList>& gridList)
-    {
+	void GridListFactoryFNFDM3D::ReadCellFile(Ptr<GridList>& gridList)
+	{
 		auto& grid = gridList->GetGrid(0);
 		std::ifstream fin;
 		fin.open("cell.dat");
 		auto& cellTopo = grid->GetCellTopo();
 		int cellNum;
 		fin >> cellNum;
+		ZaranLog::info("Total cell num:{}", cellNum);
 		auto& cell_node = cellTopo->GetNodeIndex();
 		cell_node.resize(cellNum);
 		IArray cellNeiborNodeIndex(8);
@@ -534,12 +536,12 @@ namespace zaran
 			cell_node[iCell] = cellNeiborNodeIndex;
 		}
 		fin.close();
-    }
+	}
 
-    void GridListFactoryFNFDM3D::ReadBoundFile(Ptr<GridList>& gridList)
-    {
+	void GridListFactoryFNFDM3D::ReadBoundFile(Ptr<GridList>& gridList)
+	{
 		auto& grid = gridList->GetGrid(0);
 		//TODO:读取边界文件
-    }
+	}
 
 }

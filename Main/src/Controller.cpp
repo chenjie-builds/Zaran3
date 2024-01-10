@@ -134,19 +134,16 @@ void zaran::Controller::CalcResidual()
         auto& currentGrid = m_field[iField]->GetGrid();
         auto& fieldData = m_field[iField]->GetFieldData();
         auto& rho = fieldData->GetData("rho");
-        auto&rhs0=fieldData->GetData("rhs0");
+        auto&res0=fieldData->GetData("res0");
         auto& nodeTopo = currentGrid->GetNodeTopo();
         auto& nodeCoord = nodeTopo->GetCoordinate();
         auto& nodeType = nodeTopo->GetType();
-        double x, y;
-        DVector prim;
-        double theory_rho;
         maxResidual_ = aveResidual_ = 0.0;
         int n_data = rho.size();
         for (int iNode = 0;iNode < n_data;++iNode)
         {
-            maxResidual_ = Max(maxResidual_, abs(rhs0[iNode]));
-            aveResidual_ += pow(rhs0[iNode], 2);
+            maxResidual_ = Max(maxResidual_, abs(res0[iNode]));
+            aveResidual_ += pow(res0[iNode], 2);
         }
         aveResidual_ /= n_data;
         aveResidual_ = sqrt(aveResidual_);

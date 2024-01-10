@@ -622,7 +622,7 @@ namespace zaran {
 		if(limiterType!="oneOrder")
 		{
 			int firstOrderSteps=GlobalData::GetInt("firstOrderSteps");
-			int currentStep=GlobalData::GetInt("steps");
+			int currentStep=GlobalData::GetInt("step");
 			if(currentStep<firstOrderSteps)
 			{
 				limiterType="oneOrder";
