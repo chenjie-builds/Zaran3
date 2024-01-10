@@ -617,7 +617,18 @@ namespace zaran {
 
 	void NSSolver::ComputeLimiterCoef()
 	{
+
 		string limiterType = GlobalData::GetString("limiterType");
+		if(limiterType!="oneOrder")
+		{
+			int firstOrderSteps=GlobalData::GetInt("firstOrderSteps");
+			int currentStep=GlobalData::GetInt("steps");
+			if(currentStep<firstOrderSteps)
+			{
+				limiterType="oneOrder";
+				ZaranLog::info("First {}/{} steps use one order scheme",currentStep,firstOrderSteps);
+			}			
+		}
 		if (limiterType == "vk")
 			ComputeLimiterCoefVK();
 		else if (limiterType == "barth")
