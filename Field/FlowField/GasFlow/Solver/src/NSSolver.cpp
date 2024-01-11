@@ -322,29 +322,44 @@ namespace zaran {
 					r.z() * (*primGradZ[iVal])[index_right]);
 		}
 #if 1
+		auto OutputError = [&](int iNode)
+			{
+				DVector3D xRight, xLeft, yRight, yLeft, zRight, zLeft;
+				auto& tempI = nodeTopo->GetTemplateI();
+				auto& tempJ = nodeTopo->GetTemplateJ();
+				auto& tempK = nodeTopo->GetTemplateK();
+				xLeft = nodeCoord[tempI[iNode][0]];
+				xRight = nodeCoord[tempI[iNode][2]];
+				yLeft = nodeCoord[tempJ[iNode][0]];
+				yRight = nodeCoord[tempJ[iNode][2]];
+				zLeft = nodeCoord[tempK[iNode][0]];
+				zRight = nodeCoord[tempK[iNode][2]];
+				ZaranLog::warn("Node {}: {},{},{}", iNode, nodeCoord[iNode].x(), nodeCoord[iNode].y(), nodeCoord[iNode].z());
+				ZaranLog::info("xLeft index={}: {},{},{}", tempI[iNode][0], xLeft.x(), xLeft.y(), xLeft.z());
+				ZaranLog::info("xRight index={}: {},{},{}", tempI[iNode][2], xRight.x(), xRight.y(), xRight.z());
+				ZaranLog::info("yLeft index={}: {},{},{}", tempJ[iNode][0], yLeft.x(), yLeft.y(), yLeft.z());
+				ZaranLog::info("yRight index={}: {},{},{}", tempJ[iNode][2], yRight.x(), yRight.y(), yRight.z());
+				ZaranLog::info("zLeft index={}: {},{},{}", tempK[iNode][0], zLeft.x(), zLeft.y(), zLeft.z());
+				ZaranLog::info("zRight index={}: {},{},{}", tempK[iNode][2], zRight.x(), zRight.y(), zRight.z());
+			};
 		//check negative pressure and density
-		for (int iVal = 0;iVal < GetNumberOfEquations();++iVal)
+		if (value_rec_left[0] < 0 || value_rec_left[4] < 0)
 		{
-			if (value_rec_left[0] < 0)
+			for (int iVal = 0;iVal < GetNumberOfEquations();++iVal)
 			{
-				ZaranLog::warn("Negative density at node {}", index_left);
-				value_rec_left[0] = (*prim[0])[index_left];
+				value_rec_left[iVal] = (*prim[iVal])[index_left];
+				value_rec_right[iVal] = (*prim[iVal])[index_right];
 			}
-			if (value_rec_right[0] < 0)
+			OutputError(index_left);
+		}
+		if (value_rec_right[0] < 0 || value_rec_right[4] < 0)
+		{
+			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
-				ZaranLog::warn("Negative density at node {}", index_right);
-				value_rec_right[0] = (*prim[0])[index_right];
+				value_rec_left[iVal] = (*prim[iVal])[index_left];
+				value_rec_right[iVal] = (*prim[iVal])[index_right];
 			}
-			if (value_rec_left[4] < 0)
-			{
-				ZaranLog::warn("Negative pressure at node {}", index_left);
-				value_rec_left[4] = (*prim[4])[index_left];
-			}
-			if (value_rec_right[4] < 0)
-			{
-				ZaranLog::warn("Negative pressure at node {}", index_right);
-				value_rec_right[4] = (*prim[4])[index_right];
-			}
+			OutputError(index_right);
 		}
 #endif
 	}
@@ -619,15 +634,15 @@ namespace zaran {
 	{
 
 		string limiterType = GlobalData::GetString("limiterType");
-		if(limiterType!="oneOrder")
+		if (limiterType != "oneOrder")
 		{
-			int firstOrderSteps=GlobalData::GetInt("firstOrderSteps");
-			int currentStep=GlobalData::GetInt("step");
-			if(currentStep<firstOrderSteps)
+			int firstOrderSteps = GlobalData::GetInt("firstOrderSteps");
+			int currentStep = GlobalData::GetInt("step");
+			if (currentStep < firstOrderSteps)
 			{
-				limiterType="oneOrder";
-				ZaranLog::info("First {}/{} steps use one order scheme",currentStep,firstOrderSteps);
-			}			
+				limiterType = "oneOrder";
+				ZaranLog::info("First {}/{} steps use one order scheme", currentStep, firstOrderSteps);
+			}
 		}
 		if (limiterType == "vk")
 			ComputeLimiterCoefVK();
