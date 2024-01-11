@@ -189,6 +189,67 @@ namespace zaran
 			boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,connectNodeIndex,0,wallNorm });
 			nodeType[boundNodeIndex] = NodeType::slipWall;
 		}
+
+
+
+
+
+
+
+		//扩展内部节点邻居节点，用于计算梯度
+		Array<std::set<int>> nodeNeiborSet(m_NodeNum);
+		for (int iNode = 0; iNode < m_NodeNum; iNode++)
+		{
+			if (nodeType[iNode] != NodeType::inner)
+				continue;
+			auto& currentNeibor = nodeNeibor[iNode];
+			auto& neiborSet = nodeNeiborSet[iNode];
+			for (auto& iNeibor : currentNeibor)
+			{
+				neiborSet.insert(iNeibor);
+			}
+			for(int iNeibor=0;iNeibor<currentNeibor.size();iNeibor++)
+			{
+				auto& neighbor_neighbor = nodeNeibor[currentNeibor[iNeibor]];
+				for (int jNeibor = 0; jNeibor < neighbor_neighbor.size(); jNeibor++)
+				{
+					neiborSet.insert(neighbor_neighbor[jNeibor]);
+				}
+			}
+
+
+
+			// double max_distance = 0;
+			// for (auto& iNeibor : currentNeibor)
+			// {
+			// 	max_distance = Max(max_distance, (nodeCoord[iNeibor] - nodeCoord[iNode]).norm());
+			// }
+			// while (neiborSet.size() < 20)
+			// {
+			// 	for (int jNode = 0;jNode < m_NodeNum;++jNode)
+			// 	{
+			// 		if ((nodeCoord[jNode] - nodeCoord[iNode]).norm() < max_distance)
+			// 			neiborSet.insert(jNode);
+			// 	}
+			// 	max_distance *= 1.5;
+			// }
+			neiborSet.erase(iNode);
+		}
+
+		for (int iNode = 0; iNode < m_NodeNum; iNode++)
+		{
+			if (nodeType[iNode] != NodeType::inner)
+				continue;
+			auto& currentNeibor = nodeNeibor[iNode];
+			auto& neiborSet = nodeNeiborSet[iNode];
+			currentNeibor.resize(neiborSet.size());
+			int i = 0;
+			for (auto& iNeibor : neiborSet)
+			{
+				currentNeibor[i] = iNeibor;
+				i++;
+			}
+		}
 		//查找邻居节点，看自身是否是其邻居，如不是，则加进去
 		ZaranLog::info("Add self to neibor node's neibor node");
 		bool find_current;
@@ -212,57 +273,7 @@ namespace zaran
 				}
 			}
 		}
-
-
-
-
-
-
-		//扩展内部节点邻居节点，用于计算梯度
-		// Array<std::set<int>> nodeNeiborSet(m_NodeNum);
-		// for (int iNode = 0; iNode < m_NodeNum; iNode++)
-		// {
-		// 	if (nodeType[iNode] != NodeType::inner)
-		// 		continue;
-		// 	auto& currentNeibor = nodeNeibor[iNode];
-		// 	auto& neiborSet = nodeNeiborSet[iNode];
-		// 	for (auto& iNeibor : currentNeibor)
-		// 	{
-		// 		neiborSet.insert(iNeibor);
-		// 	}
-		// 	double max_distance = 0;
-		// 	for (auto& iNeibor : currentNeibor)
-		// 	{
-		// 		max_distance = Max(max_distance, (nodeCoord[iNeibor] - nodeCoord[iNode]).norm());
-		// 	}
-		// 	while (neiborSet.size() < 20)
-		// 	{
-		// 		for (int jNode = 0;jNode < m_NodeNum;++jNode)
-		// 		{
-		// 			if ((nodeCoord[jNode] - nodeCoord[iNode]).norm() < max_distance)
-		// 				neiborSet.insert(jNode);
-		// 		}
-		// 		max_distance *= 1.5;
-		// 	}
-		// 	neiborSet.erase(iNode);
-		// }
-
-		// for (int iNode = 0; iNode < m_NodeNum; iNode++)
-		// {
-		// 	if (nodeType[iNode] != NodeType::inner)
-		// 		continue;
-		// 	auto& currentNeibor = nodeNeibor[iNode];
-		// 	auto& neiborSet = nodeNeiborSet[iNode];
-		// 	currentNeibor.resize(neiborSet.size());
-		// 	int i = 0;
-		// 	for (auto& iNeibor : neiborSet)
-		// 	{
-		// 		currentNeibor[i] = iNeibor;
-		// 		i++;
-		// 	}
-		// }
 		fin.close();
-
 		ReadCellFile(gridList);
 
 
