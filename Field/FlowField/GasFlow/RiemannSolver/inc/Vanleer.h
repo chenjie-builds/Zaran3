@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	VanLeer.h															||
-//*	@brief	van Leer ÀèÂüÇó½âÆ÷													||
+//*	@brief	van Leer é»Žæ›¼æ±‚è§£å™¨													||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once

@@ -202,7 +202,7 @@ namespace zaran
 		auto& res = m_Residual;
 		auto& coordTrans = m_CoordTrans;
 		RiemannSolverPara riemann_para;
-		riemann_para.gammaL = riemann_para.gammaR = 1.4;
+		riemann_para.gamma_left = riemann_para.gamma_right = 1.4;
 #pragma omp parallel for private(riemann_para)
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
@@ -214,11 +214,11 @@ namespace zaran
 			riemann_para.norm(1) = (*coordTrans[17])[iNode];
 			riemann_para.norm(2) = (*coordTrans[18])[iNode];
 			riemann_para.nt = (*coordTrans[19])[iNode];
-			MidPointReconstruct(templateI[iNode][1], templateI[iNode][2], &riemann_para.primL(0), &riemann_para.primR(0));
+			MidPointReconstruct(templateI[iNode][1], templateI[iNode][2], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				(*res[iVal])[iNode] += riemann_para.flux[iVal] / jacobi;
-			MidPointReconstruct(templateI[iNode][0], templateI[iNode][1], &riemann_para.primL(0), &riemann_para.primR(0));
+			MidPointReconstruct(templateI[iNode][0], templateI[iNode][1], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				(*res[iVal])[iNode] -= riemann_para.flux[iVal] / jacobi;
@@ -227,11 +227,11 @@ namespace zaran
 			riemann_para.norm(1) = (*coordTrans[21])[iNode];
 			riemann_para.norm(2) = (*coordTrans[22])[iNode];
 			riemann_para.nt = (*coordTrans[23])[iNode];
-			MidPointReconstruct(templateJ[iNode][1], templateJ[iNode][2], &riemann_para.primL(0), &riemann_para.primR(0));
+			MidPointReconstruct(templateJ[iNode][1], templateJ[iNode][2], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				(*res[iVal])[iNode] += riemann_para.flux[iVal] / jacobi;
-			MidPointReconstruct(templateJ[iNode][0], templateJ[iNode][1], &riemann_para.primL(0), &riemann_para.primR(0));
+			MidPointReconstruct(templateJ[iNode][0], templateJ[iNode][1], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				(*res[iVal])[iNode] -= riemann_para.flux[iVal] / jacobi;
@@ -240,11 +240,11 @@ namespace zaran
 			riemann_para.norm(1) = (*coordTrans[25])[iNode];
 			riemann_para.norm(2) = (*coordTrans[26])[iNode];
 			riemann_para.nt = (*coordTrans[27])[iNode];
-			MidPointReconstruct(templateK[iNode][1], templateK[iNode][2], &riemann_para.primL(0), &riemann_para.primR(0));
+			MidPointReconstruct(templateK[iNode][1], templateK[iNode][2], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				(*res[iVal])[iNode] += riemann_para.flux[iVal] / jacobi;
-			MidPointReconstruct(templateK[iNode][0], templateK[iNode][1], &riemann_para.primL(0), &riemann_para.primR(0));
+			MidPointReconstruct(templateK[iNode][0], templateK[iNode][1], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				(*res[iVal])[iNode] -= riemann_para.flux[iVal] / jacobi;

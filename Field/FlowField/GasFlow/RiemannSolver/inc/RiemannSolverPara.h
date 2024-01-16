@@ -18,23 +18,25 @@ namespace zaran
 	struct RiemannSolverPara
 	{
 		//左右原始变量
-		Vector<double ,5> primL, primR;
+		Vector<double ,5> prim_left, prim_right;
 		//左右比热比
-		double gammaL, gammaR;
+		double gamma_left, gamma_right;
 		//左右能量
-		double eL, eR;
+		double energy_left, energy_right;
+		//左右焓
+		double enthalpy_left, enthalpy_right;
 		//左右声速
-		double cL, cR;
+		double c_left, c_right;
 		//左右速度大小
-		double v2L, v2R;
+		double v2_left, v2_right;
 		//法向向量
 		Vector3d norm;
 
 		double nt;
 		//法向速度
-		double vnL, vnR;
+		double vn_left, vn_right;
 		//左右马赫数
-		double machL, machR;
+		double mach_left, mach_right;
 		//重构后的通量
 		Vector<double, 5> flux;
 	};

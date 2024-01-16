@@ -228,7 +228,7 @@ namespace zaran
 		auto NodeIndex = [&](int i, int j) {return grid->GetNodeIndex(i, j); };
 		DVector2D r, grad;
 		RiemannSolverPara riemann_para;
-		riemann_para.gammaL = riemann_para.gammaR = 1.4;
+		riemann_para.gamma_left = riemann_para.gamma_right = 1.4;
 		for (int j = js; j < je; j++)
 		{
 			for (int i = is; i < ie; i++)
@@ -246,10 +246,10 @@ namespace zaran
 				{
 					grad(0) = (*primGradX[iVal])[iNode];
 					grad(1) = (*primGradY[iVal])[iNode];
-					riemann_para.primL(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+					riemann_para.prim_left(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
 					grad(0) = (*primGradX[iVal])[NodeIndex(i + 1, j)];
 					grad(1) = (*primGradY[iVal])[NodeIndex(i + 1, j)];
-					riemann_para.primR(iVal) = (*prim[iVal])[NodeIndex(i + 1, j)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
+					riemann_para.prim_right(iVal) = (*prim[iVal])[NodeIndex(i + 1, j)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 				}
 				riemannSolver_->Solver(riemann_para);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -260,10 +260,10 @@ namespace zaran
 				{
 					grad(0) = (*primGradX[iVal])[iNode];
 					grad(1) = (*primGradY[iVal])[iNode];
-					riemann_para.primR(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+					riemann_para.prim_right(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
 					grad(0) = (*primGradX[iVal])[NodeIndex(i - 1, j)];
 					grad(1) = (*primGradY[iVal])[NodeIndex(i - 1, j)];
-					riemann_para.primL(iVal) = (*prim[iVal])[NodeIndex(i - 1, j)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
+					riemann_para.prim_left(iVal) = (*prim[iVal])[NodeIndex(i - 1, j)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 				}
 				riemannSolver_->Solver(riemann_para);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -280,10 +280,10 @@ namespace zaran
 				{
 					grad(0) = (*primGradX[iVal])[iNode];
 					grad(1) = (*primGradY[iVal])[iNode];
-					riemann_para.primL(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+					riemann_para.prim_left(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
 					grad(0) = (*primGradX[iVal])[NodeIndex(i, j + 1)];
 					grad(1) = (*primGradY[iVal])[NodeIndex(i, j + 1)];
-					riemann_para.primR(iVal) = (*prim[iVal])[NodeIndex(i + 1, j)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
+					riemann_para.prim_right(iVal) = (*prim[iVal])[NodeIndex(i + 1, j)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 				}
 				riemannSolver_->Solver(riemann_para);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -294,10 +294,10 @@ namespace zaran
 				{
 					grad(0) = (*primGradX[iVal])[iNode];
 					grad(1) = (*primGradY[iVal])[iNode];
-					riemann_para.primR(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+					riemann_para.prim_right(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
 					grad(0) = (*primGradX[iVal])[NodeIndex(i, j - 1)];
 					grad(1) = (*primGradY[iVal])[NodeIndex(i, j - 1)];
-					riemann_para.primL(iVal) = (*prim[iVal])[NodeIndex(i - 1, j)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
+					riemann_para.prim_left(iVal) = (*prim[iVal])[NodeIndex(i - 1, j)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 				}
 				riemannSolver_->Solver(riemann_para);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -324,7 +324,7 @@ namespace zaran
 		auto NodeIndex = [&](int i, int j) {return grid->GetNodeIndex(i, j); };
 		auto Prim = [&](int iVal, int i, int j) {return (*m_Primitive[iVal])[NodeIndex(i, j)]; };
 		RiemannSolverPara riemann_para;
-		riemann_para.gammaL = riemann_para.gammaR = 1.4;
+		riemann_para.gamma_left = riemann_para.gamma_right = 1.4;
 		double k = GlobalData::GetDouble("muscl_k");
 		for (int j = js; j < je; j++)
 		{
@@ -339,10 +339,10 @@ namespace zaran
 				riemann_para.nt = (*coordTrans[19])[iNode];
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
-					riemann_para.primL(iVal) = Prim(iVal, i, j) +
+					riemann_para.prim_left(iVal) = Prim(iVal, i, j) +
 						0.25 * ((1 - k) * (limiter(Prim(iVal, i + 1, j) - Prim(iVal, i, j), Prim(iVal, i, j) - Prim(iVal, i - 1, j)) * (Prim(iVal, i, j) - Prim(iVal, i - 1, j)) +
 							(1 + k) * (limiter(Prim(iVal, i, j) - Prim(iVal, i - 1, j), Prim(iVal, i + 1, j) - Prim(iVal, i, j)) * (Prim(iVal, i + 1, j) - Prim(iVal, i, j)))));
-					riemann_para.primR(iVal) = Prim(iVal, i + 1, j) +
+					riemann_para.prim_right(iVal) = Prim(iVal, i + 1, j) +
 						0.25 * ((1 - k) * (limiter(Prim(iVal, i + 1, j) - Prim(iVal, i, j), Prim(iVal, i + 2, j) - Prim(iVal, i + 1, j)) * (Prim(iVal, i + 2, j) - Prim(iVal, i + 1, j)) +
 							(1 + k) * (limiter(Prim(iVal, i + 2, j) - Prim(iVal, i + 1, j), Prim(iVal, i + 1, j) - Prim(iVal, i, j)) * (Prim(iVal, i + 1, j) - Prim(iVal, i, j)))));
 				}
@@ -351,10 +351,10 @@ namespace zaran
 					(*res[iVal])[iNode] += riemann_para.flux[iVal] / jacobi;
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
-					riemann_para.primL(iVal) = Prim(iVal, i - 1, j) +
+					riemann_para.prim_left(iVal) = Prim(iVal, i - 1, j) +
 						0.25 * ((1 - k) * (limiter(Prim(iVal, i, j) - Prim(iVal, i - 1, j), Prim(iVal, i - 1, j) - Prim(iVal, i - 2, j)) * (Prim(iVal, i - 1, j) - Prim(iVal, i - 2, j)) +
 							(1 + k) * (limiter(Prim(iVal, i - 1, j) - Prim(iVal, i - 2, j), Prim(iVal, i, j) - Prim(iVal, i - 1, j)) * (Prim(iVal, i, j) - Prim(iVal, i - 1, j)))));
-					riemann_para.primR(iVal) = Prim(iVal, i, j) +
+					riemann_para.prim_right(iVal) = Prim(iVal, i, j) +
 						0.25 * ((1 - k) * (limiter(Prim(iVal, i, j) - Prim(iVal, i - 1, j), Prim(iVal, i + 1, j) - Prim(iVal, i, j)) * (Prim(iVal, i + 1, j) - Prim(iVal, i, j)) +
 							(1 + k) * (limiter(Prim(iVal, i + 1, j) - Prim(iVal, i, j), Prim(iVal, i, j) - Prim(iVal, i - 1, j)) * (Prim(iVal, i, j) - Prim(iVal, i - 1, j)))));
 				}
@@ -369,10 +369,10 @@ namespace zaran
 				riemann_para.nt = (*coordTrans[23])[iNode];
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
-					riemann_para.primL(iVal) = Prim(iVal, i, j) +
+					riemann_para.prim_left(iVal) = Prim(iVal, i, j) +
 						0.25 * ((1 - k) * (limiter(Prim(iVal, i + 1, j) - Prim(iVal, i, j), Prim(iVal, i, j) - Prim(iVal, i - 1, j)) * (Prim(iVal, i, j) - Prim(iVal, i - 1, j)) +
 							(1 + k) * (limiter(Prim(iVal, i, j) - Prim(iVal, i - 1, j), Prim(iVal, i + 1, j) - Prim(iVal, i, j)) * (Prim(iVal, i + 1, j) - Prim(iVal, i, j)))));
-					riemann_para.primR(iVal) = Prim(iVal, i + 1, j) +
+					riemann_para.prim_right(iVal) = Prim(iVal, i + 1, j) +
 						0.25 * ((1 - k) * (limiter(Prim(iVal, i + 1, j) - Prim(iVal, i, j), Prim(iVal, i + 2, j) - Prim(iVal, i + 1, j)) * (Prim(iVal, i + 2, j) - Prim(iVal, i + 1, j)) +
 							(1 + k) * (limiter(Prim(iVal, i + 2, j) - Prim(iVal, i + 1, j), Prim(iVal, i + 1, j) - Prim(iVal, i, j)) * (Prim(iVal, i + 1, j) - Prim(iVal, i, j)))));
 				}
@@ -381,10 +381,10 @@ namespace zaran
 					(*res[iVal])[iNode] += riemann_para.flux[iVal] / jacobi;
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
-					riemann_para.primL(iVal) = Prim(iVal, i - 1, j) +
+					riemann_para.prim_left(iVal) = Prim(iVal, i - 1, j) +
 						0.25 * ((1 - k) * (limiter(Prim(iVal, i, j) - Prim(iVal, i - 1, j), Prim(iVal, i - 1, j) - Prim(iVal, i - 2, j)) * (Prim(iVal, i - 1, j) - Prim(iVal, i - 2, j)) +
 							(1 + k) * (limiter(Prim(iVal, i - 1, j) - Prim(iVal, i - 2, j), Prim(iVal, i, j) - Prim(iVal, i - 1, j)) * (Prim(iVal, i, j) - Prim(iVal, i - 1, j)))));
-					riemann_para.primR(iVal) = Prim(iVal, i, j) +
+					riemann_para.prim_right(iVal) = Prim(iVal, i, j) +
 						0.25 * ((1 - k) * (limiter(Prim(iVal, i, j) - Prim(iVal, i - 1, j), Prim(iVal, i + 1, j) - Prim(iVal, i, j)) * (Prim(iVal, i + 1, j) - Prim(iVal, i, j)) +
 							(1 + k) * (limiter(Prim(iVal, i + 1, j) - Prim(iVal, i, j), Prim(iVal, i, j) - Prim(iVal, i - 1, j)) * (Prim(iVal, i, j) - Prim(iVal, i - 1, j)))));
 				}

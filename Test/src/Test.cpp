@@ -6,19 +6,19 @@ namespace zaran
     void TestVanLeer()
     {
         RiemannSolverPara para1;
-        para1.primL << 1.2, 3.0, 0.0, 0.0, 1.0;
-        para1.primR << 1.2, 3.0, 0.0, 0.0, 1.0;
-        para1.gammaL = 1.4;
-        para1.gammaR = 1.4;
+        para1.prim_left << 1.2, 3.0, 0.0, 0.0, 1.0;
+        para1.prim_right << 1.2, 3.0, 0.0, 0.0, 1.0;
+        para1.gamma_left = 1.4;
+        para1.gamma_right = 1.4;
         para1.norm << 0.0, 1.0, 0.0;
         para1.nt = 1.0;
         Vanleer vanleer;
         vanleer.Solver(para1);
         RiemannSolverPara para2;
-        para2.primL << 1.0, 3.0, 0.0, 0.0, 1.0;
-        para2.primR << 1.0, 3.0, 0.0, 0.0, 1.0;
-        para2.gammaL = 1.4;
-        para2.gammaR = 1.4;
+        para2.prim_left << 1.0, 3.0, 0.0, 0.0, 1.0;
+        para2.prim_right << 1.0, 3.0, 0.0, 0.0, 1.0;
+        para2.gamma_left = 1.4;
+        para2.gamma_right = 1.4;
         para2.norm << 0.0, 1.0, 0.0;
         para2.nt = 1.0;
         vanleer.Solver(para2);

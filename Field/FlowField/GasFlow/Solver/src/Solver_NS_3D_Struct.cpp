@@ -166,7 +166,7 @@ namespace zaran
 		auto NodeIndex = [&](int i, int j, int k) {return grid->GetNodeIndex(i, j, k); };
 		DVector3D r, grad;
 		RiemannSolverPara riemann_para ;
-		riemann_para.gammaL = riemann_para.gammaR = 1.4;
+		riemann_para.gamma_left = riemann_para.gamma_right = 1.4;
 		for (int k = ks; k < ke; k++)
 		{
 			for (int j = js; j < je; j++)
@@ -186,11 +186,11 @@ namespace zaran
 						grad(0) = (*primGradX[iVal])[iNode];
 						grad(1) = (*primGradY[iVal])[iNode];
 						grad(2) = (*primGradZ[iVal])[iNode];
-						riemann_para.primL(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+						riemann_para.prim_left(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
 						grad(0) = (*primGradX[iVal])[NodeIndex(i + 1, j, k)];
 						grad(1) = (*primGradY[iVal])[NodeIndex(i + 1, j, k)];
 						grad(2) = (*primGradZ[iVal])[NodeIndex(i + 1, j, k)];
-						riemann_para.primR(iVal) = (*prim[iVal])[NodeIndex(i + 1, j, k)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
+						riemann_para.prim_right(iVal) = (*prim[iVal])[NodeIndex(i + 1, j, k)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 					}
 					riemannSolver_->Solver(riemann_para);
 					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -201,11 +201,11 @@ namespace zaran
 						grad(0) = (*primGradX[iVal])[iNode];
 						grad(1) = (*primGradY[iVal])[iNode];
 						grad(2) = (*primGradZ[iVal])[iNode];
-						riemann_para.primR(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+						riemann_para.prim_right(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
 						grad(0) = (*primGradX[iVal])[NodeIndex(i - 1, j, k)];
 						grad(1) = (*primGradY[iVal])[NodeIndex(i - 1, j, k)];
 						grad(2) = (*primGradZ[iVal])[NodeIndex(i - 1, j, k)];
-						riemann_para.primL(iVal) = (*prim[iVal])[NodeIndex(i - 1, j, k)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
+						riemann_para.prim_left(iVal) = (*prim[iVal])[NodeIndex(i - 1, j, k)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 					}
 					riemannSolver_->Solver(riemann_para);
 					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -222,11 +222,11 @@ namespace zaran
 						grad(0) = (*primGradX[iVal])[iNode];
 						grad(1) = (*primGradY[iVal])[iNode];
 						grad(2) = (*primGradZ[iVal])[iNode];
-						riemann_para.primL(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+						riemann_para.prim_left(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
 						grad(0) = (*primGradX[iVal])[NodeIndex(i, j + 1, k)];
 						grad(1) = (*primGradY[iVal])[NodeIndex(i, j + 1, k)];
 						grad(2) = (*primGradZ[iVal])[NodeIndex(i, j + 1, k)];
-						riemann_para.primR(iVal) = (*prim[iVal])[NodeIndex(i + 1, j, k)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
+						riemann_para.prim_right(iVal) = (*prim[iVal])[NodeIndex(i + 1, j, k)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 					}
 					riemannSolver_->Solver(riemann_para);
 					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -237,11 +237,11 @@ namespace zaran
 						grad(0) = (*primGradX[iVal])[iNode];
 						grad(1) = (*primGradY[iVal])[iNode];
 						grad(2) = (*primGradZ[iVal])[iNode];
-						riemann_para.primR(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+						riemann_para.prim_right(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
 						grad(0) = (*primGradX[iVal])[NodeIndex(i, j - 1, k)];
 						grad(1) = (*primGradY[iVal])[NodeIndex(i, j - 1, k)];
 						grad(2) = (*primGradZ[iVal])[NodeIndex(i, j - 1, k)];
-						riemann_para.primL(iVal) = (*prim[iVal])[NodeIndex(i - 1, j, k)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
+						riemann_para.prim_left(iVal) = (*prim[iVal])[NodeIndex(i - 1, j, k)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 					}
 					riemannSolver_->Solver(riemann_para);
 					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -258,11 +258,11 @@ namespace zaran
 						grad(0) = (*primGradX[iVal])[iNode];
 						grad(1) = (*primGradY[iVal])[iNode];
 						grad(2) = (*primGradZ[iVal])[iNode];
-						riemann_para.primL(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+						riemann_para.prim_left(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
 						grad(0) = (*primGradX[iVal])[NodeIndex(i, j, k + 1)];
 						grad(1) = (*primGradY[iVal])[NodeIndex(i, j, k + 1)];
 						grad(2) = (*primGradZ[iVal])[NodeIndex(i, j, k + 1)];
-						riemann_para.primR(iVal) = (*prim[iVal])[NodeIndex(i + 1, j, k)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
+						riemann_para.prim_right(iVal) = (*prim[iVal])[NodeIndex(i + 1, j, k)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 					}
 					riemannSolver_->Solver(riemann_para);
 					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -273,11 +273,11 @@ namespace zaran
 						grad(0) = (*primGradX[iVal])[iNode];
 						grad(1) = (*primGradY[iVal])[iNode];
 						grad(2) = (*primGradZ[iVal])[iNode];
-						riemann_para.primR(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
+						riemann_para.prim_right(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
 						grad(0) = (*primGradX[iVal])[NodeIndex(i, j, k - 1)];
 						grad(1) = (*primGradY[iVal])[NodeIndex(i, j, k - 1)];
 						grad(2) = (*primGradZ[iVal])[NodeIndex(i, j, k - 1)];
-						riemann_para.primL(iVal) = (*prim[iVal])[NodeIndex(i - 1, j, k)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
+						riemann_para.prim_left(iVal) = (*prim[iVal])[NodeIndex(i - 1, j, k)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 					}
 					riemannSolver_->Solver(riemann_para);
 					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
