@@ -244,6 +244,7 @@ namespace zaran {
 		BoundaryCondition();
 		TimeAdvance();
 		UpdateField();
+		CheckPrimtive();
 	}
 	double NSSolver::ComputeMaxResidual()
 	{
@@ -334,13 +335,13 @@ namespace zaran {
 				yRight = nodeCoord[tempJ[iNode][2]];
 				zLeft = nodeCoord[tempK[iNode][0]];
 				zRight = nodeCoord[tempK[iNode][2]];
-				ZaranLog::warn("Node {}: {},{},{}", iNode, nodeCoord[iNode].x(), nodeCoord[iNode].y(), nodeCoord[iNode].z());
-				ZaranLog::info("xLeft index={}: {},{},{}", tempI[iNode][0], xLeft.x(), xLeft.y(), xLeft.z());
-				ZaranLog::info("xRight index={}: {},{},{}", tempI[iNode][2], xRight.x(), xRight.y(), xRight.z());
-				ZaranLog::info("yLeft index={}: {},{},{}", tempJ[iNode][0], yLeft.x(), yLeft.y(), yLeft.z());
-				ZaranLog::info("yRight index={}: {},{},{}", tempJ[iNode][2], yRight.x(), yRight.y(), yRight.z());
-				ZaranLog::info("zLeft index={}: {},{},{}", tempK[iNode][0], zLeft.x(), zLeft.y(), zLeft.z());
-				ZaranLog::info("zRight index={}: {},{},{}", tempK[iNode][2], zRight.x(), zRight.y(), zRight.z());
+				// ZaranLog::warn("Node {}: {},{},{}", iNode, nodeCoord[iNode].x(), nodeCoord[iNode].y(), nodeCoord[iNode].z());
+				// ZaranLog::info("xLeft index={}: {},{},{}", tempI[iNode][0], xLeft.x(), xLeft.y(), xLeft.z());
+				// ZaranLog::info("xRight index={}: {},{},{}", tempI[iNode][2], xRight.x(), xRight.y(), xRight.z());
+				// ZaranLog::info("yLeft index={}: {},{},{}", tempJ[iNode][0], yLeft.x(), yLeft.y(), yLeft.z());
+				// ZaranLog::info("yRight index={}: {},{},{}", tempJ[iNode][2], yRight.x(), yRight.y(), yRight.z());
+				// ZaranLog::info("zLeft index={}: {},{},{}", tempK[iNode][0], zLeft.x(), zLeft.y(), zLeft.z());
+				// ZaranLog::info("zRight index={}: {},{},{}", tempK[iNode][2], zRight.x(), zRight.y(), zRight.z());
 			};
 		//check negative pressure and density
 		if (value_rec_left[0] < 0 || value_rec_left[4] < 0)
@@ -838,6 +839,81 @@ namespace zaran {
 					//(*limiterCoef[iVal])[boundIndex] = (*limiterCoef[iVal])[innerIndex];
 				}
 			}
+		}
+	}
+	void NSSolver::CheckPrimtive()
+	{
+		GridPtr grid = GetGrid();
+		auto& nodeTopo = grid->GetNodeTopo();
+		auto& nodeType = nodeTopo->GetType();
+		auto& nodeCoord = nodeTopo->GetCoordinate();
+		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
+		auto& prim = m_Primitive;
+		auto& res= m_Residual;
+		auto& limiterCoef = m_LimiterCoef;
+		int nTotalNodeNum = grid->GetTotalNodeNum();
+		int equation_num=GetNumberOfEquations();
+		DArray ave_prim(equation_num,0.0);
+		int nan_node_num=0;
+		// #pragma omp parallel for private(ave_prim) reduction(+:nan_node_num)
+		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		{
+			bool existNan=false;
+			for(int iVal=0;iVal<equation_num;++iVal)
+			{
+				ave_prim[iVal]=0;
+			}
+			int none_nan_neighbor_num=0;
+			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
+				continue;
+			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			{
+				if(isnan((*prim[iVal])[iNode])||isinf((*prim[iVal])[iNode])||(*prim[iVal])[iNode]<0||(*prim[iVal])[iNode]<0)
+				{
+					existNan=true;
+					break;
+				}
+			}
+			if(existNan)
+			{
+				nan_node_num++;
+				auto& neighborNode = nodeNeighbor[iNode];
+				bool existNanNeighbor=false;
+				for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
+				{
+					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					{
+						if(isnan((*prim[iVal])[neighborNode[iNeighbor]])||isinf((*prim[iVal])[neighborNode[iNeighbor]])||(*prim[iVal])[neighborNode[iNeighbor]]<0||(*prim[iVal])[neighborNode[iNeighbor]]<0)
+						{
+							existNanNeighbor=true;
+							break;
+						}
+					}
+					if(!existNanNeighbor)
+					{
+						none_nan_neighbor_num++;
+						for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+						{
+							ave_prim[iVal]+=(*prim[iVal])[neighborNode[iNeighbor]];
+						}
+					}
+				}
+				if(none_nan_neighbor_num>0)
+				{
+					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					{
+						(*prim[iVal])[iNode]=ave_prim[iVal]/none_nan_neighbor_num;
+					}
+				}
+				Primitive2Conservative((*prim[0])[iNode], (*prim[1])[iNode], (*prim[2])[iNode], (*prim[3])[iNode], (*prim[4])[iNode],
+					(*m_Conservative[0])[iNode], (*m_Conservative[1])[iNode], (*m_Conservative[2])[iNode], (*m_Conservative[3])[iNode], (*m_Conservative[4])[iNode]);
+					(*res[0])[iNode]=0;
+
+			}
+		}
+		if(nan_node_num>0)
+		{
+			ZaranLog::warn("There are {} nan nodes",nan_node_num);
 		}
 	}
 	void NSSolver::NoGradient()

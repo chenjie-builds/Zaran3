@@ -138,15 +138,19 @@ void zaran::Controller::CalcResidual()
         auto& nodeTopo = currentGrid->GetNodeTopo();
         auto& nodeCoord = nodeTopo->GetCoordinate();
         auto& nodeType = nodeTopo->GetType();
-        maxResidual_ = aveResidual_ = 0.0;
+        double maxResidual = 0.0;
+        double aveResidual = 0.0;
         int n_data = rho.size();
+        #pragma omp parallel for reduction(max:maxResidual) reduction(+:aveResidual)
         for (int iNode = 0;iNode < n_data;++iNode)
         {
-            maxResidual_ = Max(maxResidual_, abs(res0[iNode]));
-            aveResidual_ += pow(res0[iNode], 2);
+            maxResidual = Max(maxResidual, abs(res0[iNode]));
+            aveResidual += pow(res0[iNode], 2);
         }
-        aveResidual_ /= n_data;
-        aveResidual_ = sqrt(aveResidual_);
+        aveResidual /= n_data;
+        aveResidual = sqrt(aveResidual);
+        maxResidual_ = maxResidual;
+        aveResidual_ = aveResidual;
     }
 }
 

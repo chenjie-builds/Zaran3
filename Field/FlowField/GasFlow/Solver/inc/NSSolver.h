@@ -83,6 +83,9 @@ namespace zaran
 		virtual void ComputeLimiterCoefOneOrder();
 
 		virtual void ComputeBoundaryLimiterCoef();
+		/// @brief 检查原始变量
+		/// 如果原始变量出现异常值，将其修正为合理值
+		virtual void CheckPrimtive();
 		/// @brief mid point value reconstruct
 		/// @param index_left left node index
 		/// @param index_right right node index 
