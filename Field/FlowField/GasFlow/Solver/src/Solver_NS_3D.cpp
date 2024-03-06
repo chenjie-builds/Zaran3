@@ -14,6 +14,11 @@ namespace zaran
 		int nInnerNode = grid->GetInnerNodeNum();
 		CoordTrans coordTrans;
 		DVector3D xRight, xLeft, yRight, yLeft, zRight, zLeft;
+		double max_jacobi , min_jacobi;
+		max_jacobi=-LARGE_NUMBER;
+		min_jacobi=LARGE_NUMBER;
+		int max_jacobi_index = 0;
+		int min_jacobi_index = 0;
 		for (size_t iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
 			if (nodeType[iNode] != NodeType::inner)
@@ -90,7 +95,19 @@ namespace zaran
 			(*coordTransCoef[30])[iNode] = coordTrans.GetTau()[2];
 			(*coordTransCoef[31])[iNode] = coordTrans.GetTau()[3];
 			(*coordTransCoef[32])[iNode] = coordTrans.J();
+			if (coordTrans.J() > max_jacobi)
+			{
+				max_jacobi = coordTrans.J();
+				max_jacobi_index = iNode;
+			}
+			if (coordTrans.J() < min_jacobi)
+			{
+				min_jacobi = coordTrans.J();
+				min_jacobi_index = iNode;
+			}
 		}
+		ZaranLog::info("max jacobi: {}, index: {}", max_jacobi, max_jacobi_index);
+		ZaranLog::info("min jacobi: {}, index: {}", min_jacobi, min_jacobi_index);
 	}
 
 	void Solver_NS_3D::ComputeGradientWLS()
