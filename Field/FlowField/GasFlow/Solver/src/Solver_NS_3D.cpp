@@ -45,7 +45,7 @@ namespace zaran
 			}
 
 			// check coordinate
-			if (coordTrans.J() > 1e15 || coordTrans.J() < 0|| isnan(coordTrans.J()) || isinf(coordTrans.J()))
+			if (coordTrans.J() > 1e15 || coordTrans.J() < 0 || isnan(coordTrans.J()) || isinf(coordTrans.J()))
 			{
 				ZaranLog::warn("jacobi is too large or negative: {}", coordTrans.J());
 				ZaranLog::warn("Node {}: {},{},{}", iNode, nodeCoord[iNode].x(), nodeCoord[iNode].y(), nodeCoord[iNode].z());
@@ -201,53 +201,79 @@ namespace zaran
 		auto& limiterCoef = m_LimiterCoef;
 		auto& res = m_Residual;
 		auto& coordTrans = m_CoordTrans;
-		RiemannSolverPara riemann_para;
-		riemann_para.gamma_left = riemann_para.gamma_right = 1.4;
-#pragma omp parallel for private(riemann_para)
+		RiemannSolverPara riemann_para[6];
+		for (int i = 0; i < 6; ++i)
+		{
+			riemann_para[i].gamma_left = riemann_para[i].gamma_right = 1.4;
+		}
+		bool exist_negative = false;
+#pragma omp parallel for private(riemann_para,exist_negative)
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
 			if (nodeType[iNode] != NodeType::inner)
 				continue;
+			exist_negative = false;
 			auto& jacobi = (*coordTrans[32])[iNode];
 			// i direction
-			riemann_para.norm(0) = (*coordTrans[16])[iNode];
-			riemann_para.norm(1) = (*coordTrans[17])[iNode];
-			riemann_para.norm(2) = (*coordTrans[18])[iNode];
-			riemann_para.nt = (*coordTrans[19])[iNode];
-			MidPointReconstruct(templateI[iNode][1], templateI[iNode][2], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
-			riemannSolver_->Solver(riemann_para);
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-				(*res[iVal])[iNode] += riemann_para.flux[iVal] / jacobi;
-			MidPointReconstruct(templateI[iNode][0], templateI[iNode][1], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
-			riemannSolver_->Solver(riemann_para);
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-				(*res[iVal])[iNode] -= riemann_para.flux[iVal] / jacobi;
+			riemann_para[0].norm(0) = (*coordTrans[16])[iNode];
+			riemann_para[0].norm(1) = (*coordTrans[17])[iNode];
+			riemann_para[0].norm(2) = (*coordTrans[18])[iNode];
+			riemann_para[0].nt = (*coordTrans[19])[iNode];
+			riemann_para[1].norm(0) = (*coordTrans[16])[iNode];
+			riemann_para[1].norm(1) = (*coordTrans[17])[iNode];
+			riemann_para[1].norm(2) = (*coordTrans[18])[iNode];
+			riemann_para[1].nt = (*coordTrans[19])[iNode];
+			MidPointReconstruct(templateI[iNode][1], templateI[iNode][2], &riemann_para[0].prim_left(0), &riemann_para[0].prim_right(0));
+			MidPointReconstruct(templateI[iNode][0], templateI[iNode][1], &riemann_para[1].prim_left(0), &riemann_para[1].prim_right(0));
 			// j direction
-			riemann_para.norm(0) = (*coordTrans[20])[iNode];
-			riemann_para.norm(1) = (*coordTrans[21])[iNode];
-			riemann_para.norm(2) = (*coordTrans[22])[iNode];
-			riemann_para.nt = (*coordTrans[23])[iNode];
-			MidPointReconstruct(templateJ[iNode][1], templateJ[iNode][2], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
-			riemannSolver_->Solver(riemann_para);
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-				(*res[iVal])[iNode] += riemann_para.flux[iVal] / jacobi;
-			MidPointReconstruct(templateJ[iNode][0], templateJ[iNode][1], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
-			riemannSolver_->Solver(riemann_para);
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-				(*res[iVal])[iNode] -= riemann_para.flux[iVal] / jacobi;
+			riemann_para[2].norm(0) = (*coordTrans[20])[iNode];
+			riemann_para[2].norm(1) = (*coordTrans[21])[iNode];
+			riemann_para[2].norm(2) = (*coordTrans[22])[iNode];
+			riemann_para[2].nt = (*coordTrans[23])[iNode];
+			riemann_para[3].norm(0) = (*coordTrans[20])[iNode];
+			riemann_para[3].norm(1) = (*coordTrans[21])[iNode];
+			riemann_para[3].norm(2) = (*coordTrans[22])[iNode];
+			riemann_para[3].nt = (*coordTrans[23])[iNode];
+			MidPointReconstruct(templateJ[iNode][1], templateJ[iNode][2], &riemann_para[2].prim_left(0), &riemann_para[2].prim_right(0));
+			MidPointReconstruct(templateJ[iNode][0], templateJ[iNode][1], &riemann_para[3].prim_left(0), &riemann_para[3].prim_right(0));
 			// k direction
-			riemann_para.norm(0) = (*coordTrans[24])[iNode];
-			riemann_para.norm(1) = (*coordTrans[25])[iNode];
-			riemann_para.norm(2) = (*coordTrans[26])[iNode];
-			riemann_para.nt = (*coordTrans[27])[iNode];
-			MidPointReconstruct(templateK[iNode][1], templateK[iNode][2], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
-			riemannSolver_->Solver(riemann_para);
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-				(*res[iVal])[iNode] += riemann_para.flux[iVal] / jacobi;
-			MidPointReconstruct(templateK[iNode][0], templateK[iNode][1], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
-			riemannSolver_->Solver(riemann_para);
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-				(*res[iVal])[iNode] -= riemann_para.flux[iVal] / jacobi;
+			riemann_para[4].norm(0) = (*coordTrans[24])[iNode];
+			riemann_para[4].norm(1) = (*coordTrans[25])[iNode];
+			riemann_para[4].norm(2) = (*coordTrans[26])[iNode];
+			riemann_para[4].nt = (*coordTrans[27])[iNode];
+			riemann_para[5].norm(0) = (*coordTrans[24])[iNode];
+			riemann_para[5].norm(1) = (*coordTrans[25])[iNode];
+			riemann_para[5].norm(2) = (*coordTrans[26])[iNode];
+			riemann_para[5].nt = (*coordTrans[27])[iNode];
+			MidPointReconstruct(templateK[iNode][1], templateK[iNode][2], &riemann_para[4].prim_left(0), &riemann_para[4].prim_right(0));
+			MidPointReconstruct(templateK[iNode][0], templateK[iNode][1], &riemann_para[5].prim_left(0), &riemann_para[5].prim_right(0));
+			// check negative density and pressure
+			for (int i = 0; i < 6; ++i)
+			{
+				if (riemann_para[i].prim_left(0) < 0 || riemann_para[i].prim_right(0) < 0||riemann_para[i].prim_left(4)<0||riemann_para[i].prim_right(4)<0)
+				{
+					exist_negative = true;
+					break;
+				}
+			}
+			if (exist_negative)
+			{
+				MidPointReconstructOneOrder(templateI[iNode][1], templateI[iNode][2], &riemann_para[0].prim_left(0), &riemann_para[0].prim_right(0));
+				MidPointReconstructOneOrder(templateI[iNode][0], templateI[iNode][1], &riemann_para[1].prim_left(0), &riemann_para[1].prim_right(0));
+				MidPointReconstructOneOrder(templateJ[iNode][1], templateJ[iNode][2], &riemann_para[2].prim_left(0), &riemann_para[2].prim_right(0));
+				MidPointReconstructOneOrder(templateJ[iNode][0], templateJ[iNode][1], &riemann_para[3].prim_left(0), &riemann_para[3].prim_right(0));
+				MidPointReconstructOneOrder(templateK[iNode][1], templateK[iNode][2], &riemann_para[4].prim_left(0), &riemann_para[4].prim_right(0));
+				MidPointReconstructOneOrder(templateK[iNode][0], templateK[iNode][1], &riemann_para[5].prim_left(0), &riemann_para[5].prim_right(0));
+			}
+			// calculate flux
+			for (int i = 0; i < 6; ++i)
+			{
+				riemannSolver_->Solver(riemann_para[i]);
+			}
+			for (int iVar = 0;iVar < GetNumberOfEquations();++iVar)
+			{
+				(*res[iVar])[iNode] = (riemann_para[0].flux[iVar] - riemann_para[1].flux[iVar] + riemann_para[2].flux[iVar] - riemann_para[3].flux[iVar] + riemann_para[4].flux[iVar] - riemann_para[5].flux[iVar]) / jacobi;
+			}
 		}
 	}
 

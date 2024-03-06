@@ -29,7 +29,7 @@ namespace zaran
 		void Post()override;
 		// 同步时间步长为全局时间步
 		virtual void SnycTimeStepWithGlobal(double& dt) = 0;
-		virtual	double ComputeMaxResidual()=0;
+		virtual	double ComputeMaxResidual() = 0;
 	public:
 		//计算当前时刻的CFL数
 		double ComputeCFL();
@@ -52,5 +52,6 @@ namespace zaran
 		Array<DArray*> m_Residual;
 		Array<DArray*> m_LimiterCoef;
 		Array<DArray*> m_ConservativeRK;// 用于存储Runge-Kutta的中间量
+		DArray* m_non_physical;
 	};
 }

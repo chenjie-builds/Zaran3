@@ -21,6 +21,9 @@ namespace zaran
 	private:
 		void ReadFile(Ptr<GridList>& gridList);
 		void SortNeiborNode(Ptr<GridList>& gridList);
+		/// @brief 扩展邻居节点，使用kd树，找到范围内的节点
+		/// @param gridList 
+		void ExtendNeighborNode(Ptr<GridList>& gridList);
 		void ReadCellFile(Ptr<GridList>& gridList);
 		void ReadBoundFile(Ptr<GridList>& gridList);
 	private:

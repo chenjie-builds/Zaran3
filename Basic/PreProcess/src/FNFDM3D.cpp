@@ -3,6 +3,11 @@
 #include"MathBasic.h"
 #include<set>
 #include<fstream>
+#include<vtkKdTreePointLocator.h>
+#include<vtkNew.h>
+#include<vtkPoints.h>
+#include<vtkPolyData.h>
+#include<vtkVertexGlyphFilter.h>
 namespace zaran
 {
 
@@ -54,6 +59,7 @@ namespace zaran
 		temp_k.resize(m_NodeNum);
 		auto& nodeNeibor = nodeTopo->GetNeighborCloud();
 		nodeNeibor.resize(m_NodeNum);
+		double delta=1e-5;
 		for (size_t i = 0; i < innerNodeNum; i++)
 		{
 			fin >> innerNodeIndex;
@@ -65,30 +71,44 @@ namespace zaran
 			neibor_index[3] -= 1;
 			neibor_index[4] -= 1;
 			neibor_index[5] -= 1;
+			if(innerNodeIndex==709761)
+				ZaranLog::info("inner node index:{}", innerNodeIndex);
 			nodeType[innerNodeIndex] = NodeType::inner;
 			nodeNeibor[innerNodeIndex] = neibor_index;
-
 			Array<DVector3D> vec(3);
 			vec[0] = nodeCoord[neibor_index[1]] - nodeCoord[neibor_index[0]];
 			vec[1] = nodeCoord[neibor_index[3]] - nodeCoord[neibor_index[2]];
 			vec[2] = nodeCoord[neibor_index[5]] - nodeCoord[neibor_index[4]];
 			double angle = AngleOfTwoArray3D(vec[0].data(), vec[1].data());
 			//i,j方向平行
-			if (abs(angle) < EPSILON_NUMBER || abs(angle - PI) < EPSILON_NUMBER)
+			if (abs(angle) < delta)
 			{
-				std::swap(neibor_index[1], neibor_index[0]);
+				std::swap(neibor_index[1], neibor_index[3]);
 			}
+			else if (abs(angle - PI) < delta)
+			{
+				std::swap(neibor_index[1], neibor_index[2]);
+			}
+
 			angle = AngleOfTwoArray3D(vec[0].data(), vec[2].data());
 			//i,k方向平行
-			if (abs(angle) < EPSILON_NUMBER || abs(angle - PI) < EPSILON_NUMBER)
+			if (abs(angle) < delta)
 			{
-				std::swap(neibor_index[2], neibor_index[0]);
+				std::swap(neibor_index[1], neibor_index[5]);
+			}
+			else if (abs(angle - PI) < delta)
+			{
+				std::swap(neibor_index[1], neibor_index[4]);
 			}
 			angle = AngleOfTwoArray3D(vec[1].data(), vec[2].data());
 			//j,k方向平行
-			if (abs(angle) < EPSILON_NUMBER || abs(angle - PI) < EPSILON_NUMBER)
+			if (abs(angle) < delta)
 			{
-				std::swap(neibor_index[4], neibor_index[3]);
+				std::swap(neibor_index[3], neibor_index[5]);
+			}
+			else if (abs(angle - PI) < delta)
+			{
+				std::swap(neibor_index[3], neibor_index[4]);
 			}
 			//检查是否是右手坐标系
 			vec[0] = nodeCoord[neibor_index[1]] - nodeCoord[neibor_index[0]];
@@ -189,67 +209,11 @@ namespace zaran
 			boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,connectNodeIndex,0,wallNorm });
 			nodeType[boundNodeIndex] = NodeType::slipWall;
 		}
-
-
-
-
-
-
+		ZaranLog::info("extend inner node neibor node");
+		ExtendNeighborNode(gridList);
 
 		//扩展内部节点邻居节点，用于计算梯度
-		Array<std::set<int>> nodeNeiborSet(m_NodeNum);
-		for (int iNode = 0; iNode < m_NodeNum; iNode++)
-		{
-			if (nodeType[iNode] != NodeType::inner)
-				continue;
-			auto& currentNeibor = nodeNeibor[iNode];
-			auto& neiborSet = nodeNeiborSet[iNode];
-			for (auto& iNeibor : currentNeibor)
-			{
-				neiborSet.insert(iNeibor);
-			}
-			for(int iNeibor=0;iNeibor<currentNeibor.size();iNeibor++)
-			{
-				auto& neighbor_neighbor = nodeNeibor[currentNeibor[iNeibor]];
-				for (int jNeibor = 0; jNeibor < neighbor_neighbor.size(); jNeibor++)
-				{
-					neiborSet.insert(neighbor_neighbor[jNeibor]);
-				}
-			}
 
-
-
-			// double max_distance = 0;
-			// for (auto& iNeibor : currentNeibor)
-			// {
-			// 	max_distance = Max(max_distance, (nodeCoord[iNeibor] - nodeCoord[iNode]).norm());
-			// }
-			// while (neiborSet.size() < 20)
-			// {
-			// 	for (int jNode = 0;jNode < m_NodeNum;++jNode)
-			// 	{
-			// 		if ((nodeCoord[jNode] - nodeCoord[iNode]).norm() < max_distance)
-			// 			neiborSet.insert(jNode);
-			// 	}
-			// 	max_distance *= 1.5;
-			// }
-			neiborSet.erase(iNode);
-		}
-
-		for (int iNode = 0; iNode < m_NodeNum; iNode++)
-		{
-			if (nodeType[iNode] != NodeType::inner)
-				continue;
-			auto& currentNeibor = nodeNeibor[iNode];
-			auto& neiborSet = nodeNeiborSet[iNode];
-			currentNeibor.resize(neiborSet.size());
-			int i = 0;
-			for (auto& iNeibor : neiborSet)
-			{
-				currentNeibor[i] = iNeibor;
-				i++;
-			}
-		}
 		//查找邻居节点，看自身是否是其邻居，如不是，则加进去
 		ZaranLog::info("Add self to neibor node's neibor node");
 		bool find_current;
@@ -275,9 +239,8 @@ namespace zaran
 		}
 		fin.close();
 		ReadCellFile(gridList);
-
-
 	}
+
 	void GridListFactoryFNFDM3D::SortNeiborNode(Ptr<GridList>& gridList)
 	{
 		auto& grid = gridList->GetGrid(0);
@@ -320,8 +283,6 @@ namespace zaran
 				}
 
 			}
-
-
 			// 生成点对map
 			// 以点对与iNode连线的夹角为key
 			// 以点对为value
@@ -517,6 +478,68 @@ namespace zaran
 			}
 		}
 
+
+	}
+
+	void GridListFactoryFNFDM3D::ExtendNeighborNode(Ptr<GridList>& gridList)
+	{
+		// 构建节点KD树
+		auto& grid = gridList->GetGrid(0);
+		auto& nodeTopo = grid->GetNodeTopo();
+		auto& nodeCoord = nodeTopo->GetCoordinate();
+		auto& nodeNeibor = nodeTopo->GetNeighborCloud();
+		auto& nodeType = nodeTopo->GetType();
+		vtkNew<vtkPoints> points;
+		for (int i = 0; i < nodeCoord.size(); ++i)
+		{
+			points->InsertNextPoint(nodeCoord[i].data());
+		}
+		vtkNew<vtkPolyData> polydata;
+		polydata->SetPoints(points);
+		vtkNew<vtkVertexGlyphFilter> glyphFilter;
+		glyphFilter->SetInputData(polydata);
+		glyphFilter->Update();
+		vtkNew<vtkKdTreePointLocator> kdTree;
+		kdTree->SetDataSet(glyphFilter->GetOutput());
+		kdTree->BuildLocator();
+		int point_num = kdTree->GetDataSet()->GetNumberOfPoints();
+		ZaranLog::info("point num:{}", point_num);
+		int neibor_num_before = 0;
+		int neibor_num_after = 0;
+		// 扩展内部节点邻居节点，用于计算梯度
+		for (int iNode = 0; iNode < m_NodeNum; iNode++)
+		{
+			if (nodeType[iNode] != NodeType::inner)
+				continue;
+			auto& currentNeibor = nodeNeibor[iNode];
+			neibor_num_before = currentNeibor.size();
+
+			double max_distance = 0;
+			for (auto& iNeibor : currentNeibor)
+			{
+				max_distance = Max(max_distance, (nodeCoord[iNeibor] - nodeCoord[iNode]).norm());
+			}
+			//以当前节点为中心，以最大距离为半径，找到范围内的节点
+			vtkNew<vtkIdList> result;
+			kdTree->FindPointsWithinRadius(max_distance * 1.1, nodeCoord[iNode].data(), result);
+			currentNeibor.clear();
+			for (int i = 0; i < result->GetNumberOfIds(); ++i)
+			{
+				currentNeibor.push_back(result->GetId(i));
+			}
+			// 删除邻居节点中与当地节点距离小于小量的节点
+			for (int i = 0; i < currentNeibor.size(); ++i)
+			{
+				if ((nodeCoord[currentNeibor[i]] - nodeCoord[iNode]).norm() < 1e-6)
+				{
+					currentNeibor.erase(currentNeibor.begin() + i);
+					--i;
+				}
+			}
+			neibor_num_after = currentNeibor.size();
+			if (neibor_num_after < neibor_num_before)
+				ZaranLog::info("node:{} neibor num before:{} neibor num after:{}", iNode, neibor_num_before, neibor_num_after);
+		}
 
 	}
 

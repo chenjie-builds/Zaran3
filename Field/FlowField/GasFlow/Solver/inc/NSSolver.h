@@ -84,14 +84,16 @@ namespace zaran
 
 		virtual void ComputeBoundaryLimiterCoef();
 		/// @brief 检查原始变量
-		/// 如果原始变量出现异常值，将其修正为合理值
 		virtual void CheckPrimtive();
+		/// 如果原始变量出现异常值，将其修正为合理值
+		virtual void FixPrimtive();
 		/// @brief mid point value reconstruct
 		/// @param index_left left node index
 		/// @param index_right right node index 
 		/// @param value_rec_left reconstructed value of left side at mid point
 		/// @param value_rec_right reconstructed value of right side at mid point
 		void MidPointReconstruct(int index_left, int index_right,double* value_rec_left, double* value_rec_right);
+		void MidPointReconstructOneOrder(int index_left, int index_right, double* value_rec_left, double* value_rec_right);
 	protected:
 		void BoundaryCondition()override;
 		// 超声速入口边界条件

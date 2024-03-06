@@ -138,13 +138,14 @@ namespace zaran {
 		data.AddData("coordTransTauZ", emptyData);
 		data.AddData("coordTransTauT", emptyData);
 		data.AddData("coordTransJ", emptyData);
+		data.AddData("nonPhysical", emptyData);
 	}
 	void NSSolver::RegisterFieldData()
 	{
 
 		auto& data = *GetFieldData();
 
-		// Ԥ�����ڴ�
+		// 预锟斤拷锟斤拷锟节达拷
 		m_Primitive.reserve(5);
 		m_Conservative.reserve(5);
 		m_Residual.reserve(5);
@@ -233,6 +234,7 @@ namespace zaran {
 		addDataToVector(m_CoordTrans, "coordTransTauT");
 		addDataToVector(m_CoordTrans, "coordTransJ");
 		m_TimeStep = &data.GetData("dt");
+		m_non_physical = &data.GetData("nonPhysical");
 
 	}
 
@@ -245,6 +247,7 @@ namespace zaran {
 		TimeAdvance();
 		UpdateField();
 		CheckPrimtive();
+		FixPrimtive();
 	}
 	double NSSolver::ComputeMaxResidual()
 	{
@@ -263,7 +266,7 @@ namespace zaran {
 	{
 		GlobalData::Update("dt", LARGE_NUMBER);
 		ComputeTimeStepLocal();
-		//�Ƿ�ʹ��ȫ��ʱ�䲽
+		//锟角凤拷使锟斤拷全锟斤拷时锟戒步
 		int useGlobalTimeStep = GlobalData::GetInt("useGlobalTimeStep");
 		if (useGlobalTimeStep == 1)
 		{
@@ -322,7 +325,7 @@ namespace zaran {
 					r.y() * (*primGradY[iVal])[index_right] +
 					r.z() * (*primGradZ[iVal])[index_right]);
 		}
-#if 1
+#if 0
 		auto OutputError = [&](int iNode)
 			{
 				DVector3D xRight, xLeft, yRight, yLeft, zRight, zLeft;
@@ -363,6 +366,25 @@ namespace zaran {
 			OutputError(index_right);
 		}
 #endif
+	}
+
+	void NSSolver::MidPointReconstructOneOrder(int index_left, int index_right, double* value_rec_left, double* value_rec_right)
+	{
+		GridPtr grid = GetGrid();
+		auto& nodeTopo = grid->GetNodeTopo();
+		auto& nodeCoord = nodeTopo->GetCoordinate();
+		auto& prim = m_Primitive;
+		auto& cons = m_Conservative;
+		auto& primGradX = m_PrimGradX;
+		auto& primGradY = m_PrimGradY;
+		auto& primGradZ = m_PrimGradZ;
+		auto& limiterCoef = m_LimiterCoef;
+		DVector3D r = nodeCoord[index_right] - nodeCoord[index_left];
+		for (int iVal = 0;iVal < GetNumberOfEquations();++iVal)
+		{
+			value_rec_left[iVal] = (*prim[iVal])[index_left];
+			value_rec_right[iVal] = (*prim[iVal])[index_right];
+		}
 	}
 
 	void NSSolver::BoundaryCondition()
@@ -849,72 +871,147 @@ namespace zaran {
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
 		auto& prim = m_Primitive;
-		auto& res= m_Residual;
+		auto& res = m_Residual;
 		auto& limiterCoef = m_LimiterCoef;
 		int nTotalNodeNum = grid->GetTotalNodeNum();
-		int equation_num=GetNumberOfEquations();
-		DArray ave_prim(equation_num,0.0);
-		int nan_node_num=0;
-		// #pragma omp parallel for private(ave_prim) reduction(+:nan_node_num)
+		int equation_num = GetNumberOfEquations();
+		DArray ave_prim(equation_num, 0.0);
+		int nonphysical_node_num = 0;
+		// #pragma omp parallel for private(ave_prim) reduction(+:nonphysical_node_num)
 		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 		{
-			bool existNan=false;
-			for(int iVal=0;iVal<equation_num;++iVal)
-			{
-				ave_prim[iVal]=0;
-			}
-			int none_nan_neighbor_num=0;
+			bool exist_nonphysical = false;
+			(*m_non_physical)[iNode] = -1.0;
 			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
 				continue;
+			if ((*prim[0])[iNode] < 0 || (*prim[4])[iNode] < 0)
+			{
+				exist_nonphysical = true;
+			}
+			if (!exist_nonphysical)
+			{
+				for (int iVal = 0; iVal < equation_num; ++iVal)
+				{
+					if (isnan((*prim[iVal])[iNode]) || isinf((*prim[iVal])[iNode]))
+					{
+						exist_nonphysical = true;
+						break;
+					}
+				}
+			}
+			if (exist_nonphysical)
+			{
+				(*m_non_physical)[iNode] = 1.0;
+				nonphysical_node_num++;
+				ZaranLog::info("Non-physical Node: {}, neighbor num: {}, prim: {},{},{},{},{}", iNode, nodeNeighbor[iNode].size(), (*prim[0])[iNode], (*prim[1])[iNode], (*prim[2])[iNode], (*prim[3])[iNode], (*prim[4])[iNode]);
+				ZaranLog::info("Non-physical Node: {}, coord: {},{},{},", iNode, nodeCoord[iNode].x(), nodeCoord[iNode].y(), nodeCoord[iNode].z());
+			}
+		}
+		if (nonphysical_node_num > 0)
+		{
+			ZaranLog::warn("Non-physical Node Num: {}", nonphysical_node_num);
+			auto& para = GetPara();
+			double cfl = para->GetCflNumber();
+			cfl = cfl / 10.0;
+			para->SetCflNumber(cfl);
+			ZaranLog::warn("CFL Number is reduced to {}", cfl);
+		}
+		else
+		{
+			auto& para = GetPara();
+			double cfl = para->GetCflNumber();
+			double cfl_max = GlobalData::GetDouble("cflNumber");
+			if (cfl < cfl_max)
+			{
+				cfl = Min(cfl_max, cfl * 1.15);
+				para->SetCflNumber(cfl);
+				ZaranLog::info("CFL Number is increased to {}", cfl);
+			}
+			else
+				para->SetCflNumber(cfl_max);
+
+		}
+	}
+	void NSSolver::FixPrimtive()
+	{
+		GridPtr grid = GetGrid();
+		auto& nodeTopo = grid->GetNodeTopo();
+		auto& nodeType = nodeTopo->GetType();
+		auto& nodeCoord = nodeTopo->GetCoordinate();
+		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
+		auto& prim = m_Primitive;
+		auto& res = m_Residual;
+		auto& limiterCoef = m_LimiterCoef;
+		int nTotalNodeNum = grid->GetTotalNodeNum();
+		int equation_num = GetNumberOfEquations();
+		DArray weight, distance;
+		IArray physical_neighbor;
+		double sum = 0;
+		// #pragma omp parallel for private(ave_prim)
+		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		{
+			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
+				continue;
+			if ((*m_non_physical)[iNode] < 0)
+				continue;
+			physical_neighbor.clear();
+			auto& neighborNode = nodeNeighbor[iNode];
+			for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
+			{
+				if ((*m_non_physical)[neighborNode[iNeighbor]] > 0)
+					continue;
+				physical_neighbor.push_back(neighborNode[iNeighbor]);
+			}
+			weight.resize(physical_neighbor.size());
+			distance.resize(physical_neighbor.size());
+			sum = 0;
+			for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
+			{
+				if ((*m_non_physical)[physical_neighbor[iNeighbor]] > 0)
+					continue;
+				distance[iNeighbor] = (nodeCoord[physical_neighbor[iNeighbor]] - nodeCoord[iNode]).norm();
+				sum += 1.0 / distance[iNeighbor];
+			}
+			for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
+			{
+				if ((*m_non_physical)[physical_neighbor[iNeighbor]] > 0)
+					continue;
+				weight[iNeighbor] = 1.0 / (distance[iNeighbor] * sum);
+			}
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
-				if(isnan((*prim[iVal])[iNode])||isinf((*prim[iVal])[iNode])||(*prim[iVal])[iNode]<0||(*prim[iVal])[iNode]<0)
+				if (isnan((*prim[iVal])[iNode]) || isinf((*prim[iVal])[iNode]))
 				{
-					existNan=true;
-					break;
+					(*prim[iVal])[iNode] = 0;
+					for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
+					{
+						if ((*m_non_physical)[physical_neighbor[iNeighbor]] > 0)
+							continue;
+						(*prim[iVal])[iNode] += (*prim[iVal])[physical_neighbor[iNeighbor]] * weight[iNeighbor];
+					}
 				}
 			}
-			if(existNan)
+			if ((*prim[0])[iNode] < 0)
+				(*prim[0])[iNode] = 0;
+			for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
 			{
-				nan_node_num++;
-				auto& neighborNode = nodeNeighbor[iNode];
-				bool existNanNeighbor=false;
-				for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
-				{
-					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-					{
-						if(isnan((*prim[iVal])[neighborNode[iNeighbor]])||isinf((*prim[iVal])[neighborNode[iNeighbor]])||(*prim[iVal])[neighborNode[iNeighbor]]<0||(*prim[iVal])[neighborNode[iNeighbor]]<0)
-						{
-							existNanNeighbor=true;
-							break;
-						}
-					}
-					if(!existNanNeighbor)
-					{
-						none_nan_neighbor_num++;
-						for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-						{
-							ave_prim[iVal]+=(*prim[iVal])[neighborNode[iNeighbor]];
-						}
-					}
-				}
-				if(none_nan_neighbor_num>0)
-				{
-					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-					{
-						(*prim[iVal])[iNode]=ave_prim[iVal]/none_nan_neighbor_num;
-					}
-				}
-				Primitive2Conservative((*prim[0])[iNode], (*prim[1])[iNode], (*prim[2])[iNode], (*prim[3])[iNode], (*prim[4])[iNode],
-					(*m_Conservative[0])[iNode], (*m_Conservative[1])[iNode], (*m_Conservative[2])[iNode], (*m_Conservative[3])[iNode], (*m_Conservative[4])[iNode]);
-					(*res[0])[iNode]=0;
-
+				if ((*m_non_physical)[physical_neighbor[iNeighbor]] > 0)
+					continue;
+				(*prim[0])[iNode] += (*prim[0])[physical_neighbor[iNeighbor]] * weight[iNeighbor];
 			}
+			if ((*prim[4])[iNode] < 0)
+				(*prim[4])[iNode] = 0;
+			for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
+			{
+				if ((*m_non_physical)[physical_neighbor[iNeighbor]] > 0)
+					continue;
+				(*prim[4])[iNode] += (*prim[4])[physical_neighbor[iNeighbor]] * weight[iNeighbor];
+			}
+			Primitive2Conservative((*prim[0])[iNode], (*prim[1])[iNode], (*prim[2])[iNode], (*prim[3])[iNode], (*prim[4])[iNode],
+				(*m_Conservative[0])[iNode], (*m_Conservative[1])[iNode], (*m_Conservative[2])[iNode], (*m_Conservative[3])[iNode], (*m_Conservative[4])[iNode]);
+			(*res[0])[iNode] = 0;
 		}
-		if(nan_node_num>0)
-		{
-			ZaranLog::warn("There are {} nan nodes",nan_node_num);
-		}
+
 	}
 	void NSSolver::NoGradient()
 	{
