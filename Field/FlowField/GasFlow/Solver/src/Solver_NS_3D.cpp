@@ -185,7 +185,8 @@ namespace zaran
 		auto& coordTrans = m_CoordTrans;
 		double cfl = para->GetCflNumber();
 		int nInnerNode = grid->GetInnerNodeNum();
-		double minDt = LARGE_NUMBER;
+		double min_dt = LARGE_NUMBER;
+		int min_dt_index = 0;
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
 
@@ -201,10 +202,15 @@ namespace zaran
 			double uZeta = u[iNode] * (*coordTrans[24])[iNode] + v[iNode] * (*coordTrans[25])[iNode] + w[iNode] * (*coordTrans[26])[iNode] + (*coordTrans[27])[iNode];
 			double lamda = abs(uXi) + abs(uEta) + abs(uZeta) + c * (normXi + normEta + normZeta);
 			dt[iNode] = cfl / lamda;
-			minDt = Min(minDt, dt[iNode]);
-		}
-		GlobalData::Update("dt", minDt);
+			if (dt[iNode] < min_dt)
+			{
+				min_dt = dt[iNode];
+				min_dt_index = iNode;
+			}
 
+		}
+		GlobalData::Update("dt", min_dt);
+		GlobalData::Update("min_dt_index", min_dt_index);
 	}
 
 	void Solver_NS_3D::InviscidFlux()

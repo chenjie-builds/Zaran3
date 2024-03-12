@@ -134,14 +134,14 @@ void zaran::Controller::CalcResidual()
         auto& currentGrid = m_field[iField]->GetGrid();
         auto& fieldData = m_field[iField]->GetFieldData();
         auto& rho = fieldData->GetData("rho");
-        auto&res0=fieldData->GetData("res0");
+        auto& res0 = fieldData->GetData("res0");
         auto& nodeTopo = currentGrid->GetNodeTopo();
         auto& nodeCoord = nodeTopo->GetCoordinate();
         auto& nodeType = nodeTopo->GetType();
         double maxResidual = 0.0;
         double aveResidual = 0.0;
         int n_data = rho.size();
-        #pragma omp parallel for reduction(max:maxResidual) reduction(+:aveResidual)
+#pragma omp parallel for reduction(max:maxResidual) reduction(+:aveResidual)
         for (int iNode = 0;iNode < n_data;++iNode)
         {
             maxResidual = Max(maxResidual, abs(res0[iNode]));
@@ -201,7 +201,7 @@ void Controller::SolveFieldOneStep()
 {
     for (size_t iField = 0; iField < m_field.size(); iField++)
     {
-        auto& currentSolver =m_field[iField]->GetSolver();
+        auto& currentSolver = m_field[iField]->GetSolver();
         currentSolver->Solve();
     }
 }
@@ -222,7 +222,11 @@ void Controller::PostSolve()
     if (iterStep % calResidualStep == 0 || IsStopSolve())
     {
         CalcResidual();
-        ZaranLog::info("step={}, dt={:e}, maxRes={:e}, aveRes={:e}", GlobalData::GetInt("step"), GlobalData::GetDouble("dt"), maxResidual_, aveResidual_);
+        ZaranLog::info("step={}, dt={:e}, max_res={:e}, ave_res={:e}", GlobalData::GetInt("step"), GlobalData::GetDouble("dt"), maxResidual_, aveResidual_);
+        if (GlobalData::IsExist("min_dt_index"))
+        {
+            ZaranLog::info("min_dt_index={}", GlobalData::GetInt("min_dt_index"));
+        }
         SaveResidual();
     }
     if (iterStep % writeFieldStep == 0 || IsStopSolve())
