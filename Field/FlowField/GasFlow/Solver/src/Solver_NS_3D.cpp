@@ -3,6 +3,7 @@ namespace zaran
 {
 	void Solver_NS_3D::ComputeCoordTrans()
 	{
+		ZaranLog::info("Compute NS 3D Coordination Transformation Coefficients");
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
@@ -14,9 +15,9 @@ namespace zaran
 		int nInnerNode = grid->GetInnerNodeNum();
 		CoordTrans coordTrans;
 		DVector3D xRight, xLeft, yRight, yLeft, zRight, zLeft;
-		double max_jacobi , min_jacobi;
-		max_jacobi=-LARGE_NUMBER;
-		min_jacobi=LARGE_NUMBER;
+		double max_jacobi, min_jacobi;
+		max_jacobi = -LARGE_NUMBER;
+		min_jacobi = LARGE_NUMBER;
 		int max_jacobi_index = 0;
 		int min_jacobi_index = 0;
 		for (size_t iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
@@ -108,6 +109,7 @@ namespace zaran
 		}
 		ZaranLog::info("max jacobi: {}, index: {}", max_jacobi, max_jacobi_index);
 		ZaranLog::info("min jacobi: {}, index: {}", min_jacobi, min_jacobi_index);
+		ZaranLog::info("NS 3D Coordination Transformation Coefficients are computed");
 	}
 
 	void Solver_NS_3D::ComputeGradientWLS()
@@ -202,6 +204,7 @@ namespace zaran
 			minDt = Min(minDt, dt[iNode]);
 		}
 		GlobalData::Update("dt", minDt);
+
 	}
 
 	void Solver_NS_3D::InviscidFlux()
@@ -267,7 +270,7 @@ namespace zaran
 			// check negative density and pressure
 			for (int i = 0; i < 6; ++i)
 			{
-				if (riemann_para[i].prim_left(0) < 0 || riemann_para[i].prim_right(0) < 0||riemann_para[i].prim_left(4)<0||riemann_para[i].prim_right(4)<0)
+				if (riemann_para[i].prim_left(0) < 0 || riemann_para[i].prim_right(0) < 0 || riemann_para[i].prim_left(4) < 0 || riemann_para[i].prim_right(4) < 0)
 				{
 					exist_negative = true;
 					break;

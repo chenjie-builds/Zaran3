@@ -44,15 +44,18 @@ namespace zaran {
 			p[iNode] = primInit(4);
 		}
 		Primitive2Conservative();
+		ZaranLog::info("Flow Field Initialize Finished!");
 	}
 
 	void NSSolver::InitSolver()
 	{
+		ZaranLog::info("Initialize NS Solver!");
 		FlowSolver::InitSolver();
 		SetNumberOfEquations(5);
 		std::string riemannSolverType = GlobalData::GetString("riemannSolver");
 		RiemannSolverFactory riemannSolverFactory;
 		riemannSolverFactory.Create(riemannSolver_, riemannSolverType);
+		ZaranLog::info("NS Solver Initialize Finished!");
 	}
 
 	void NSSolver::CreateFieldData()
@@ -145,7 +148,7 @@ namespace zaran {
 
 		auto& data = *GetFieldData();
 
-		// 预锟斤拷锟斤拷锟节达拷
+		// 预锟斤拷锟斤拷锟节达�?
 		m_Primitive.reserve(5);
 		m_Conservative.reserve(5);
 		m_Residual.reserve(5);

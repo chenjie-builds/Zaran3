@@ -71,8 +71,6 @@ namespace zaran
 			neibor_index[3] -= 1;
 			neibor_index[4] -= 1;
 			neibor_index[5] -= 1;
-			if(innerNodeIndex==709761)
-				ZaranLog::info("inner node index:{}", innerNodeIndex);
 			nodeType[innerNodeIndex] = NodeType::inner;
 			nodeNeibor[innerNodeIndex] = neibor_index;
 			Array<DVector3D> vec(3);
