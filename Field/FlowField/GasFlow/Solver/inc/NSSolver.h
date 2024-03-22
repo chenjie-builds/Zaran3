@@ -85,6 +85,8 @@ namespace zaran
 		virtual void ComputeBoundaryLimiterCoef();
 		/// @brief 检查原始变量
 		virtual void CheckPrimtive();
+		/// @brief 检查残差
+		virtual void CheckResidual();
 		/// 如果原始变量出现异常值，将其修正为合理值
 		virtual void FixPrimtive();
 		/// @brief mid point value reconstruct
@@ -108,5 +110,7 @@ namespace zaran
 		Array<DArray*> m_PrimGradZ;
 		//通量求解器
 		Ptr<RiemannSolver> riemannSolver_;
+		//降阶标识，对于二阶精度的格式，降阶到一阶
+		IArray m_reduce_order;
 	};
 }

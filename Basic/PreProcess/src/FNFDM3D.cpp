@@ -51,6 +51,11 @@ namespace zaran
 		IArray neibor_index(6);
 		auto& nodeType = nodeTopo->GetType();
 		nodeType.resize(m_NodeNum);
+		//初始化为未定义
+		for (size_t i = 0; i < m_NodeNum; i++)
+		{
+			nodeType[i] = NodeType::undefined;
+		}
 		auto& temp_i = nodeTopo->GetTemplateI();
 		auto& temp_j = nodeTopo->GetTemplateJ();
 		auto& temp_k = nodeTopo->GetTemplateK();
@@ -59,7 +64,7 @@ namespace zaran
 		temp_k.resize(m_NodeNum);
 		auto& nodeNeibor = nodeTopo->GetNeighborCloud();
 		nodeNeibor.resize(m_NodeNum);
-		double delta=1e-5;
+		double delta = 1e-5;
 		for (size_t i = 0; i < innerNodeNum; i++)
 		{
 			fin >> innerNodeIndex;
@@ -237,6 +242,14 @@ namespace zaran
 		}
 		fin.close();
 		ReadCellFile(gridList);
+		//检查未定义节点
+		for (size_t i = 0; i < m_NodeNum; i++)
+		{
+			if (nodeType[i] == NodeType::undefined)
+			{
+				ZaranLog::info("node:{} type is undefined", i);
+			}
+		}
 	}
 
 	void GridListFactoryFNFDM3D::SortNeiborNode(Ptr<GridList>& gridList)

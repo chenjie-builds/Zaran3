@@ -103,8 +103,9 @@ void Controller::SolveField()
     ZaranLog::info("Start to solve field!");
     Initialize();
     ZaranLog::info("Initialize finished!");
+    ZaranLog::info("Save init field···");
     SaveFieldData();
-    ZaranLog::info("Save data");
+    ZaranLog::info("Save init field finished!");
     SaveResidual();
     while (!IsStopSolve())
     {

@@ -4,9 +4,13 @@
 #include<TECIO.h>
 #include <fstream>
 #include <string>
+#include"Log.h"
 using namespace zaran;
 void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 {
+	WriteTecplotBinary(solver);
+
+	return;
 	int step = GlobalData::GetInt("step");
 	std::string filename = "result/" + std::to_string(step) + ".dat";
 	std::ofstream fout(filename);
@@ -46,6 +50,105 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 		fout << std::endl;
 	}
 	fout.close();
+}
+void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
+{
+	auto& data = solver->GetFieldData();
+	auto& rho = data->GetData("rho");
+	auto& u = data->GetData("u");
+	auto& v = data->GetData("v");
+	auto& w = data->GetData("w");
+	auto& p = data->GetData("p");
+	auto& grid = solver->GetGrid();
+	auto& cellTopo = grid->GetCellTopo();
+	auto& cell2node = cellTopo->GetNodeIndex();
+	auto& node_topo = grid->GetNodeTopo();
+	auto& node_coord = node_topo->GetCoordinate();
+
+	INTEGER4 node_num = grid->GetTotalNodeNum();
+	INTEGER4 cell_num = cell2node.size();
+
+	DArray x(node_num), y(node_num), z(node_num);
+
+	for (int iNode = 0; iNode < node_num; ++iNode)
+	{
+		x[iNode] = node_coord[iNode].x();
+		y[iNode] = node_coord[iNode].y();
+		z[iNode] = node_coord[iNode].z();
+	}
+	INTEGER4 file_format = 0;
+	INTEGER4 debug = 0;
+	INTEGER4 vIsDouble = 1;
+	INTEGER4 fileType = 0;
+	string grid_name = "grid_" + grid->GetName();
+	string var_name = "x y z rho u v w p";
+	std::string file_name = "result/" + std::to_string(GlobalData::GetInt("step")) + ".plt";
+	int i = TECINI142(grid_name.c_str(),
+		var_name.c_str(),
+		file_name.c_str(),
+		(char*)".",
+		&file_format,
+		&fileType,
+		&debug,
+		&vIsDouble);
+
+	string zone_name = "grid_" + grid->GetName();
+	INTEGER4 zone_type = 5;//Brick
+	INTEGER4 face_num = 6;
+	INTEGER4 iCellMax = 0;
+	INTEGER4 jCellMax = 0;
+	INTEGER4 kCellMax = 0;
+	double solution_time = GlobalData::GetDouble("globalTime");
+	INTEGER4 strandID = 0;
+	INTEGER4 parentZn = 0;
+	INTEGER4 isBlock = 1;
+	INTEGER4 nFConns = 0;
+	INTEGER4 FNMode = 0;
+	int valueLocation[] = { 1,1,1,1,1,1,1,1};
+	int shrConn = 0;
+	i=TECZNE142((char*)zone_name.c_str(),
+		&zone_type,
+		&node_num,
+		&cell_num,
+		&face_num,
+		&iCellMax,
+		&jCellMax,
+		&kCellMax,
+		&solution_time,
+		&strandID,
+		&parentZn,
+		&isBlock,
+		&nFConns,
+		&FNMode,
+		0,
+		0,
+		0,
+		NULL,
+		valueLocation,
+		NULL,
+		&shrConn);
+		
+	i = TECDAT142(&node_num, x.data(), &vIsDouble);
+	i = TECDAT142(&node_num, y.data(), &vIsDouble);
+	i = TECDAT142(&node_num, z.data(), &vIsDouble);
+	i = TECDAT142(&node_num, rho.data(), &vIsDouble);
+	i = TECDAT142(&node_num, u.data(), &vIsDouble);
+	i = TECDAT142(&node_num, v.data(), &vIsDouble);
+	i = TECDAT142(&node_num, w.data(), &vIsDouble);
+	i = TECDAT142(&node_num, p.data(), &vIsDouble);
+	INTEGER4 connectivityCount = cell_num * 8;
+	Array<INTEGER4> cell_nodes(connectivityCount);
+	for (int iCell = 0; iCell < cell_num; ++iCell)
+	{
+		for (int iNode = 0; iNode < cell2node[iCell].size(); ++iNode)
+		{
+			cell_nodes[iCell * 8 + iNode] = cell2node[iCell][iNode] + 1;
+		}
+	}
+
+	i = TECNODE142(&connectivityCount, cell_nodes.data());
+	i = TECEND142();
+
 }
 void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
 {
@@ -242,7 +345,6 @@ void zaran::Visual::WriteTecplotPoint(Ptr<FieldSolver>& solver)
 
 
 }
-
 void Visual::WriteVTK(Ptr<FieldSolver>& solver)
 {
 	// TO DO
@@ -438,7 +540,7 @@ void zaran::Visual::WriteTecplotZaran3DBinary(Ptr<FieldSolver>& solver)
 		{
 			for (int i = is; i < ie; ++i)
 			{
-				node_index=(k - ks) * (je - js) * (ie - is) + (j - js) * (ie - is) + (i - is);
+				node_index = (k - ks) * (je - js) * (ie - is) + (j - js) * (ie - is) + (i - is);
 				x[node_index] = node_coord[grid->GetNodeIndex(i, j, k)].x();
 				y[node_index] = node_coord[grid->GetNodeIndex(i, j, k)].y();
 				z[node_index] = node_coord[grid->GetNodeIndex(i, j, k)].z();
@@ -452,7 +554,7 @@ void zaran::Visual::WriteTecplotZaran3DBinary(Ptr<FieldSolver>& solver)
 		{
 			for (int i = is; i < ie - 1; ++i)
 			{
-				cell_index = (k - ks) * (je - js - 1) * (ie - is - 1) + (j - js ) * (ie - is - 1) + (i - is);
+				cell_index = (k - ks) * (je - js - 1) * (ie - is - 1) + (j - js) * (ie - is - 1) + (i - is);
 				density[cell_index] = rho[grid->GetCellIndex(i, j, k)];
 				x_vel[cell_index] = u[grid->GetCellIndex(i, j, k)];
 				y_vel[cell_index] = v[grid->GetCellIndex(i, j, k)];

@@ -935,30 +935,36 @@ namespace zaran {
 
 		}
 	}
+
+    void NSSolver::CheckResidual()
+    {
+
+    }
+
 	void NSSolver::FixPrimtive()
 	{
 		GridPtr grid = GetGrid();
-		auto& nodeTopo = grid->GetNodeTopo();
-		auto& nodeType = nodeTopo->GetType();
-		auto& nodeCoord = nodeTopo->GetCoordinate();
-		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
+		auto& node_topo = grid->GetNodeTopo();
+		auto& node_type = node_topo->GetType();
+		auto& node_coord = node_topo->GetCoordinate();
+		auto& node_neighbor = node_topo->GetNeighborCloud();
 		auto& prim = m_Primitive;
 		auto& res = m_Residual;
 		auto& limiterCoef = m_LimiterCoef;
-		int nTotalNodeNum = grid->GetTotalNodeNum();
+		int total_node_num = grid->GetTotalNodeNum();
 		int equation_num = GetNumberOfEquations();
 		DArray weight, distance;
 		IArray physical_neighbor;
 		double sum = 0;
 		// #pragma omp parallel for private(ave_prim)
-		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		for (int iNode = 0; iNode < total_node_num; ++iNode)
 		{
-			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
+			if (node_type[iNode] != NodeType::inner && node_type[iNode] != NodeType::hole)
 				continue;
 			if ((*m_non_physical)[iNode] < 0)
 				continue;
 			physical_neighbor.clear();
-			auto& neighborNode = nodeNeighbor[iNode];
+			auto& neighborNode = node_neighbor[iNode];
 			for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
 			{
 				if ((*m_non_physical)[neighborNode[iNeighbor]] > 0)
@@ -972,7 +978,7 @@ namespace zaran {
 			{
 				if ((*m_non_physical)[physical_neighbor[iNeighbor]] > 0)
 					continue;
-				distance[iNeighbor] = (nodeCoord[physical_neighbor[iNeighbor]] - nodeCoord[iNode]).norm();
+				distance[iNeighbor] = (node_coord[physical_neighbor[iNeighbor]] - node_coord[iNode]).norm();
 				sum += 1.0 / distance[iNeighbor];
 			}
 			for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
