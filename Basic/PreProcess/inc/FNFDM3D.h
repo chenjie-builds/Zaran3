@@ -25,7 +25,7 @@ namespace zaran
 		/// @param gridList 
 		void ExtendNeighborNode(Ptr<GridList>& gridList);
 		void ReadCellFile(Ptr<GridList>& gridList);
-		void ReadBoundFile(Ptr<GridList>& gridList);
+		void ReadBoundFaceFile(Ptr<GridList>& gridList);
 	private:
 		string m_node_file_name;
 		string m_ele_file_name;

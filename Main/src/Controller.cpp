@@ -52,6 +52,7 @@ void Controller::SaveDataTecplot()
     {
         auto& currentSolver = m_field[iField]->GetSolver();
         m_visual->WriteTecplot(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
+        m_visual->WriteTecplotWallFace(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
         // m_visual->WriteTecplot2D(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
         //  m_visual->WriteTecplotZaran3D(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
         // m_visual->WriteTecplotZaran3DBinary(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
@@ -167,13 +168,13 @@ bool Controller::IsStopSolve()
     int calResidualStep = GlobalData::GetInt("calResidualStep");
     double minResidual = GlobalData::GetDouble("minResidual");
     double currentTime = GlobalData::GetDouble("globalTime");
-    //达到要求的最小残差
+    //达到要求的最小残�?
     if (iterStep > calResidualStep && maxResidual_ < minResidual)
     {
         ZaranLog::info("Max Residual is small than {}, stop compute!", minResidual);
         return true;
     }
-    //达到最大计算时间
+    //达到最大计算时�?
     if (currentTime > endTime || abs(currentTime - endTime) < SMALL_NUMBER)
     {
         ZaranLog::info("Max time={}, stop compute!", endTime);
@@ -233,7 +234,7 @@ void Controller::PostSolve()
     if (iterStep % writeFieldStep == 0 || IsStopSolve())
     {
         SaveFieldData();
-        SaveWallNode();
+        // SaveWallNode();
     }
 }
 

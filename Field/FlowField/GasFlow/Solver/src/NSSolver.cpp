@@ -256,6 +256,7 @@ namespace zaran {
 	{
 		double maxRes = 0;
 		auto& rhoRes = *m_Residual[0];
+#pragma omp parallel
 		for (int i = 0; i < rhoRes.size(); ++i)
 		{
 			double res = abs(rhoRes[i]);
@@ -292,9 +293,10 @@ namespace zaran {
 	{
 		GridPtr grid = GetGrid();
 		FlowSolverParaPtr para = GetPara();
-		for (auto var : *m_TimeStep)
+#pragma omp parallel for
+		for (int iNode = 0;iNode < grid->GetTotalNodeNum();++iNode)
 		{
-			(*m_TimeStep)[var] = dt;
+			(*m_TimeStep)[iNode] = dt;
 		}
 	}
 
@@ -396,12 +398,15 @@ namespace zaran {
 		BoundaryMapPtr& boundaryMapPtr = grid->GetBoundaryMap();
 		auto& boundaryMap = boundaryMapPtr->GetBoundaryMap();
 		auto& wallBound = boundaryMap["slipWall"];
+#pragma omp parallel for
 		for (int iBound = 0; iBound < wallBound.size(); ++iBound)
 			ComputeWallBC(wallBound[iBound]);
 		auto& outletBound = boundaryMap["outlet"];
+#pragma omp parallel for
 		for (int iBound = 0; iBound < outletBound.size(); ++iBound)
 			ComputeOutletBC(outletBound[iBound]);
 		auto& inletBound = boundaryMap["inlet"];
+#pragma omp parallel for
 		for (int iBound = 0; iBound < inletBound.size(); ++iBound)
 			ComputeInletBC(inletBound[iBound]);
 
@@ -444,6 +449,7 @@ namespace zaran {
 			auto& bound = boundary.second;
 			if (boundName == "hole")
 				continue;
+#pragma omp parallel for
 			for (int iBound = 0; iBound < bound.size(); ++iBound)
 			{
 				auto& boundIndex = bound[iBound].GetIndex();
@@ -481,6 +487,7 @@ namespace zaran {
 		for (int iStage = 0; iStage < rkStage; ++iStage)
 		{
 			ComputeResidual();
+#pragma omp parallel for
 			for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 			{
 				for (int iVal = 0; iVal < 5; ++iVal)
@@ -542,10 +549,14 @@ namespace zaran {
 		auto& cons3 = *m_Conservative[3];
 		auto& cons4 = *m_Conservative[4];
 		auto& inflowPrim = GetPara()->GetPrimitiveInflow();
+		double prim_tmp[5];
 #pragma omp parallel for
 		for (int iNode = 0; iNode < rho.size(); ++iNode)
 		{
-			Conservative2Primitive(cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode], rho[iNode], u[iNode], v[iNode], w[iNode], p[iNode]);
+			// Conservative2Primitive(cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode], rho[iNode], u[iNode], v[iNode], w[iNode], p[iNode]);
+			Conservative2Primitive(cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode], prim_tmp[0], prim_tmp[1], prim_tmp[2], prim_tmp[3], prim_tmp[4]);
+
+
 		}
 	}
 
@@ -698,6 +709,7 @@ namespace zaran {
 		double maxVal, minVal;
 		double eps = 1e-6;
 		double venkatCoeff = 1.0e-5;
+#pragma omp parallel for private(maxVal, minVal, eps)
 		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 		{
 			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
@@ -758,6 +770,7 @@ namespace zaran {
 		auto& primGradZ = m_PrimGradZ;
 		int nTotalNodeNum = grid->GetTotalNodeNum();
 		double maxVal, minVal;
+#pragma omp parallel for private(maxVal, minVal)
 		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 		{
 			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
@@ -880,7 +893,7 @@ namespace zaran {
 		int equation_num = GetNumberOfEquations();
 		DArray ave_prim(equation_num, 0.0);
 		int nonphysical_node_num = 0;
-		// #pragma omp parallel for private(ave_prim) reduction(+:nonphysical_node_num)
+#pragma omp parallel for private(ave_prim) reduction(+:nonphysical_node_num)
 		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 		{
 			bool exist_nonphysical = false;
@@ -915,7 +928,7 @@ namespace zaran {
 			ZaranLog::warn("Non-physical Node Num: {}", nonphysical_node_num);
 			auto& para = GetPara();
 			double cfl = para->GetCflNumber();
-			cfl = cfl / 10.0;
+			cfl = cfl / 5.0;
 			para->SetCflNumber(cfl);
 			ZaranLog::warn("CFL Number is reduced to {}", cfl);
 		}
@@ -926,7 +939,7 @@ namespace zaran {
 			double cfl_max = GlobalData::GetDouble("cflNumber");
 			if (cfl < cfl_max)
 			{
-				cfl = Min(cfl_max, cfl * 1.15);
+				cfl = Min(cfl_max, cfl * 1.6);
 				para->SetCflNumber(cfl);
 				ZaranLog::info("CFL Number is increased to {}", cfl);
 			}
@@ -936,10 +949,10 @@ namespace zaran {
 		}
 	}
 
-    void NSSolver::CheckResidual()
-    {
+	void NSSolver::CheckResidual()
+	{
 
-    }
+	}
 
 	void NSSolver::FixPrimtive()
 	{
@@ -956,7 +969,7 @@ namespace zaran {
 		DArray weight, distance;
 		IArray physical_neighbor;
 		double sum = 0;
-		// #pragma omp parallel for private(ave_prim)
+#pragma omp parallel for private(physical_neighbor, weight, distance, sum)
 		for (int iNode = 0; iNode < total_node_num; ++iNode)
 		{
 			if (node_type[iNode] != NodeType::inner && node_type[iNode] != NodeType::hole)

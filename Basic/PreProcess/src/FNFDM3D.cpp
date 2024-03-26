@@ -212,10 +212,8 @@ namespace zaran
 			boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,connectNodeIndex,0,wallNorm });
 			nodeType[boundNodeIndex] = NodeType::slipWall;
 		}
-		ZaranLog::info("extend inner node neibor node");
-		ExtendNeighborNode(gridList);
 
-		//扩展内部节点邻居节点，用于计算梯度
+		fin.close();
 
 		//查找邻居节点，看自身是否是其邻居，如不是，则加进去
 		ZaranLog::info("Add self to neibor node's neibor node");
@@ -240,9 +238,35 @@ namespace zaran
 				}
 			}
 		}
-		fin.close();
+		//扩展内部节点邻居节点，用于计算梯度
+		ZaranLog::info("extend inner node neibor node");
+		ExtendNeighborNode(gridList);
+		//查找邻居节点，看自身是否是其邻居，如不是，则加进去
+		ZaranLog::info("Add self to neibor node's neibor node");
+		for (int iNode = 0;iNode < m_NodeNum;iNode++)
+		{
+			if (nodeType[iNode] != NodeType::inner)
+				continue;
+			find_current = false;
+			auto& currentNeibor = nodeNeibor[iNode];
+			for (int iNeibor = 0;iNeibor < currentNeibor.size();iNeibor++)
+			{
+				auto& neighbor_neighbor = nodeNeibor[currentNeibor[iNeibor]];
+				for (int jNeibor = 0;jNeibor < neighbor_neighbor.size();jNeibor++)
+				{
+					if (neighbor_neighbor[jNeibor] == iNode)
+						find_current = true;
+				}
+				if (find_current == false)
+				{
+					neighbor_neighbor.push_back(iNode);
+				}
+			}
+		}
 		ReadCellFile(gridList);
+		ReadBoundFaceFile(gridList);
 		//检查未定义节点
+		ZaranLog::info("Check undefined node");
 		for (size_t i = 0; i < m_NodeNum; i++)
 		{
 			if (nodeType[i] == NodeType::undefined)
@@ -250,6 +274,7 @@ namespace zaran
 				ZaranLog::info("node:{} type is undefined", i);
 			}
 		}
+		ZaranLog::info("Check undefined node done");
 	}
 
 	void GridListFactoryFNFDM3D::SortNeiborNode(Ptr<GridList>& gridList)
@@ -514,43 +539,58 @@ namespace zaran
 		kdTree->SetDataSet(glyphFilter->GetOutput());
 		kdTree->BuildLocator();
 		int point_num = kdTree->GetDataSet()->GetNumberOfPoints();
-		ZaranLog::info("point num:{}", point_num);
 		int neibor_num_before = 0;
 		int neibor_num_after = 0;
+		int min_neibor_num = 1E5;
+		int max_neibor_num = 0;
 		// 扩展内部节点邻居节点，用于计算梯度
+		std::set<int> neibor_set;
 		for (int iNode = 0; iNode < m_NodeNum; iNode++)
 		{
 			if (nodeType[iNode] != NodeType::inner)
 				continue;
-			auto& currentNeibor = nodeNeibor[iNode];
-			neibor_num_before = currentNeibor.size();
-
+			neibor_set.clear();
+			neibor_num_before = nodeNeibor[iNode].size();
 			double max_distance = 0;
-			for (auto& iNeibor : currentNeibor)
+			for (auto& iNeibor : nodeNeibor[iNode])
 			{
 				max_distance = Max(max_distance, (nodeCoord[iNeibor] - nodeCoord[iNode]).norm());
+				neibor_set.insert(iNeibor);
+
 			}
 			//以当前节点为中心，以最大距离为半径，找到范围内的节点
+			double search_radius = max_distance * 1.00001;
 			vtkNew<vtkIdList> result;
-			kdTree->FindPointsWithinRadius(max_distance * 1.1, nodeCoord[iNode].data(), result);
-			currentNeibor.clear();
+			while (result->GetNumberOfIds() < 6)
+			{
+				kdTree->FindPointsWithinRadius(search_radius, nodeCoord[iNode].data(), result);
+				if (result->GetNumberOfIds() > 50)
+				{
+					search_radius *= 0.9;
+					result->Reset();
+				}
+				else
+					search_radius *= 1.1;
+			}
 			for (int i = 0; i < result->GetNumberOfIds(); ++i)
 			{
-				currentNeibor.push_back(result->GetId(i));
+				neibor_set.insert(result->GetId(i));
 			}
-			// 删除邻居节点中与当地节点距离小于小量的节点
-			for (int i = 0; i < currentNeibor.size(); ++i)
+			neibor_set.erase(iNode);
+
+			neibor_num_after = neibor_set.size();
+			nodeNeibor[iNode].clear();
+			nodeNeibor[iNode].reserve(neibor_set.size());
+			for (auto& i : neibor_set)
 			{
-				if ((nodeCoord[currentNeibor[i]] - nodeCoord[iNode]).norm() < 1e-6)
-				{
-					currentNeibor.erase(currentNeibor.begin() + i);
-					--i;
-				}
+				nodeNeibor[iNode].emplace_back(i);
 			}
-			neibor_num_after = currentNeibor.size();
+			min_neibor_num = Min(min_neibor_num, neibor_num_after);
+			max_neibor_num = Max(max_neibor_num, neibor_num_after);
 			if (neibor_num_after < neibor_num_before)
 				ZaranLog::info("node:{} neibor num before:{} neibor num after:{}", iNode, neibor_num_before, neibor_num_after);
 		}
+		ZaranLog::info("min neibor num:{} max neibor num:{}", min_neibor_num, max_neibor_num);
 
 	}
 
@@ -583,10 +623,27 @@ namespace zaran
 		fin.close();
 	}
 
-	void GridListFactoryFNFDM3D::ReadBoundFile(Ptr<GridList>& gridList)
+	void GridListFactoryFNFDM3D::ReadBoundFaceFile(Ptr<GridList>& gridList)
 	{
 		auto& grid = gridList->GetGrid(0);
-		//TODO:读取边界文件
+		std::ifstream fin;
+		fin.open("bound.dat");
+		auto& bound_info = grid->GetFaceTopo();
+		int boundNum;
+		fin >> boundNum;
+		auto& bound_node = bound_info->GetFace2Node();
+		bound_node.resize(boundNum);
+		IArray boundNodeIndex(4);
+		for (int iBound = 0; iBound < boundNum; iBound++)
+		{
+			fin >> boundNodeIndex[0] >> boundNodeIndex[1] >> boundNodeIndex[2] >> boundNodeIndex[3];
+			boundNodeIndex[0] -= 1;
+			boundNodeIndex[1] -= 1;
+			boundNodeIndex[2] -= 1;
+			boundNodeIndex[3] -= 1;
+			bound_node[iBound] = boundNodeIndex;
+		}
+		fin.close();
 	}
 
 }

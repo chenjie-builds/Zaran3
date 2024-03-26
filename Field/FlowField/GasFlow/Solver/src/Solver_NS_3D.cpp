@@ -125,19 +125,39 @@ namespace zaran
 		auto& primGradZ = m_PrimGradZ;
 		int nInnerNode = grid->GetInnerNodeNum();
 		int nBoundNode = grid->GetBoundNodeNum();
-		Matrix3d A;
+		Matrix3d A, A_inv;
 		DVector3D b, grad;
 		double omega = 0;
 		double deltaVal;
 		double deltaX, deltaY, deltaZ;
-#pragma omp parallel for private(A, b, grad, omega, deltaVal, deltaX, deltaY, deltaZ)
+#pragma omp parallel for private(A,A_inv, b, grad, omega, deltaVal, deltaX, deltaY, deltaZ)
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
 			auto& currentCoord = nodeCoord[iNode];
 			auto& neighborNodeVec = nodeNeighbor[iNode];
+			A.setZero();
+			for (size_t iNeib = 0; iNeib < neighborNodeVec.size(); ++iNeib)
+			{
+				omega = DistanceOfTwoPoints(nodeCoord[neighborNodeVec[iNeib]].data(), nodeCoord[iNode].data());
+				if (abs(omega) < SMALL_NUMBER)
+					continue;
+				omega = 1.0 / omega;
+				deltaX = nodeCoord[neighborNodeVec[iNeib]].x() - nodeCoord[iNode].x();
+				deltaY = nodeCoord[neighborNodeVec[iNeib]].y() - nodeCoord[iNode].y();
+				deltaZ = nodeCoord[neighborNodeVec[iNeib]].z() - nodeCoord[iNode].z();
+				A(0, 0) += omega * deltaX * deltaX;
+				A(0, 1) += omega * deltaX * deltaY;
+				A(0, 2) += omega * deltaX * deltaZ;
+				A(1, 0) += omega * deltaY * deltaX;
+				A(1, 1) += omega * deltaY * deltaY;
+				A(1, 2) += omega * deltaY * deltaZ;
+				A(2, 0) += omega * deltaZ * deltaX;
+				A(2, 1) += omega * deltaZ * deltaY;
+				A(2, 2) += omega * deltaZ * deltaZ;
+			}
+			A_inv = A.inverse();
 			for (size_t iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
-				A.setZero();
 				b.setZero();
 				for (size_t iNeib = 0; iNeib < neighborNodeVec.size(); ++iNeib)
 				{
@@ -149,20 +169,11 @@ namespace zaran
 					deltaX = nodeCoord[neighborNodeVec[iNeib]].x() - nodeCoord[iNode].x();
 					deltaY = nodeCoord[neighborNodeVec[iNeib]].y() - nodeCoord[iNode].y();
 					deltaZ = nodeCoord[neighborNodeVec[iNeib]].z() - nodeCoord[iNode].z();
-					A(0, 0) += omega * deltaX * deltaX;
-					A(0, 1) += omega * deltaX * deltaY;
-					A(0, 2) += omega * deltaX * deltaZ;
-					A(1, 0) += omega * deltaY * deltaX;
-					A(1, 1) += omega * deltaY * deltaY;
-					A(1, 2) += omega * deltaY * deltaZ;
-					A(2, 0) += omega * deltaZ * deltaX;
-					A(2, 1) += omega * deltaZ * deltaY;
-					A(2, 2) += omega * deltaZ * deltaZ;
 					b(0) += omega * deltaVal * deltaX;
 					b(1) += omega * deltaVal * deltaY;
 					b(2) += omega * deltaVal * deltaZ;
 				}
-				grad = A.inverse() * b;
+				grad = A_inv * b;
 				(*primGradX[iVal])[iNode] = grad.x();
 				(*primGradY[iVal])[iNode] = grad.y();
 				(*primGradZ[iVal])[iNode] = grad.z();
@@ -186,7 +197,7 @@ namespace zaran
 		double cfl = para->GetCflNumber();
 		int nInnerNode = grid->GetInnerNodeNum();
 		double min_dt = LARGE_NUMBER;
-		int min_dt_index = 0;
+#pragma omp parallel for reduction(min:min_dt)
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
 
@@ -205,12 +216,10 @@ namespace zaran
 			if (dt[iNode] < min_dt)
 			{
 				min_dt = dt[iNode];
-				min_dt_index = iNode;
 			}
 
 		}
 		GlobalData::Update("dt", min_dt);
-		GlobalData::Update("min_dt_index", min_dt_index);
 	}
 
 	void Solver_NS_3D::InviscidFlux()
@@ -282,7 +291,7 @@ namespace zaran
 					break;
 				}
 			}
-			if (exist_negative)
+			if (exist_negative||(*m_non_physical)[iNode]>0)
 			{
 				MidPointReconstructOneOrder(templateI[iNode][1], templateI[iNode][2], &riemann_para[0].prim_left(0), &riemann_para[0].prim_right(0));
 				MidPointReconstructOneOrder(templateI[iNode][0], templateI[iNode][1], &riemann_para[1].prim_left(0), &riemann_para[1].prim_right(0));
