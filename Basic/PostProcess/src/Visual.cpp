@@ -104,9 +104,9 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 	INTEGER4 isBlock = 1;
 	INTEGER4 nFConns = 0;
 	INTEGER4 FNMode = 0;
-	int valueLocation[] = { 1,1,1,1,1,1,1,1};
+	int valueLocation[] = { 1,1,1,1,1,1,1,1 };
 	int shrConn = 0;
-	i=TECZNE142((char*)zone_name.c_str(),
+	i = TECZNE142((char*)zone_name.c_str(),
 		&zone_type,
 		&node_num,
 		&cell_num,
@@ -127,7 +127,7 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 		valueLocation,
 		NULL,
 		&shrConn);
-		
+
 	i = TECDAT142(&node_num, x.data(), &vIsDouble);
 	i = TECDAT142(&node_num, y.data(), &vIsDouble);
 	i = TECDAT142(&node_num, z.data(), &vIsDouble);
@@ -633,7 +633,7 @@ void zaran::Visual::WriteTecplotZaran3DBinary(Ptr<FieldSolver>& solver)
 void zaran::Visual::WriteTecplotWallFace(Ptr<FieldSolver>& solver)
 {
 
-auto& data = solver->GetFieldData();
+	auto& data = solver->GetFieldData();
 	auto& rho = data->GetData("rho");
 	auto& u = data->GetData("u");
 	auto& v = data->GetData("v");
@@ -642,8 +642,8 @@ auto& data = solver->GetFieldData();
 	auto& grid = solver->GetGrid();
 	auto& node_topo = grid->GetNodeTopo();
 	auto& node_coord = node_topo->GetCoordinate();
-	auto& face_topo=grid->GetFaceTopo();
-	auto& face2node=face_topo->GetFace2Node();
+	auto& face_topo = grid->GetFaceTopo();
+	auto& face2node = face_topo->GetFace2Node();
 
 	INTEGER4 node_num = grid->GetTotalNodeNum();
 	INTEGER4 cell_num = face2node.size();
@@ -684,9 +684,9 @@ auto& data = solver->GetFieldData();
 	INTEGER4 isBlock = 1;
 	INTEGER4 nFConns = 0;
 	INTEGER4 FNMode = 0;
-	int valueLocation[] = { 1,1,1,1,1,1,1,1};
+	int valueLocation[] = { 1,1,1,1,1,1,1,1 };
 	int shrConn = 0;
-	i=TECZNE142((char*)zone_name.c_str(),
+	i = TECZNE142((char*)zone_name.c_str(),
 		&zone_type,
 		&node_num,
 		&cell_num,
@@ -707,7 +707,7 @@ auto& data = solver->GetFieldData();
 		valueLocation,
 		NULL,
 		&shrConn);
-		
+
 	i = TECDAT142(&node_num, x.data(), &vIsDouble);
 	i = TECDAT142(&node_num, y.data(), &vIsDouble);
 	i = TECDAT142(&node_num, z.data(), &vIsDouble);
@@ -724,9 +724,9 @@ auto& data = solver->GetFieldData();
 		{
 			cell_nodes[iFace * 8 + iNode] = face2node[iFace][iNode] + 1;
 		}
-		if(face2node[iFace].size()<8)
+		if (face2node[iFace].size() < 8)
 		{
-			for(int i=face2node[iFace].size();i<8;++i)
+			for (int i = face2node[iFace].size();i < 8;++i)
 			{
 				cell_nodes[iFace * 8 + i] = face2node[iFace][0] + 1;
 			}

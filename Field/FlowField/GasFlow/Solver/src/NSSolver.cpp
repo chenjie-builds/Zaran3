@@ -553,10 +553,7 @@ namespace zaran {
 #pragma omp parallel for
 		for (int iNode = 0; iNode < rho.size(); ++iNode)
 		{
-			// Conservative2Primitive(cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode], rho[iNode], u[iNode], v[iNode], w[iNode], p[iNode]);
-			Conservative2Primitive(cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode], prim_tmp[0], prim_tmp[1], prim_tmp[2], prim_tmp[3], prim_tmp[4]);
-
-
+			Conservative2Primitive(cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode], rho[iNode], u[iNode], v[iNode], w[iNode], p[iNode]);
 		}
 	}
 
