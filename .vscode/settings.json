@@ -93,11 +93,7 @@
         "xtree": "cpp",
         "xutility": "cpp"
     },
-    "workbench.colorCustomizations": {
-        "editorCursor.foreground": "#FF0000",
-        "terminalCursor.foreground": "#FF0000",
-        "activityBar.background": "#570B42",
-        "titleBar.activeBackground": "#79105D",
-        "titleBar.activeForeground": "#FFFCFE"
-    }
+
+
+
 }

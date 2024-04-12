@@ -599,9 +599,42 @@ namespace zaran
 		auto& grid = gridList->GetGrid(0);
 		std::ifstream fin;
 		fin.open("cell.dat");
-		auto& cellTopo = grid->GetCellTopo();
+		int nodeNum;
 		int cellNum;
-		fin >> cellNum;
+		std::string separator = " \r\n\t#$;\"";
+		std::string line;
+		while (std::getline(fin, line))
+		{
+			if (line.empty())
+				continue;
+			std::transform(line.begin(), line.end(), line.begin(), std::toupper);
+			line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
+			size_t start_id_node_num = line.find("N=");
+			if (start_id_node_num == std::string::npos)
+				continue;
+			start_id_node_num += 2;
+			size_t end_id_node_num = line.find_first_of(',');
+			std::string node_num_str = line.substr(start_id_node_num, end_id_node_num - start_id_node_num);
+			line.erase(0, end_id_node_num + 1);
+			size_t start_id_cell_num = line.find("E=");
+			if (start_id_cell_num == std::string::npos)
+				continue;
+			start_id_cell_num += 2;
+			size_t end_id_cell_num = line.find_first_of(',');
+			std::string cell_num_str = line.substr(start_id_cell_num, end_id_cell_num - start_id_cell_num);
+			nodeNum = std::stoi(node_num_str);
+			cellNum = std::stoi(cell_num_str);
+			break;
+		}
+		//跳过节点坐标
+		for (int i = 0; i < nodeNum; i++)
+		{
+			fin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		}
+
+
+
+		auto& cellTopo = grid->GetCellTopo();
 		ZaranLog::info("Total cell num:{}", cellNum);
 		auto& cell_node = cellTopo->GetNodeIndex();
 		cell_node.resize(cellNum);
@@ -628,9 +661,39 @@ namespace zaran
 		auto& grid = gridList->GetGrid(0);
 		std::ifstream fin;
 		fin.open("bound.dat");
-		auto& bound_info = grid->GetFaceTopo();
+		int nodeNum;
 		int boundNum;
-		fin >> boundNum;
+		std::string separator = " \r\n\t#$;\"";
+		std::string line;
+		while (std::getline(fin, line))
+		{
+			if (line.empty())
+				continue;
+			std::transform(line.begin(), line.end(), line.begin(), std::toupper);
+			line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
+			size_t start_id_node_num = line.find("N=");
+			if (start_id_node_num == std::string::npos)
+				continue;
+			start_id_node_num += 2;
+			size_t end_id_node_num = line.find_first_of(',');
+			std::string node_num_str = line.substr(start_id_node_num, end_id_node_num - start_id_node_num);
+			line.erase(0, end_id_node_num + 1);
+			size_t start_id_cell_num = line.find("E=");
+			if (start_id_cell_num == std::string::npos)
+				continue;
+			start_id_cell_num += 2;
+			size_t end_id_cell_num = line.find_first_of(',');
+			std::string cell_num_str = line.substr(start_id_cell_num, end_id_cell_num - start_id_cell_num);
+			nodeNum = std::stoi(node_num_str);
+			boundNum = std::stoi(cell_num_str);
+			break;
+		}
+		//跳过节点坐标
+		for (int i = 0; i < nodeNum; i++)
+		{
+			fin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		}
+		auto& bound_info = grid->GetFaceTopo();
 		auto& bound_node = bound_info->GetFace2Node();
 		bound_node.resize(boundNum);
 		IArray boundNodeIndex(4);
