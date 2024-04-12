@@ -92,7 +92,7 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 		&debug,
 		&vIsDouble);
 
-	string zone_name = "grid_" + grid->GetName();
+	string zone_name = "grid_" + grid->GetName() + "_zone";
 	INTEGER4 zone_type = 5;//Brick
 	INTEGER4 face_num = 6;
 	INTEGER4 iCellMax = 0;
@@ -147,6 +147,74 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 	}
 
 	i = TECNODE142(&connectivityCount, cell_nodes.data());
+
+	/// bound face
+	auto& face_topo = grid->GetFaceTopo();
+	auto& face2node = face_topo->GetFace2Node();
+	cell_num = face2node.size();
+	zone_name = "grid_" + grid->GetName() + "_bound";
+	zone_type = 3;//Brick
+	face_num = 6;
+	iCellMax = 0;
+	jCellMax = 0;
+	kCellMax = 0;
+	strandID = 0;
+	parentZn = 0;
+	isBlock = 1;
+	nFConns = 0;
+	FNMode = 0;
+	i = TECZNE142((char*)zone_name.c_str(),
+		&zone_type,
+		&node_num,
+		&cell_num,
+		&face_num,
+		&iCellMax,
+		&jCellMax,
+		&kCellMax,
+		&solution_time,
+		&strandID,
+		&parentZn,
+		&isBlock,
+		&nFConns,
+		&FNMode,
+		0,
+		0,
+		0,
+		NULL,
+		valueLocation,
+		NULL,
+		&shrConn);
+
+	i = TECDAT142(&node_num, x.data(), &vIsDouble);
+	i = TECDAT142(&node_num, y.data(), &vIsDouble);
+	i = TECDAT142(&node_num, z.data(), &vIsDouble);
+	i = TECDAT142(&node_num, rho.data(), &vIsDouble);
+	i = TECDAT142(&node_num, u.data(), &vIsDouble);
+	i = TECDAT142(&node_num, v.data(), &vIsDouble);
+	i = TECDAT142(&node_num, w.data(), &vIsDouble);
+	i = TECDAT142(&node_num, p.data(), &vIsDouble);
+	int node_num_per_cell = 4;
+	 connectivityCount = cell_num * node_num_per_cell;
+	Array<INTEGER4> face_nodes(connectivityCount);
+	for (int iFace = 0; iFace < cell_num; ++iFace)
+	{
+		for (int iNode = 0; iNode < face2node[iFace].size(); ++iNode)
+		{
+			face_nodes[iFace * node_num_per_cell + iNode] = face2node[iFace][iNode] + 1;
+		}
+		// if (face2node[iFace].size() < 8)
+		// {
+		// 	for (int i = face2node[iFace].size();i < 8;++i)
+		// 	{
+		// 		cell_nodes[iFace * 8 + i] = face2node[iFace][0] + 1;
+		// 	}
+		// }
+	}
+
+	i = TECNODE142(&connectivityCount, face_nodes.data());
+
+
+
 	i = TECEND142();
 
 }
@@ -627,113 +695,6 @@ void zaran::Visual::WriteTecplotZaran3DBinary(Ptr<FieldSolver>& solver)
 	i = TECDAT142(&n_cell, pressure.data(), &VIsDouble);
 	VIsDouble = 0;
 	i = TECDAT142(&n_cell, cell_type_array.data(), &VIsDouble);
-	i = TECEND142();
-}
-
-void zaran::Visual::WriteTecplotWallFace(Ptr<FieldSolver>& solver)
-{
-
-	auto& data = solver->GetFieldData();
-	auto& rho = data->GetData("rho");
-	auto& u = data->GetData("u");
-	auto& v = data->GetData("v");
-	auto& w = data->GetData("w");
-	auto& p = data->GetData("p");
-	auto& grid = solver->GetGrid();
-	auto& node_topo = grid->GetNodeTopo();
-	auto& node_coord = node_topo->GetCoordinate();
-	auto& face_topo = grid->GetFaceTopo();
-	auto& face2node = face_topo->GetFace2Node();
-
-	INTEGER4 node_num = grid->GetTotalNodeNum();
-	INTEGER4 cell_num = face2node.size();
-
-	DArray x(node_num), y(node_num), z(node_num);
-
-	for (int iNode = 0; iNode < node_num; ++iNode)
-	{
-		x[iNode] = node_coord[iNode].x();
-		y[iNode] = node_coord[iNode].y();
-		z[iNode] = node_coord[iNode].z();
-	}
-	INTEGER4 file_format = 0;
-	INTEGER4 debug = 0;
-	INTEGER4 vIsDouble = 1;
-	INTEGER4 fileType = 0;
-	string grid_name = "grid_" + grid->GetName();
-	string var_name = "x y z rho u v w p";
-	std::string file_name = "result/" + std::to_string(GlobalData::GetInt("step")) + "-wall.plt";
-	int i = TECINI142(grid_name.c_str(),
-		var_name.c_str(),
-		file_name.c_str(),
-		(char*)".",
-		&file_format,
-		&fileType,
-		&debug,
-		&vIsDouble);
-
-	string zone_name = "grid_" + grid->GetName();
-	INTEGER4 zone_type = 5;//Brick
-	INTEGER4 face_num = 6;
-	INTEGER4 iCellMax = 0;
-	INTEGER4 jCellMax = 0;
-	INTEGER4 kCellMax = 0;
-	double solution_time = GlobalData::GetDouble("globalTime");
-	INTEGER4 strandID = 0;
-	INTEGER4 parentZn = 0;
-	INTEGER4 isBlock = 1;
-	INTEGER4 nFConns = 0;
-	INTEGER4 FNMode = 0;
-	int valueLocation[] = { 1,1,1,1,1,1,1,1 };
-	int shrConn = 0;
-	i = TECZNE142((char*)zone_name.c_str(),
-		&zone_type,
-		&node_num,
-		&cell_num,
-		&face_num,
-		&iCellMax,
-		&jCellMax,
-		&kCellMax,
-		&solution_time,
-		&strandID,
-		&parentZn,
-		&isBlock,
-		&nFConns,
-		&FNMode,
-		0,
-		0,
-		0,
-		NULL,
-		valueLocation,
-		NULL,
-		&shrConn);
-
-	i = TECDAT142(&node_num, x.data(), &vIsDouble);
-	i = TECDAT142(&node_num, y.data(), &vIsDouble);
-	i = TECDAT142(&node_num, z.data(), &vIsDouble);
-	i = TECDAT142(&node_num, rho.data(), &vIsDouble);
-	i = TECDAT142(&node_num, u.data(), &vIsDouble);
-	i = TECDAT142(&node_num, v.data(), &vIsDouble);
-	i = TECDAT142(&node_num, w.data(), &vIsDouble);
-	i = TECDAT142(&node_num, p.data(), &vIsDouble);
-	INTEGER4 connectivityCount = cell_num * 8;
-	Array<INTEGER4> cell_nodes(connectivityCount);
-	for (int iFace = 0; iFace < cell_num; ++iFace)
-	{
-		for (int iNode = 0; iNode < face2node[iFace].size(); ++iNode)
-		{
-			cell_nodes[iFace * 8 + iNode] = face2node[iFace][iNode] + 1;
-		}
-		if (face2node[iFace].size() < 8)
-		{
-			for (int i = face2node[iFace].size();i < 8;++i)
-			{
-				cell_nodes[iFace * 8 + i] = face2node[iFace][0] + 1;
-			}
-		}
-	}
-
-	i = TECNODE142(&connectivityCount, cell_nodes.data());
 	i = TECEND142();
 }
 
