@@ -693,9 +693,7 @@ namespace zaran
 		{
 			fin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
-		auto& bound_info = grid->GetFaceTopo();
-		auto& bound_node = bound_info->GetFace2Node();
-		bound_node.resize(boundNum);
+		Array<IArray> bound_node(boundNum);
 		IArray boundNodeIndex(4);
 		for (int iBound = 0; iBound < boundNum; iBound++)
 		{
@@ -704,9 +702,60 @@ namespace zaran
 			boundNodeIndex[1] -= 1;
 			boundNodeIndex[2] -= 1;
 			boundNodeIndex[3] -= 1;
-			bound_node[iBound] = boundNodeIndex;
+			if (boundNodeIndex[2] == boundNodeIndex[3])
+				bound_node[iBound] = IArray{ boundNodeIndex[0],boundNodeIndex[1],boundNodeIndex[2] };
+			else
+				bound_node[iBound] = boundNodeIndex;
 		}
 		fin.close();
+		IArray bound_face_node_num(boundNum);
+		for (int iBound = 0; iBound < boundNum; iBound++)
+		{
+			bound_face_node_num[iBound] = bound_node[iBound].size();
+		}
+		auto& bound_topo = grid->GetFaceTopo();
+		auto& node_topo = grid->GetNodeTopo();
+		auto& node_coord = node_topo->GetCoordinate();
+		bound_topo->Allocate(boundNum, bound_face_node_num.data());
+		double area;
+		double v1[3], v2[3];
+		for (int iBound = 0;iBound < boundNum;iBound++)
+		{
+			bound_topo->SetFace2Node(iBound, bound_node[iBound].data(), bound_node[iBound].size());
+			if (bound_node[iBound].size() == 3)
+			{
+				area = TriangleArea(node_coord[bound_node[iBound][0]].data(), node_coord[bound_node[iBound][1]].data(), node_coord[bound_node[iBound][2]].data());
+			}
+			else
+			{
+				area = QuadrangleArea(node_coord[bound_node[iBound][0]].data(), node_coord[bound_node[iBound][1]].data(), node_coord[bound_node[iBound][2]].data(), node_coord[bound_node[iBound][3]].data());
+			}
+			bound_topo->SetArea(iBound, area);
+			double* normal = bound_topo->GetNormal(iBound);
+			if (bound_node[iBound].size() == 3)
+			{
+				v1[0] = node_coord[bound_node[iBound][1]].x() - node_coord[bound_node[iBound][0]].x();
+				v1[1] = node_coord[bound_node[iBound][1]].y() - node_coord[bound_node[iBound][0]].y();
+				v1[2] = node_coord[bound_node[iBound][1]].z() - node_coord[bound_node[iBound][0]].z();
+				v2[0] = node_coord[bound_node[iBound][2]].x() - node_coord[bound_node[iBound][0]].x();
+				v2[1] = node_coord[bound_node[iBound][2]].y() - node_coord[bound_node[iBound][0]].y();
+				v2[2] = node_coord[bound_node[iBound][2]].z() - node_coord[bound_node[iBound][0]].z();
+			}
+			else
+			{
+				v1[0] = node_coord[bound_node[iBound][1]].x() - node_coord[bound_node[iBound][0]].x();
+				v1[1] = node_coord[bound_node[iBound][1]].y() - node_coord[bound_node[iBound][0]].y();
+				v1[2] = node_coord[bound_node[iBound][1]].z() - node_coord[bound_node[iBound][0]].z();
+				v2[0] = node_coord[bound_node[iBound][2]].x() - node_coord[bound_node[iBound][0]].x();
+				v2[1] = node_coord[bound_node[iBound][2]].y() - node_coord[bound_node[iBound][0]].y();
+				v2[2] = node_coord[bound_node[iBound][2]].z() - node_coord[bound_node[iBound][0]].z();
+			}
+			CrossProduct(v1, v2, normal);
+			double norm = sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+			normal[0] /= norm;
+			normal[1] /= norm;
+			normal[2] /= norm;
+		}
 	}
 
 }

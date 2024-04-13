@@ -29,6 +29,8 @@ namespace zaran
 		//计算源项
 		void SourceFlux() override;
 		void InviscidFluxNew();
+		/// 计算气动力
+		void CalcForce();
 		
 
 	};

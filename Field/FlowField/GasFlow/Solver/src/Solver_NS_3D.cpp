@@ -291,7 +291,7 @@ namespace zaran
 					break;
 				}
 			}
-			if (exist_negative||(*m_non_physical)[iNode]>0)
+			if (exist_negative || (*m_non_physical)[iNode] > 0)
 			{
 				MidPointReconstructOneOrder(templateI[iNode][1], templateI[iNode][2], &riemann_para[0].prim_left(0), &riemann_para[0].prim_right(0));
 				MidPointReconstructOneOrder(templateI[iNode][0], templateI[iNode][1], &riemann_para[1].prim_left(0), &riemann_para[1].prim_right(0));
@@ -318,6 +318,29 @@ namespace zaran
 
 	void Solver_NS_3D::SourceFlux()
 	{
+	}
+
+	void Solver_NS_3D::CalcForce()
+	{
+		GridPtr grid = GetGrid();
+		auto& prim = m_Primitive;
+		auto& faceTopo = grid->GetFaceTopo();
+		int nFace = faceTopo->GetFaceNum();
+		double face_pressure;
+		double force[3] = { 0 };
+		for (int iFace = 0;iFace < nFace;++iFace)
+		{
+			face_pressure = 0;
+			int* face2node = faceTopo->GetFace2Node(iFace);
+			for (int iNode = 0;iNode < faceTopo->GetFaceNodeNum(iFace);++iNode)
+			{
+				face_pressure += prim[4]->at(face2node[iNode]);
+			}
+			face_pressure /= faceTopo->GetFaceNodeNum(iFace);
+			force[0] += face_pressure * faceTopo->GetArea(iFace) * faceTopo->GetNormal(iFace)[0];
+			force[1] += face_pressure * faceTopo->GetArea(iFace) * faceTopo->GetNormal(iFace)[1];
+			force[2] += face_pressure * faceTopo->GetArea(iFace) * faceTopo->GetNormal(iFace)[2];
+		}
 	}
 
 

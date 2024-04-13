@@ -150,8 +150,7 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 
 	/// bound face
 	auto& face_topo = grid->GetFaceTopo();
-	auto& face2node = face_topo->GetFace2Node();
-	cell_num = face2node.size();
+	cell_num = face_topo->GetFaceNum();
 	zone_name = "grid_" + grid->GetName() + "_bound";
 	zone_type = 3;//Brick
 	face_num = 6;
@@ -194,13 +193,15 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 	i = TECDAT142(&node_num, w.data(), &vIsDouble);
 	i = TECDAT142(&node_num, p.data(), &vIsDouble);
 	int node_num_per_cell = 4;
-	 connectivityCount = cell_num * node_num_per_cell;
+	connectivityCount = cell_num * node_num_per_cell;
 	Array<INTEGER4> face_nodes(connectivityCount);
 	for (int iFace = 0; iFace < cell_num; ++iFace)
 	{
-		for (int iNode = 0; iNode < face2node[iFace].size(); ++iNode)
+		int* face2node = face_topo->GetFace2Node(iFace);
+		int n_node = face_topo->GetFaceNodeNum(iFace);
+		for (int iNode = 0; iNode < n_node; ++iNode)
 		{
-			face_nodes[iFace * node_num_per_cell + iNode] = face2node[iFace][iNode] + 1;
+			face_nodes[iFace * node_num_per_cell + iNode] = face2node[iNode] + 1;
 		}
 		// if (face2node[iFace].size() < 8)
 		// {

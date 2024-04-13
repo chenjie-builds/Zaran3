@@ -1,4 +1,5 @@
 #include "FaceTopoInfo.h"
+#include"Log.h"
 namespace zaran
 {
 	FaceTopoInfo::FaceTopoInfo()
@@ -8,18 +9,50 @@ namespace zaran
 
 	FaceTopoInfo::~FaceTopoInfo()
 	{
+		if (m_face2node)
+			delete[] m_face2node;
+		if (m_face_node_num)
+			delete[] m_face_node_num;
+		if (m_node_id)
+			delete[] m_node_id;
+		if (m_face2cell)
+			delete[] m_face2cell;
+		if (m_area)
+			delete[] m_area;
+		if (m_normal)
+			delete[] m_normal;
+	}
 
-	}
-	void FaceTopoInfo::SetNodeIndex(Array<IArray>& node_index)
+	void FaceTopoInfo::Allocate(int nFace, int* face_node_num)
 	{
-		m_node_index = node_index;
+		m_face_num = nFace;
+		m_face_node_num = new int[nFace];
+		int nNode = 0;
+		for (int i = 0;i < nFace;i++)
+		{
+			m_node_id[i] = nNode;
+			m_face_node_num[i] = face_node_num[i];
+			nNode += face_node_num[i];
+		}
+		m_face2node = new int[nNode];
+		m_node_id = new int[nFace];
+		m_face2cell = new int[2 * nFace];
+		m_area = new double[nFace];
+		m_normal = new double[3 * nFace];
 	}
-	void FaceTopoInfo::SetLeftCell(IArray& left_cell_index)
+
+	void FaceTopoInfo::SetFace2Node(int iFace, int* node, int nNode)
 	{
-		m_left_cell_index = left_cell_index;
+		if (nNode != m_face_node_num[iFace])
+		{
+			ZaranLog::error("FaceTopoInfo::SetFace2Node: The number of nodes is not equal to the number of nodes in the face");
+		}
+		for (int i = 0; i < nNode; i++)
+		{
+			m_face2node[m_node_id[iFace] + i] = node[i];
+		}
 	}
-	void FaceTopoInfo::SetRightCell(IArray& right_cell_index)
-	{
-		m_right_cell_index = right_cell_index;
-	}
+
+
+
 }

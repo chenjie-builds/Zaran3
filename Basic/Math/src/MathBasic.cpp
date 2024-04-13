@@ -31,7 +31,7 @@ namespace zaran
 	{
 		return rand() / double(RAND_MAX) * (range_high - range_low) + range_low;
 	}
-	//southerland��ʽ
+	//southerland¹«Ê½
 	double Southerland(double T, double mu0, double T0, double Ts)
 	{
 		return mu0 * pow(T / T0, 1.5) * (T0 + Ts) / (T + Ts);
@@ -80,5 +80,34 @@ namespace zaran
 		double cross_norm = sqrt(cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]);
 		double angle = atan2(cross_norm, dot);
 		return angle;
+	}
+	double TriangleArea(const double* pt1, const double* pt2, const double* pt3)
+	{
+		double a = DistanceOfTwoPoints(pt1, pt2);
+		double b = DistanceOfTwoPoints(pt2, pt3);
+		double c = DistanceOfTwoPoints(pt3, pt1);
+		double p = (a + b + c) / 2;
+		return sqrt(p * (p - a) * (p - b) * (p - c));
+	}
+	//计算四边形面积
+	//可能存在四个点不在一个平面上的情况
+	//先计算四边形的中心点，然后分割成四个三角形进行计算
+	double QuadrangleArea(const double* pt1, const double* pt2, const double* pt3, const double* pt4)
+	{
+		double center[3] = { 0 };
+		for (int i = 0; i < 3; i++)
+		{
+			center[i] = (pt1[i] + pt2[i] + pt3[i] + pt4[i]) / 4;
+		}
+		double area = TriangleArea(pt1, pt2, center) + TriangleArea(pt2, pt3, center) +
+			TriangleArea(pt3, pt4, center) + TriangleArea(pt4, pt1, center);
+		return area;
+	}
+
+	void CrossProduct(const double* A, const double* B, double* C)
+	{
+		C[0] = A[1] * B[2] - A[2] * B[1];
+		C[1] = A[2] * B[0] - A[0] * B[2];
+		C[2] = A[0] * B[1] - A[1] * B[0];
 	}
 }

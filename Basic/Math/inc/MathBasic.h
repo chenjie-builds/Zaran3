@@ -31,12 +31,20 @@ namespace zaran
 	}
 	template<typename T1, typename T2>
 	T1 Min(const T1& a, const T2& b) { return a < b ? a : b; }
-	//ÈýµãÄâºÏÒ»¸öÔ²
-	//¸ù¾ÝÈý¸ö¶þÎ¬¿Õ¼äµãpt1,pt2,pt3ÄâºÏ³öÆäÍâ½ÓÔ²µÄ°ë¾¶radius,Ô²ÐÄ center
+	//ä¸‰ç‚¹æ‹Ÿåˆä¸€ä¸ªåœ†
+	//æ ¹æ®ä¸‰ä¸ªäºŒç»´ç©ºé—´ç‚¹pt1,pt2,pt3æ‹Ÿåˆå‡ºå…¶å¤–æŽ¥åœ†çš„åŠå¾„radius,åœ†å¿ƒ center
 	//https://blog.csdn.net/liyuanbhu/article/details/52891868
 	void CircleFrom3Point(const double* pt1, const double* pt2, const double* pt3, double& radius, double* center);
-	//ÏòÁ¿(x2,y2)ÄæÊ±Õëµ½(x1,y1)µÄ½Ç¶È£¬0~2pi£¬Ä¬ÈÏ(x2,y2)ÎªxÖáÕý·½Ïò
+	//å‘é‡(x2,y2)é€†æ—¶é’ˆåˆ°(x1,y1)çš„è§’åº¦ï¼Œ0~2piï¼Œé»˜è®¤(x2,y2)ä¸ºxè½´æ­£æ–¹å‘
 	double AngleOfTwoArray(const double& x1, const double& y1, const double& x2 = 1, const double& y2 = 0);
-	//ÈýÎ¬ÏòÁ¿AºÍÏòÁ¿BµÄ¼Ð½Ç£¬0~pi
+	//ä¸‰ç»´å‘é‡Aå’Œå‘é‡Bçš„å¤¹è§’ï¼Œ0~pi
 	double AngleOfTwoArray3D(const double* A, const double* B);
+	//ä¸‰è§’å½¢é¢ç§¯
+	double TriangleArea(const double* pt1, const double* pt2, const double* pt3);
+	//å››è¾¹å½¢é¢ç§¯
+	double QuadrangleArea(const double* pt1, const double* pt2, const double* pt3, const double* pt4);
+	//è®¡ç®—ä¸¤ä¸ªå‘é‡çš„å‰ä¹˜
+	void CrossProduct(const double* A, const double* B, double* C);
+
+
 }
