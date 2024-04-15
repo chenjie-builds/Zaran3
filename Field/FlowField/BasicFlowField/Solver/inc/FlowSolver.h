@@ -24,7 +24,7 @@ namespace zaran
 		void InitField() override;
 		void InitSolver() override;
 		// 计算时间步长
-		virtual void ComputeTimeStep() = 0;
+		virtual void CalcTimeStep() = 0;
 		void Solve() override;
 		void Post()override;
 		// 同步时间步长为全局时间步
@@ -43,7 +43,7 @@ namespace zaran
 		// 时间推进
 		virtual void TimeAdvance() = 0;
 		// 计算变量梯度
-		virtual void ComputePrimitiveGradient() = 0;
+		virtual void CalcPrimGrad() = 0;
 	protected:
 		Array<DArray*> m_Primitive;
 		Array<DArray*> m_Conservative;

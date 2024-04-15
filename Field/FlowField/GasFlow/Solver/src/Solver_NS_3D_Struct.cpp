@@ -5,7 +5,7 @@
 namespace zaran
 {
 
-	void Solver_NS_3D_Struct::ComputeCoordTrans()
+	void Solver_NS_3D_Struct::CalcMetric()
 	{
 		auto& grid = GetGrid();
 		// 起始点和终止点的编号,s: start, e: end
@@ -65,7 +65,7 @@ namespace zaran
 		}
 	}
 
-	void Solver_NS_3D_Struct::ComputeGradientWLS()
+	void Solver_NS_3D_Struct::CalcGradWLS()
 	{
 		auto& grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -287,7 +287,7 @@ namespace zaran
 		}
 	}
 
-	void Solver_NS_3D_Struct::ComputeTimeStepLocal()
+	void Solver_NS_3D_Struct::CalcTimeStepLocal()
 	{
 		auto& grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -331,7 +331,7 @@ namespace zaran
 		}
 		GlobalData::Update("dt", minDt);
 	}
-	void Solver_NS_3D_Struct::ComputeLimiterCoef()
+	void Solver_NS_3D_Struct::CalcLimiter()
 	{
 		auto& grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();

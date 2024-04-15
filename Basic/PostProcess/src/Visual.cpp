@@ -11,8 +11,8 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 	WriteTecplotBinary(solver);
 
 	return;
-	int step = GlobalData::GetInt("step");
-	std::string filename = "result/" + std::to_string(step) + ".dat";
+	int currentIter = GlobalData::GetInt("currentIter");
+	std::string filename = "result/" + std::to_string(currentIter) + ".dat";
 	std::ofstream fout(filename);
 	fout << "variables=x,y,z,rho,u,v,w,p,jacobi\n";
 	auto& grid = solver->GetGrid();
@@ -32,7 +32,7 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 	auto& jacobi = data->GetData("coordTransJ");
 	fout << "ZONE T= grid_" << grid->GetName() << std::endl;
 	fout << "N=" << grid->GetTotalNodeNum() << ", E= " << cell2node.size() << ", F=FEPOINT, ET=Brick" << std::endl;
-	fout << "solutiontime= " << GlobalData::GetDouble("globalTime") << std::endl;
+	fout << "solutiontime= " << GlobalData::GetDouble("currentTime") << std::endl;
 	for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
 		auto& currentCoord = nodeCoord[iNode];
@@ -82,7 +82,7 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 	INTEGER4 fileType = 0;
 	string grid_name = "grid_" + grid->GetName();
 	string var_name = "x y z rho u v w p";
-	std::string file_name = "result/" + std::to_string(GlobalData::GetInt("step")) + ".plt";
+	std::string file_name = "result/" + std::to_string(GlobalData::GetInt("currentIter")) + ".plt";
 	int i = TECINI142(grid_name.c_str(),
 		var_name.c_str(),
 		file_name.c_str(),
@@ -98,7 +98,7 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 	INTEGER4 iCellMax = 0;
 	INTEGER4 jCellMax = 0;
 	INTEGER4 kCellMax = 0;
-	double solution_time = GlobalData::GetDouble("globalTime");
+	double solution_time = GlobalData::GetDouble("currentTime");
 	INTEGER4 strandID = 0;
 	INTEGER4 parentZn = 0;
 	INTEGER4 isBlock = 1;
@@ -221,8 +221,8 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 }
 void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
 {
-	int step = GlobalData::GetInt("step");
-	std::string filename = "result/" + std::to_string(step) + ".dat";
+	int currentIter = GlobalData::GetInt("currentIter");
+	std::string filename = "result/" + std::to_string(currentIter) + ".dat";
 	std::ofstream fout(filename);
 	fout << "variables=x,y,rho,u,v,w,p,J,lim0,lim1,lim2,lim3,lim4,rhoGradX,rhoGradY,uGradX,uGradY,vGradX,vGradY,pGradX,pGradY\n";
 	auto& grid = solver->GetGrid();
@@ -255,7 +255,7 @@ void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
 	auto& limiterCoef4 = data->GetData("limiterCoef4");
 	fout << "ZONE T= grid_" << grid->GetName() << std::endl;
 	fout << "N=" << grid->GetTotalNodeNum() << ", E= " << cell2node.size() << ", F=FEPOINT, ET=QUADRILATERAL" << std::endl;
-	fout << "solutiontime= " << GlobalData::GetDouble("globalTime") << std::endl;
+	fout << "solutiontime= " << GlobalData::GetDouble("currentTime") << std::endl;
 	for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
 		auto& currentCoord = nodeCoord[iNode];
@@ -282,8 +282,8 @@ void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
 }
 void zaran::Visual::WriteTecplotPoint(Ptr<FieldSolver>& solver)
 {
-	int step = GlobalData::GetInt("step");
-	std::string filename = "result/" + std::to_string(step) + ".dat";
+	int currentIter = GlobalData::GetInt("currentIter");
+	std::string filename = "result/" + std::to_string(currentIter) + ".dat";
 	std::ofstream fout(filename);
 	fout << "variables=x,y,z,rho,u,v,w,p\n";
 	auto& grid = solver->GetGrid();
@@ -421,8 +421,8 @@ void Visual::WriteVTK(Ptr<FieldSolver>& solver)
 
 void zaran::Visual::WriteTecplotZaran3D(Ptr<FieldSolver>& solver)
 {
-	int step = GlobalData::GetInt("step");
-	std::string filename = "result/" + std::to_string(step) + ".dat";
+	int currentIter = GlobalData::GetInt("currentIter");
+	std::string filename = "result/" + std::to_string(currentIter) + ".dat";
 	std::ofstream fout(filename);
 	fout << "variables=x,y,z,rho,u,v,w,p\n";
 	auto& data = solver->GetFieldData();
@@ -442,7 +442,7 @@ void zaran::Visual::WriteTecplotZaran3D(Ptr<FieldSolver>& solver)
 	grid->GetRange(is, ie, js, je, ks, ke);
 	fout << "ZONE T= grid_" << grid->GetName() << std::endl;
 	fout << "I=" << ie - is << ", J=" << je - js << ", K=" << ke - ks << ", DATAPACKING=BLOCK, VARLOCATION=([4-8]=CELLCENTERED)" << std::endl;
-	fout << "solutiontime= " << GlobalData::GetDouble("globalTime") << std::endl;
+	fout << "solutiontime= " << GlobalData::GetDouble("currentTime") << std::endl;
 	auto CellIndex = [&](int i, int j, int k) {return grid->GetCellIndex(i, j, k); };
 	int iCell = 0;
 	int count = 0;
@@ -597,11 +597,11 @@ void zaran::Visual::WriteTecplotZaran3DBinary(Ptr<FieldSolver>& solver)
 	int n_cell = (ie - is - 1) * (je - js - 1) * (ke - ks - 1);
 	DArray x(n_node), y(n_node), z(n_node), density(n_cell), x_vel(n_cell), y_vel(n_cell), z_vel(n_cell), pressure(n_cell);
 	IArray cell_type_array(n_cell);
-	int step = GlobalData::GetInt("step");
-	std::string file_name = "result/" + std::to_string(step) + ".plt";
+	int currentIter = GlobalData::GetInt("currentIter");
+	std::string file_name = "result/" + std::to_string(currentIter) + ".plt";
 	string zone_name = "grid_" + grid->GetName();
 	string var_name = "x y z rho u v w p cell_type";
-	double solution_time = GlobalData::GetDouble("globalTime");
+	double solution_time = GlobalData::GetDouble("currentTime");
 	int node_index = 0;
 	for (int k = ks; k < ke; ++k)
 	{

@@ -50,3 +50,8 @@ void GlobalData::Update(const string& varName, const dataVariant& varValue)
 {
 	dataMap_[varName] = varValue;
 }
+
+void zaran::GlobalData::Backup(const string& back_file_name)
+{
+	
+}

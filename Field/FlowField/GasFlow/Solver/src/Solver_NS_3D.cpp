@@ -1,7 +1,7 @@
 #include "Solver_NS_3D.h"
 namespace zaran
 {
-	void Solver_NS_3D::ComputeCoordTrans()
+	void Solver_NS_3D::CalcMetric()
 	{
 		ZaranLog::info("Compute NS 3D Coordination Transformation Coefficients");
 		GridPtr grid = GetGrid();
@@ -112,7 +112,7 @@ namespace zaran
 		ZaranLog::info("NS 3D Coordination Transformation Coefficients are computed");
 	}
 
-	void Solver_NS_3D::ComputeGradientWLS()
+	void Solver_NS_3D::CalcGradWLS()
 	{
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -181,7 +181,7 @@ namespace zaran
 		}
 	}
 
-	void Solver_NS_3D::ComputeTimeStepLocal()
+	void Solver_NS_3D::CalcTimeStepLocal()
 	{
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -293,12 +293,12 @@ namespace zaran
 			}
 			if (exist_negative || (*m_non_physical)[iNode] > 0)
 			{
-				MidPointReconstructOneOrder(templateI[iNode][1], templateI[iNode][2], &riemann_para[0].prim_left(0), &riemann_para[0].prim_right(0));
-				MidPointReconstructOneOrder(templateI[iNode][0], templateI[iNode][1], &riemann_para[1].prim_left(0), &riemann_para[1].prim_right(0));
-				MidPointReconstructOneOrder(templateJ[iNode][1], templateJ[iNode][2], &riemann_para[2].prim_left(0), &riemann_para[2].prim_right(0));
-				MidPointReconstructOneOrder(templateJ[iNode][0], templateJ[iNode][1], &riemann_para[3].prim_left(0), &riemann_para[3].prim_right(0));
-				MidPointReconstructOneOrder(templateK[iNode][1], templateK[iNode][2], &riemann_para[4].prim_left(0), &riemann_para[4].prim_right(0));
-				MidPointReconstructOneOrder(templateK[iNode][0], templateK[iNode][1], &riemann_para[5].prim_left(0), &riemann_para[5].prim_right(0));
+				MidPointReconstructFirstOrder(templateI[iNode][1], templateI[iNode][2], &riemann_para[0].prim_left(0), &riemann_para[0].prim_right(0));
+				MidPointReconstructFirstOrder(templateI[iNode][0], templateI[iNode][1], &riemann_para[1].prim_left(0), &riemann_para[1].prim_right(0));
+				MidPointReconstructFirstOrder(templateJ[iNode][1], templateJ[iNode][2], &riemann_para[2].prim_left(0), &riemann_para[2].prim_right(0));
+				MidPointReconstructFirstOrder(templateJ[iNode][0], templateJ[iNode][1], &riemann_para[3].prim_left(0), &riemann_para[3].prim_right(0));
+				MidPointReconstructFirstOrder(templateK[iNode][1], templateK[iNode][2], &riemann_para[4].prim_left(0), &riemann_para[4].prim_right(0));
+				MidPointReconstructFirstOrder(templateK[iNode][0], templateK[iNode][1], &riemann_para[5].prim_left(0), &riemann_para[5].prim_right(0));
 			}
 			// calculate flux
 			for (int i = 0; i < 6; ++i)

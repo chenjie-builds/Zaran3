@@ -19,8 +19,9 @@ const double Prt = 0.9;
 class PerfectGas : public Gas
 {
 public:
-	PerfectGas(const double& Mw = 0.028964, const double& gamma = 1.4, const RefValue& refValue = RefValue());
+	PerfectGas(const double& Mw = 0.028964, const double& gamma = 1.4, const Dimensionless& refValue = Dimensionless());
 	double GetGamma() const { return gamma_; }
+	double GetSonicSpeed(const double& T);  //根据温度计算声速
 	double GetTemp(const double& density, const double& p);  //根据状态方程计算温度
 	double GetMul(const double& T);   //根据温度，利用southerland公式计算层流粘性系数μl
 	double GetMut(const double& T);   //根据温度，计算湍流粘性系数μt
@@ -32,6 +33,7 @@ public:
 	double GetCv(const double& T) { return Cv_; };	//根据温度，求出定容比热Cv
 	virtual double GetEnergy(const double& T, const double& velocity);//根据温度和速度求出总内能
 	virtual double GetEnergy(const double& density, const double& pressure, const double& velocity);//根据密度压力和速度求出总内能
+	double GetPressureFromDensityAndTemperature(const double& density, const double& T);
 private:
 	double gamma_;	//比热比 
 	double Cp_;		//定压比热	J(mol*k)

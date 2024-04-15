@@ -19,16 +19,16 @@ namespace zaran
 	public:
 		Solver_NS_3D_Struct() {}
 		~Solver_NS_3D_Struct() {}
-		virtual void ComputeCoordTrans()override;
+		virtual void CalcMetric()override;
 		// 使用最小二乘求梯度
-		virtual void ComputeGradientWLS()override;
+		virtual void CalcGradWLS()override;
 	protected:
 		Ptr<Grid_Struct_3D> GetGrid();
-		virtual void ComputeTimeStepLocal()override;
+		virtual void CalcTimeStepLocal()override;
 		// 计算流动通量
 		virtual void InviscidFlux()override;
 		// 计算限制器系数
-		virtual void ComputeLimiterCoef()override;
+		virtual void CalcLimiter()override;
 	private:
 			//限制器函数指针
 		double (*limiter)(const double&, const double&);

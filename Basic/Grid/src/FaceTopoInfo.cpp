@@ -27,6 +27,7 @@ namespace zaran
 	{
 		m_face_num = nFace;
 		m_face_node_num = new int[nFace];
+		m_node_id = new int[nFace];
 		int nNode = 0;
 		for (int i = 0;i < nFace;i++)
 		{
@@ -35,7 +36,6 @@ namespace zaran
 			nNode += face_node_num[i];
 		}
 		m_face2node = new int[nNode];
-		m_node_id = new int[nFace];
 		m_face2cell = new int[2 * nFace];
 		m_area = new double[nFace];
 		m_normal = new double[3 * nFace];

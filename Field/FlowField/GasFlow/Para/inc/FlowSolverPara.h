@@ -10,9 +10,10 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include "solverpara.h"
+#include "SolverPara.h"
 #include "Limiter.h"
 #include"BasicType.h"
+#include"Dimensionless.h"
 namespace zaran
 {
 	//梯度求解方法
@@ -29,40 +30,34 @@ namespace zaran
 		virtual ~FlowSolverPara();
 		void Init() override;
 	public:
-		void SetRefMachNumber(const int& refMach);
-		void SetRefGamma(const int& refGamma);
-		void SetRefDensity(const int& refDensity);
-		void SetRefSonicSpeed(const int& refSonicSpped);
-		void SetRefTemprature(const int& refTemperature);
 		void SetInitFieldType(const int& initflowType);
 		void SetIsViscous(const int& isViscous);
 		void SetCflNumber(const double& cfl);
-		void SetPrimitiveInflow(const DVector& primInflow);
 		void SetRKCoef(const DArray& rkCoef);
 		void SetGradScheme(const GradScheme& gradScheme);
 		void SetLimiterType(const LimiterType& limiterType);
 	public:
-		const double& GetRefMachNumber()const;
-		const double& GetRefGamma()const;
-		const double& GetRefDensity()const;
-		const double& GetRefSonicSpeed()const;
-		const double& GetRefPressure()const;
-		const double& GetRefTemperature()const;
+		const int& GetInflowDensity()const;
+		const double& GetInflowVelocityX()const;
+		const double& GetInflowVelocityY()const;
+		const double& GetInflowVelocityZ()const;
+		const double& GetInflowPressure()const;
+		const double& GetInflowTemperature()const;
 		const int& GetInitFieldType()const;
 		const int& GetIsViscous()const;
 		const double& GetCflNumber()const;
-		const DVector& GetPrimitiveInflow()const;
 		const DArray& GetRKCoef()const;
 		const GradScheme& GetGradScheme()const;
 		const LimiterType& GetLimiterType()const;
 	private:
-		//referance flow parameter
-		double refMachNumber_;
-		double refGamma_;
-		double refDensity_;
-		double refSonicSpeed_;
-		double refPressure_;
-		double refTemperature_;
+		// 无量纲参数
+		Dimensionless m_dimensionless;
+		double m_inflow_density;
+		double m_inflow_velocity_x;
+		double m_inflow_velocity_y;
+		double m_inflow_velocity_z;
+		double m_inflow_pressure;
+		double m_inflow_temperature;
 		// 流场初始化方式
 		// =0 为静止流场
 		// =1 为来流
@@ -71,8 +66,6 @@ namespace zaran
 		int isViscous_;
 		// CFL数, 决定计算步长
 		double cflNumber_;
-		// 来流原始变量
-		DVector primInflow_;
 		// RK步数
 		DArray rkCoef_;
 		// 梯度方法

@@ -11,7 +11,7 @@
 //==============================================================================||
 #pragma once
 #include"CommonPara.h"
-#include"RefValue.h"
+#include"Dimensionless.h"
 const double GAS_CONSTANT = 8.3143;//通用气体常数J/(mol*k)
 enum class FluidType
 {
@@ -23,11 +23,12 @@ enum class FluidType
 class Gas
 {
 public:
-	Gas(const double& Mw=0.028964, const double& gamma=1.4, const RefValue& refValue = RefValue());
+	Gas(const double& Mw=0.028964, const double& gamma=1.4, const Dimensionless& refValue = Dimensionless());
 
 	double GetRm()const { return Rm_; }
 	double GetMw() const { return mw_; }
 	virtual double GetGamma() const = 0;
+	virtual double GetSonicSpeed(const double& T)=0;  //根据温度计算声速
 	virtual double GetTemp(const double& density, const double& p)=0;  //根据状态方程计算温度
 	virtual double GetMul(const double& T)=0;   //根据温度，利用southerland公式计算层流粘性系数μl
 	virtual double GetMut(const double& T)=0;   //根据温度，计算湍流粘性系数μt

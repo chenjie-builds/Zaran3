@@ -1,6 +1,7 @@
 #include"flowsolverpara.h"
 #include "GlobalData.h"
 #include "log.h"
+#include "PerfectGas.h"
 using namespace zaran;
 FlowSolverPara::FlowSolverPara()
 {
@@ -14,21 +15,25 @@ FlowSolverPara::~FlowSolverPara()
 
 void FlowSolverPara::Init()
 {
-	refMachNumber_ = GlobalData::GetDouble("refMachNumber");
-	refGamma_ = GlobalData::GetDouble("refGamma");
-	refDensity_ = GlobalData::GetDouble("refDensity");
-	refSonicSpeed_ = GlobalData::GetDouble("refSonicSpeed");
-	refPressure_ = GlobalData::GetDouble("refPressure");
-	refTemperature_ = GlobalData::GetDouble("refTemperature");
+	double inflow_Ma = GlobalData::GetDouble("inflowMachNumber");
+	double inflow_gamma = GlobalData::GetDouble("inflowGamma");
+	double inflow_density = GlobalData::GetDouble("inflowDensity");
+	double inflow_temperature = GlobalData::GetDouble("inflowTemperature");
+	double inflow_Mw = GlobalData::GetDouble("inflowMw");
+	double ref_length = GlobalData::GetDouble("refLength");
+	m_dimensionless.SetRefValue(inflow_density, inflow_gamma, inflow_Mw, 1.0, inflow_temperature);
+	double inflow_attack_angle = GlobalData::GetDouble("inflowAttackAngle");
+	double inflow_slide_angle = GlobalData::GetDouble("inflowSlideAngle");
+	PerfectGas gas(inflow_Mw, inflow_gamma, m_dimensionless);
+	double inflow_sonice_speed = gas.GetSonicSpeed(m_dimensionless.GetTempDL(inflow_temperature));
+	m_inflow_velocity_x = inflow_Ma * inflow_sonice_speed * cos(inflow_attack_angle) * cos(inflow_slide_angle);
+	m_inflow_velocity_y = inflow_Ma * inflow_sonice_speed * sin(inflow_attack_angle) * cos(inflow_slide_angle);
+	m_inflow_velocity_z = inflow_Ma * inflow_sonice_speed * sin(inflow_slide_angle);
+	m_inflow_density =m_dimensionless.GetDensityDL(inflow_density);
+	m_inflow_pressure =gas.GetPressureFromDensityAndTemperature(m_inflow_density, m_dimensionless.GetTempDL(inflow_temperature));
 	initFieldType_ = GlobalData::GetInt("initFieldType");
 	isViscous_ = GlobalData::GetInt("isViscous");
 	cflNumber_ = GlobalData::GetDouble("cflNumber");
-	primInflow_.resize(5);
-	primInflow_[0] = 1.0;
-	primInflow_[1] = refMachNumber_;
-	primInflow_[2] = 0.0;
-	primInflow_[3] = 0.0;
-	primInflow_[4] = 1.0 / 1.4;
 	int rkStage = GlobalData::GetInt("rkStage");
 	if (rkStage == 1)
 	{
@@ -75,10 +80,6 @@ void FlowSolverPara::Init()
 	{
 		limiterType_ = LimiterType::nolimit;
 	}
-	else if (limiterType == "oneOrder")
-	{
-		limiterType_ = LimiterType::oneorder;
-	}
 	else if (limiterType == "barth")
 	{
 		limiterType_ = LimiterType::barth;
@@ -93,36 +94,6 @@ void FlowSolverPara::Init()
 		system("pause");
 	}
 
-}
-
-const double& FlowSolverPara::GetRefMachNumber() const
-{
-	return refMachNumber_;
-}
-
-const double& FlowSolverPara::GetRefGamma() const
-{
-	return refGamma_;
-}
-
-const double& FlowSolverPara::GetRefDensity() const
-{
-	return refDensity_;
-}
-
-const double& FlowSolverPara::GetRefSonicSpeed() const
-{
-	return refSonicSpeed_;
-}
-
-const double& FlowSolverPara::GetRefPressure() const
-{
-	return refPressure_;
-}
-
-const double& FlowSolverPara::GetRefTemperature() const
-{
-	return refTemperature_;
 }
 
 const int& FlowSolverPara::GetInitFieldType() const
@@ -140,41 +111,12 @@ const double& FlowSolverPara::GetCflNumber() const
 	return cflNumber_;
 }
 
-const DVector& FlowSolverPara::GetPrimitiveInflow() const
-{
-	return primInflow_;
-}
-
 const DArray& FlowSolverPara::GetRKCoef() const
 {
 	return rkCoef_;
 }
 
-void FlowSolverPara::SetRefMachNumber(const int& refMach)
-{
-	refMachNumber_ = refMach;
 
-}
-
-void FlowSolverPara::SetRefGamma(const int& refGamma)
-{
-	refGamma_ = refGamma;
-}
-
-void FlowSolverPara::SetRefDensity(const int& refDensity)
-{
-	refDensity_ = refDensity;
-}
-
-void FlowSolverPara::SetRefSonicSpeed(const int& refSonicSpped)
-{
-	refSonicSpeed_ = refSonicSpped;
-}
-
-void FlowSolverPara::SetRefTemprature(const int& refTemperature)
-{
-	refTemperature_ = refTemperature;
-}
 
 void FlowSolverPara::SetInitFieldType(const int& initflowType)
 {
@@ -189,11 +131,6 @@ void FlowSolverPara::SetIsViscous(const int& isViscous)
 void FlowSolverPara::SetCflNumber(const double& cfl)
 {
 	cflNumber_ = cfl;
-}
-
-void FlowSolverPara::SetPrimitiveInflow(const DVector& primInflow)
-{
-	primInflow_ = primInflow;
 }
 
 void FlowSolverPara::SetRKCoef(const DArray& rkCoef)
@@ -219,4 +156,34 @@ void FlowSolverPara::SetGradScheme(const GradScheme& gradScheme)
 void FlowSolverPara::SetLimiterType(const LimiterType& limiterType)
 {
 	limiterType_ = limiterType;
+}
+
+const int& zaran::FlowSolverPara::GetInflowDensity() const
+{
+	return m_inflow_density;
+}
+
+const double& zaran::FlowSolverPara::GetInflowVelocityX() const
+{
+	return m_inflow_velocity_x;
+}
+
+const double& zaran::FlowSolverPara::GetInflowVelocityY() const
+{
+	return m_inflow_velocity_y;
+}
+
+const double& zaran::FlowSolverPara::GetInflowVelocityZ() const
+{
+	return m_inflow_velocity_z;
+}
+
+const double& zaran::FlowSolverPara::GetInflowPressure() const
+{
+	return m_inflow_pressure;
+}
+
+const double& zaran::FlowSolverPara::GetInflowTemperature() const
+{
+	return m_inflow_temperature;
 }

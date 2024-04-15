@@ -23,6 +23,7 @@ namespace zaran
 		static const double GetDouble(const string& dataName);
 		static const string GetString(const string& dataName);
 		static void Update(const string& dataName, const dataVariant& dataValue);
+		static void Backup(const string& back_file_name);
 	private:
 		GlobalData() {};
 		~GlobalData() {};

@@ -18,15 +18,15 @@ namespace zaran
 	public:
 		Solver_NS_2D() {}
 		~Solver_NS_2D() {}
-		void ComputeCoordTrans()override;
+		void CalcMetric()override;
 		void InitField()override;
 		void InitFieldFarField();//初始化为来流
 		void InitFieldNoFlow();//初始化为静止流场
 		void InitFieldShockReflection();//初始化为激波反射
 		void InitFieldIsentropicVortex();
 	protected:
-		void ComputeGradientWLS()override;
-		void ComputeTimeStepLocal() override;
+		void CalcGradWLS()override;
+		void CalcTimeStepLocal() override;
 		// 计算流动通量
 		void InviscidFlux()override;
 		void SolveHoleNode();

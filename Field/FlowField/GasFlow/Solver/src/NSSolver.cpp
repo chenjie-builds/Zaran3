@@ -5,7 +5,7 @@ namespace zaran {
 	{
 		InitSolver();
 		InitField();
-		ComputeCoordTrans();
+		CalcMetric();
 	}
 	void NSSolver::InitField()
 	{
@@ -17,15 +17,17 @@ namespace zaran {
 		auto& p = *m_Primitive[4];
 		FlowSolverParaPtr para = GetPara();
 		int initType = para->GetInitFieldType();
-		DVector primInit = para->GetPrimitiveInflow();
-		ZaranLog::info("primitive inlet:({},{},{},{},{})", primInit(0), primInit(1), primInit(2), primInit(3), primInit(4));
 		if (initType == 0)
 		{
-			primInit(1) = primInit(2) = primInit(3) = 0;
+			InitFieldFarFieldNoVelocity();
 		}
 		else if (initType == 1)
 		{
-			//do nothing
+			InitFieldFarField();
+		}
+		else if (initType == 2)
+		{
+			InitFieldRestart();
 		}
 		else
 		{
@@ -33,18 +35,86 @@ namespace zaran {
 			ZaranLog::warn("Wrong Flow field init parameter:{}", initType);
 			exit(0);
 		}
+		Prim2Cons();
+		ZaranLog::info("Flow Field Initialize Finished!");
+	}
+
+	void NSSolver::InitFieldFarField()
+	{
+		GridPtr grid = GetGrid();
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
+		FlowSolverParaPtr para = GetPara();
+		double inflow_prim[5];
+		inflow_prim[0] = para->GetInflowDensity();
+		inflow_prim[1] = para->GetInflowVelocityX();
+		inflow_prim[2] = para->GetInflowVelocityY();
+		inflow_prim[3] = para->GetInflowVelocityZ();
+		inflow_prim[4] = para->GetInflowPressure();
 		int n_data = rho.size();
 		double x, y, z;
 		for (int iNode = 0; iNode < n_data; ++iNode)
 		{
-			rho[iNode] = primInit(0);
-			u[iNode] = primInit(1);
-			v[iNode] = primInit(2);
-			w[iNode] = primInit(3);
-			p[iNode] = primInit(4);
+			rho[iNode] = inflow_prim[0];
+			u[iNode] = inflow_prim[1];
+			v[iNode] = inflow_prim[2];
+			w[iNode] = inflow_prim[3];
+			p[iNode] = inflow_prim[4];
 		}
-		Primitive2Conservative();
-		ZaranLog::info("Flow Field Initialize Finished!");
+	}
+
+	void NSSolver::InitFieldFarFieldNoVelocity()
+	{
+		GridPtr grid = GetGrid();
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
+		FlowSolverParaPtr para = GetPara();
+		double inflow_prim[5];
+		inflow_prim[0] = para->GetInflowDensity();
+		inflow_prim[1] = 0.0;
+		inflow_prim[2] = 0.0;
+		inflow_prim[3] = 0.0;
+		inflow_prim[4] = para->GetInflowPressure();
+		int n_data = rho.size();
+		double x, y, z;
+		for (int iNode = 0; iNode < n_data; ++iNode)
+		{
+			rho[iNode] = inflow_prim[0];
+			u[iNode] = inflow_prim[1];
+			v[iNode] = inflow_prim[2];
+			w[iNode] = inflow_prim[3];
+			p[iNode] = inflow_prim[4];
+		}
+	}
+
+	void NSSolver::InitFieldRestart()
+	{
+		GridPtr grid = GetGrid();
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
+		FlowSolverParaPtr para = GetPara();
+		std::string restartFileName = "backup.dat";
+		std::ifstream fin(restartFileName);
+		if (!fin.is_open())
+		{
+			ZaranLog::warn("Restart file not found!");
+			exit(0);
+		}
+		int n_data = rho.size();
+		for (int iNode = 0; iNode < n_data; ++iNode)
+		{
+			fin >> rho[iNode] >> u[iNode] >> v[iNode] >> w[iNode] >> p[iNode];
+		}
+		fin.close();
 	}
 
 	void NSSolver::InitSolver()
@@ -243,9 +313,9 @@ namespace zaran {
 
 	void NSSolver::Solve()
 	{
-		ComputeTimeStep();
-		ComputePrimitiveGradient();
-		ComputeLimiterCoef();
+		CalcTimeStep();
+		CalcPrimGrad();
+		CalcLimiter();
 		BoundaryCondition();
 		TimeAdvance();
 		UpdateField();
@@ -266,26 +336,44 @@ namespace zaran {
 		return maxRes;
 	}
 
-	void NSSolver::ComputeTimeStep()
+	void NSSolver::BackupField()
+	{
+		GridPtr grid = GetGrid();
+		auto& rho = *m_Primitive[0];
+		auto& u = *m_Primitive[1];
+		auto& v = *m_Primitive[2];
+		auto& w = *m_Primitive[3];
+		auto& p = *m_Primitive[4];
+		FlowSolverParaPtr para = GetPara();
+		std::string backupFileName = "backup.dat";
+		std::ofstream fout(backupFileName);
+		int n_data = rho.size();
+		for (int iNode = 0; iNode < n_data; ++iNode)
+		{
+			fout << rho[iNode] << " " << u[iNode] << " " << v[iNode] << " " << w[iNode] << " " << p[iNode] << std::endl;
+		}
+		fout.close();
+	}
+
+	void NSSolver::CalcTimeStep()
 	{
 		GlobalData::Update("dt", LARGE_NUMBER);
-		ComputeTimeStepLocal();
-		//锟角凤拷使锟斤拷全锟斤拷时锟戒步
-		int useGlobalTimeStep = GlobalData::GetInt("useGlobalTimeStep");
-		if (useGlobalTimeStep == 1)
+		CalcTimeStepLocal();
+		int isSteady = GlobalData::GetInt("isSteady");
+		if (isSteady == 0)
 		{
-			double globlaTimeStep = GlobalData::GetDouble("dt");
-			double globalTime = GlobalData::GetDouble("globalTime");
+			double delta_t = GlobalData::GetDouble("dt");
+			double current_time = GlobalData::GetDouble("currentTime");
 			double endTime = GlobalData::GetDouble("endTime");
-			if (globalTime + globlaTimeStep > endTime)
+			if (current_time + delta_t > endTime)
 			{
-				globlaTimeStep = endTime - globalTime;
-				globalTime = endTime;
+				delta_t = endTime - current_time;
+				current_time = endTime;
 			}
 			else
-				globalTime += globlaTimeStep;
-			GlobalData::Update("globalTime", globalTime);
-			SnycTimeStepWithGlobal(globlaTimeStep);
+				current_time += delta_t;
+			GlobalData::Update("currentTime", current_time);
+			SnycTimeStepWithGlobal(delta_t);
 		}
 	}
 
@@ -373,7 +461,7 @@ namespace zaran {
 #endif
 	}
 
-	void NSSolver::MidPointReconstructOneOrder(int index_left, int index_right, double* value_rec_left, double* value_rec_right)
+	void NSSolver::MidPointReconstructFirstOrder(int index_left, int index_right, double* value_rec_left, double* value_rec_right)
 	{
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -400,29 +488,29 @@ namespace zaran {
 		auto& wallBound = boundaryMap["slipWall"];
 #pragma omp parallel for
 		for (int iBound = 0; iBound < wallBound.size(); ++iBound)
-			ComputeWallBC(wallBound[iBound]);
+			WallBC(wallBound[iBound]);
 		auto& outletBound = boundaryMap["outlet"];
 #pragma omp parallel for
 		for (int iBound = 0; iBound < outletBound.size(); ++iBound)
-			ComputeOutletBC(outletBound[iBound]);
+			OutletBC(outletBound[iBound]);
 		auto& inletBound = boundaryMap["inlet"];
 #pragma omp parallel for
 		for (int iBound = 0; iBound < inletBound.size(); ++iBound)
-			ComputeInletBC(inletBound[iBound]);
+			InletBC(inletBound[iBound]);
 
 	}
 
 
-	void NSSolver::ComputePrimitiveGradient()
+	void NSSolver::CalcPrimGrad()
 	{
 		FlowSolverParaPtr para = GetPara();
 		if (para->GetGradScheme() == GradScheme::wls)
 		{
-			ComputeGradientWLS();
+			CalcGradWLS();
 		}
 		else if (para->GetGradScheme() == GradScheme::ufdm)
 		{
-			ComputeGradientUFDM();
+			CalcGradUFDM();
 		}
 		else if (para->GetGradScheme() == GradScheme::noGrad)
 		{
@@ -432,9 +520,9 @@ namespace zaran {
 		{
 			ZaranLog::warn("Unsupported Gradiend Scheme!");
 		}
-		ComputeBoundaryPrimtiveGradient();
+		CalcPrimGradBound();
 	}
-	void NSSolver::ComputeBoundaryPrimtiveGradient()
+	void NSSolver::CalcPrimGradBound()
 	{
 		auto& grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -486,7 +574,7 @@ namespace zaran {
 		int nBoundNode = grid->GetBoundNodeNum();
 		for (int iStage = 0; iStage < rkStage; ++iStage)
 		{
-			ComputeResidual();
+			CalcResidual();
 #pragma omp parallel for
 			for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 			{
@@ -503,7 +591,7 @@ namespace zaran {
 		}
 	}
 
-	void NSSolver::Primitive2Conservative()
+	void NSSolver::Prim2Cons()
 	{
 		double gamma = 1.4;
 		GridPtr grid = GetGrid();
@@ -520,10 +608,10 @@ namespace zaran {
 		int n_data = rho.size();
 #pragma omp parallel for
 		for (int iNode = 0; iNode < n_data; ++iNode)
-			Primitive2Conservative(rho[iNode], u[iNode], v[iNode], w[iNode], p[iNode], cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode]);
+			Prim2Cons(rho[iNode], u[iNode], v[iNode], w[iNode], p[iNode], cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode]);
 	}
 
-	void NSSolver::Primitive2Conservative(double& rho, double& u, double& v, double& w, double& p, double& cons0, double& cons1, double& cons2, double& cons3, double& cons4)
+	void NSSolver::Prim2Cons(double& rho, double& u, double& v, double& w, double& p, double& cons0, double& cons1, double& cons2, double& cons3, double& cons4)
 	{
 		double gamma = 1.4;
 		double v2 = u * u + v * v + w * w;
@@ -534,7 +622,7 @@ namespace zaran {
 		cons4 = p / (gamma - 1) + 0.5 * rho * v2;
 	}
 
-	void NSSolver::Conservative2Primitive()
+	void NSSolver::Cons2Prim()
 	{
 
 		GridPtr grid = GetGrid();
@@ -548,16 +636,14 @@ namespace zaran {
 		auto& cons2 = *m_Conservative[2];
 		auto& cons3 = *m_Conservative[3];
 		auto& cons4 = *m_Conservative[4];
-		auto& inflowPrim = GetPara()->GetPrimitiveInflow();
-		double prim_tmp[5];
 #pragma omp parallel for
 		for (int iNode = 0; iNode < rho.size(); ++iNode)
 		{
-			Conservative2Primitive(cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode], rho[iNode], u[iNode], v[iNode], w[iNode], p[iNode]);
+			Cons2Prim(cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode], rho[iNode], u[iNode], v[iNode], w[iNode], p[iNode]);
 		}
 	}
 
-	void NSSolver::Conservative2Primitive(double& cons0, double& cons1, double& cons2, double& cons3, double& cons4, double& rho, double& u, double& v, double& w, double& p)
+	void NSSolver::Cons2Prim(double& cons0, double& cons1, double& cons2, double& cons3, double& cons4, double& rho, double& u, double& v, double& w, double& p)
 	{
 		double gamma = 1.4;
 		rho = cons0;
@@ -568,7 +654,7 @@ namespace zaran {
 		p = (gamma - 1) * (cons4 - 0.5 * rho * v2);
 	}
 
-	void NSSolver::ComputeResidual()
+	void NSSolver::CalcResidual()
 	{
 		ZeroResidual();
 		InviscidFlux();
@@ -576,17 +662,17 @@ namespace zaran {
 		SourceFlux();
 	}
 
-	void NSSolver::ComputeGradientUFDM()
+	void NSSolver::CalcGradUFDM()
 	{
 		ZaranLog::warn("TO DO Gradient Function UFDM!");
 	}
 
 	void NSSolver::UpdateField()
 	{
-		Conservative2Primitive();
+		Cons2Prim();
 	}
 
-	void NSSolver::ComputeInletBC(Boundary& bound)
+	void NSSolver::InletBC(Boundary& bound)
 	{
 		FlowSolverParaPtr para = GetPara();
 		int boundIndex = bound.GetIndex();
@@ -600,17 +686,17 @@ namespace zaran {
 		auto& cons2 = *m_Conservative[2];
 		auto& cons3 = *m_Conservative[3];
 		auto& cons4 = *m_Conservative[4];
-		auto& inletPara = para->GetPrimitiveInflow();
-		rho[boundIndex] = inletPara[0];
-		u[boundIndex] = inletPara[1];
-		v[boundIndex] = inletPara[2];
-		w[boundIndex] = inletPara[3];
-		p[boundIndex] = inletPara[4];
-		Primitive2Conservative(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex],
+
+		rho[boundIndex] = para->GetInflowDensity();
+		u[boundIndex] = para->GetInflowVelocityX();
+		v[boundIndex] = para->GetInflowVelocityY();
+		w[boundIndex] = para->GetInflowVelocityZ();
+		p[boundIndex] = para->GetInflowPressure();
+		Prim2Cons(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex],
 			cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
 	}
 
-	void NSSolver::ComputeOutletBC(Boundary& bound)
+	void NSSolver::OutletBC(Boundary& bound)
 	{
 		auto& rho = *m_Primitive[0];
 		auto& u = *m_Primitive[1];
@@ -629,13 +715,13 @@ namespace zaran {
 		v[boundIndex] = v[innerIndex];
 		w[boundIndex] = w[innerIndex];
 		p[boundIndex] = p[innerIndex];
-		Primitive2Conservative(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex],
+		Prim2Cons(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex],
 			cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
 
 
 	}
 
-	void NSSolver::ComputeWallBC(Boundary& bound)
+	void NSSolver::WallBC(Boundary& bound)
 	{
 		int& innerIndex = bound.GetInnerIndex();
 		int boundIndex = bound.GetIndex();
@@ -660,37 +746,37 @@ namespace zaran {
 		u[boundIndex] = boundVel(0);
 		v[boundIndex] = boundVel(1);
 		w[boundIndex] = boundVel(2);
-		Primitive2Conservative(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex],
+		Prim2Cons(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex],
 			cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
 	}
 
-	void NSSolver::ComputeLimiterCoef()
+	void NSSolver::CalcLimiter()
 	{
 
 		string limiterType = GlobalData::GetString("limiterType");
-		if (limiterType != "oneOrder")
+		if (limiterType != "1st-order")
 		{
 			int firstOrderSteps = GlobalData::GetInt("firstOrderSteps");
-			int currentStep = GlobalData::GetInt("step");
-			if (currentStep < firstOrderSteps)
+			int currentIter = GlobalData::GetInt("currentIter");
+			if (currentIter < firstOrderSteps)
 			{
-				limiterType = "oneOrder";
-				ZaranLog::info("First {}/{} steps use one order scheme", currentStep, firstOrderSteps);
+				limiterType = "1st-order";
+				ZaranLog::info("First {}/{} iteration steps use 1st-order scheme", currentIter, firstOrderSteps);
 			}
 		}
 		if (limiterType == "vk")
-			ComputeLimiterCoefVK();
+			CalcLimiterVK();
 		else if (limiterType == "barth")
-			ComputeLimiterCoefBJ();
+			CalcLimiterBJ();
 		else if (limiterType == "noLimiter")
-			ComputeLimiterCoefNoLimiter();
-		else if (limiterType == "oneOrder")
-			ComputeLimiterCoefOneOrder();
+			CalcLimiterNone();
+		else if (limiterType == "1st-order")
+			CalcLimiterFirstOrder();
 		else
 			ZaranLog::warn("Unsupported Limiter Type: {}", limiterType);
 		//ComputeBoundaryLimiterCoef();
 	}
-	void NSSolver::ComputeLimiterCoefVK()
+	void NSSolver::CalcLimiterVK()
 	{
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -753,7 +839,7 @@ namespace zaran {
 			}
 		}
 	}
-	void NSSolver::ComputeLimiterCoefBJ()
+	void NSSolver::CalcLimiterBJ()
 	{
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -811,7 +897,7 @@ namespace zaran {
 			}
 		}
 	}
-	void NSSolver::ComputeLimiterCoefNoLimiter()
+	void NSSolver::CalcLimiterNone()
 	{
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -828,7 +914,7 @@ namespace zaran {
 			}
 		}
 	}
-	void NSSolver::ComputeLimiterCoefOneOrder()
+	void NSSolver::CalcLimiterFirstOrder()
 	{
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -852,7 +938,7 @@ namespace zaran {
 			}
 		}
 	}
-	void NSSolver::ComputeBoundaryLimiterCoef()
+	void NSSolver::CalcLimiterBound()
 	{
 		auto& grid = GetGrid();
 		BoundaryMapPtr& boundaryMapPtr = grid->GetBoundaryMap();
@@ -1026,7 +1112,7 @@ namespace zaran {
 					continue;
 				(*prim[4])[iNode] += (*prim[4])[physical_neighbor[iNeighbor]] * weight[iNeighbor];
 			}
-			Primitive2Conservative((*prim[0])[iNode], (*prim[1])[iNode], (*prim[2])[iNode], (*prim[3])[iNode], (*prim[4])[iNode],
+			Prim2Cons((*prim[0])[iNode], (*prim[1])[iNode], (*prim[2])[iNode], (*prim[3])[iNode], (*prim[4])[iNode],
 				(*m_Conservative[0])[iNode], (*m_Conservative[1])[iNode], (*m_Conservative[2])[iNode], (*m_Conservative[3])[iNode], (*m_Conservative[4])[iNode]);
 			(*res[0])[iNode] = 0;
 		}

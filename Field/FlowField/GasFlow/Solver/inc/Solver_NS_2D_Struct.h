@@ -20,24 +20,24 @@ namespace zaran
 		Solver_NS_2D_Struct() {}
 		~Solver_NS_2D_Struct() {}
 		virtual void InitField()override;
-		virtual void ComputeCoordTrans()override;
+		virtual void CalcMetric()override;
 		// 使用最小二乘求梯度
-		virtual void ComputeGradientWLS()override;
+		virtual void CalcGradWLS()override;
 	protected:
 		Ptr<Grid_Struct_2D> GetGrid();
-		virtual void ComputeTimeStepLocal()override;
+		virtual void CalcTimeStepLocal()override;
 		// 计算流动通量
 		virtual void InviscidFlux()override;
 		// 使用MUSCL格式计算流动通量
 		void InviscidFluxMUSCL();
 		// 计算限制器系数
-		virtual void ComputeLimiterCoef()override;
+		virtual void CalcLimiter()override;
 		// 超声速入口边界条件
-		virtual void ComputeInletBC(Boundary& bound);
+		virtual void InletBC(Boundary& bound);
 		// 超声速出口边界条件
-		virtual void ComputeOutletBC(Boundary& bound);
+		virtual void OutletBC(Boundary& bound);
 		// 壁面边界条件
-		virtual void  ComputeWallBC(Boundary& bound) {};
+		virtual void  WallBC(Boundary& bound) {};
 	private:
 		//限制器函数指针
 		double (*limiter)(const double&, const double&);

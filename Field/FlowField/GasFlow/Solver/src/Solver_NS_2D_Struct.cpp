@@ -15,16 +15,20 @@ namespace zaran
 		auto& nodeCoord = NodeTopo->GetCoordinate();
 		FlowSolverParaPtr para = GetPara();
 		int initType = para->GetInitFieldType();
-		DVector primInit = para->GetPrimitiveInflow();
+		double prim_init[5];
+		prim_init[0] = para->GetInflowDensity();
+		prim_init[1] = para->GetInflowVelocityX();
+		prim_init[2] = para->GetInflowVelocityY();
+		prim_init[3] = para->GetInflowVelocityZ();
+		prim_init[4] = para->GetInflowPressure();
 		int nTotalNodeNum = grid->GetTotalNodeNum();
 		double theta = 90 / 180.0 * PI;
 		double x, y, z;
-		primInit[0] = 5.4;
-		primInit[1] = 2.2222 * sin(theta);
-		primInit[2] = -2.22222 * cos(theta);
-		primInit[3] = 0;
-		primInit[4] = 10.3333;
-		para->SetPrimitiveInflow(primInit);
+		prim_init[0] = 5.4;
+		prim_init[1] = 2.2222 * sin(theta);
+		prim_init[2] = -2.22222 * cos(theta);
+		prim_init[3] = 0;
+		prim_init[4] = 10.3333;
 		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 		{
 			x = nodeCoord[iNode].x();
@@ -46,9 +50,9 @@ namespace zaran
 				p[iNode] = 10.33333;
 			}
 		}
-		Primitive2Conservative();
+		Prim2Cons();
 	}
-	void Solver_NS_2D_Struct::ComputeCoordTrans()
+	void Solver_NS_2D_Struct::CalcMetric()
 	{
 		auto& grid = GetGrid();
 		// 起始点和终止点的编号,s: start, e: end
@@ -104,7 +108,7 @@ namespace zaran
 			}
 		}
 	}
-	void Solver_NS_2D_Struct::ComputeGradientWLS()
+	void Solver_NS_2D_Struct::CalcGradWLS()
 	{
 		auto& grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -167,7 +171,7 @@ namespace zaran
 	{
 		return std::static_pointer_cast<Grid_Struct_2D>(Solver::GetGrid());
 	}
-	void Solver_NS_2D_Struct::ComputeTimeStepLocal()
+	void Solver_NS_2D_Struct::CalcTimeStepLocal()
 	{
 		auto& grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -394,7 +398,7 @@ namespace zaran
 			}
 		}
 	}
-	void Solver_NS_2D_Struct::ComputeLimiterCoef()
+	void Solver_NS_2D_Struct::CalcLimiter()
 	{
 		auto& grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -459,7 +463,7 @@ namespace zaran
 		}
 
 	}
-	void Solver_NS_2D_Struct::ComputeInletBC(Boundary& bound)
+	void Solver_NS_2D_Struct::InletBC(Boundary& bound)
 	{
 		FlowSolverParaPtr para = GetPara();
 		int  ghostIndex = bound.GetGhostIndex();
@@ -473,16 +477,21 @@ namespace zaran
 		auto& cons2 = *m_Conservative[2];
 		auto& cons3 = *m_Conservative[3];
 		auto& cons4 = *m_Conservative[4];
-		auto& inletPara = para->GetPrimitiveInflow();
-		rho[ghostIndex] = inletPara[0];
-		u[ghostIndex] = inletPara[1];
-		v[ghostIndex] = inletPara[2];
-		w[ghostIndex] = inletPara[3];
-		p[ghostIndex] = inletPara[4];
-		Primitive2Conservative(rho[ghostIndex], u[ghostIndex], v[ghostIndex], w[ghostIndex], p[ghostIndex],
+		double prim_init[5];
+		prim_init[0] = para->GetInflowDensity();
+		prim_init[1] = para->GetInflowVelocityX();
+		prim_init[2] = para->GetInflowVelocityY();
+		prim_init[3] = para->GetInflowVelocityZ();
+		prim_init[4] = para->GetInflowPressure();
+		rho[ghostIndex] = prim_init[0];
+		u[ghostIndex] = prim_init[1];
+		v[ghostIndex] = prim_init[2];
+		w[ghostIndex] = prim_init[3];
+		p[ghostIndex] = prim_init[4];
+		Prim2Cons(rho[ghostIndex], u[ghostIndex], v[ghostIndex], w[ghostIndex], p[ghostIndex],
 			cons0[ghostIndex], cons1[ghostIndex], cons2[ghostIndex], cons3[ghostIndex], cons4[ghostIndex]);
 	}
-	void Solver_NS_2D_Struct::ComputeOutletBC(Boundary& bound)
+	void Solver_NS_2D_Struct::OutletBC(Boundary& bound)
 	{
 		auto& rho = *m_Primitive[0];
 		auto& u = *m_Primitive[1];
@@ -501,7 +510,7 @@ namespace zaran
 		v[ghostIndex] = v[boundIndex];
 		w[ghostIndex] = w[boundIndex];
 		p[ghostIndex] = p[boundIndex];
-		Primitive2Conservative(rho[ghostIndex], u[ghostIndex], v[ghostIndex], w[ghostIndex], p[ghostIndex],
+		Prim2Cons(rho[ghostIndex], u[ghostIndex], v[ghostIndex], w[ghostIndex], p[ghostIndex],
 			cons0[ghostIndex], cons1[ghostIndex], cons2[ghostIndex], cons3[ghostIndex], cons4[ghostIndex]);
 	}
 }

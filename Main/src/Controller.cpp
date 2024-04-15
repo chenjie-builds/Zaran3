@@ -19,14 +19,14 @@ Controller::~Controller()
 
 void Controller::Initialize()
 {
-    if (!GlobalData::IsExist("step"))
+    if (!GlobalData::IsExist("currentIter"))
     {
-        GlobalData::Update("step", 0);
+        GlobalData::Update("currentIter", 0);
     }
-    if (!GlobalData::IsExist("globalTime"))
+    if (!GlobalData::IsExist("currentTime"))
     {
         double startTime = GlobalData::GetDouble("startTime");
-        GlobalData::Update("globalTime", startTime);
+        GlobalData::Update("currentTime", startTime);
     }
     for (size_t iField = 0; iField < m_field.size(); iField++)
     {
@@ -163,17 +163,18 @@ void Controller::SaveFieldData()
 bool Controller::IsStopSolve()
 {
     double endTime = GlobalData::GetDouble("endTime");
-    int iterStep = GlobalData::GetInt("step");
-    int calResidualStep = GlobalData::GetInt("calResidualStep");
+    int currentIter = GlobalData::GetInt("currentIter");
+    int calResidualIter = GlobalData::GetInt("calResidualIter");
+    int maxIter = GlobalData::GetInt("maxIter");
     double minResidual = GlobalData::GetDouble("minResidual");
-    double currentTime = GlobalData::GetDouble("globalTime");
-    //达到覝求的最尝残�?
-    if (iterStep > calResidualStep && maxResidual_ < minResidual)
+    double currentTime = GlobalData::GetDouble("currentTime");
+    //达到最大迭代次数
+    if (currentIter > maxIter || maxResidual_ < minResidual && currentIter > calResidualIter)
     {
         ZaranLog::info("Max Residual is small than {}, stop compute!", minResidual);
         return true;
     }
-    //达到最大计算时�?
+    //达到最大计算时间
     if (currentTime > endTime || abs(currentTime - endTime) < SMALL_NUMBER)
     {
         ZaranLog::info("Max time={}, stop compute!", endTime);
@@ -183,8 +184,8 @@ bool Controller::IsStopSolve()
 }
 void Controller::SaveResidual()
 {
-    int step = GlobalData::GetInt("step");
-    if (step == 0)
+    int currentIter = GlobalData::GetInt("currentIter");
+    if (currentIter == 0)
     {
         std::ofstream fout("res.dat");
         fout << "variables=step,time,MaxRes,AveRes\n";
@@ -193,7 +194,7 @@ void Controller::SaveResidual()
     else
     {
         std::ofstream fout("res.dat", std::ios::app);
-        fout << step << "\t\t" << GlobalData::GetDouble("globalTime") << "\t\t" << maxResidual_ << "\t\t" << aveResidual_ << std::endl;
+        fout << currentIter << "\t\t" << GlobalData::GetDouble("currentTime") << "\t\t" << maxResidual_ << "\t\t" << aveResidual_ << std::endl;
         fout.close();
     }
 }
@@ -209,28 +210,28 @@ void Controller::SolveFieldOneStep()
 
 void Controller::PreSolve()
 {
-    int iterStep = GlobalData::GetInt("step");
-    GlobalData::Update("step", ++iterStep);
+    int currentIter = GlobalData::GetInt("currentIter");
+    GlobalData::Update("currentIter", ++currentIter);
 }
 
 void Controller::PostSolve()
 {
 
     CommInterNodeData();
-    int iterStep = GlobalData::GetInt("step");
-    int calResidualStep = GlobalData::GetInt("calResidualStep");
-    int writeFieldStep = GlobalData::GetInt("writeFieldStep");
-    if (iterStep % calResidualStep == 0 || IsStopSolve())
+    int currentIter = GlobalData::GetInt("currentIter");
+    int calResidualIter = GlobalData::GetInt("calResidualIter");
+    int writeFieldIter = GlobalData::GetInt("writeFieldIter");
+    if (currentIter % calResidualIter == 0 || IsStopSolve())
     {
         CalcResidual();
-        ZaranLog::info("step={}, dt={:e}, max_res={:e}, ave_res={:e}", GlobalData::GetInt("step"), GlobalData::GetDouble("dt"), maxResidual_, aveResidual_);
+        ZaranLog::info("currentIter={}, dt={:e}, max_res={:e}, ave_res={:e}", GlobalData::GetInt("currentIter"), GlobalData::GetDouble("dt"), maxResidual_, aveResidual_);
         if (GlobalData::IsExist("min_dt_index"))
         {
             ZaranLog::info("min_dt_index={}", GlobalData::GetInt("min_dt_index"));
         }
         SaveResidual();
     }
-    if (iterStep % writeFieldStep == 0 || IsStopSolve())
+    if (currentIter % writeFieldIter == 0 || IsStopSolve())
     {
         SaveFieldData();
         // SaveWallNode();

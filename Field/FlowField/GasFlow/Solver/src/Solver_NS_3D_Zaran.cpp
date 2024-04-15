@@ -162,33 +162,38 @@ namespace zaran
     {
         NSSolver::InitField();
         auto para = GetPara();
-        DVector primInit = para->GetPrimitiveInflow();
+        double prim_init[5];
+        prim_init[0] = para->GetInflowDensity();
+        prim_init[1] = para->GetInflowVelocityX();
+        prim_init[2] = para->GetInflowVelocityY();
+        prim_init[3] = para->GetInflowVelocityZ();
+        prim_init[4] = para->GetInflowPressure();
         auto grid = GetGrid();
         int n_patch = grid->GetBoundPatch().GetPatchNum();
         for (int iPatch = 0;iPatch < n_patch;++iPatch)
         {
-            (*m_prim_bound[0])[iPatch] = primInit[0];
-            (*m_prim_bound[1])[iPatch] = primInit[1];
-            (*m_prim_bound[2])[iPatch] = primInit[2];
-            (*m_prim_bound[3])[iPatch] = primInit[3];
-            (*m_prim_bound[4])[iPatch] = primInit[4];
+            (*m_prim_bound[0])[iPatch] = prim_init[0];
+            (*m_prim_bound[1])[iPatch] = prim_init[1];
+            (*m_prim_bound[2])[iPatch] = prim_init[2];
+            (*m_prim_bound[3])[iPatch] = prim_init[3];
+            (*m_prim_bound[4])[iPatch] = prim_init[4];
         }
     }
-    void Solver_NS_3D_Zaran::ComputeCoordTrans()
+    void Solver_NS_3D_Zaran::CalcMetric()
     {
-        ComputeCoordTransStruct();
-        ComputeCoordTransMid();
+        CalcMetricStruct();
+        CalcMetricMid();
     }
-    void Solver_NS_3D_Zaran::ComputeGradientWLS()
+    void Solver_NS_3D_Zaran::CalcGradWLS()
     {
-        ComputeGradientWLSStruct();
-        ComputeGradientWLSMid();
+        CalcGradStructWLS();
+        CalcGradMidWLS();
     }
 
-    void Solver_NS_3D_Zaran::ComputeTimeStepLocal()
+    void Solver_NS_3D_Zaran::CalcTimeStepLocal()
     {
-        ComputeTimeStepLocalStruct();
-        ComputeTimeStepLocalMid();
+        CalcTimeStepLocalStruct();
+        CalcTimeStepLocalMid();
     }
 
     void Solver_NS_3D_Zaran::InviscidFlux()
@@ -208,28 +213,28 @@ namespace zaran
         //TODO
     }
 
-    void Solver_NS_3D_Zaran::ComputeLimiterCoefVK()
+    void Solver_NS_3D_Zaran::CalcLimiterVK()
     {
         //TODO
     }
 
-    void Solver_NS_3D_Zaran::ComputeLimiterCoefBJ()
+    void Solver_NS_3D_Zaran::CalcLimiterBJ()
     {
         //TODO
     }
 
 
-    void Solver_NS_3D_Zaran::ComputeLimiterCoefNoLimiter()
+    void Solver_NS_3D_Zaran::CalcLimiterNone()
     {
         //TODO
     }
 
-    void Solver_NS_3D_Zaran::ComputeLimiterCoefOneOrder()
+    void Solver_NS_3D_Zaran::CalcLimiterFirstOrder()
     {
         //TODO
     }
 
-    void Solver_NS_3D_Zaran::ComputeBoundaryLimiterCoef()
+    void Solver_NS_3D_Zaran::CalcLimiterBound()
     {
         //TODO
     }
@@ -247,7 +252,7 @@ namespace zaran
         int n_data = cons[0]->size();
         for (int iStage = 0; iStage < rkStage; ++iStage)
         {
-            ComputeResidual();
+            CalcResidual();
 #pragma omp parallel for
             for (int iNode = 0; iNode < n_data; ++iNode)
             {
@@ -262,7 +267,7 @@ namespace zaran
             }
         }
     }
-    void Solver_NS_3D_Zaran::ComputeCoordTransStruct()
+    void Solver_NS_3D_Zaran::CalcMetricStruct()
     {
         auto grid = GetGrid();
         // 起始点和终止点的编号,s: start, e: end
@@ -321,7 +326,7 @@ namespace zaran
         }
     }
 
-    void Solver_NS_3D_Zaran::ComputeCoordTransMid()
+    void Solver_NS_3D_Zaran::CalcMetricMid()
     {
         auto grid = GetGrid();
         auto& bound_patch = grid->GetBoundPatch();
@@ -399,17 +404,17 @@ namespace zaran
         }
     }
 
-    void Solver_NS_3D_Zaran::ComputeGradientWLSStruct()
+    void Solver_NS_3D_Zaran::CalcGradStructWLS()
     {
         //TODO
     }
 
-    void Solver_NS_3D_Zaran::ComputeGradientWLSMid()
+    void Solver_NS_3D_Zaran::CalcGradMidWLS()
     {
         //TODO
     }
 
-    void Solver_NS_3D_Zaran::ComputeTimeStepLocalStruct()
+    void Solver_NS_3D_Zaran::CalcTimeStepLocalStruct()
     {
         auto grid = GetGrid();
         // 起始点和终止点的编号,s: start, e: end
@@ -458,7 +463,7 @@ namespace zaran
         GlobalData::Update("dt", min_dt);
     }
 
-    void Solver_NS_3D_Zaran::ComputeTimeStepLocalMid()
+    void Solver_NS_3D_Zaran::CalcTimeStepLocalMid()
     {
         //TODO
     }
@@ -1082,17 +1087,17 @@ namespace zaran
         auto& boundaryMap = boundaryMapPtr->GetBoundaryMap();
         auto& wallBound = boundaryMap["slipWall"];
         for (int iBound = 0; iBound < wallBound.size(); ++iBound)
-            ComputeWallBC(wallBound[iBound]);
+            WallBC(wallBound[iBound]);
         auto& outletBound = boundaryMap["outlet"];
         for (int iBound = 0; iBound < outletBound.size(); ++iBound)
-            ComputeOutletBC(outletBound[iBound]);
+            OutletBC(outletBound[iBound]);
         auto& inletBound = boundaryMap["inlet"];
         for (int iBound = 0; iBound < inletBound.size(); ++iBound)
-            ComputeInletBC(inletBound[iBound]);
-        ComputeBoundPatchBC();
+            InletBC(inletBound[iBound]);
+        BoundPatchBC();
     }
 
-    void Solver_NS_3D_Zaran::ComputeOutletBC(Boundary& bound)
+    void Solver_NS_3D_Zaran::OutletBC(Boundary& bound)
     {
         auto& rho = *m_Primitive[0];
         auto& u = *m_Primitive[1];
@@ -1112,12 +1117,12 @@ namespace zaran
         v[ghost_index] = v[boundIndex];
         w[ghost_index] = w[boundIndex];
         p[ghost_index] = p[boundIndex];
-        Primitive2Conservative(rho[ghost_index], u[ghost_index], v[ghost_index], w[ghost_index], p[ghost_index],
+        Prim2Cons(rho[ghost_index], u[ghost_index], v[ghost_index], w[ghost_index], p[ghost_index],
             cons0[ghost_index], cons1[ghost_index], cons2[ghost_index], cons3[ghost_index], cons4[ghost_index]);
 
     }
 
-    void Solver_NS_3D_Zaran::ComputeInletBC(Boundary& bound)
+    void Solver_NS_3D_Zaran::InletBC(Boundary& bound)
     {
         FlowSolverParaPtr para = GetPara();
         auto& rho = *m_Primitive[0];
@@ -1131,17 +1136,16 @@ namespace zaran
         auto& cons3 = *m_Conservative[3];
         auto& cons4 = *m_Conservative[4];
         int ghost_index = bound.GetGhostIndex();
-        auto& inlet_para = para->GetPrimitiveInflow();
-        rho[ghost_index] = inlet_para[0];
-        u[ghost_index] = inlet_para[1];
-        v[ghost_index] = inlet_para[2];
-        w[ghost_index] = inlet_para[3];
-        p[ghost_index] = inlet_para[4];
-        Primitive2Conservative(rho[ghost_index], u[ghost_index], v[ghost_index], w[ghost_index], p[ghost_index],
+        rho[ghost_index] = para->GetInflowDensity();
+        u[ghost_index] = para->GetInflowVelocityX();
+        v[ghost_index] = para->GetInflowVelocityY();
+        w[ghost_index] = para->GetInflowVelocityZ();
+        p[ghost_index] = para->GetInflowPressure();
+        Prim2Cons(rho[ghost_index], u[ghost_index], v[ghost_index], w[ghost_index], p[ghost_index],
             cons0[ghost_index], cons1[ghost_index], cons2[ghost_index], cons3[ghost_index], cons4[ghost_index]);
     }
 
-    void Solver_NS_3D_Zaran::ComputeWallBC(Boundary& bound)
+    void Solver_NS_3D_Zaran::WallBC(Boundary& bound)
     {
         int& inner_index = bound.GetInnerIndex();
         int bound_index = bound.GetIndex();
@@ -1166,11 +1170,11 @@ namespace zaran
         u[bound_index] = bound_vel(0);
         v[bound_index] = bound_vel(1);
         w[bound_index] = bound_vel(2);
-        Primitive2Conservative(rho[bound_index], u[bound_index], v[bound_index], w[bound_index], p[bound_index],
+        Prim2Cons(rho[bound_index], u[bound_index], v[bound_index], w[bound_index], p[bound_index],
             cons0[bound_index], cons1[bound_index], cons2[bound_index], cons3[bound_index], cons4[bound_index]);
     }
 
-    void Solver_NS_3D_Zaran::ComputeBoundPatchBC()
+    void Solver_NS_3D_Zaran::BoundPatchBC()
     {
         auto& grid = GetGrid();
         auto& cell_topo = grid->GetCellTopo();

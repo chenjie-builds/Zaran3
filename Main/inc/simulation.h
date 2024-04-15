@@ -32,8 +32,8 @@ namespace zaran
 		Simulation() :
 			globalDataFileName_("zaran.ini"),
 			programVersion_("V3.3.2_alpha"),
-			lastModifyDate_("2024/01/10"),
-			minSupportCtrlFileVersion_("V3.3.2_alpha")
+			lastModifyDate_("2024/04/15"),
+			minSupportCtrlFileVersion_("V3.3.3")
 		{
 			GlobalData::Init();
 		}

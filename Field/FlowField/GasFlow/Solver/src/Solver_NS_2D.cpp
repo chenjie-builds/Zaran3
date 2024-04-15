@@ -20,7 +20,12 @@ namespace zaran
 		auto& coord = node_topo->GetCoordinate();
 		FlowSolverParaPtr para = GetPara();
 		int init_type = para->GetInitFieldType();
-		DVector prim_init = para->GetPrimitiveInflow();
+		double prim_init[5];
+		prim_init[0] = para->GetInflowDensity();
+		prim_init[1] = para->GetInflowVelocityX();
+		prim_init[2] = para->GetInflowVelocityY();
+		prim_init[3] = para->GetInflowVelocityZ();
+		prim_init[4] = para->GetInflowPressure();
 		int total_node_num = grid->GetTotalNodeNum();
 		for (int iNode = 0; iNode < total_node_num; ++iNode)
 		{
@@ -30,7 +35,7 @@ namespace zaran
 			w[iNode] = prim_init[3];
 			p[iNode] = prim_init[4];
 		}
-		Primitive2Conservative();
+		Prim2Cons();
 	}
 	void Solver_NS_2D::InitFieldNoFlow()
 	{
@@ -44,7 +49,12 @@ namespace zaran
 		auto& coord = node_topo->GetCoordinate();
 		FlowSolverParaPtr para = GetPara();
 		int init_type = para->GetInitFieldType();
-		DVector prim_init = para->GetPrimitiveInflow();
+		double prim_init[5];
+		prim_init[0] = para->GetInflowDensity();
+		prim_init[1] = para->GetInflowVelocityX();
+		prim_init[2] = para->GetInflowVelocityY();
+		prim_init[3] = para->GetInflowVelocityZ();
+		prim_init[4] = para->GetInflowPressure();
 		int total_node_num = grid->GetTotalNodeNum();
 		for (int iNode = 0; iNode < total_node_num; ++iNode)
 		{
@@ -54,7 +64,7 @@ namespace zaran
 			w[iNode] = 0;
 			p[iNode] = prim_init[4];
 		}
-		Primitive2Conservative();
+		Prim2Cons();
 	}
 	void Solver_NS_2D::InitFieldShockReflection()
 	{
@@ -68,7 +78,7 @@ namespace zaran
 		auto& coord = node_topo->GetCoordinate();
 		FlowSolverParaPtr para = GetPara();
 		int init_type = para->GetInitFieldType();
-		DVector prim_init = para->GetPrimitiveInflow();
+		double prim_init[5];
 		prim_init[0] = 6.4;
 		prim_init[1] = 3.125;
 		prim_init[2] = 0;
@@ -76,7 +86,6 @@ namespace zaran
 		prim_init[4] = 18.5;
 		int total_node_num = grid->GetTotalNodeNum();
 		double x, y;
-		para->SetPrimitiveInflow(prim_init);
 		for (int iNode = 0; iNode < total_node_num; ++iNode)
 		{
 			x = coord[iNode].x();
@@ -98,7 +107,7 @@ namespace zaran
 				p[iNode] = 1.0;
 			}
 		}
-		Primitive2Conservative();
+		Prim2Cons();
 	}
 	void Solver_NS_2D::InitFieldIsentropicVortex()
 	{
@@ -125,9 +134,9 @@ namespace zaran
 			w[iNode] = prim[3];
 			p[iNode] = prim[4];
 		}
-		Primitive2Conservative();
+		Prim2Cons();
 	}
-	void Solver_NS_2D::ComputeCoordTrans()
+	void Solver_NS_2D::CalcMetric()
 	{
 		GridPtr grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
@@ -212,7 +221,7 @@ namespace zaran
 			(*coordTransCoef[32])[iNode] = coord_trans_coef.J();
 		}
 	}
-	void Solver_NS_2D::ComputeGradientWLS()
+	void Solver_NS_2D::CalcGradWLS()
 	{
 		GridPtr grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
@@ -263,7 +272,7 @@ namespace zaran
 			}
 		}
 	}
-	void Solver_NS_2D::ComputeTimeStepLocal()
+	void Solver_NS_2D::CalcTimeStepLocal()
 	{
 		GridPtr grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
@@ -482,7 +491,7 @@ namespace zaran
 					(*prim[iVal])[iNode] += (*prim[iVal])[neiborNode[iNeib]] * weight[iNeib];
 				}
 			}
-			Primitive2Conservative((*prim[0])[iNode], (*prim[1])[iNode], (*prim[2])[iNode], (*prim[3])[iNode], (*prim[4])[iNode], (*cons[0])[iNode], (*cons[1])[iNode], (*cons[2])[iNode], (*cons[3])[iNode], (*cons[4])[iNode]);
+			Prim2Cons((*prim[0])[iNode], (*prim[1])[iNode], (*prim[2])[iNode], (*prim[3])[iNode], (*prim[4])[iNode], (*cons[0])[iNode], (*cons[1])[iNode], (*cons[2])[iNode], (*cons[3])[iNode], (*cons[4])[iNode]);
 		}
 	}
 	void Solver_NS_2D::BoundaryCondition()
@@ -519,7 +528,7 @@ namespace zaran
 				(*prim[iVal])[iNode] = prim_ideal(iVal);
 				(*res[iVal])[iNode] = 0;
 			}
-			Primitive2Conservative((*prim[0])[iNode], (*prim[1])[iNode], (*prim[2])[iNode], (*prim[3])[iNode], (*prim[4])[iNode], (*cons[0])[iNode], (*cons[1])[iNode], (*cons[2])[iNode], (*cons[3])[iNode], (*cons[4])[iNode]);
+			Prim2Cons((*prim[0])[iNode], (*prim[1])[iNode], (*prim[2])[iNode], (*prim[3])[iNode], (*prim[4])[iNode], (*cons[0])[iNode], (*cons[1])[iNode], (*cons[2])[iNode], (*cons[3])[iNode], (*cons[4])[iNode]);
 		}
 	}
 	void Solver_NS_2D::ViscousFlux()

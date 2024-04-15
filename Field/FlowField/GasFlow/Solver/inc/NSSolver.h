@@ -17,6 +17,8 @@
 #include "CommonPara.h"
 #include "RiemannSolverFactory.h"
 #include "Limiter.h"
+#include "Gas.h"
+#include"PerfectGas.h"
 
 namespace zaran
 {
@@ -27,34 +29,38 @@ namespace zaran
 		~NSSolver() {}
 		void Init()override;
 		void InitField()override;
+		void InitFieldFarField();
+		void InitFieldFarFieldNoVelocity();
+		void InitFieldRestart();
 		void InitSolver()override;
 		void Solve() override;
 		void UpdateField()override;
 		void CreateFieldData()override;
 		void RegisterFieldData()override;
-		virtual void ComputeCoordTrans() = 0;
+		virtual void CalcMetric() = 0;
 		double ComputeMaxResidual()override;
+		void BackupField();
 		/*
 		* 梯度计算函数
 		* 目前包括最小二乘法、非结构有限差分法
 		*/
 	protected:
-		void ComputePrimitiveGradient()override;
-		void ComputeBoundaryPrimtiveGradient();
+		void CalcPrimGrad()override;
+		void CalcPrimGradBound();
 		// 使用最小二乘求梯度
-		virtual void ComputeGradientWLS() = 0;
+		virtual void CalcGradWLS() = 0;
 		// 使用非结构有限差分法求梯度
-		virtual void ComputeGradientUFDM();
+		virtual void CalcGradUFDM();
 		void NoGradient();
 		/**
 		 * 时间步计算与时间推进相关函数
 		 */
 	protected:
-		void ComputeTimeStep()override;
+		void CalcTimeStep()override;
 		void SnycTimeStepWithGlobal(double& dt)override;
 		void TimeAdvance()override;
 		// 计算当地时间步
-		virtual void ComputeTimeStepLocal() = 0;
+		virtual void CalcTimeStepLocal() = 0;
 		//龙格库塔法
 		virtual void RungeKutta();
 		/**
@@ -62,11 +68,11 @@ namespace zaran
 		*/
 	protected:
 		// 原始变量到守恒变量
-		void Primitive2Conservative();
-		void Primitive2Conservative(double& rho, double& u, double& v, double& w, double& p, double& cons0, double& cons1, double& cons2, double& cons3, double& cons4);
+		void Prim2Cons();
+		void Prim2Cons(double& rho, double& u, double& v, double& w, double& p, double& cons0, double& cons1, double& cons2, double& cons3, double& cons4);
 		// 守恒变量到原始变量
-		void Conservative2Primitive();
-		void Conservative2Primitive(double& cons0, double& cons1, double& cons2, double& cons3, double& cons4, double& rho, double& u, double& v, double& w, double& p);
+		void Cons2Prim();
+		void Cons2Prim(double& cons0, double& cons1, double& cons2, double& cons3, double& cons4, double& rho, double& u, double& v, double& w, double& p);
 		// 计算流动通量
 		virtual void InviscidFlux() = 0;
 		//计算粘性通量
@@ -74,15 +80,15 @@ namespace zaran
 		//计算源项
 		virtual void SourceFlux() = 0;
 		// 计算流场残差，即右端项
-		virtual void ComputeResidual();
+		virtual void CalcResidual();
 		// 计算限制器系数
-		virtual void ComputeLimiterCoef();
-		virtual void ComputeLimiterCoefVK();
-		virtual void ComputeLimiterCoefBJ();
-		virtual void ComputeLimiterCoefNoLimiter();
-		virtual void ComputeLimiterCoefOneOrder();
+		virtual void CalcLimiter();
+		virtual void CalcLimiterVK();
+		virtual void CalcLimiterBJ();
+		virtual void CalcLimiterNone();
+		virtual void CalcLimiterFirstOrder();
 
-		virtual void ComputeBoundaryLimiterCoef();
+		virtual void CalcLimiterBound();
 		/// @brief 检查原始变量
 		virtual void CheckPrimtive();
 		/// @brief 检查残差
@@ -94,16 +100,16 @@ namespace zaran
 		/// @param index_right right node index 
 		/// @param value_rec_left reconstructed value of left side at mid point
 		/// @param value_rec_right reconstructed value of right side at mid point
-		void MidPointReconstruct(int index_left, int index_right,double* value_rec_left, double* value_rec_right);
-		void MidPointReconstructOneOrder(int index_left, int index_right, double* value_rec_left, double* value_rec_right);
+		void MidPointReconstruct(int index_left, int index_right, double* value_rec_left, double* value_rec_right);
+		void MidPointReconstructFirstOrder(int index_left, int index_right, double* value_rec_left, double* value_rec_right);
 	protected:
 		void BoundaryCondition()override;
 		// 超声速入口边界条件
-		virtual void ComputeInletBC(Boundary& bound);
+		virtual void InletBC(Boundary& bound);
 		// 超声速出口边界条件
-		virtual void ComputeOutletBC(Boundary& bound);
+		virtual void OutletBC(Boundary& bound);
 		// 壁面边界条件
-		virtual void  ComputeWallBC(Boundary& bound);
+		virtual void  WallBC(Boundary& bound);
 		// 原始变量梯度
 		Array<DArray*> m_PrimGradX;
 		Array<DArray*> m_PrimGradY;
@@ -112,5 +118,6 @@ namespace zaran
 		Ptr<RiemannSolver> riemannSolver_;
 		//降阶标识，对于二阶精度的格式，降阶到一阶
 		IArray m_reduce_order;
+
 	};
 }
