@@ -31,12 +31,12 @@ namespace zaran {
 		}
 		else
 		{
-			ZaranLog::warn("Initialize Failed!");
-			ZaranLog::warn("Wrong Flow field init parameter:{}", initType);
+			Log::warn("Initialize Failed!");
+			Log::warn("Wrong Flow field init parameter:{}", initType);
 			exit(0);
 		}
 		Prim2Cons();
-		ZaranLog::info("Flow Field Initialize Finished!");
+		Log::info("Flow Field Initialize Finished!");
 	}
 
 	void NSSolver::InitFieldFarField()
@@ -106,7 +106,7 @@ namespace zaran {
 		std::ifstream fin(restartFileName);
 		if (!fin.is_open())
 		{
-			ZaranLog::warn("Restart file not found!");
+			Log::warn("Restart file not found!");
 			exit(0);
 		}
 		int n_data = rho.size();
@@ -119,13 +119,13 @@ namespace zaran {
 
 	void NSSolver::InitSolver()
 	{
-		ZaranLog::info("Initialize NS Solver!");
+		Log::info("Initialize NS Solver!");
 		FlowSolver::InitSolver();
 		SetNumberOfEquations(5);
 		std::string riemannSolverType = GlobalData::GetString("riemannSolver");
 		RiemannSolverFactory riemannSolverFactory;
 		riemannSolverFactory.Create(riemannSolver_, riemannSolverType);
-		ZaranLog::info("NS Solver Initialize Finished!");
+		Log::info("NS Solver Initialize Finished!");
 	}
 
 	void NSSolver::CreateFieldData()
@@ -518,7 +518,7 @@ namespace zaran {
 		}
 		else
 		{
-			ZaranLog::warn("Unsupported Gradiend Scheme!");
+			Log::warn("Unsupported Gradiend Scheme!");
 		}
 		CalcPrimGradBound();
 	}
@@ -664,7 +664,7 @@ namespace zaran {
 
 	void NSSolver::CalcGradUFDM()
 	{
-		ZaranLog::warn("TO DO Gradient Function UFDM!");
+		Log::warn("TO DO Gradient Function UFDM!");
 	}
 
 	void NSSolver::UpdateField()
@@ -761,7 +761,7 @@ namespace zaran {
 			if (currentIter < firstOrderSteps)
 			{
 				limiterType = "1st-order";
-				ZaranLog::info("First {}/{} iteration steps use 1st-order scheme", currentIter, firstOrderSteps);
+				Log::info("First {}/{} iteration steps use 1st-order scheme", currentIter, firstOrderSteps);
 			}
 		}
 		if (limiterType == "vk")
@@ -773,7 +773,7 @@ namespace zaran {
 		else if (limiterType == "1st-order")
 			CalcLimiterFirstOrder();
 		else
-			ZaranLog::warn("Unsupported Limiter Type: {}", limiterType);
+			Log::warn("Unsupported Limiter Type: {}", limiterType);
 		//ComputeBoundaryLimiterCoef();
 	}
 	void NSSolver::CalcLimiterVK()
@@ -824,11 +824,11 @@ namespace zaran {
 					delta2 *= 0.5;
 					if (delta2 > 0)
 					{
-						tempCoef = VenFun(maxVal - (*prim[iVal])[iNode], delta2, eps);
+						tempCoef = LimiterVK(maxVal - (*prim[iVal])[iNode], delta2, eps);
 					}
 					else if (delta2 < 0)
 					{
-						tempCoef = VenFun(minVal - (*prim[iVal])[iNode], delta2, eps);
+						tempCoef = LimiterVK(minVal - (*prim[iVal])[iNode], delta2, eps);
 					}
 					else
 					{
@@ -882,11 +882,11 @@ namespace zaran {
 					delta2 *= 0.5;
 					if (delta2 > 0)
 					{
-						tempCoef = Barth(maxVal - (*prim[iVal])[iNode], delta2);
+						tempCoef = LimiterBarth(maxVal - (*prim[iVal])[iNode], delta2);
 					}
 					else if (delta2 < 0)
 					{
-						tempCoef = Barth(minVal - (*prim[iVal])[iNode], delta2);
+						tempCoef = LimiterBarth(minVal - (*prim[iVal])[iNode], delta2);
 					}
 					else
 					{
@@ -1002,18 +1002,18 @@ namespace zaran {
 			{
 				(*m_non_physical)[iNode] = 1.0;
 				nonphysical_node_num++;
-				ZaranLog::info("Non-physical Node: {}, neighbor num: {}, prim: {},{},{},{},{}", iNode, nodeNeighbor[iNode].size(), (*prim[0])[iNode], (*prim[1])[iNode], (*prim[2])[iNode], (*prim[3])[iNode], (*prim[4])[iNode]);
-				ZaranLog::info("Non-physical Node: {}, coord: {},{},{},", iNode, nodeCoord[iNode].x(), nodeCoord[iNode].y(), nodeCoord[iNode].z());
+				Log::info("Non-physical Node: {}, neighbor num: {}, prim: {},{},{},{},{}", iNode, nodeNeighbor[iNode].size(), (*prim[0])[iNode], (*prim[1])[iNode], (*prim[2])[iNode], (*prim[3])[iNode], (*prim[4])[iNode]);
+				Log::info("Non-physical Node: {}, coord: {},{},{},", iNode, nodeCoord[iNode].x(), nodeCoord[iNode].y(), nodeCoord[iNode].z());
 			}
 		}
 		if (nonphysical_node_num > 0)
 		{
-			ZaranLog::warn("Non-physical Node Num: {}", nonphysical_node_num);
+			Log::warn("Non-physical Node Num: {}", nonphysical_node_num);
 			auto& para = GetPara();
 			double cfl = para->GetCflNumber();
 			cfl = cfl / 5.0;
 			para->SetCflNumber(cfl);
-			ZaranLog::warn("CFL Number is reduced to {}", cfl);
+			Log::warn("CFL Number is reduced to {}", cfl);
 		}
 		else
 		{
@@ -1024,7 +1024,7 @@ namespace zaran {
 			{
 				cfl = Min(cfl_max, cfl * 1.6);
 				para->SetCflNumber(cfl);
-				ZaranLog::info("CFL Number is increased to {}", cfl);
+				Log::info("CFL Number is increased to {}", cfl);
 			}
 			else
 				para->SetCflNumber(cfl_max);

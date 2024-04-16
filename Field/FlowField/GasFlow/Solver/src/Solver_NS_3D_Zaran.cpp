@@ -400,7 +400,7 @@ namespace zaran
             (*coord_trans_coef[31])[iCell] = coordTrans.GetTau()[3];
             (*coord_trans_coef[32])[iCell] = coordTrans.J();
             if (isinf(coordTrans.J()))
-                ZaranLog::error("i:{},j:{},k:{},J:{}", i, j, k, coordTrans.J());
+                Log::error("i:{},j:{},k:{},J:{}", i, j, k, coordTrans.J());
         }
     }
 
@@ -651,12 +651,12 @@ namespace zaran
                     {
 #ifdef USE_OMP
 
-                        ZaranLog::error("i:{},j:{},k:{},cpu_index:{}", i, j, k, omp_get_thread_num());
+                        Log::error("i:{},j:{},k:{},cpu_index:{}", i, j, k, omp_get_thread_num());
 #endif // DEBUG
-                        ZaranLog::error("primL:{},{},{},{},{}", riemann_para.prim_left(0), riemann_para.prim_left(1), riemann_para.prim_left(2), riemann_para.prim_left(3), riemann_para.prim_left(4));
-                        ZaranLog::error("primR:{},{},{},{},{}", riemann_para.prim_right(0), riemann_para.prim_right(1), riemann_para.prim_right(2), riemann_para.prim_right(3), riemann_para.prim_right(4));
-                        ZaranLog::error("flux:{},{},{},{},{}", riemann_para.flux(0), riemann_para.flux(1), riemann_para.flux(2), riemann_para.flux(3), riemann_para.flux(4));
-                        ZaranLog::error("norm:{},{},{}", riemann_para.norm(0), riemann_para.norm(1), riemann_para.norm(2));
+                        Log::error("primL:{},{},{},{},{}", riemann_para.prim_left(0), riemann_para.prim_left(1), riemann_para.prim_left(2), riemann_para.prim_left(3), riemann_para.prim_left(4));
+                        Log::error("primR:{},{},{},{},{}", riemann_para.prim_right(0), riemann_para.prim_right(1), riemann_para.prim_right(2), riemann_para.prim_right(3), riemann_para.prim_right(4));
+                        Log::error("flux:{},{},{},{},{}", riemann_para.flux(0), riemann_para.flux(1), riemann_para.flux(2), riemann_para.flux(3), riemann_para.flux(4));
+                        Log::error("norm:{},{},{}", riemann_para.norm(0), riemann_para.norm(1), riemann_para.norm(2));
                         exit(0);
                     }
                 }

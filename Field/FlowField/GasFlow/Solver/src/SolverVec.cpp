@@ -22,8 +22,8 @@ void SolverVec::CheckSolver()
 	{
 		if (solverVec_[iSolver]->GetIndex() != iSolver)
 		{
-			ZaranLog::warn("the index of solver are not match to solver set!");
-			ZaranLog::warn("solver index:{}, solver set index:{}", solverVec_[iSolver]->GetIndex(), iSolver);
+			Log::warn("the index of solver are not match to solver set!");
+			Log::warn("solver index:{}, solver set index:{}", solverVec_[iSolver]->GetIndex(), iSolver);
 		}
 	}
 }

@@ -22,8 +22,8 @@ void GridList::CheckGrid()
 	{
 		if (iGrid != gridList_[iGrid]->GetIndex())
 		{
-			ZaranLog::warn("the index of grid are not match to grid set!");
-			ZaranLog::warn("grid index:{}, grid set index:{}", gridList_[iGrid]->GetIndex(), iGrid);
+			Log::warn("the index of grid are not match to grid set!");
+			Log::warn("grid index:{}, grid set index:{}", gridList_[iGrid]->GetIndex(), iGrid);
 		}
 	}
 }

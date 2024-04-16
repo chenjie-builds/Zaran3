@@ -100,12 +100,12 @@ void Controller::SaveDataVTK(std::ostream& os)
 
 void Controller::SolveField()
 {
-    ZaranLog::info("Start to solve field!");
+    Log::info("Start to solve field!");
     Initialize();
-    ZaranLog::info("Initialize finished!");
-    ZaranLog::info("Save init field data...");
+    Log::info("Initialize finished!");
+    Log::info("Save init field data...");
     SaveFieldData();
-    ZaranLog::info("Save init field data finished!");
+    Log::info("Save init field data finished!");
     SaveResidual();
     while (!IsStopSolve())
     {
@@ -171,13 +171,13 @@ bool Controller::IsStopSolve()
     //达到最大迭代次数
     if (currentIter > maxIter || maxResidual_ < minResidual && currentIter > calResidualIter)
     {
-        ZaranLog::info("Max Residual is small than {}, stop compute!", minResidual);
+        Log::info("Max Residual is small than {}, stop compute!", minResidual);
         return true;
     }
     //达到最大计算时间
     if (currentTime > endTime || abs(currentTime - endTime) < SMALL_NUMBER)
     {
-        ZaranLog::info("Max time={}, stop compute!", endTime);
+        Log::info("Max time={}, stop compute!", endTime);
         return true;
     }
     return false;
@@ -224,10 +224,10 @@ void Controller::PostSolve()
     if (currentIter % calResidualIter == 0 || IsStopSolve())
     {
         CalcResidual();
-        ZaranLog::info("currentIter={}, dt={:e}, max_res={:e}, ave_res={:e}", GlobalData::GetInt("currentIter"), GlobalData::GetDouble("dt"), maxResidual_, aveResidual_);
+        Log::info("currentIter={}, dt={:e}, max_res={:e}, ave_res={:e}", GlobalData::GetInt("currentIter"), GlobalData::GetDouble("dt"), maxResidual_, aveResidual_);
         if (GlobalData::IsExist("min_dt_index"))
         {
-            ZaranLog::info("min_dt_index={}", GlobalData::GetInt("min_dt_index"));
+            Log::info("min_dt_index={}", GlobalData::GetInt("min_dt_index"));
         }
         SaveResidual();
     }

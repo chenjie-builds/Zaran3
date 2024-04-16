@@ -24,7 +24,7 @@ void SolverFactory::Create(Ptr<GridList>& gridList, Ptr<SolverVec>& solverVecPtr
 			newSolver = std::make_shared<Solver_NS_3D_Zaran>();
 		else
 		{
-			ZaranLog::warn("Unsupported Solver Type! Please Check!");
+			Log::warn("Unsupported Solver Type! Please Check!");
 			system("pause");
 		}
 		newSolver->SetGridList(gridList);

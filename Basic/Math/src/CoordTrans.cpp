@@ -211,8 +211,8 @@ void CoordTrans::CalcCoordTrans(int dim, const std::vector<Coordinate>& coord_ne
 	}
 	else//意外情况
 	{
-		ZaranLog::error("wrong neibor num ={}, dim={}", coord_neib.size(), dim);
-		ZaranLog::error("EXIT NOW!");
+		Log::error("wrong neibor num ={}, dim={}", coord_neib.size(), dim);
+		Log::error("EXIT NOW!");
 		exit(0);
 	}
 }

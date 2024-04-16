@@ -45,7 +45,7 @@ namespace zaran
 	{
 		if (nNode != m_face_node_num[iFace])
 		{
-			ZaranLog::error("FaceTopoInfo::SetFace2Node: The number of nodes is not equal to the number of nodes in the face");
+			Log::error("FaceTopoInfo::SetFace2Node: The number of nodes is not equal to the number of nodes in the face");
 		}
 		for (int i = 0; i < nNode; i++)
 		{

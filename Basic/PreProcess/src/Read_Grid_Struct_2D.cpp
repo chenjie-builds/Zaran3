@@ -17,7 +17,7 @@ void zaran::GridListFactoryStruct2D::Create(Ptr<GridList>& gridList)
 	fin.open(fileName, std::ios_base::in);
 	if (!fin.is_open())
 	{
-		ZaranLog::error("Grid File:{} is NOT exist! Please Check!", fileName);
+		Log::error("Grid File:{} is NOT exist! Please Check!", fileName);
 		system("pause");
 	}
 	int ghostNum;

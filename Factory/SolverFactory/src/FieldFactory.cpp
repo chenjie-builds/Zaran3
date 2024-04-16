@@ -34,7 +34,7 @@ namespace zaran
         }
         else
         {
-            ZaranLog::warn("Unsupported Grid Type! Please Check!");
+            Log::warn("Unsupported Grid Type! Please Check!");
             system("pause");
         }
         grid_list_factory->Create(grid_list);

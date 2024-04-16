@@ -20,7 +20,7 @@ namespace zaran
 		fin.open(fileName, std::ios_base::in);
 		if (!fin.is_open())
 		{
-			ZaranLog::error("Grid File:{} is NOT exist! Please Check!", fileName);
+			Log::error("Grid File:{} is NOT exist! Please Check!", fileName);
 			system("pause");
 		}
 		int nNode;
@@ -96,7 +96,7 @@ namespace zaran
 			}
 			else
 			{
-				ZaranLog::info("Boundary Type:{} is NOT exist! Please Check!", boundType);
+				Log::info("Boundary Type:{} is NOT exist! Please Check!", boundType);
 			}
 		}
 		int nCell;

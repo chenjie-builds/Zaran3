@@ -14,14 +14,14 @@ void zaran::GridListFactoryZaran3D::Create(Ptr<GridList>& gridList)
 	{
 		gridList = std::make_shared<GridList>();
 	}
-	ZaranLog::info("Start create grid");
+	Log::info("Start create grid");
 	CreateStructPart(gridList);
-	ZaranLog::info("Create grid finished");
-	ZaranLog::info("Start read model");
+	Log::info("Create grid finished");
+	Log::info("Start read model");
 	ReadModel();
-	ZaranLog::info("Start tag cell type");
+	Log::info("Start tag cell type");
 	TagCell(gridList);
-	ZaranLog::info("Tag cell type finished");
+	Log::info("Tag cell type finished");
 	CrateBoundPatch(gridList);
 }
 
@@ -91,25 +91,25 @@ void zaran::GridListFactoryZaran3D::CreateStructPart(Ptr<GridList>& gridList)
 			}
 		}
 	}
-	ZaranLog::info("Start create cell topo1");
+	Log::info("Start create cell topo1");
 	grid->SetInnerNodeNum((xNodeNum - 4) * (yNodeNum - 4) * (zNodeNum - 4));
 	grid->SetTotalNodeNum((xNodeNum) * (yNodeNum) * (zNodeNum));
 	grid->SetBoundNodeNum(xNodeNum * yNodeNum * zNodeNum - grid->GetInnerNodeNum());
 	grid->SetInterNodeInfo(std::make_shared<InterNodeInfo>());
 	grid->SetBoundaryMap(std::make_shared<BoundaryMap>());
-	ZaranLog::info("Start create cell topo2");
+	Log::info("Start create cell topo2");
 	Ptr<CellTopoInfoZaran>& cellTopo = grid->GetCellTopo();
-	ZaranLog::info("Start create cell topo2");
+	Log::info("Start create cell topo2");
 	auto& cell2node = cellTopo->GetNodeIndex();
 	auto& cell_center = cellTopo->GetCenterCoord();
-	ZaranLog::info("Start create cell topo");
-	ZaranLog::info("cell2node size: {}", cell2node.size());
-	ZaranLog::info("cell_center size: {}", cell_center.size());
-	ZaranLog::info("xNodeNum: {}, yNodeNum: {}, zNodeNum: {}", xNodeNum, yNodeNum, zNodeNum);
+	Log::info("Start create cell topo");
+	Log::info("cell2node size: {}", cell2node.size());
+	Log::info("cell_center size: {}", cell_center.size());
+	Log::info("xNodeNum: {}, yNodeNum: {}, zNodeNum: {}", xNodeNum, yNodeNum, zNodeNum);
 	cell2node.resize((xNodeNum - 1) * (yNodeNum - 1) * (zNodeNum - 1));
 	cell_center.resize((xNodeNum - 1) * (yNodeNum - 1) * (zNodeNum - 1));
 	int iCell;
-	ZaranLog::info("Start create cell topo");
+	Log::info("Start create cell topo");
 	for (k = 0; k < zNodeNum - 1; ++k)
 	{
 		for (j = 0; j < yNodeNum - 1; ++j)
@@ -124,7 +124,7 @@ void zaran::GridListFactoryZaran3D::CreateStructPart(Ptr<GridList>& gridList)
 			}
 		}
 	}
-	ZaranLog::info("Create cell topo finished");
+	Log::info("Create cell topo finished");
 	auto boundMap = grid->GetBoundaryMap();
 	int cellIndex, innerNodeIndex, ghostNodeIndex;
 	DVector3D boundNorm;
@@ -234,7 +234,7 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 	dist_cell_to_model.resize((cell_type.size()));
 	IArray cell_in_model;//单元中心是否在模型内
 	cell_in_model.resize((cell_type.size()));
-	ZaranLog::info("Start tag cell type");
+	Log::info("Start tag cell type");
 	auto poly_data = m_polyDataModel->GetPolyData();
 	vtkSmartPointer<vtkImplicitPolyDataDistance> implicitPolyDataDistance = vtkSmartPointer<vtkImplicitPolyDataDistance>::New();
 	implicitPolyDataDistance->SetInput(poly_data);
@@ -297,7 +297,7 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 				}
 			}
 		}
-		ZaranLog::info("nFluid: {}", nFluid);
+		Log::info("nFluid: {}", nFluid);
 	}
 	for (int iCell = 0;iCell < cell_type.size();++iCell)
 	{
@@ -331,11 +331,11 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 				}
 			}
 		}
-		ZaranLog::info("n_new_solid: {}", n_new_solid);
+		Log::info("n_new_solid: {}", n_new_solid);
 	}
 
-	ZaranLog::info("Tag cell type finished");
-	ZaranLog::info("Start find fluid-solid interface");
+	Log::info("Tag cell type finished");
+	Log::info("Start find fluid-solid interface");
 	for (int iCell = 0;iCell < cell_type.size();++iCell)
 	{
 		grid->GetCellIndex(iCell, i, j, k);
@@ -403,9 +403,9 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 			}
 		}
 	}
-	ZaranLog::info("n_bad_cell: {}", n_bad_cell);
-	ZaranLog::info("Find fluid-solid interface finished");
-	ZaranLog::info("Output cell type");
+	Log::info("n_bad_cell: {}", n_bad_cell);
+	Log::info("Find fluid-solid interface finished");
+	Log::info("Output cell type");
 	std::ofstream fout("cell_type.dat");
 	fout << "variables=x,y,z,label\n";
 	fout << "ZONE T= grid_" << grid->GetName() << std::endl;
@@ -474,7 +474,7 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 		}
 	}
 	fout.close();
-	ZaranLog::info("Output cell type finished");
+	Log::info("Output cell type finished");
 
 }
 
@@ -548,7 +548,7 @@ void zaran::GridListFactoryZaran3D::ReadModel()
 	m_polyDataModel = std::make_shared<PolyDataModel>();
 	m_polyDataModel->SetPolyData(reader.GetMesh(), 1e-6);
 	if (m_polyDataModel->IsClosed())
-		ZaranLog::info("Import Model: {}, is closed!", modelFileName);
+		Log::info("Import Model: {}, is closed!", modelFileName);
 	else
-		ZaranLog::info("Import Model: {}, is not closed!", modelFileName);
+		Log::info("Import Model: {}, is not closed!", modelFileName);
 }

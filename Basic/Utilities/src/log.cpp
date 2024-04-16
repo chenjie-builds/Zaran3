@@ -1,28 +1,28 @@
 #include "log.h"
 #include <cstdio>
 #include <chrono>
-Log& Log::Start()
+Logger& Logger::Start()
 {
-	static Log log;
+	static Logger log;
 	return log;
 }
-Log::Log()
+Logger::Logger()
 {
-	auto console_sink = std::make_shared<ZaranLog::sinks::stdout_color_sink_mt>();
-	console_sink->set_level(ZaranLog::level::debug);
+	auto console_sink = std::make_shared<Log::sinks::stdout_color_sink_mt>();
+	console_sink->set_level(Log::level::debug);
 	console_sink->set_pattern("[%D %H:%M:%S] [%^%l%$] %v");
-	auto file_sink = std::make_shared<ZaranLog::sinks::basic_file_sink_mt>("log/log.txt", true);
-	file_sink->set_level(ZaranLog::level::trace);
+	auto file_sink = std::make_shared<Log::sinks::basic_file_sink_mt>("log/log.txt", true);
+	file_sink->set_level(Log::level::trace);
 	file_sink->set_pattern("[%D %H:%M:%S] [%^%l%$] %v");
-	ZaranLog::logger logger("multi_sink", { console_sink, file_sink });
-	logger.set_level(ZaranLog::level::trace);
+	Log::logger logger("multi_sink", { console_sink, file_sink });
+	logger.set_level(Log::level::trace);
 	logger.info("Start Logger, Log file path: ./{}", file_sink->filename());
-	ZaranLog::set_default_logger(std::make_shared<ZaranLog::logger>(logger));
-	ZaranLog::flush_every(std::chrono::milliseconds(10));//每隔0.01s刷新一次log文件
+	Log::set_default_logger(std::make_shared<Log::logger>(logger));
+	Log::flush_every(std::chrono::milliseconds(10));//每隔0.01s刷新一次log文件
 }
 
-Log::~Log()
+Logger::~Logger()
 {
-	ZaranLog::drop_all();
-	ZaranLog::shutdown();
+	Log::drop_all();
+	Log::shutdown();
 }

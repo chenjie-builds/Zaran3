@@ -14,18 +14,18 @@ namespace zaran
 {
 	enum class LimiterType//限制器类型
 	{
-		nolimit,
-		barth,
-		oneorder,
-		vk
+		none,//无限制器
+		barth,//Barth限制器
+		first_order,//一阶限制器
+		vk//Venkatakrishnan限制器
 	};
-	double NoLimiter(const double& x, const double& y);
-	double MinMod(const double& x, const double& y);
-	double VanLeer(const double& x, const double& y);
-	double MixMinModVanLeer(const double& x, const double& y);
-	double VanAlbada(const double& x, const double& y);
-	double OneOrder(const double& x, const double& y);
-	double Barth(const double& x, const double& y);
-	double VenFun(const double& x, const double& y, const double& eps);
+	double LimiterNone(const double& x, const double& y);
+	double LimiterMinMod(const double& x, const double& y);
+	double LimiterVanLeer(const double& x, const double& y);
+	double LimiterMixMinModVanLeer(const double& x, const double& y);
+	double LimiterVanAlbada(const double& x, const double& y);
+	double LimiterFirstOrder(const double& x, const double& y);
+	double LimiterBarth(const double& x, const double& y);
+	double LimiterVK(const double& x, const double& y, const double& eps);
 
 }

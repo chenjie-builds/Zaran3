@@ -61,16 +61,16 @@ namespace zaran
 		// 流场初始化方式
 		// =0 为静止流场
 		// =1 为来流
-		int initFieldType_;
+		int m_init_field_type;
 		// 是否为粘性
-		int isViscous_;
+		int m_is_viscous;
 		// CFL数, 决定计算步长
-		double cflNumber_;
+		double m_cfl;
 		// RK步数
-		DArray rkCoef_;
+		DArray m_rk_coef;
 		// 梯度方法
-		GradScheme gradSchem_;
+		GradScheme m_grad_scheme;
 		// 限制器
-		LimiterType limiterType_;
+		LimiterType n_limiter_type;
 	};
 }

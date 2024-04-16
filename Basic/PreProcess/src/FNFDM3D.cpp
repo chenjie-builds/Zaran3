@@ -34,7 +34,7 @@ namespace zaran
 		std::ifstream fin(m_node_file_name);
 		//读取所有节点坐标
 		fin >> m_NodeNum;
-		ZaranLog::info("Total node num:{}", m_NodeNum);
+		Log::info("Total node num:{}", m_NodeNum);
 		grid->SetTotalNodeNum(m_NodeNum);
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		nodeCoord.resize(m_NodeNum);
@@ -46,7 +46,7 @@ namespace zaran
 		//读取所有内部节点邻居节点
 		int innerNodeNum = 0;
 		fin >> innerNodeNum;
-		ZaranLog::info("Inner node num:{}", innerNodeNum);
+		Log::info("Inner node num:{}", innerNodeNum);
 		int innerNodeIndex;
 		IArray neibor_index(6);
 		auto& nodeType = nodeTopo->GetType();
@@ -136,7 +136,7 @@ namespace zaran
 		int tempIndex1, tempIndex2;
 		int boundNodeIndex, connectNodeIndex;
 		Boundary tempBound;
-		ZaranLog::info("x- boundary node num:{}", nBound);
+		Log::info("x- boundary node num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -147,7 +147,7 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
-		ZaranLog::info("x+ boundary node num:{}", nBound);
+		Log::info("x+ boundary node num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -158,7 +158,7 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
-		ZaranLog::info("y- boundary node num:{}", nBound);
+		Log::info("y- boundary node num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -169,7 +169,7 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
-		ZaranLog::info("y+ boundary node num:{}", nBound);
+		Log::info("y+ boundary node num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -180,7 +180,7 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
-		ZaranLog::info("z- boundary node num:{}", nBound);
+		Log::info("z- boundary node num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -191,7 +191,7 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
-		ZaranLog::info("z+ boundary node num:{}", nBound);
+		Log::info("z+ boundary node num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -202,7 +202,7 @@ namespace zaran
 		}
 		fin >> nBound;
 		m_BoundNodeNum += nBound;
-		ZaranLog::info("wall boundary node num:{}", nBound);
+		Log::info("wall boundary node num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
@@ -216,7 +216,7 @@ namespace zaran
 		fin.close();
 
 		//查找邻居节点，看自身是否是其邻居，如不是，则加进去
-		ZaranLog::info("Add self to neibor node's neibor node");
+		Log::info("Add self to neibor node's neibor node");
 		bool find_current;
 		for (int iNode = 0;iNode < m_NodeNum;iNode++)
 		{
@@ -239,10 +239,10 @@ namespace zaran
 			}
 		}
 		//扩展内部节点邻居节点，用于计算梯度
-		ZaranLog::info("extend inner node neibor node");
+		Log::info("extend inner node neibor node");
 		ExtendNeighborNode(gridList);
 		//查找邻居节点，看自身是否是其邻居，如不是，则加进去
-		ZaranLog::info("Add self to neibor node's neibor node");
+		Log::info("Add self to neibor node's neibor node");
 		for (int iNode = 0;iNode < m_NodeNum;iNode++)
 		{
 			if (nodeType[iNode] != NodeType::inner)
@@ -266,15 +266,15 @@ namespace zaran
 		ReadCellFile(gridList);
 		ReadBoundFaceFile(gridList);
 		//检查未定义节点
-		ZaranLog::info("Check undefined node");
+		Log::info("Check undefined node");
 		for (size_t i = 0; i < m_NodeNum; i++)
 		{
 			if (nodeType[i] == NodeType::undefined)
 			{
-				ZaranLog::info("node:{} type is undefined", i);
+				Log::info("node:{} type is undefined", i);
 			}
 		}
-		ZaranLog::info("Check undefined node done");
+		Log::info("Check undefined node done");
 	}
 
 	void GridListFactoryFNFDM3D::SortNeiborNode(Ptr<GridList>& gridList)
@@ -302,11 +302,11 @@ namespace zaran
 			//ZaranLog::info("node:{}\n", iNode);
 			if (iNode == 15896)
 			{
-				ZaranLog::info("node before:{}", iNode);
-				ZaranLog::info("{} {} {}", currentNodeCoord.x(), currentNodeCoord.y(), currentNodeCoord.z());
+				Log::info("node before:{}", iNode);
+				Log::info("{} {} {}", currentNodeCoord.x(), currentNodeCoord.y(), currentNodeCoord.z());
 				for (auto& i : currentNeibor)
 				{
-					ZaranLog::info("{} {} {}", nodeCoord[i].x(), nodeCoord[i].y(), nodeCoord[i].z());
+					Log::info("{} {} {}", nodeCoord[i].x(), nodeCoord[i].y(), nodeCoord[i].z());
 				}
 			}
 			//删除邻居节点中与当地节点距离小于小量的节点
@@ -397,11 +397,11 @@ namespace zaran
 			}
 			if (iNode == 15896)
 			{
-				ZaranLog::info("node after:{}", iNode);
-				ZaranLog::info("{} {} {}", currentNodeCoord.x(), currentNodeCoord.y(), currentNodeCoord.z());
+				Log::info("node after:{}", iNode);
+				Log::info("{} {} {}", currentNodeCoord.x(), currentNodeCoord.y(), currentNodeCoord.z());
 				for (auto& i : currentNeibor)
 				{
-					ZaranLog::info("{} {} {}", nodeCoord[i].x(), nodeCoord[i].y(), nodeCoord[i].z());
+					Log::info("{} {} {}", nodeCoord[i].x(), nodeCoord[i].y(), nodeCoord[i].z());
 				}
 			}
 			//求出邻居节点与当地节点之间的距离
@@ -444,7 +444,7 @@ namespace zaran
 
 
 			if (node_pair_map.size() != currentNeibor.size())
-				ZaranLog::info("node_pair_map.size()!=currentNeibor.size()");
+				Log::info("node_pair_map.size()!=currentNeibor.size()");
 			//取出map中第一个点对，即夹角最小的点对
 			//删除这个点对中距离最大的点
 			while (currentNeibor.size() > 4)
@@ -505,11 +505,11 @@ namespace zaran
 			currentNeibor.push_back(main_pair.node2);
 			if (iNode == 15896)
 			{
-				ZaranLog::info("node after:{}", iNode);
-				ZaranLog::info("{} {} {}", currentNodeCoord.x(), currentNodeCoord.y(), currentNodeCoord.z());
+				Log::info("node after:{}", iNode);
+				Log::info("{} {} {}", currentNodeCoord.x(), currentNodeCoord.y(), currentNodeCoord.z());
 				for (auto& i : currentNeibor)
 				{
-					ZaranLog::info("{} {} {}", nodeCoord[i].x(), nodeCoord[i].y(), nodeCoord[i].z());
+					Log::info("{} {} {}", nodeCoord[i].x(), nodeCoord[i].y(), nodeCoord[i].z());
 				}
 			}
 		}
@@ -588,9 +588,9 @@ namespace zaran
 			min_neibor_num = Min(min_neibor_num, neibor_num_after);
 			max_neibor_num = Max(max_neibor_num, neibor_num_after);
 			if (neibor_num_after < neibor_num_before)
-				ZaranLog::info("node:{} neibor num before:{} neibor num after:{}", iNode, neibor_num_before, neibor_num_after);
+				Log::info("node:{} neibor num before:{} neibor num after:{}", iNode, neibor_num_before, neibor_num_after);
 		}
-		ZaranLog::info("min neibor num:{} max neibor num:{}", min_neibor_num, max_neibor_num);
+		Log::info("min neibor num:{} max neibor num:{}", min_neibor_num, max_neibor_num);
 
 	}
 
@@ -635,7 +635,7 @@ namespace zaran
 
 
 		auto& cellTopo = grid->GetCellTopo();
-		ZaranLog::info("Total cell num:{}", cellNum);
+		Log::info("Total cell num:{}", cellNum);
 		auto& cell_node = cellTopo->GetNodeIndex();
 		cell_node.resize(cellNum);
 		IArray cellNeiborNodeIndex(8);

@@ -18,7 +18,7 @@ namespace zaran
 		}
 		else
 		{
-			ZaranLog::warn("Unsupported Grid Generate Method:{}, Please Check!", createMethod);
+			Log::warn("Unsupported Grid Generate Method:{}, Please Check!", createMethod);
 			system("pause");
 		}
 	}

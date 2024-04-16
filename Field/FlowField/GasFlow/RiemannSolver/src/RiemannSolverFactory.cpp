@@ -20,7 +20,7 @@ void RiemannSolverFactory::Create(Ptr<RiemannSolver>& riemannSolver, string& rie
 		CreateStegerWarming(riemannSolver);
 	else
 	{
-		ZaranLog::warn("unsupportted riemann solver name: {}", riemannSolverName);
+		Log::warn("unsupportted riemann solver name: {}", riemannSolverName);
 	}
 
 }

@@ -179,11 +179,11 @@ namespace zaran
 			// check coordinate
 			if (coord_trans_coef.J() > 1e15 || coord_trans_coef.J() < 0)
 			{
-				ZaranLog::warn("Node {}: {},{},{}", iNode, coord[iNode].x(), coord[iNode].y(), coord[iNode].z());
-				ZaranLog::info("x_left index={}: {},{},{}", tempI[iNode][0], x_left.x(), x_left.y(), x_left.z());
-				ZaranLog::info("x_right index={}: {},{},{}", tempI[iNode][2], x_right.x(), x_right.y(), x_right.z());
-				ZaranLog::info("y_left index={}: {},{},{}", tempJ[iNode][0], y_left.x(), y_left.y(), y_left.z());
-				ZaranLog::info("y_right index={}: {},{},{}", tempJ[iNode][2], y_right.x(), y_right.y(), y_right.z());
+				Log::warn("Node {}: {},{},{}", iNode, coord[iNode].x(), coord[iNode].y(), coord[iNode].z());
+				Log::info("x_left index={}: {},{},{}", tempI[iNode][0], x_left.x(), x_left.y(), x_left.z());
+				Log::info("x_right index={}: {},{},{}", tempI[iNode][2], x_right.x(), x_right.y(), x_right.z());
+				Log::info("y_left index={}: {},{},{}", tempJ[iNode][0], y_left.x(), y_left.y(), y_left.z());
+				Log::info("y_right index={}: {},{},{}", tempJ[iNode][2], y_right.x(), y_right.y(), y_right.z());
 			}
 
 			(*coordTransCoef[0])[iNode] = coord_trans_coef.GetX()[0];
@@ -359,7 +359,7 @@ namespace zaran
 		else if (hole_solver_type == "IDW")
 			SolveHoleNodeIDW();
 		else
-			ZaranLog::error("HoleSolverType: {} is not defined!", hole_solver_type);
+			Log::error("HoleSolverType: {} is not defined!", hole_solver_type);
 	}
 	void Solver_NS_2D::SolveHoleNodeFNFDM()
 	{
@@ -443,7 +443,7 @@ namespace zaran
 			{
 				(*res[iVal])[iNode] -= riemann_para.flux[iVal] / jacobi;
 				if (isnan((*res[iVal])[iNode]) || isinf((*res[iVal])[iNode]))
-					ZaranLog::error("inode={},NAN in Residual!", iNode);
+					Log::error("inode={},NAN in Residual!", iNode);
 				(*cons[iVal])[iNode] -= (*res[iVal])[iNode] * dt[iNode] * (*coord_trans_coef[32])[iNode];
 				(*res[iVal])[iNode] = 0;
 			}

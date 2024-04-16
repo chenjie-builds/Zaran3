@@ -31,66 +31,70 @@ void FlowSolverPara::Init()
 	m_inflow_velocity_z = inflow_Ma * inflow_sonice_speed * sin(inflow_slide_angle);
 	m_inflow_density =m_dimensionless.GetDensityDL(inflow_density);
 	m_inflow_pressure =gas.GetPressureFromDensityAndTemperature(m_inflow_density, m_dimensionless.GetTempDL(inflow_temperature));
-	initFieldType_ = GlobalData::GetInt("initFieldType");
-	isViscous_ = GlobalData::GetInt("isViscous");
-	cflNumber_ = GlobalData::GetDouble("cflNumber");
+	m_init_field_type = GlobalData::GetInt("initFieldType");
+	m_is_viscous = GlobalData::GetInt("isViscous");
+	m_cfl = GlobalData::GetDouble("cflNumber");
 	int rkStage = GlobalData::GetInt("rkStage");
 	if (rkStage == 1)
 	{
-		rkCoef_ = { 1.0 };
+		m_rk_coef = { 1.0 };
 	}
 	else if (rkStage == 3)
 	{
-		rkCoef_ = { 0.1918,0.4929,1.0 };
+		m_rk_coef = { 0.1918,0.4929,1.0 };
 	}
 	else if (rkStage == 4)
 	{
-		rkCoef_ = { 0.1084,0.2602,0.5052,1.0 };
+		m_rk_coef = { 0.1084,0.2602,0.5052,1.0 };
 	}
 	else if (rkStage == 5)
 	{
-		rkCoef_ = { 0.0695,0.1602,0.2898,0.5060 };
+		m_rk_coef = { 0.0695,0.1602,0.2898,0.5060 };
 	}
 	else
 	{
-		ZaranLog::warn("Wrong Runge-Kutta Stage: {}, Please Check Control File!", rkStage);
+		Log::warn("Wrong Runge-Kutta Stage: {}, Please Check Control File!", rkStage);
 		system("pause");
 	}
 	int gradScheme = GlobalData::GetInt("gradScheme");
 	if (gradScheme == 0)
 	{
-		gradSchem_ = GradScheme::wls;
+		m_grad_scheme = GradScheme::wls;
 	}
 	else if (gradScheme == 1)
 	{
-		gradSchem_ = GradScheme::ufdm;
+		m_grad_scheme = GradScheme::ufdm;
 	}
 	else if (gradScheme == -1)
 	{
-		gradSchem_ = GradScheme::noGrad;
+		m_grad_scheme = GradScheme::noGrad;
 	}
 	else
 	{
-		ZaranLog::warn("Unsupported Gradient Scheme parameter: {}, Please Check Control File!", gradScheme);
+		Log::warn("Unsupported Gradient Scheme parameter: {}, Please Check Control File!", gradScheme);
 		system("pause");
 	}
 
-	std::string limiterType = GlobalData::GetString("limiterType");
-	if (limiterType == "noLimiter")
+	std::string limiter_type = GlobalData::GetString("limiterType");
+	if (limiter_type == "noLimiter")
 	{
-		limiterType_ = LimiterType::nolimit;
+		n_limiter_type = LimiterType::none;
 	}
-	else if (limiterType == "barth")
+	else if (limiter_type == "barth")
 	{
-		limiterType_ = LimiterType::barth;
+		n_limiter_type = LimiterType::barth;
 	}
-	else if (limiterType == "vk")
+	else if (limiter_type == "vk")
 	{
-		limiterType_ = LimiterType::vk;
+		n_limiter_type = LimiterType::vk;
+	}
+	else if (limiter_type=="1st-order")
+	{
+		n_limiter_type = LimiterType::first_order;
 	}
 	else
 	{
-		ZaranLog::warn("Unsupportted Limiter: {}, Please Check Control File!", limiterType);
+		Log::warn("Unsupportted Limiter: {}, Please Check Control File!", limiter_type);
 		system("pause");
 	}
 
@@ -98,64 +102,64 @@ void FlowSolverPara::Init()
 
 const int& FlowSolverPara::GetInitFieldType() const
 {
-	return initFieldType_;
+	return m_init_field_type;
 }
 
 const int& FlowSolverPara::GetIsViscous() const
 {
-	return isViscous_;
+	return m_is_viscous;
 }
 
 const double& FlowSolverPara::GetCflNumber() const
 {
-	return cflNumber_;
+	return m_cfl;
 }
 
 const DArray& FlowSolverPara::GetRKCoef() const
 {
-	return rkCoef_;
+	return m_rk_coef;
 }
 
 
 
 void FlowSolverPara::SetInitFieldType(const int& initflowType)
 {
-	initFieldType_ = initflowType;
+	m_init_field_type = initflowType;
 }
 
 void FlowSolverPara::SetIsViscous(const int& isViscous)
 {
-	isViscous_ = isViscous;
+	m_is_viscous = isViscous;
 }
 
 void FlowSolverPara::SetCflNumber(const double& cfl)
 {
-	cflNumber_ = cfl;
+	m_cfl = cfl;
 }
 
 void FlowSolverPara::SetRKCoef(const DArray& rkCoef)
 {
-	rkCoef_ = rkCoef;
+	m_rk_coef = rkCoef;
 }
 
 const GradScheme& FlowSolverPara::GetGradScheme() const
 {
-	return gradSchem_;
+	return m_grad_scheme;
 }
 
 const LimiterType& FlowSolverPara::GetLimiterType() const
 {
-	return limiterType_;
+	return n_limiter_type;
 }
 
 void FlowSolverPara::SetGradScheme(const GradScheme& gradScheme)
 {
-	gradSchem_ = gradScheme;
+	m_grad_scheme = gradScheme;
 }
 
 void FlowSolverPara::SetLimiterType(const LimiterType& limiterType)
 {
-	limiterType_ = limiterType;
+	n_limiter_type = limiterType;
 }
 
 const int& zaran::FlowSolverPara::GetInflowDensity() const

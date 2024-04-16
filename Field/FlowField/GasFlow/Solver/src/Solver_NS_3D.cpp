@@ -3,7 +3,7 @@ namespace zaran
 {
 	void Solver_NS_3D::CalcMetric()
 	{
-		ZaranLog::info("Compute NS 3D Coordination Transformation Coefficients");
+		Log::info("Compute NS 3D Coordination Transformation Coefficients");
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
@@ -53,14 +53,14 @@ namespace zaran
 			// check coordinate
 			if (coordTrans.J() > 1e15 || coordTrans.J() < 0 || isnan(coordTrans.J()) || isinf(coordTrans.J()))
 			{
-				ZaranLog::warn("jacobi is too large or negative: {}", coordTrans.J());
-				ZaranLog::warn("Node {}: {},{},{}", iNode, nodeCoord[iNode].x(), nodeCoord[iNode].y(), nodeCoord[iNode].z());
-				ZaranLog::info("xLeft index={}: {},{},{}", tempI[iNode][0], xLeft.x(), xLeft.y(), xLeft.z());
-				ZaranLog::info("xRight index={}: {},{},{}", tempI[iNode][2], xRight.x(), xRight.y(), xRight.z());
-				ZaranLog::info("yLeft index={}: {},{},{}", tempJ[iNode][0], yLeft.x(), yLeft.y(), yLeft.z());
-				ZaranLog::info("yRight index={}: {},{},{}", tempJ[iNode][2], yRight.x(), yRight.y(), yRight.z());
-				ZaranLog::info("zLeft index={}: {},{},{}", tempK[iNode][0], zLeft.x(), zLeft.y(), zLeft.z());
-				ZaranLog::info("zRight index={}: {},{},{}", tempK[iNode][2], zRight.x(), zRight.y(), zRight.z());
+				Log::warn("jacobi is too large or negative: {}", coordTrans.J());
+				Log::warn("Node {}: {},{},{}", iNode, nodeCoord[iNode].x(), nodeCoord[iNode].y(), nodeCoord[iNode].z());
+				Log::info("xLeft index={}: {},{},{}", tempI[iNode][0], xLeft.x(), xLeft.y(), xLeft.z());
+				Log::info("xRight index={}: {},{},{}", tempI[iNode][2], xRight.x(), xRight.y(), xRight.z());
+				Log::info("yLeft index={}: {},{},{}", tempJ[iNode][0], yLeft.x(), yLeft.y(), yLeft.z());
+				Log::info("yRight index={}: {},{},{}", tempJ[iNode][2], yRight.x(), yRight.y(), yRight.z());
+				Log::info("zLeft index={}: {},{},{}", tempK[iNode][0], zLeft.x(), zLeft.y(), zLeft.z());
+				Log::info("zRight index={}: {},{},{}", tempK[iNode][2], zRight.x(), zRight.y(), zRight.z());
 			}
 
 			(*coordTransCoef[0])[iNode] = coordTrans.GetX()[0];
@@ -107,9 +107,9 @@ namespace zaran
 				min_jacobi_index = iNode;
 			}
 		}
-		ZaranLog::info("max jacobi: {}, index: {}", max_jacobi, max_jacobi_index);
-		ZaranLog::info("min jacobi: {}, index: {}", min_jacobi, min_jacobi_index);
-		ZaranLog::info("NS 3D Coordination Transformation Coefficients are computed");
+		Log::info("max jacobi: {}, index: {}", max_jacobi, max_jacobi_index);
+		Log::info("min jacobi: {}, index: {}", min_jacobi, min_jacobi_index);
+		Log::info("NS 3D Coordination Transformation Coefficients are computed");
 	}
 
 	void Solver_NS_3D::CalcGradWLS()

@@ -44,7 +44,7 @@ void ModelControl::Input()
 	//原始设定的不同外形读取
 	fin >> modelNum_;
 	modelVec_.resize(modelNum_);
-	ZaranLog::info("Model Num= {}", modelNum_);
+	Log::info("Model Num= {}", modelNum_);
 	string modeType;
 	int pointNum;
 	for (int iModel = 0; iModel < modelNum_; ++iModel)

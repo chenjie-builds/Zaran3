@@ -38,12 +38,15 @@ namespace zaran
 			GlobalData::Init();
 		}
 		~Simulation() {};
-		void Start();
+		void Run();
 	protected:
 		//读取控制文件参数
 		void ReadGlobalData();
 		void InitSimulationTask();
 		void ShowInfo();
+		void SolveField();
+		void ConvertGrid();	
+		void ReadModel();
 	private:
 		SimulationTask task_;
 		//参数文件名

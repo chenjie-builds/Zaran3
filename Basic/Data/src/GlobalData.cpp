@@ -23,8 +23,8 @@ const dataVariant& GlobalData::Get(const string& dataName)
 		return data->second;
 	else
 	{
-		ZaranLog::warn("Not Found:{},in Global Data!", dataName);
-		ZaranLog::warn("Exit Now!");
+		Log::warn("Not Found:{},in Global Data!", dataName);
+		Log::warn("Exit Now!");
 		exit(0);
 	}
 }
@@ -53,5 +53,5 @@ void GlobalData::Update(const string& varName, const dataVariant& varValue)
 
 void zaran::GlobalData::Backup(const string& back_file_name)
 {
-	
+
 }

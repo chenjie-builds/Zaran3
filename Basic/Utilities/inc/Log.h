@@ -15,14 +15,14 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 //对spdlog进行初始化
 //TODO 对spdlog库更熟悉后： 设置输出位置，log等级自定义
-namespace ZaranLog = spdlog;
-class Log
+namespace Log = spdlog;
+class Logger
 {
 public:
-	static Log& Start();
+	static Logger& Start();
 private:
-	Log();
-	~Log();
+	Logger();
+	~Logger();
 };
 
 

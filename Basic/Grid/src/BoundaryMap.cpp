@@ -32,7 +32,7 @@ std::vector<Boundary>& BoundaryMap::GetBoundary(const std::string& name)
 	auto it = boundaryMap_.find(name);
 	if (it == boundaryMap_.end())
 	{
-		ZaranLog::info("Boundary Name:{}, is not found!", name);
+		Log::info("Boundary Name:{}, is not found!", name);
 	}
 	return it->second;
 
