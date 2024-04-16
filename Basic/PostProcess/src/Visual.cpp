@@ -79,7 +79,7 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 		z[iNode] = node_coord[iNode].z();
 	}
 	INTEGER4 file_format = 0;
-	INTEGER4 debug = 1;
+	INTEGER4 debug = 0;
 	INTEGER4 vIsDouble = 1;
 	INTEGER4 fileType = 0;
 	string grid_name = "grid_" + grid->GetName();

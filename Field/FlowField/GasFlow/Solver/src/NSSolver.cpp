@@ -276,8 +276,8 @@ namespace zaran {
 		BoundaryCondition();
 		TimeAdvance();
 		UpdateField();
-		// CheckPrimtive();
-		// FixPrimtive();
+		CheckPrimtive();
+		FixPrimtive();
 	}
 	double NSSolver::ComputeMaxResidual()
 	{
@@ -480,15 +480,15 @@ namespace zaran {
 			if (boundName == "hole")
 				continue;
 #pragma omp parallel for
-			for (int iBound = 0; iBound < bound.size(); ++iBound)
+			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
-				auto& boundIndex = bound[iBound].GetIndex();
-				auto& innerIndex = bound[iBound].GetInnerIndex();
-				int boundNeighborNum = nodeTopo->GetNeighborCloud()[boundIndex].size();
-				// if (boundNeighborNum <= 6)
-				// 	ZaranLog::info("Boundary {} has {} neighbors", boundIndex, boundNeighborNum);
-				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
+					auto& boundIndex = bound[iBound].GetIndex();
+					auto& innerIndex = bound[iBound].GetInnerIndex();
+					int boundNeighborNum = nodeTopo->GetNeighborCloud()[boundIndex].size();
+					// if (boundNeighborNum <= 6)
+					// 	ZaranLog::info("Boundary {} has {} neighbors", boundIndex, boundNeighborNum);
 					m_PrimGradX[iVal][boundIndex] = 0;
 					m_PrimGradY[iVal][boundIndex] = 0;
 					m_PrimGradZ[iVal][boundIndex] = 0;
@@ -512,10 +512,10 @@ namespace zaran {
 		for (int iStage = 0; iStage < rkStage; ++iStage)
 		{
 			CalcResidual();
-#pragma omp parallel for
-			for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
+			for (int iVal = 0; iVal < 5; ++iVal)
 			{
-				for (int iVal = 0; iVal < 5; ++iVal)
+#pragma omp parallel for
+				for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 				{
 					m_cons[iVal][iNode] = m_cons[iVal][iNode] - rk_coef[iStage] * m_dt[iNode] * m_residual[iVal][iNode] * m_metric[32][iNode];
 				}
@@ -672,14 +672,14 @@ namespace zaran {
 		double maxVal, minVal;
 		double eps = 1e-6;
 		double venkatCoeff = 1.0e-5;
-#pragma omp parallel for private(maxVal, minVal, eps)
-		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
-			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
-				continue;
-			auto& neighborNode = nodeNeighbor[iNode];
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+#pragma omp parallel for private(maxVal, minVal, eps)
+			for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 			{
+				if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
+					continue;
+				auto& neighborNode = nodeNeighbor[iNode];
 				maxVal = m_prim[iVal][iNode];
 				minVal = m_prim[iVal][iNode];
 				for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
@@ -728,14 +728,14 @@ namespace zaran {
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
 		int nTotalNodeNum = grid->GetTotalNodeNum();
 		double maxVal, minVal;
-#pragma omp parallel for private(maxVal, minVal)
-		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
-			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
-				continue;
-			auto& neighborNode = nodeNeighbor[iNode];
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+#pragma omp parallel for private(maxVal, minVal)
+			for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 			{
+				if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
+					continue;
+				auto& neighborNode = nodeNeighbor[iNode];
 				maxVal = m_prim[iVal][iNode];
 				minVal = m_prim[iVal][iNode];
 				for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
@@ -779,12 +779,12 @@ namespace zaran {
 		auto& nodeType = nodeTopo->GetType();
 		auto& limiterCoef = m_limiter;
 		int nTotalNodeNum = grid->GetTotalNodeNum();
-		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
-			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
-				continue;
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 			{
+				if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
+					continue;
 				m_limiter[iVal][iNode] = 1.0;
 			}
 		}
@@ -798,12 +798,12 @@ namespace zaran {
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
 		int nTotalNodeNum = grid->GetTotalNodeNum();
 		double maxVal, minVal;
-		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
+		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
-			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
-				continue;
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 			{
+				if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
+					continue;
 				m_limiter[iVal][iNode] = 1.0;
 			}
 		}
@@ -819,12 +819,12 @@ namespace zaran {
 			auto& bound = boundary.second;
 			if (boundName == "hole")
 				continue;
-			for (int iBound = 0; iBound < bound.size(); ++iBound)
+			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
-				auto& boundIndex = bound[iBound].GetIndex();
-				auto& innerIndex = bound[iBound].GetInnerIndex();
-				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
+					auto& boundIndex = bound[iBound].GetIndex();
+					auto& innerIndex = bound[iBound].GetInnerIndex();
 					m_limiter[iVal][boundIndex] = 0.0;
 				}
 			}
@@ -845,7 +845,7 @@ namespace zaran {
 		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 		{
 			bool exist_nonphysical = false;
-			m_non_physical[iNode] = 0.0;
+			m_non_physical[iNode] = -1.0;
 			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
 				continue;
 			if (m_prim[0][iNode] < 0 || m_prim[4][iNode] < 0)
