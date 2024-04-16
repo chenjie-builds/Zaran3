@@ -104,17 +104,17 @@ void Simulation::InitSimulationTask()
 
 void Simulation::ShowInfo()
 {
-	Log::info("********Zaran: A Totally Automatic CFD Solver!");
-	Log::info(">>>>>>>>Software Version: {}", programVersion_);
-	Log::info(">>>>>>>>Software Last Modify Date: {}", lastModifyDate_);
-	Log::info(">>>>>>>>Control File Version: {}", GlobalData::GetString("version"));
+	Log::info("********Zaran: A Totally Automatic CFD Software!********");
+	Log::info(">>>>>>>>Software Version: {}<<<<<<<<", programVersion_);
+	Log::info(">>>>>>>>Software Last Modify Date: {}<<<<<<<<", lastModifyDate_);
+	Log::info(">>>>>>>>Control File Version: {}<<<<<<<<", GlobalData::GetString("version"));
 	if (minSupportCtrlFileVersion_ > GlobalData::GetString("version"))
 	{
-		Log::warn(">>>>>>>>Control File is too old, please use new Control File!");
-		Log::warn(">>>>>>>>The minus version Control File is:{}", minSupportCtrlFileVersion_);
+		Log::warn(">>>>>>>>Control File is too old, please use new Control File!<<<<<<<<");
+		Log::warn(">>>>>>>>The minus version Control File is:{}<<<<<<<<", minSupportCtrlFileVersion_);
 		system("pause");
 	}
-	Log::info(">>>>>>>>Simulation Task: {}", GlobalData::GetString("simulationTask"));
+	Log::info(">>>>>>>>Simulation Task: {}<<<<<<<<", GlobalData::GetString("simulationTask"));
 }
 
 void zaran::Simulation::SolveField()

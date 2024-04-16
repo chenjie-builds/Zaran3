@@ -11,7 +11,7 @@ void SolverFactory::Create(Ptr<GridList>& gridList, Ptr<SolverVec>& solverVecPtr
 	}
 	for (int iSolver = 0; iSolver < gridList->GetGridNumber(); ++iSolver)
 	{
-		Ptr<Solver> newSolver = std::make_shared<Solver_NS_2D>();
+		Ptr<Solver> newSolver ;
 		if (solverType == FieldSolverType::NS_2D)
 			newSolver = std::make_shared<Solver_NS_2D>();
 		else if (solverType == FieldSolverType::NS_3D)
@@ -30,9 +30,6 @@ void SolverFactory::Create(Ptr<GridList>& gridList, Ptr<SolverVec>& solverVecPtr
 		newSolver->SetGridList(gridList);
 		newSolver->SetGridIndex(iSolver);
 		newSolver->SetName("test");
-		FlowSolverParaPtr para = std::make_shared<FlowSolverPara>();
-		para->Init();
-		newSolver->SetPara(para);
 		solverVecPtr->AddSolver(newSolver);
 	}
 }

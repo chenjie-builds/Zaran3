@@ -1,4 +1,5 @@
 #include "solver.h"
+#include"Log.h"
 using namespace zaran;
 Solver::Solver()
 {
@@ -14,7 +15,8 @@ Solver::~Solver()
 
 }
 
-SolverParaPtr& Solver::GetPara()
+SolverPara* Solver::GetPara()
 {
+	Log::info("using Solver::GetPara()");
 	return para_;
 }

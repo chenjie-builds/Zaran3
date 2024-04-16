@@ -3,19 +3,15 @@
 namespace zaran {
 	void NSSolver::Init()
 	{
+		SetNumberOfEquations(5);
 		InitSolver();
-		InitField();
+		InitData();
 		CalcMetric();
 	}
-	void NSSolver::InitField()
+	void NSSolver::InitData()
 	{
 		GridPtr grid = GetGrid();
-		auto& rho = *m_Primitive[0];
-		auto& u = *m_Primitive[1];
-		auto& v = *m_Primitive[2];
-		auto& w = *m_Primitive[3];
-		auto& p = *m_Primitive[4];
-		FlowSolverParaPtr para = GetPara();
+		FlowSolverPara* para = GetPara();
 		int initType = para->GetInitFieldType();
 		if (initType == 0)
 		{
@@ -42,66 +38,45 @@ namespace zaran {
 	void NSSolver::InitFieldFarField()
 	{
 		GridPtr grid = GetGrid();
-		auto& rho = *m_Primitive[0];
-		auto& u = *m_Primitive[1];
-		auto& v = *m_Primitive[2];
-		auto& w = *m_Primitive[3];
-		auto& p = *m_Primitive[4];
-		FlowSolverParaPtr para = GetPara();
+		FlowSolverPara* para = GetPara();
 		double inflow_prim[5];
 		inflow_prim[0] = para->GetInflowDensity();
 		inflow_prim[1] = para->GetInflowVelocityX();
 		inflow_prim[2] = para->GetInflowVelocityY();
 		inflow_prim[3] = para->GetInflowVelocityZ();
 		inflow_prim[4] = para->GetInflowPressure();
-		int n_data = rho.size();
-		double x, y, z;
-		for (int iNode = 0; iNode < n_data; ++iNode)
+		int n_node = grid->GetTotalNodeNum();
+		for (int iVal = 0;iVal < GetNumberOfEquations();++iVal)
 		{
-			rho[iNode] = inflow_prim[0];
-			u[iNode] = inflow_prim[1];
-			v[iNode] = inflow_prim[2];
-			w[iNode] = inflow_prim[3];
-			p[iNode] = inflow_prim[4];
+			for (int iNode = 0; iNode < n_node; ++iNode)
+				m_prim[iVal][iNode] = inflow_prim[iVal];
 		}
 	}
 
 	void NSSolver::InitFieldFarFieldNoVelocity()
 	{
 		GridPtr grid = GetGrid();
-		auto& rho = *m_Primitive[0];
-		auto& u = *m_Primitive[1];
-		auto& v = *m_Primitive[2];
-		auto& w = *m_Primitive[3];
-		auto& p = *m_Primitive[4];
-		FlowSolverParaPtr para = GetPara();
-		double inflow_prim[5];
+		FlowSolverPara* para = GetPara();
+		double* inflow_prim = new double[5];
 		inflow_prim[0] = para->GetInflowDensity();
 		inflow_prim[1] = 0.0;
 		inflow_prim[2] = 0.0;
 		inflow_prim[3] = 0.0;
 		inflow_prim[4] = para->GetInflowPressure();
-		int n_data = rho.size();
-		double x, y, z;
-		for (int iNode = 0; iNode < n_data; ++iNode)
+		int n_node = grid->GetTotalNodeNum();
+		for (int iVal = 0;iVal < GetNumberOfEquations();++iVal)
 		{
-			rho[iNode] = inflow_prim[0];
-			u[iNode] = inflow_prim[1];
-			v[iNode] = inflow_prim[2];
-			w[iNode] = inflow_prim[3];
-			p[iNode] = inflow_prim[4];
+			for (int iNode = 0; iNode < n_node; ++iNode)
+			{
+				m_prim[iVal][iNode] = inflow_prim[iVal];
+			}
 		}
 	}
 
 	void NSSolver::InitFieldRestart()
 	{
 		GridPtr grid = GetGrid();
-		auto& rho = *m_Primitive[0];
-		auto& u = *m_Primitive[1];
-		auto& v = *m_Primitive[2];
-		auto& w = *m_Primitive[3];
-		auto& p = *m_Primitive[4];
-		FlowSolverParaPtr para = GetPara();
+		FlowSolverPara* para = GetPara();
 		std::string restartFileName = "backup.dat";
 		std::ifstream fin(restartFileName);
 		if (!fin.is_open())
@@ -109,10 +84,11 @@ namespace zaran {
 			Log::warn("Restart file not found!");
 			exit(0);
 		}
-		int n_data = rho.size();
-		for (int iNode = 0; iNode < n_data; ++iNode)
+		int n_node = grid->GetTotalNodeNum();
+		for (int iNode = 0; iNode < n_node; ++iNode)
 		{
-			fin >> rho[iNode] >> u[iNode] >> v[iNode] >> w[iNode] >> p[iNode];
+			for (int iVal = 0;iVal < GetNumberOfEquations();++iVal)
+				fin >> m_prim[iVal][iNode];
 		}
 		fin.close();
 	}
@@ -128,187 +104,168 @@ namespace zaran {
 		Log::info("NS Solver Initialize Finished!");
 	}
 
-	void NSSolver::CreateFieldData()
+	void NSSolver::CreateData()
 	{
 
 		auto& grid = *GetGrid();
 		int nTotalNodeNum = grid.GetTotalNodeNum();
-		DArray emptyData(nTotalNodeNum);
+		FieldDataType type = FieldDataType::real;
 		auto& dataPtr = GetFieldData();
 		// dataPtr = std::make_shared<FieldData>();
 		auto& data = *dataPtr;
-		data.AddData("rho", emptyData);
-		data.AddData("u", emptyData);
-		data.AddData("v", emptyData);
-		data.AddData("w", emptyData);
-		data.AddData("p", emptyData);
-		data.AddData("cons0", emptyData);
-		data.AddData("cons1", emptyData);
-		data.AddData("cons2", emptyData);
-		data.AddData("cons3", emptyData);
-		data.AddData("cons4", emptyData);
-		data.AddData("res0", emptyData);
-		data.AddData("res1", emptyData);
-		data.AddData("res2", emptyData);
-		data.AddData("res3", emptyData);
-		data.AddData("res4", emptyData);
-		data.AddData("dt", emptyData);
-		data.AddData("limiterCoef0", emptyData);
-		data.AddData("limiterCoef1", emptyData);
-		data.AddData("limiterCoef2", emptyData);
-		data.AddData("limiterCoef3", emptyData);
-		data.AddData("limiterCoef4", emptyData);
-		data.AddData("rhoGradX", emptyData);
-		data.AddData("rhoGradY", emptyData);
-		data.AddData("rhoGradZ", emptyData);
-		data.AddData("uGradX", emptyData);
-		data.AddData("uGradY", emptyData);
-		data.AddData("uGradZ", emptyData);
-		data.AddData("vGradX", emptyData);
-		data.AddData("vGradY", emptyData);
-		data.AddData("vGradZ", emptyData);
-		data.AddData("wGradX", emptyData);
-		data.AddData("wGradY", emptyData);
-		data.AddData("wGradZ", emptyData);
-		data.AddData("pGradX", emptyData);
-		data.AddData("pGradY", emptyData);
-		data.AddData("pGradZ", emptyData);
-		data.AddData("consRK0", emptyData);
-		data.AddData("consRK1", emptyData);
-		data.AddData("consRK2", emptyData);
-		data.AddData("consRK3", emptyData);
-		data.AddData("consRK4", emptyData);
-		data.AddData("coordTransXXi", emptyData);
-		data.AddData("coordTransXEta", emptyData);
-		data.AddData("coordTransXZeta", emptyData);
-		data.AddData("coordTransXTau", emptyData);
-		data.AddData("coordTransYXi", emptyData);
-		data.AddData("coordTransYEta", emptyData);
-		data.AddData("coordTransYZeta", emptyData);
-		data.AddData("coordTransYTau", emptyData);
-		data.AddData("coordTransZXi", emptyData);
-		data.AddData("coordTransZEta", emptyData);
-		data.AddData("coordTransZZeta", emptyData);
-		data.AddData("coordTransZTau", emptyData);
-		data.AddData("coordTransTXi", emptyData);
-		data.AddData("coordTransTEta", emptyData);
-		data.AddData("coordTransTZeta", emptyData);
-		data.AddData("coordTransTTau", emptyData);
-		data.AddData("coordTransXiX", emptyData);
-		data.AddData("coordTransXiY", emptyData);
-		data.AddData("coordTransXiZ", emptyData);
-		data.AddData("coordTransXiT", emptyData);
-		data.AddData("coordTransEtaX", emptyData);
-		data.AddData("coordTransEtaY", emptyData);
-		data.AddData("coordTransEtaZ", emptyData);
-		data.AddData("coordTransEtaT", emptyData);
-		data.AddData("coordTransZetaX", emptyData);
-		data.AddData("coordTransZetaY", emptyData);
-		data.AddData("coordTransZetaZ", emptyData);
-		data.AddData("coordTransZetaT", emptyData);
-		data.AddData("coordTransTauX", emptyData);
-		data.AddData("coordTransTauY", emptyData);
-		data.AddData("coordTransTauZ", emptyData);
-		data.AddData("coordTransTauT", emptyData);
-		data.AddData("coordTransJ", emptyData);
-		data.AddData("nonPhysical", emptyData);
+		data.AddData("rho", type, nTotalNodeNum);
+		data.AddData("u", type, nTotalNodeNum);
+		data.AddData("v", type, nTotalNodeNum);
+		data.AddData("w", type, nTotalNodeNum);
+		data.AddData("p", type, nTotalNodeNum);
+		data.AddData("cons0", type, nTotalNodeNum);
+		data.AddData("cons1", type, nTotalNodeNum);
+		data.AddData("cons2", type, nTotalNodeNum);
+		data.AddData("cons3", type, nTotalNodeNum);
+		data.AddData("cons4", type, nTotalNodeNum);
+		data.AddData("res0", type, nTotalNodeNum);
+		data.AddData("res1", type, nTotalNodeNum);
+		data.AddData("res2", type, nTotalNodeNum);
+		data.AddData("res3", type, nTotalNodeNum);
+		data.AddData("res4", type, nTotalNodeNum);
+		data.AddData("dt", type, nTotalNodeNum);
+		data.AddData("limiterCoef0", type, nTotalNodeNum);
+		data.AddData("limiterCoef1", type, nTotalNodeNum);
+		data.AddData("limiterCoef2", type, nTotalNodeNum);
+		data.AddData("limiterCoef3", type, nTotalNodeNum);
+		data.AddData("limiterCoef4", type, nTotalNodeNum);
+		data.AddData("rhoGradX", type, nTotalNodeNum);
+		data.AddData("rhoGradY", type, nTotalNodeNum);
+		data.AddData("rhoGradZ", type, nTotalNodeNum);
+		data.AddData("uGradX", type, nTotalNodeNum);
+		data.AddData("uGradY", type, nTotalNodeNum);
+		data.AddData("uGradZ", type, nTotalNodeNum);
+		data.AddData("vGradX", type, nTotalNodeNum);
+		data.AddData("vGradY", type, nTotalNodeNum);
+		data.AddData("vGradZ", type, nTotalNodeNum);
+		data.AddData("wGradX", type, nTotalNodeNum);
+		data.AddData("wGradY", type, nTotalNodeNum);
+		data.AddData("wGradZ", type, nTotalNodeNum);
+		data.AddData("pGradX", type, nTotalNodeNum);
+		data.AddData("pGradY", type, nTotalNodeNum);
+		data.AddData("pGradZ", type, nTotalNodeNum);
+		data.AddData("coordTransXXi", type, nTotalNodeNum);
+		data.AddData("coordTransXEta", type, nTotalNodeNum);
+		data.AddData("coordTransXZeta", type, nTotalNodeNum);
+		data.AddData("coordTransXTau", type, nTotalNodeNum);
+		data.AddData("coordTransYXi", type, nTotalNodeNum);
+		data.AddData("coordTransYEta", type, nTotalNodeNum);
+		data.AddData("coordTransYZeta", type, nTotalNodeNum);
+		data.AddData("coordTransYTau", type, nTotalNodeNum);
+		data.AddData("coordTransZXi", type, nTotalNodeNum);
+		data.AddData("coordTransZEta", type, nTotalNodeNum);
+		data.AddData("coordTransZZeta", type, nTotalNodeNum);
+		data.AddData("coordTransZTau", type, nTotalNodeNum);
+		data.AddData("coordTransTXi", type, nTotalNodeNum);
+		data.AddData("coordTransTEta", type, nTotalNodeNum);
+		data.AddData("coordTransTZeta", type, nTotalNodeNum);
+		data.AddData("coordTransTTau", type, nTotalNodeNum);
+		data.AddData("coordTransXiX", type, nTotalNodeNum);
+		data.AddData("coordTransXiY", type, nTotalNodeNum);
+		data.AddData("coordTransXiZ", type, nTotalNodeNum);
+		data.AddData("coordTransXiT", type, nTotalNodeNum);
+		data.AddData("coordTransEtaX", type, nTotalNodeNum);
+		data.AddData("coordTransEtaY", type, nTotalNodeNum);
+		data.AddData("coordTransEtaZ", type, nTotalNodeNum);
+		data.AddData("coordTransEtaT", type, nTotalNodeNum);
+		data.AddData("coordTransZetaX", type, nTotalNodeNum);
+		data.AddData("coordTransZetaY", type, nTotalNodeNum);
+		data.AddData("coordTransZetaZ", type, nTotalNodeNum);
+		data.AddData("coordTransZetaT", type, nTotalNodeNum);
+		data.AddData("coordTransTauX", type, nTotalNodeNum);
+		data.AddData("coordTransTauY", type, nTotalNodeNum);
+		data.AddData("coordTransTauZ", type, nTotalNodeNum);
+		data.AddData("coordTransTauT", type, nTotalNodeNum);
+		data.AddData("coordTransJ", type, nTotalNodeNum);
+		data.AddData("nonPhysical", type, nTotalNodeNum);
 	}
 	void NSSolver::RegisterFieldData()
 	{
-
+		FlowSolverPara* para = GetPara();
 		auto& data = *GetFieldData();
-
-		// 预锟斤拷锟斤拷锟节达�?
-		m_Primitive.reserve(5);
-		m_Conservative.reserve(5);
-		m_Residual.reserve(5);
-		m_LimiterCoef.reserve(5);
-		m_PrimGradX.reserve(5);
-		m_PrimGradY.reserve(5);
-		m_PrimGradZ.reserve(5);
-		m_ConservativeRK.reserve(5);
-		m_CoordTrans.reserve(36);
-
-		auto addDataToVector = [&data](Array<DArray*>& vec, const std::string& name) {
-			vec.push_back(&data.GetData(name));
-			};
-
-		addDataToVector(m_Primitive, "rho");
-		addDataToVector(m_Primitive, "u");
-		addDataToVector(m_Primitive, "v");
-		addDataToVector(m_Primitive, "w");
-		addDataToVector(m_Primitive, "p");
-		addDataToVector(m_Conservative, "cons0");
-		addDataToVector(m_Conservative, "cons1");
-		addDataToVector(m_Conservative, "cons2");
-		addDataToVector(m_Conservative, "cons3");
-		addDataToVector(m_Conservative, "cons4");
-		addDataToVector(m_Residual, "res0");
-		addDataToVector(m_Residual, "res1");
-		addDataToVector(m_Residual, "res2");
-		addDataToVector(m_Residual, "res3");
-		addDataToVector(m_Residual, "res4");
-		addDataToVector(m_LimiterCoef, "limiterCoef0");
-		addDataToVector(m_LimiterCoef, "limiterCoef1");
-		addDataToVector(m_LimiterCoef, "limiterCoef2");
-		addDataToVector(m_LimiterCoef, "limiterCoef3");
-		addDataToVector(m_LimiterCoef, "limiterCoef4");
-		addDataToVector(m_PrimGradX, "rhoGradX");
-		addDataToVector(m_PrimGradX, "uGradX");
-		addDataToVector(m_PrimGradX, "vGradX");
-		addDataToVector(m_PrimGradX, "wGradX");
-		addDataToVector(m_PrimGradX, "pGradX");
-		addDataToVector(m_PrimGradY, "rhoGradY");
-		addDataToVector(m_PrimGradY, "uGradY");
-		addDataToVector(m_PrimGradY, "vGradY");
-		addDataToVector(m_PrimGradY, "wGradY");
-		addDataToVector(m_PrimGradY, "pGradY");
-		addDataToVector(m_PrimGradZ, "rhoGradZ");
-		addDataToVector(m_PrimGradZ, "uGradZ");
-		addDataToVector(m_PrimGradZ, "vGradZ");
-		addDataToVector(m_PrimGradZ, "wGradZ");
-		addDataToVector(m_PrimGradZ, "pGradZ");
-		addDataToVector(m_ConservativeRK, "consRK0");
-		addDataToVector(m_ConservativeRK, "consRK1");
-		addDataToVector(m_ConservativeRK, "consRK2");
-		addDataToVector(m_ConservativeRK, "consRK3");
-		addDataToVector(m_ConservativeRK, "consRK4");
-		addDataToVector(m_CoordTrans, "coordTransXXi");
-		addDataToVector(m_CoordTrans, "coordTransXEta");
-		addDataToVector(m_CoordTrans, "coordTransXZeta");
-		addDataToVector(m_CoordTrans, "coordTransXTau");
-		addDataToVector(m_CoordTrans, "coordTransYXi");
-		addDataToVector(m_CoordTrans, "coordTransYEta");
-		addDataToVector(m_CoordTrans, "coordTransYZeta");
-		addDataToVector(m_CoordTrans, "coordTransYTau");
-		addDataToVector(m_CoordTrans, "coordTransZXi");
-		addDataToVector(m_CoordTrans, "coordTransZEta");
-		addDataToVector(m_CoordTrans, "coordTransZZeta");
-		addDataToVector(m_CoordTrans, "coordTransZTau");
-		addDataToVector(m_CoordTrans, "coordTransTXi");
-		addDataToVector(m_CoordTrans, "coordTransTEta");
-		addDataToVector(m_CoordTrans, "coordTransTZeta");
-		addDataToVector(m_CoordTrans, "coordTransTTau");
-		addDataToVector(m_CoordTrans, "coordTransXiX");
-		addDataToVector(m_CoordTrans, "coordTransXiY");
-		addDataToVector(m_CoordTrans, "coordTransXiZ");
-		addDataToVector(m_CoordTrans, "coordTransXiT");
-		addDataToVector(m_CoordTrans, "coordTransEtaX");
-		addDataToVector(m_CoordTrans, "coordTransEtaY");
-		addDataToVector(m_CoordTrans, "coordTransEtaZ");
-		addDataToVector(m_CoordTrans, "coordTransEtaT");
-		addDataToVector(m_CoordTrans, "coordTransZetaX");
-		addDataToVector(m_CoordTrans, "coordTransZetaY");
-		addDataToVector(m_CoordTrans, "coordTransZetaZ");
-		addDataToVector(m_CoordTrans, "coordTransZetaT");
-		addDataToVector(m_CoordTrans, "coordTransTauX");
-		addDataToVector(m_CoordTrans, "coordTransTauY");
-		addDataToVector(m_CoordTrans, "coordTransTauZ");
-		addDataToVector(m_CoordTrans, "coordTransTauT");
-		addDataToVector(m_CoordTrans, "coordTransJ");
-		m_TimeStep = &data.GetData("dt");
-		m_non_physical = &data.GetData("nonPhysical");
-
+		m_prim = new double* [5];
+		m_cons = new double* [5];
+		m_residual = new double* [5];
+		m_limiter = new double* [5];
+		m_PrimGradX = new double* [5];
+		m_PrimGradY = new double* [5];
+		m_PrimGradZ = new double* [5];
+		m_metric = new double* [33];
+		data.GetData("rho", m_prim[0]);
+		data.GetData("u", m_prim[1]);
+		data.GetData("v", m_prim[2]);
+		data.GetData("w", m_prim[3]);
+		data.GetData("p", m_prim[4]);
+		data.GetData("cons0", m_cons[0]);
+		data.GetData("cons1", m_cons[1]);
+		data.GetData("cons2", m_cons[2]);
+		data.GetData("cons3", m_cons[3]);
+		data.GetData("cons4", m_cons[4]);
+		data.GetData("res0", m_residual[0]);
+		data.GetData("res1", m_residual[1]);
+		data.GetData("res2", m_residual[2]);
+		data.GetData("res3", m_residual[3]);
+		data.GetData("res4", m_residual[4]);
+		data.GetData("limiterCoef0", m_limiter[0]);
+		data.GetData("limiterCoef1", m_limiter[1]);
+		data.GetData("limiterCoef2", m_limiter[2]);
+		data.GetData("limiterCoef3", m_limiter[3]);
+		data.GetData("limiterCoef4", m_limiter[4]);
+		data.GetData("rhoGradX", m_PrimGradX[0]);
+		data.GetData("rhoGradY", m_PrimGradY[0]);
+		data.GetData("rhoGradZ", m_PrimGradZ[0]);
+		data.GetData("uGradX", m_PrimGradX[1]);
+		data.GetData("uGradY", m_PrimGradY[1]);
+		data.GetData("uGradZ", m_PrimGradZ[1]);
+		data.GetData("vGradX", m_PrimGradX[2]);
+		data.GetData("vGradY", m_PrimGradY[2]);
+		data.GetData("vGradZ", m_PrimGradZ[2]);
+		data.GetData("wGradX", m_PrimGradX[3]);
+		data.GetData("wGradY", m_PrimGradY[3]);
+		data.GetData("wGradZ", m_PrimGradZ[3]);
+		data.GetData("pGradX", m_PrimGradX[4]);
+		data.GetData("pGradY", m_PrimGradY[4]);
+		data.GetData("pGradZ", m_PrimGradZ[4]);
+		data.GetData("coordTransXXi", m_metric[0]);
+		data.GetData("coordTransXEta", m_metric[1]);
+		data.GetData("coordTransXZeta", m_metric[2]);
+		data.GetData("coordTransXTau", m_metric[3]);
+		data.GetData("coordTransYXi", m_metric[4]);
+		data.GetData("coordTransYEta", m_metric[5]);
+		data.GetData("coordTransYZeta", m_metric[6]);
+		data.GetData("coordTransYTau", m_metric[7]);
+		data.GetData("coordTransZXi", m_metric[8]);
+		data.GetData("coordTransZEta", m_metric[9]);
+		data.GetData("coordTransZZeta", m_metric[10]);
+		data.GetData("coordTransZTau", m_metric[11]);
+		data.GetData("coordTransTXi", m_metric[12]);
+		data.GetData("coordTransTEta", m_metric[13]);
+		data.GetData("coordTransTZeta", m_metric[14]);
+		data.GetData("coordTransTTau", m_metric[15]);
+		data.GetData("coordTransXiX", m_metric[16]);
+		data.GetData("coordTransXiY", m_metric[17]);
+		data.GetData("coordTransXiZ", m_metric[18]);
+		data.GetData("coordTransXiT", m_metric[19]);
+		data.GetData("coordTransEtaX", m_metric[20]);
+		data.GetData("coordTransEtaY", m_metric[21]);
+		data.GetData("coordTransEtaZ", m_metric[22]);
+		data.GetData("coordTransEtaT", m_metric[23]);
+		data.GetData("coordTransZetaX", m_metric[24]);
+		data.GetData("coordTransZetaY", m_metric[25]);
+		data.GetData("coordTransZetaZ", m_metric[26]);
+		data.GetData("coordTransZetaT", m_metric[27]);
+		data.GetData("coordTransTauX", m_metric[28]);
+		data.GetData("coordTransTauY", m_metric[29]);
+		data.GetData("coordTransTauZ", m_metric[30]);
+		data.GetData("coordTransTauT", m_metric[31]);
+		data.GetData("coordTransJ", m_metric[32]);
+		data.GetData("dt", m_dt);
+		data.GetData("nonPhysical", m_non_physical);
 	}
 
 	void NSSolver::Solve()
@@ -319,17 +276,18 @@ namespace zaran {
 		BoundaryCondition();
 		TimeAdvance();
 		UpdateField();
-		CheckPrimtive();
-		FixPrimtive();
+		// CheckPrimtive();
+		// FixPrimtive();
 	}
 	double NSSolver::ComputeMaxResidual()
 	{
 		double maxRes = 0;
-		auto& rhoRes = *m_Residual[0];
+		auto& rho_res = m_residual[0];
+		int n_node = GetGrid()->GetTotalNodeNum();
 #pragma omp parallel
-		for (int i = 0; i < rhoRes.size(); ++i)
+		for (int i = 0; i < n_node; ++i)
 		{
-			double res = abs(rhoRes[i]);
+			double res = abs(rho_res[i]);
 			if (res > maxRes)
 				maxRes = res;
 		}
@@ -339,18 +297,17 @@ namespace zaran {
 	void NSSolver::BackupField()
 	{
 		GridPtr grid = GetGrid();
-		auto& rho = *m_Primitive[0];
-		auto& u = *m_Primitive[1];
-		auto& v = *m_Primitive[2];
-		auto& w = *m_Primitive[3];
-		auto& p = *m_Primitive[4];
-		FlowSolverParaPtr para = GetPara();
+		FlowSolverPara* para = GetPara();
 		std::string backupFileName = "backup.dat";
 		std::ofstream fout(backupFileName);
-		int n_data = rho.size();
-		for (int iNode = 0; iNode < n_data; ++iNode)
+		int n_node = grid->GetTotalNodeNum();
+		for (int iNode = 0; iNode < n_node; ++iNode)
 		{
-			fout << rho[iNode] << " " << u[iNode] << " " << v[iNode] << " " << w[iNode] << " " << p[iNode] << std::endl;
+			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			{
+				fout << m_prim[iVal][iNode] << " ";
+			}
+			fout << std::endl;
 		}
 		fout.close();
 	}
@@ -380,11 +337,11 @@ namespace zaran {
 	void NSSolver::SnycTimeStepWithGlobal(double& dt)
 	{
 		GridPtr grid = GetGrid();
-		FlowSolverParaPtr para = GetPara();
+		FlowSolverPara* para = GetPara();
 #pragma omp parallel for
 		for (int iNode = 0;iNode < grid->GetTotalNodeNum();++iNode)
 		{
-			(*m_TimeStep)[iNode] = dt;
+			m_dt[iNode] = dt;
 		}
 	}
 
@@ -398,25 +355,19 @@ namespace zaran {
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
-		auto& prim = m_Primitive;
-		auto& cons = m_Conservative;
-		auto& primGradX = m_PrimGradX;
-		auto& primGradY = m_PrimGradY;
-		auto& primGradZ = m_PrimGradZ;
-		auto& limiterCoef = m_LimiterCoef;
 		DVector3D r = nodeCoord[index_right] - nodeCoord[index_left];
 		for (int iVal = 0;iVal < GetNumberOfEquations();++iVal)
 		{
-			value_rec_left[iVal] = (*prim[iVal])[index_left] +
-				0.5 * (*limiterCoef[iVal])[index_left] *
-				(r.x() * (*primGradX[iVal])[index_left] +
-					r.y() * (*primGradY[iVal])[index_left] +
-					r.z() * (*primGradZ[iVal])[index_left]);
-			value_rec_right[iVal] = (*prim[iVal])[index_right] -
-				0.5 * (*limiterCoef[iVal])[index_right] *
-				(r.x() * (*primGradX[iVal])[index_right] +
-					r.y() * (*primGradY[iVal])[index_right] +
-					r.z() * (*primGradZ[iVal])[index_right]);
+			value_rec_left[iVal] = m_prim[iVal][index_left] +
+				0.5 * m_limiter[iVal][index_left] *
+				(r.x() * m_PrimGradX[iVal][index_left] +
+					r.y() * m_PrimGradY[iVal][index_left] +
+					r.z() * m_PrimGradZ[iVal][index_left]);
+			value_rec_right[iVal] = m_prim[iVal][index_right] +
+				0.5 * m_limiter[iVal][index_right] *
+				(r.x() * m_PrimGradX[iVal][index_right] +
+					r.y() * m_PrimGradY[iVal][index_right] +
+					r.z() * m_PrimGradZ[iVal][index_right]);
 		}
 #if 0
 		auto OutputError = [&](int iNode)
@@ -444,8 +395,8 @@ namespace zaran {
 		{
 			for (int iVal = 0;iVal < GetNumberOfEquations();++iVal)
 			{
-				value_rec_left[iVal] = (*prim[iVal])[index_left];
-				value_rec_right[iVal] = (*prim[iVal])[index_right];
+				value_rec_left[iVal] = m_prim[iVal][index_left];
+				value_rec_right[iVal] = m_prim[iVal][index_right];
 			}
 			OutputError(index_left);
 		}
@@ -453,8 +404,8 @@ namespace zaran {
 		{
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
-				value_rec_left[iVal] = (*prim[iVal])[index_left];
-				value_rec_right[iVal] = (*prim[iVal])[index_right];
+				value_rec_left[iVal] = m_prim[iVal][index_left];
+				value_rec_right[iVal] = m_prim[iVal][index_right];
 			}
 			OutputError(index_right);
 		}
@@ -466,17 +417,11 @@ namespace zaran {
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
-		auto& prim = m_Primitive;
-		auto& cons = m_Conservative;
-		auto& primGradX = m_PrimGradX;
-		auto& primGradY = m_PrimGradY;
-		auto& primGradZ = m_PrimGradZ;
-		auto& limiterCoef = m_LimiterCoef;
 		DVector3D r = nodeCoord[index_right] - nodeCoord[index_left];
 		for (int iVal = 0;iVal < GetNumberOfEquations();++iVal)
 		{
-			value_rec_left[iVal] = (*prim[iVal])[index_left];
-			value_rec_right[iVal] = (*prim[iVal])[index_right];
+			value_rec_left[iVal] = m_prim[iVal][index_left];
+			value_rec_right[iVal] = m_prim[iVal][index_right];
 		}
 	}
 
@@ -503,7 +448,7 @@ namespace zaran {
 
 	void NSSolver::CalcPrimGrad()
 	{
-		FlowSolverParaPtr para = GetPara();
+		FlowSolverPara* para = GetPara();
 		if (para->GetGradScheme() == GradScheme::wls)
 		{
 			CalcGradWLS();
@@ -528,9 +473,6 @@ namespace zaran {
 		auto& nodeTopo = grid->GetNodeTopo();
 		BoundaryMapPtr& boundaryMapPtr = grid->GetBoundaryMap();
 		auto& boundaryMap = boundaryMapPtr->GetBoundaryMap();
-		auto& primGradX = m_PrimGradX;
-		auto& primGradY = m_PrimGradY;
-		auto& primGradZ = m_PrimGradZ;
 		for (auto& boundary : boundaryMap)
 		{
 			auto& boundName = boundary.first;
@@ -547,12 +489,12 @@ namespace zaran {
 				// 	ZaranLog::info("Boundary {} has {} neighbors", boundIndex, boundNeighborNum);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
-					(*primGradX[iVal])[boundIndex] = 0;
-					(*primGradY[iVal])[boundIndex] = 0;
-					(*primGradZ[iVal])[boundIndex] = 0;
-					// (*primGradX[iVal])[boundIndex] = (*primGradX[iVal])[innerIndex];
-					// (*primGradY[iVal])[boundIndex] = (*primGradY[iVal])[innerIndex];
-					// (*primGradZ[iVal])[boundIndex] = (*primGradZ[iVal])[innerIndex];
+					m_PrimGradX[iVal][boundIndex] = 0;
+					m_PrimGradY[iVal][boundIndex] = 0;
+					m_PrimGradZ[iVal][boundIndex] = 0;
+					// m_PrimGradX[iVal][boundIndex] = m_PrimGradX[iVal][innerIndex];
+					// m_PrimGradY[iVal][boundIndex] = m_PrimGradY[iVal][innerIndex];
+					// m_PrimGradZ[iVal][boundIndex] = m_PrimGradZ[iVal][innerIndex];
 				}
 			}
 		}
@@ -561,14 +503,9 @@ namespace zaran {
 	void NSSolver::RungeKutta()
 	{
 		GridPtr grid = GetGrid();
-		FlowSolverParaPtr para = GetPara();
-		const DArray& rkCoef = para->GetRKCoef();
-		int rkStage = rkCoef.size();
-		auto& cons = m_Conservative;
-		auto& cons_RK = m_ConservativeRK;
-		auto& dt = *m_TimeStep;
-		auto& res = m_Residual;
-		auto& coordTrans = m_CoordTrans;
+		FlowSolverPara* para = GetPara();
+		const DArray& rk_coef = para->GetRKCoef();
+		int rkStage = rk_coef.size();
 		auto& nodeTopo = grid->GetNodeTopo();
 		int nInnerNode = grid->GetInnerNodeNum();
 		int nBoundNode = grid->GetBoundNodeNum();
@@ -580,12 +517,7 @@ namespace zaran {
 			{
 				for (int iVal = 0; iVal < 5; ++iVal)
 				{
-					auto& currentCons = (*cons[iVal])[iNode];
-					auto& currentCons_RK = (*cons_RK[iVal])[iNode];
-					auto& currentDt = dt[iNode];
-					auto& currentRes = (*res[iVal])[iNode];
-					currentCons = currentCons - rkCoef[iStage] * currentDt * currentRes * (*coordTrans[32])[iNode];
-
+					m_cons[iVal][iNode] = m_cons[iVal][iNode] - rk_coef[iStage] * m_dt[iNode] * m_residual[iVal][iNode] * m_metric[32][iNode];
 				}
 			}
 		}
@@ -595,20 +527,11 @@ namespace zaran {
 	{
 		double gamma = 1.4;
 		GridPtr grid = GetGrid();
-		auto& rho = *m_Primitive[0];
-		auto& u = *m_Primitive[1];
-		auto& v = *m_Primitive[2];
-		auto& w = *m_Primitive[3];
-		auto& p = *m_Primitive[4];
-		auto& cons0 = *m_Conservative[0];
-		auto& cons1 = *m_Conservative[1];
-		auto& cons2 = *m_Conservative[2];
-		auto& cons3 = *m_Conservative[3];
-		auto& cons4 = *m_Conservative[4];
-		int n_data = rho.size();
+		int n_node = grid->GetTotalNodeNum();
 #pragma omp parallel for
-		for (int iNode = 0; iNode < n_data; ++iNode)
-			Prim2Cons(rho[iNode], u[iNode], v[iNode], w[iNode], p[iNode], cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode]);
+		for (int iNode = 0; iNode < n_node; ++iNode)
+			Prim2Cons(m_prim[0][iNode], m_prim[1][iNode], m_prim[2][iNode], m_prim[3][iNode], m_prim[4][iNode],
+				m_cons[0][iNode], m_cons[1][iNode], m_cons[2][iNode], m_cons[3][iNode], m_cons[4][iNode]);
 	}
 
 	void NSSolver::Prim2Cons(double& rho, double& u, double& v, double& w, double& p, double& cons0, double& cons1, double& cons2, double& cons3, double& cons4)
@@ -626,20 +549,12 @@ namespace zaran {
 	{
 
 		GridPtr grid = GetGrid();
-		auto& rho = *m_Primitive[0];
-		auto& u = *m_Primitive[1];
-		auto& v = *m_Primitive[2];
-		auto& w = *m_Primitive[3];
-		auto& p = *m_Primitive[4];
-		auto& cons0 = *m_Conservative[0];
-		auto& cons1 = *m_Conservative[1];
-		auto& cons2 = *m_Conservative[2];
-		auto& cons3 = *m_Conservative[3];
-		auto& cons4 = *m_Conservative[4];
+		int n_node = grid->GetTotalNodeNum();
 #pragma omp parallel for
-		for (int iNode = 0; iNode < rho.size(); ++iNode)
+		for (int iNode = 0; iNode < n_node; ++iNode)
 		{
-			Cons2Prim(cons0[iNode], cons1[iNode], cons2[iNode], cons3[iNode], cons4[iNode], rho[iNode], u[iNode], v[iNode], w[iNode], p[iNode]);
+			Cons2Prim(m_cons[0][iNode], m_cons[1][iNode], m_cons[2][iNode], m_cons[3][iNode], m_cons[4][iNode],
+				m_prim[0][iNode], m_prim[1][iNode], m_prim[2][iNode], m_prim[3][iNode], m_prim[4][iNode]);
 		}
 	}
 
@@ -674,49 +589,29 @@ namespace zaran {
 
 	void NSSolver::InletBC(Boundary& bound)
 	{
-		FlowSolverParaPtr para = GetPara();
+		FlowSolverPara* para = GetPara();
 		int boundIndex = bound.GetIndex();
-		auto& rho = *m_Primitive[0];
-		auto& u = *m_Primitive[1];
-		auto& v = *m_Primitive[2];
-		auto& w = *m_Primitive[3];
-		auto& p = *m_Primitive[4];
-		auto& cons0 = *m_Conservative[0];
-		auto& cons1 = *m_Conservative[1];
-		auto& cons2 = *m_Conservative[2];
-		auto& cons3 = *m_Conservative[3];
-		auto& cons4 = *m_Conservative[4];
-
-		rho[boundIndex] = para->GetInflowDensity();
-		u[boundIndex] = para->GetInflowVelocityX();
-		v[boundIndex] = para->GetInflowVelocityY();
-		w[boundIndex] = para->GetInflowVelocityZ();
-		p[boundIndex] = para->GetInflowPressure();
-		Prim2Cons(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex],
-			cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
+		m_prim[0][boundIndex] = para->GetInflowDensity();
+		m_prim[1][boundIndex] = para->GetInflowVelocityX();
+		m_prim[2][boundIndex] = para->GetInflowVelocityY();
+		m_prim[3][boundIndex] = para->GetInflowVelocityZ();
+		m_prim[4][boundIndex] = para->GetInflowPressure();
+		Prim2Cons(m_prim[0][boundIndex], m_prim[1][boundIndex], m_prim[2][boundIndex], m_prim[3][boundIndex], m_prim[4][boundIndex],
+			m_cons[0][boundIndex], m_cons[1][boundIndex], m_cons[2][boundIndex], m_cons[3][boundIndex], m_cons[4][boundIndex]);
 	}
 
 	void NSSolver::OutletBC(Boundary& bound)
 	{
-		auto& rho = *m_Primitive[0];
-		auto& u = *m_Primitive[1];
-		auto& v = *m_Primitive[2];
-		auto& w = *m_Primitive[3];
-		auto& p = *m_Primitive[4];
-		auto& cons0 = *m_Conservative[0];
-		auto& cons1 = *m_Conservative[1];
-		auto& cons2 = *m_Conservative[2];
-		auto& cons3 = *m_Conservative[3];
-		auto& cons4 = *m_Conservative[4];
 		int boundIndex = bound.GetIndex();
 		int innerIndex = bound.GetInnerIndex();
-		rho[boundIndex] = rho[innerIndex];
-		u[boundIndex] = u[innerIndex];
-		v[boundIndex] = v[innerIndex];
-		w[boundIndex] = w[innerIndex];
-		p[boundIndex] = p[innerIndex];
-		Prim2Cons(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex],
-			cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
+		m_prim[0][boundIndex] = m_prim[0][innerIndex];
+		m_prim[1][boundIndex] = m_prim[1][innerIndex];
+		m_prim[2][boundIndex] = m_prim[2][innerIndex];
+		m_prim[3][boundIndex] = m_prim[3][innerIndex];
+		m_prim[4][boundIndex] = m_prim[4][innerIndex];
+
+		Prim2Cons(m_prim[0][boundIndex], m_prim[1][boundIndex], m_prim[2][boundIndex], m_prim[3][boundIndex], m_prim[4][boundIndex],
+			m_cons[0][boundIndex], m_cons[1][boundIndex], m_cons[2][boundIndex], m_cons[3][boundIndex], m_cons[4][boundIndex]);
 
 
 	}
@@ -725,29 +620,19 @@ namespace zaran {
 	{
 		int& innerIndex = bound.GetInnerIndex();
 		int boundIndex = bound.GetIndex();
-		auto& rho = *m_Primitive[0];
-		auto& u = *m_Primitive[1];
-		auto& v = *m_Primitive[2];
-		auto& w = *m_Primitive[3];
-		auto& p = *m_Primitive[4];
-		auto& cons0 = *m_Conservative[0];
-		auto& cons1 = *m_Conservative[1];
-		auto& cons2 = *m_Conservative[2];
-		auto& cons3 = *m_Conservative[3];
-		auto& cons4 = *m_Conservative[4];
 		auto& boundNorm = bound.GetNorm();
-		rho[boundIndex] = rho[innerIndex];
-		u[boundIndex] = u[innerIndex];
-		v[boundIndex] = v[innerIndex];
-		w[boundIndex] = w[innerIndex];
-		p[boundIndex] = p[innerIndex];
-		DVector3D innerVel(u[innerIndex], v[innerIndex], w[innerIndex]);
+		m_prim[0][boundIndex] = m_prim[0][innerIndex];
+		m_prim[1][boundIndex] = m_prim[1][innerIndex];
+		m_prim[2][boundIndex] = m_prim[2][innerIndex];
+		m_prim[3][boundIndex] = m_prim[3][innerIndex];
+		m_prim[4][boundIndex] = m_prim[4][innerIndex];
+		DVector3D innerVel(m_prim[1][innerIndex], m_prim[2][innerIndex], m_prim[3][innerIndex]);
 		DVector3D boundVel = innerVel - (innerVel.dot(boundNorm)) * boundNorm / (boundNorm.norm() * boundNorm.norm());
-		u[boundIndex] = boundVel(0);
-		v[boundIndex] = boundVel(1);
-		w[boundIndex] = boundVel(2);
-		Prim2Cons(rho[boundIndex], u[boundIndex], v[boundIndex], w[boundIndex], p[boundIndex],
-			cons0[boundIndex], cons1[boundIndex], cons2[boundIndex], cons3[boundIndex], cons4[boundIndex]);
+		m_prim[1][boundIndex] = boundVel.x();
+		m_prim[2][boundIndex] = boundVel.y();
+		m_prim[3][boundIndex] = boundVel.z();
+		Prim2Cons(m_prim[0][boundIndex], m_prim[1][boundIndex], m_prim[2][boundIndex], m_prim[3][boundIndex], m_prim[4][boundIndex],
+			m_cons[0][boundIndex], m_cons[1][boundIndex], m_cons[2][boundIndex], m_cons[3][boundIndex], m_cons[4][boundIndex]);
 	}
 
 	void NSSolver::CalcLimiter()
@@ -783,11 +668,6 @@ namespace zaran {
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
-		auto& prim = m_Primitive;
-		auto& limiterCoef = m_LimiterCoef;
-		auto& primGradX = m_PrimGradX;
-		auto& primGradY = m_PrimGradY;
-		auto& primGradZ = m_PrimGradZ;
 		int nTotalNodeNum = grid->GetTotalNodeNum();
 		double maxVal, minVal;
 		double eps = 1e-6;
@@ -800,23 +680,23 @@ namespace zaran {
 			auto& neighborNode = nodeNeighbor[iNode];
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
-				maxVal = (*prim[iVal])[iNode];
-				minVal = (*prim[iVal])[iNode];
+				maxVal = m_prim[iVal][iNode];
+				minVal = m_prim[iVal][iNode];
 				for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
 				{
-					maxVal = Max(maxVal, (*prim[iVal])[neighborNode[iNeighbor]]);
-					minVal = Min(minVal, (*prim[iVal])[neighborNode[iNeighbor]]);
+					maxVal = Max(maxVal, m_prim[iVal][neighborNode[iNeighbor]]);
+					minVal = Min(minVal, m_prim[iVal][neighborNode[iNeighbor]]);
 				}
 				eps = venkatCoeff * (maxVal - minVal);
 				eps = eps * eps + SMALL_NUMBER;
 				//eps = venkatCoeff * (maxVal - minVal) + SMALL_NUMBER;
-				double gradx = (*primGradX[iVal])[iNode];
-				double grady = (*primGradY[iVal])[iNode];
-				double gradz = (*primGradZ[iVal])[iNode];
-				double deltaMax = maxVal - (*prim[iVal])[iNode];
-				double deltaMin = minVal - (*prim[iVal])[iNode];
+				double gradx = m_PrimGradX[iVal][iNode];
+				double grady = m_PrimGradY[iVal][iNode];
+				double gradz = m_PrimGradZ[iVal][iNode];
+				double deltaMax = maxVal - m_prim[iVal][iNode];
+				double deltaMin = minVal - m_prim[iVal][iNode];
 				double tempCoef = LARGE_NUMBER;
-				(*limiterCoef[iVal])[iNode] = LARGE_NUMBER;
+				m_limiter[iVal][iNode] = LARGE_NUMBER;
 				for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
 				{
 					auto current2Neighbor = nodeCoord[neighborNode[iNeighbor]] - nodeCoord[iNode];
@@ -824,17 +704,17 @@ namespace zaran {
 					delta2 *= 0.5;
 					if (delta2 > 0)
 					{
-						tempCoef = LimiterVK(maxVal - (*prim[iVal])[iNode], delta2, eps);
+						tempCoef = LimiterVK(maxVal - m_prim[iVal][iNode], delta2, eps);
 					}
 					else if (delta2 < 0)
 					{
-						tempCoef = LimiterVK(minVal - (*prim[iVal])[iNode], delta2, eps);
+						tempCoef = LimiterVK(minVal - m_prim[iVal][iNode], delta2, eps);
 					}
 					else
 					{
 						tempCoef = 1.0;
 					}
-					(*limiterCoef[iVal])[iNode] = Min((*limiterCoef[iVal])[iNode], tempCoef);
+					m_limiter[iVal][iNode] = Min(m_limiter[iVal][iNode], tempCoef);
 				}
 			}
 		}
@@ -846,11 +726,6 @@ namespace zaran {
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
-		auto& prim = m_Primitive;
-		auto& limiterCoef = m_LimiterCoef;
-		auto& primGradX = m_PrimGradX;
-		auto& primGradY = m_PrimGradY;
-		auto& primGradZ = m_PrimGradZ;
 		int nTotalNodeNum = grid->GetTotalNodeNum();
 		double maxVal, minVal;
 #pragma omp parallel for private(maxVal, minVal)
@@ -861,20 +736,20 @@ namespace zaran {
 			auto& neighborNode = nodeNeighbor[iNode];
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
-				maxVal = (*prim[iVal])[iNode];
-				minVal = (*prim[iVal])[iNode];
+				maxVal = m_prim[iVal][iNode];
+				minVal = m_prim[iVal][iNode];
 				for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
 				{
-					maxVal = Max(maxVal, (*prim[iVal])[neighborNode[iNeighbor]]);
-					minVal = Min(minVal, (*prim[iVal])[neighborNode[iNeighbor]]);
+					maxVal = Max(maxVal, m_prim[iVal][neighborNode[iNeighbor]]);
+					minVal = Min(minVal, m_prim[iVal][neighborNode[iNeighbor]]);
 				}
-				double gradx = (*primGradX[iVal])[iNode];
-				double grady = (*primGradY[iVal])[iNode];
-				double gradz = (*primGradZ[iVal])[iNode];
-				double deltaMax = maxVal - (*prim[iVal])[iNode];
-				double deltaMin = minVal - (*prim[iVal])[iNode];
+				double gradx = m_PrimGradX[iVal][iNode];
+				double grady = m_PrimGradY[iVal][iNode];
+				double gradz = m_PrimGradZ[iVal][iNode];
+				double deltaMax = maxVal - m_prim[iVal][iNode];
+				double deltaMin = minVal - m_prim[iVal][iNode];
 				double tempCoef = LARGE_NUMBER;
-				(*limiterCoef[iVal])[iNode] = LARGE_NUMBER;
+				m_limiter[iVal][iNode] = LARGE_NUMBER;
 				for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
 				{
 					auto current2Neighbor = nodeCoord[neighborNode[iNeighbor]] - nodeCoord[iNode];
@@ -882,17 +757,17 @@ namespace zaran {
 					delta2 *= 0.5;
 					if (delta2 > 0)
 					{
-						tempCoef = LimiterBarth(maxVal - (*prim[iVal])[iNode], delta2);
+						tempCoef = LimiterBarth(maxVal - m_prim[iVal][iNode], delta2);
 					}
 					else if (delta2 < 0)
 					{
-						tempCoef = LimiterBarth(minVal - (*prim[iVal])[iNode], delta2);
+						tempCoef = LimiterBarth(minVal - m_prim[iVal][iNode], delta2);
 					}
 					else
 					{
 						tempCoef = 1.0;
 					}
-					(*limiterCoef[iVal])[iNode] = Min((*limiterCoef[iVal])[iNode], tempCoef);
+					m_limiter[iVal][iNode] = Min(m_limiter[iVal][iNode], tempCoef);
 				}
 			}
 		}
@@ -902,7 +777,7 @@ namespace zaran {
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
-		auto& limiterCoef = m_LimiterCoef;
+		auto& limiterCoef = m_limiter;
 		int nTotalNodeNum = grid->GetTotalNodeNum();
 		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 		{
@@ -910,7 +785,7 @@ namespace zaran {
 				continue;
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
-				(*limiterCoef[iVal])[iNode] = 1.0;
+				m_limiter[iVal][iNode] = 1.0;
 			}
 		}
 	}
@@ -921,11 +796,6 @@ namespace zaran {
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
-		auto& prim = m_Primitive;
-		auto& limiterCoef = m_LimiterCoef;
-		auto& primGradX = m_PrimGradX;
-		auto& primGradY = m_PrimGradY;
-		auto& primGradZ = m_PrimGradZ;
 		int nTotalNodeNum = grid->GetTotalNodeNum();
 		double maxVal, minVal;
 		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
@@ -934,7 +804,7 @@ namespace zaran {
 				continue;
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
-				(*limiterCoef[iVal])[iNode] = 0.0;
+				m_limiter[iVal][iNode] = 1.0;
 			}
 		}
 	}
@@ -943,7 +813,6 @@ namespace zaran {
 		auto& grid = GetGrid();
 		BoundaryMapPtr& boundaryMapPtr = grid->GetBoundaryMap();
 		auto& boundaryMap = boundaryMapPtr->GetBoundaryMap();
-		auto& limiterCoef = m_LimiterCoef;
 		for (auto& boundary : boundaryMap)
 		{
 			auto& boundName = boundary.first;
@@ -956,8 +825,7 @@ namespace zaran {
 				auto& innerIndex = bound[iBound].GetInnerIndex();
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
-					(*limiterCoef[iVal])[boundIndex] = 0;
-					//(*limiterCoef[iVal])[boundIndex] = (*limiterCoef[iVal])[innerIndex];
+					m_limiter[iVal][boundIndex] = 0.0;
 				}
 			}
 		}
@@ -969,9 +837,6 @@ namespace zaran {
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
-		auto& prim = m_Primitive;
-		auto& res = m_Residual;
-		auto& limiterCoef = m_LimiterCoef;
 		int nTotalNodeNum = grid->GetTotalNodeNum();
 		int equation_num = GetNumberOfEquations();
 		DArray ave_prim(equation_num, 0.0);
@@ -980,10 +845,10 @@ namespace zaran {
 		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 		{
 			bool exist_nonphysical = false;
-			(*m_non_physical)[iNode] = -1.0;
+			m_non_physical[iNode] = 0.0;
 			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
 				continue;
-			if ((*prim[0])[iNode] < 0 || (*prim[4])[iNode] < 0)
+			if (m_prim[0][iNode] < 0 || m_prim[4][iNode] < 0)
 			{
 				exist_nonphysical = true;
 			}
@@ -991,7 +856,7 @@ namespace zaran {
 			{
 				for (int iVal = 0; iVal < equation_num; ++iVal)
 				{
-					if (isnan((*prim[iVal])[iNode]) || isinf((*prim[iVal])[iNode]))
+					if (isnan(m_prim[iVal][iNode]) || isinf(m_prim[iVal][iNode]))
 					{
 						exist_nonphysical = true;
 						break;
@@ -1000,16 +865,17 @@ namespace zaran {
 			}
 			if (exist_nonphysical)
 			{
-				(*m_non_physical)[iNode] = 1.0;
+				m_non_physical[iNode] = 1.0;
 				nonphysical_node_num++;
-				Log::info("Non-physical Node: {}, neighbor num: {}, prim: {},{},{},{},{}", iNode, nodeNeighbor[iNode].size(), (*prim[0])[iNode], (*prim[1])[iNode], (*prim[2])[iNode], (*prim[3])[iNode], (*prim[4])[iNode]);
+				Log::info("Non-physical Node: {}, neighbor num: {}, prim: {},{},{},{},{}", iNode, nodeNeighbor[iNode].size(), m_prim[0][iNode], m_prim[1][iNode], m_prim[2][iNode], m_prim[3][iNode], m_prim[4][iNode]);
 				Log::info("Non-physical Node: {}, coord: {},{},{},", iNode, nodeCoord[iNode].x(), nodeCoord[iNode].y(), nodeCoord[iNode].z());
+				exit(0);
 			}
 		}
 		if (nonphysical_node_num > 0)
 		{
 			Log::warn("Non-physical Node Num: {}", nonphysical_node_num);
-			auto& para = GetPara();
+			FlowSolverPara* para = GetPara();
 			double cfl = para->GetCflNumber();
 			cfl = cfl / 5.0;
 			para->SetCflNumber(cfl);
@@ -1017,7 +883,7 @@ namespace zaran {
 		}
 		else
 		{
-			auto& para = GetPara();
+			FlowSolverPara* para = GetPara();
 			double cfl = para->GetCflNumber();
 			double cfl_max = GlobalData::GetDouble("cflNumber");
 			if (cfl < cfl_max)
@@ -1044,9 +910,6 @@ namespace zaran {
 		auto& node_type = node_topo->GetType();
 		auto& node_coord = node_topo->GetCoordinate();
 		auto& node_neighbor = node_topo->GetNeighborCloud();
-		auto& prim = m_Primitive;
-		auto& res = m_Residual;
-		auto& limiterCoef = m_LimiterCoef;
 		int total_node_num = grid->GetTotalNodeNum();
 		int equation_num = GetNumberOfEquations();
 		DArray weight, distance;
@@ -1057,13 +920,13 @@ namespace zaran {
 		{
 			if (node_type[iNode] != NodeType::inner && node_type[iNode] != NodeType::hole)
 				continue;
-			if ((*m_non_physical)[iNode] < 0)
+			if (m_non_physical[iNode] < 0)
 				continue;
 			physical_neighbor.clear();
 			auto& neighborNode = node_neighbor[iNode];
 			for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
 			{
-				if ((*m_non_physical)[neighborNode[iNeighbor]] > 0)
+				if (m_non_physical[neighborNode[iNeighbor]] > 0)
 					continue;
 				physical_neighbor.push_back(neighborNode[iNeighbor]);
 			}
@@ -1072,49 +935,50 @@ namespace zaran {
 			sum = 0;
 			for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
 			{
-				if ((*m_non_physical)[physical_neighbor[iNeighbor]] > 0)
+				if (m_non_physical[physical_neighbor[iNeighbor]] > 0)
 					continue;
 				distance[iNeighbor] = (node_coord[physical_neighbor[iNeighbor]] - node_coord[iNode]).norm();
 				sum += 1.0 / distance[iNeighbor];
 			}
 			for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
 			{
-				if ((*m_non_physical)[physical_neighbor[iNeighbor]] > 0)
+				if (m_non_physical[physical_neighbor[iNeighbor]] > 0)
 					continue;
 				weight[iNeighbor] = 1.0 / (distance[iNeighbor] * sum);
 			}
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
-				if (isnan((*prim[iVal])[iNode]) || isinf((*prim[iVal])[iNode]))
+				if (isnan(m_prim[iVal][iNode]) || isinf(m_prim[iVal][iNode]))
 				{
-					(*prim[iVal])[iNode] = 0;
+					m_prim[iVal][iNode] = 0;
 					for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
 					{
-						if ((*m_non_physical)[physical_neighbor[iNeighbor]] > 0)
+						if (m_non_physical[physical_neighbor[iNeighbor]] > 0)
 							continue;
-						(*prim[iVal])[iNode] += (*prim[iVal])[physical_neighbor[iNeighbor]] * weight[iNeighbor];
+						m_prim[iVal][iNode] += m_prim[iVal][physical_neighbor[iNeighbor]] * weight[iNeighbor];
 					}
 				}
 			}
-			if ((*prim[0])[iNode] < 0)
-				(*prim[0])[iNode] = 0;
+			if (m_prim[0][iNode] < 0)
+				m_prim[0][iNode] = 0;
 			for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
 			{
-				if ((*m_non_physical)[physical_neighbor[iNeighbor]] > 0)
+				if (m_non_physical[physical_neighbor[iNeighbor]] > 0)
 					continue;
-				(*prim[0])[iNode] += (*prim[0])[physical_neighbor[iNeighbor]] * weight[iNeighbor];
+				m_prim[0][iNode] += m_prim[0][physical_neighbor[iNeighbor]] * weight[iNeighbor];
+
 			}
-			if ((*prim[4])[iNode] < 0)
-				(*prim[4])[iNode] = 0;
+			if (m_prim[4][iNode] < 0)
+				m_prim[4][iNode] = 0;
 			for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
 			{
-				if ((*m_non_physical)[physical_neighbor[iNeighbor]] > 0)
+				if (m_non_physical[physical_neighbor[iNeighbor]] > 0)
 					continue;
-				(*prim[4])[iNode] += (*prim[4])[physical_neighbor[iNeighbor]] * weight[iNeighbor];
+				m_prim[4][iNode] += m_prim[4][physical_neighbor[iNeighbor]] * weight[iNeighbor];
 			}
-			Prim2Cons((*prim[0])[iNode], (*prim[1])[iNode], (*prim[2])[iNode], (*prim[3])[iNode], (*prim[4])[iNode],
-				(*m_Conservative[0])[iNode], (*m_Conservative[1])[iNode], (*m_Conservative[2])[iNode], (*m_Conservative[3])[iNode], (*m_Conservative[4])[iNode]);
-			(*res[0])[iNode] = 0;
+			Prim2Cons(m_prim[0][iNode], m_prim[1][iNode], m_prim[2][iNode], m_prim[3][iNode], m_prim[4][iNode],
+				m_cons[0][iNode], m_cons[1][iNode], m_cons[2][iNode], m_cons[3][iNode], m_cons[4][iNode]);
+			m_residual[0][iNode] = 0;
 		}
 
 	}

@@ -19,7 +19,7 @@ namespace zaran
 	public:
 		Solver_NS_2D_Struct() {}
 		~Solver_NS_2D_Struct() {}
-		virtual void InitField()override;
+		virtual void InitData()override;
 		virtual void CalcMetric()override;
 		// 使用最小二乘求梯度
 		virtual void CalcGradWLS()override;

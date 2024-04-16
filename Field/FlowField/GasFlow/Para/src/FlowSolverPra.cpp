@@ -10,7 +10,8 @@ FlowSolverPara::FlowSolverPara()
 
 FlowSolverPara::~FlowSolverPara()
 {
-
+	Log::info("FlowSolverPara is destroyed!");
+	exit(0);
 }
 
 void FlowSolverPara::Init()
@@ -25,15 +26,16 @@ void FlowSolverPara::Init()
 	double inflow_attack_angle = GlobalData::GetDouble("inflowAttackAngle");
 	double inflow_slide_angle = GlobalData::GetDouble("inflowSlideAngle");
 	PerfectGas gas(inflow_Mw, inflow_gamma, m_dimensionless);
-	double inflow_sonice_speed = gas.GetSonicSpeed(m_dimensionless.GetTempDL(inflow_temperature));
-	m_inflow_velocity_x = inflow_Ma * inflow_sonice_speed * cos(inflow_attack_angle) * cos(inflow_slide_angle);
-	m_inflow_velocity_y = inflow_Ma * inflow_sonice_speed * sin(inflow_attack_angle) * cos(inflow_slide_angle);
-	m_inflow_velocity_z = inflow_Ma * inflow_sonice_speed * sin(inflow_slide_angle);
+	double inflow_sonic_speed = gas.GetSonicSpeed(m_dimensionless.GetTempDL(inflow_temperature));
+	m_inflow_velocity_x = inflow_Ma * inflow_sonic_speed * cos(inflow_attack_angle) * cos(inflow_slide_angle);
+	m_inflow_velocity_y = inflow_Ma * inflow_sonic_speed * sin(inflow_attack_angle) * cos(inflow_slide_angle);
+	m_inflow_velocity_z = inflow_Ma * inflow_sonic_speed * sin(inflow_slide_angle);
 	m_inflow_density =m_dimensionless.GetDensityDL(inflow_density);
 	m_inflow_pressure =gas.GetPressureFromDensityAndTemperature(m_inflow_density, m_dimensionless.GetTempDL(inflow_temperature));
 	m_init_field_type = GlobalData::GetInt("initFieldType");
 	m_is_viscous = GlobalData::GetInt("isViscous");
 	m_cfl = GlobalData::GetDouble("cflNumber");
+	Log::info("Inflow Parameters: Density: {}, Velocity: ({},{},{}), Pressure: {}", m_inflow_density, m_inflow_velocity_x, m_inflow_velocity_y, m_inflow_velocity_z, m_inflow_pressure);
 	int rkStage = GlobalData::GetInt("rkStage");
 	if (rkStage == 1)
 	{
@@ -162,7 +164,7 @@ void FlowSolverPara::SetLimiterType(const LimiterType& limiterType)
 	n_limiter_type = limiterType;
 }
 
-const int& zaran::FlowSolverPara::GetInflowDensity() const
+const double& zaran::FlowSolverPara::GetInflowDensity() const
 {
 	return m_inflow_density;
 }

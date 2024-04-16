@@ -14,14 +14,14 @@
 #include "flowsolverpara.h"
 namespace zaran
 {
-	using FlowSolverParaPtr = Ptr<FlowSolverPara>;
+	/// @brief 流场求解器基类
 	class FlowSolver :public FieldSolver
 	{
 	public:
-		FlowSolver() {};
-		virtual ~FlowSolver() {};
+		FlowSolver();
+		virtual ~FlowSolver();
 	public:
-		void InitField() override;
+		void InitData() override;
 		void InitSolver() override;
 		// 计算时间步长
 		virtual void CalcTimeStep() = 0;
@@ -37,7 +37,7 @@ namespace zaran
 		//将残差归零
 		void ZeroResidual();
 		//返回当前求解器的参数
-		FlowSolverParaPtr GetPara();
+		FlowSolverPara* GetPara();
 		//从网格中取数据，为了防止每次直接使用数据名称
 	public:
 		// 时间推进
@@ -45,13 +45,12 @@ namespace zaran
 		// 计算变量梯度
 		virtual void CalcPrimGrad() = 0;
 	protected:
-		Array<DArray*> m_Primitive;
-		Array<DArray*> m_Conservative;
-		Array<DArray*> m_CoordTrans;
-		DArray* m_TimeStep;
-		Array<DArray*> m_Residual;
-		Array<DArray*> m_LimiterCoef;
-		Array<DArray*> m_ConservativeRK;// 用于存储Runge-Kutta的中间量
-		DArray* m_non_physical;
+		double** m_prim;
+		double**m_cons;
+		double** m_metric;
+		double* m_dt;
+		double** m_residual;
+		double** m_limiter;
+		double* m_non_physical;
 	};
 }

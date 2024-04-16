@@ -32,7 +32,6 @@ void Controller::Initialize()
     {
         m_field[iField]->GetSolver()->Init();
     }
-    SaveFieldData();
 }
 void Controller::SaveWallNode()
 {
@@ -134,14 +133,16 @@ void zaran::Controller::CalcResidual()
         auto& currentSolver = std::dynamic_pointer_cast<FlowSolver>(m_field[iField]->GetSolver());
         auto& currentGrid = m_field[iField]->GetGrid();
         auto& fieldData = m_field[iField]->GetFieldData();
-        auto& rho = fieldData->GetData("rho");
-        auto& res0 = fieldData->GetData("res0");
+        double* rho, * res0;
+        fieldData->GetData("rho", rho);
+        fieldData->GetData("res0", res0);
+        int n_data;
+        fieldData->GetDataSize("rho", n_data);
         auto& nodeTopo = currentGrid->GetNodeTopo();
         auto& nodeCoord = nodeTopo->GetCoordinate();
         auto& nodeType = nodeTopo->GetType();
         double maxResidual = 0.0;
         double aveResidual = 0.0;
-        int n_data = rho.size();
 #pragma omp parallel for reduction(max:maxResidual) reduction(+:aveResidual)
         for (int iNode = 0;iNode < n_data;++iNode)
         {

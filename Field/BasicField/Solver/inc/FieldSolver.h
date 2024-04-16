@@ -24,18 +24,22 @@ namespace zaran
 		NS_ZaRan_2D,
 		NS_ZaRan_3D
 	};
+	/// @brief 场求解器基类
 	class FieldSolver :public Solver
 	{
 	public:
-		// 初始化流场
-		virtual void InitField() = 0;
+		FieldSolver() {}
+		virtual ~FieldSolver() {}
+	public:
+		// 初始化流场数据
+		virtual void InitData() = 0;
 		// 边界处理
 		virtual void BoundaryCondition() = 0;
-		// 生成场数据
-		virtual void CreateFieldData() = 0;
-		// 注册场数据
+		// 生成场数据, 开辟内存
+		virtual void CreateData() = 0;
+		// 注册场数据, 根据求解器类型对场数据分类注册
 		virtual void RegisterFieldData() = 0;
-
+		// 更新场数据, 根据迭代中间结果更新场数据
 		virtual void UpdateField() = 0;
 
 		// 获取求解器求解方程的个数

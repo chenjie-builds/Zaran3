@@ -3,17 +3,12 @@
 #include"MathBasic.h"
 namespace zaran
 {
-	void Solver_NS_2D_Struct::InitField()
+	void Solver_NS_2D_Struct::InitData()
 	{
 		GridPtr grid = GetGrid();
-		auto& rho = *m_Primitive[0];
-		auto& u = *m_Primitive[1];
-		auto& v = *m_Primitive[2];
-		auto& w = *m_Primitive[3];
-		auto& p = *m_Primitive[4];
 		auto& NodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = NodeTopo->GetCoordinate();
-		FlowSolverParaPtr para = GetPara();
+		FlowSolverPara* para = GetPara();
 		int initType = para->GetInitFieldType();
 		double prim_init[5];
 		prim_init[0] = para->GetInflowDensity();
@@ -35,19 +30,20 @@ namespace zaran
 			y = nodeCoord[iNode].y();
 			if (x >= 0.07 && y <= x * tan(theta) - 0.07 * tan(theta))
 			{
-				rho[iNode] = 1.4;
-				u[iNode] = 0.0;
-				v[iNode] = 0.0;
-				w[iNode] = 0.0;
-				p[iNode] = 1.0;
+				m_prim[0][iNode] = 1.4;
+				m_prim[1][iNode] = 0.0;
+				m_prim[2][iNode] = 0.0;
+				m_prim[3][iNode] = 0.0;
+				m_prim[4][iNode] = 1.0;
+
 			}
 			else
 			{
-				rho[iNode] = 5.4;
-				u[iNode] = 2.22222 * sin(theta);
-				v[iNode] = -2.22222 * cos(theta);
-				w[iNode] = 0.0;
-				p[iNode] = 10.33333;
+				m_prim[0][iNode] = 5.4;
+				m_prim[1][iNode] = 2.22222 * sin(theta);
+				m_prim[2][iNode] = -2.22222 * cos(theta);
+				m_prim[3][iNode] = 0.0;
+				m_prim[4][iNode] = 10.33333;
 			}
 		}
 		Prim2Cons();
@@ -64,7 +60,6 @@ namespace zaran
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeType = nodeTopo->GetType();
-		auto& coordTransCoef = m_CoordTrans;
 		CoordTrans coordTrans;
 		for (int j = js; j < je; j++)
 		{
@@ -72,39 +67,39 @@ namespace zaran
 			{
 				iNode = NodeIndex(i, j);
 				coordTrans.CalcCoordTrans(int(grid->GetDimension()), nodeCoord[NodeIndex(i + 1, j)], nodeCoord[NodeIndex(i - 1, j)], nodeCoord[NodeIndex(i, j + 1)], nodeCoord[NodeIndex(i, j - 1)]);
-				(*coordTransCoef[0])[iNode] = coordTrans.GetX()[0];
-				(*coordTransCoef[1])[iNode] = coordTrans.GetX()[1];
-				(*coordTransCoef[2])[iNode] = coordTrans.GetX()[2];
-				(*coordTransCoef[3])[iNode] = coordTrans.GetX()[3];
-				(*coordTransCoef[4])[iNode] = coordTrans.GetY()[0];
-				(*coordTransCoef[5])[iNode] = coordTrans.GetY()[1];
-				(*coordTransCoef[6])[iNode] = coordTrans.GetY()[2];
-				(*coordTransCoef[7])[iNode] = coordTrans.GetY()[3];
-				(*coordTransCoef[8])[iNode] = coordTrans.GetZ()[0];
-				(*coordTransCoef[9])[iNode] = coordTrans.GetZ()[1];
-				(*coordTransCoef[10])[iNode] = coordTrans.GetZ()[2];
-				(*coordTransCoef[11])[iNode] = coordTrans.GetZ()[3];
-				(*coordTransCoef[12])[iNode] = coordTrans.GetT()[0];
-				(*coordTransCoef[13])[iNode] = coordTrans.GetT()[1];
-				(*coordTransCoef[14])[iNode] = coordTrans.GetT()[2];
-				(*coordTransCoef[15])[iNode] = coordTrans.GetT()[3];
-				(*coordTransCoef[16])[iNode] = coordTrans.GetXi()[0];
-				(*coordTransCoef[17])[iNode] = coordTrans.GetXi()[1];
-				(*coordTransCoef[18])[iNode] = coordTrans.GetXi()[2];
-				(*coordTransCoef[19])[iNode] = coordTrans.GetXi()[3];
-				(*coordTransCoef[20])[iNode] = coordTrans.GetEta()[0];
-				(*coordTransCoef[21])[iNode] = coordTrans.GetEta()[1];
-				(*coordTransCoef[22])[iNode] = coordTrans.GetEta()[2];
-				(*coordTransCoef[23])[iNode] = coordTrans.GetEta()[3];
-				(*coordTransCoef[24])[iNode] = coordTrans.GetZeta()[0];
-				(*coordTransCoef[25])[iNode] = coordTrans.GetZeta()[1];
-				(*coordTransCoef[26])[iNode] = coordTrans.GetZeta()[2];
-				(*coordTransCoef[27])[iNode] = coordTrans.GetZeta()[3];
-				(*coordTransCoef[28])[iNode] = coordTrans.GetTau()[0];
-				(*coordTransCoef[29])[iNode] = coordTrans.GetTau()[1];
-				(*coordTransCoef[30])[iNode] = coordTrans.GetTau()[2];
-				(*coordTransCoef[31])[iNode] = coordTrans.GetTau()[3];
-				(*coordTransCoef[32])[iNode] = coordTrans.J();
+				m_metric[0][iNode] = coordTrans.GetX()[0];
+				m_metric[1][iNode] = coordTrans.GetX()[1];
+				m_metric[2][iNode] = coordTrans.GetX()[2];
+				m_metric[3][iNode] = coordTrans.GetX()[3];
+				m_metric[4][iNode] = coordTrans.GetY()[0];
+				m_metric[5][iNode] = coordTrans.GetY()[1];
+				m_metric[6][iNode] = coordTrans.GetY()[2];
+				m_metric[7][iNode] = coordTrans.GetY()[3];
+				m_metric[8][iNode] = coordTrans.GetZ()[0];
+				m_metric[9][iNode] = coordTrans.GetZ()[1];
+				m_metric[10][iNode] = coordTrans.GetZ()[2];
+				m_metric[11][iNode] = coordTrans.GetZ()[3];
+				m_metric[12][iNode] = coordTrans.GetT()[0];
+				m_metric[13][iNode] = coordTrans.GetT()[1];
+				m_metric[14][iNode] = coordTrans.GetT()[2];
+				m_metric[15][iNode] = coordTrans.GetT()[3];
+				m_metric[16][iNode] = coordTrans.GetXi()[0];
+				m_metric[17][iNode] = coordTrans.GetXi()[1];
+				m_metric[18][iNode] = coordTrans.GetXi()[2];
+				m_metric[19][iNode] = coordTrans.GetXi()[3];
+				m_metric[20][iNode] = coordTrans.GetEta()[0];
+				m_metric[21][iNode] = coordTrans.GetEta()[1];
+				m_metric[22][iNode] = coordTrans.GetEta()[2];
+				m_metric[23][iNode] = coordTrans.GetEta()[3];
+				m_metric[24][iNode] = coordTrans.GetZeta()[0];
+				m_metric[25][iNode] = coordTrans.GetZeta()[1];
+				m_metric[26][iNode] = coordTrans.GetZeta()[2];
+				m_metric[27][iNode] = coordTrans.GetZeta()[3];
+				m_metric[28][iNode] = coordTrans.GetTau()[0];
+				m_metric[29][iNode] = coordTrans.GetTau()[1];
+				m_metric[30][iNode] = coordTrans.GetTau()[2];
+				m_metric[31][iNode] = coordTrans.GetTau()[3];
+				m_metric[32][iNode] = coordTrans.J();
 			}
 		}
 	}
@@ -113,12 +108,7 @@ namespace zaran
 		auto& grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
-		FlowSolverParaPtr para = GetPara();
-		auto& prim = m_Primitive;
-		auto& limiterCoef = m_LimiterCoef;
-		auto& primGradX = m_PrimGradX;
-		auto& primGradY = m_PrimGradY;
-		auto& primGradZ = m_PrimGradZ;
+		FlowSolverPara* para = GetPara();
 		double cfl = para->GetCflNumber();
 		// 起始点和终止点的编号,s: start, e: end
 		int is, ie, js, je;
@@ -150,7 +140,7 @@ namespace zaran
 					{
 						omega = DistanceOfTwoPoints(nodeCoord[neighborNodeIndex[iNeib]].data(), nodeCoord[iNode].data());
 						omega = 1.0 / omega;
-						deltaVal = (*prim[iVal])[neighborNodeIndex[iNeib]] - (*prim[iVal])[iNode];
+						deltaVal = m_prim[iVal][neighborNodeIndex[iNeib]] - m_prim[iVal][iNode];
 						deltaX = nodeCoord[neighborNodeIndex[iNeib]].x() - nodeCoord[iNode].x();
 						deltaY = nodeCoord[neighborNodeIndex[iNeib]].y() - nodeCoord[iNode].y();
 						A(0, 0) += omega * deltaX * deltaX;
@@ -161,8 +151,9 @@ namespace zaran
 						b(1) += omega * deltaVal * deltaY;
 					}
 					grad = A.inverse() * b;
-					(*primGradX[iVal])[iNode] = grad.x();
-					(*primGradY[iVal])[iNode] = grad.y();
+					m_PrimGradX[iVal][iNode] = grad.x();
+					m_PrimGradY[iVal][iNode] = grad.y();
+
 				}
 			}
 		}
@@ -176,14 +167,7 @@ namespace zaran
 		auto& grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
-		FlowSolverParaPtr para = GetPara();
-		auto& rho = *m_Primitive[0];
-		auto& u = *m_Primitive[1];
-		auto& v = *m_Primitive[2];
-		auto& w = *m_Primitive[3];
-		auto& p = *m_Primitive[4];
-		auto& coordTrans = m_CoordTrans;
-		auto& dt = *m_TimeStep;
+		FlowSolverPara* para = GetPara();
 		double cfl = para->GetCflNumber();
 		// 起始点和终止点的编号,s: start, e: end
 		int is, ie, js, je;
@@ -198,14 +182,15 @@ namespace zaran
 			for (int i = is; i < ie; i++)
 			{
 				iNode = NodeIndex(i, j);
-				double c = sqrt(gamma * p[iNode] / rho[iNode]);
-				double normXi = sqrt((*coordTrans[16])[iNode] * (*coordTrans[16])[iNode] + (*coordTrans[17])[iNode] * (*coordTrans[17])[iNode] + (*coordTrans[18])[iNode] * (*coordTrans[19])[iNode]);
-				double normEta = sqrt((*coordTrans[20])[iNode] * (*coordTrans[20])[iNode] + (*coordTrans[21])[iNode] * (*coordTrans[21])[iNode] + (*coordTrans[22])[iNode] * (*coordTrans[22])[iNode]);
-				double uXi = u[iNode] * (*coordTrans[16])[iNode] + v[iNode] * (*coordTrans[17])[iNode] + w[iNode] * (*coordTrans[18])[iNode] + (*coordTrans[19])[iNode];
-				double uEta = u[iNode] * (*coordTrans[20])[iNode] + v[iNode] * (*coordTrans[21])[iNode] + w[iNode] * (*coordTrans[22])[iNode] + (*coordTrans[23])[iNode];
+
+				double c = sqrt(gamma * m_prim[4][iNode] / m_prim[0][iNode]);
+				double normXi = sqrt(m_metric[16][iNode] * m_metric[16][iNode] + m_metric[17][iNode] * m_metric[17][iNode] + m_metric[18][iNode] * m_metric[19][iNode]);
+				double normEta = sqrt(m_metric[20][iNode] * m_metric[20][iNode] + m_metric[21][iNode] * m_metric[21][iNode] + m_metric[22][iNode] * m_metric[22][iNode]);
+				double uXi = m_prim[1][iNode] * m_metric[16][iNode] + m_prim[2][iNode] * m_metric[17][iNode] + m_prim[3][iNode] * m_metric[18][iNode] + m_metric[19][iNode];
+				double uEta = m_prim[1][iNode] * m_metric[20][iNode] + m_prim[2][iNode] * m_metric[21][iNode] + m_prim[3][iNode] * m_metric[22][iNode] + m_metric[23][iNode];
 				double lamda = abs(uXi) + abs(uEta) + c * (normXi + normEta);
-				dt[iNode] = cfl / lamda;
-				minDt = Min(minDt, dt[iNode]);
+				m_dt[iNode] = cfl / lamda;
+				minDt = Min(minDt, m_dt[iNode]);
 			}
 		}
 		GlobalData::Update("dt", minDt);
@@ -216,14 +201,6 @@ namespace zaran
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
-		auto& prim = m_Primitive;
-		auto& cons = m_Conservative;
-		auto& primGradX = m_PrimGradX;
-		auto& primGradY = m_PrimGradY;
-		auto& primGradZ = m_PrimGradZ;
-		auto& limiterCoef = m_LimiterCoef;
-		auto& res = m_Residual;
-		auto& coordTrans = m_CoordTrans;
 		// 起始点和终止点的编号,s: start, e: end
 		int is, ie, js, je;
 		grid->GetRange(is, ie, js, je);
@@ -238,74 +215,74 @@ namespace zaran
 			for (int i = is; i < ie; i++)
 			{
 				iNode = NodeIndex(i, j);
-				auto& jacobi = (*coordTrans[32])[iNode];
+				auto& jacobi = m_metric[32][iNode];
 				// i direction
-				riemann_para.norm(0) = (*coordTrans[16])[iNode];
-				riemann_para.norm(1) = (*coordTrans[17])[iNode];
-				riemann_para.norm(2) = (*coordTrans[18])[iNode];
-				riemann_para.nt = (*coordTrans[19])[iNode];
+				riemann_para.norm(0) = m_metric[16][iNode];
+				riemann_para.norm(1) = m_metric[17][iNode];
+				riemann_para.norm(2) = m_metric[18][iNode];
+				riemann_para.nt = m_metric[19][iNode];
 				r[0] = nodeCoord[NodeIndex(i + 1, j)][0] - nodeCoord[NodeIndex(i, j)][0];
 				r[1] = nodeCoord[NodeIndex(i + 1, j)][1] - nodeCoord[NodeIndex(i, j)][1];
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
-					grad(0) = (*primGradX[iVal])[iNode];
-					grad(1) = (*primGradY[iVal])[iNode];
-					riemann_para.prim_left(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
-					grad(0) = (*primGradX[iVal])[NodeIndex(i + 1, j)];
-					grad(1) = (*primGradY[iVal])[NodeIndex(i + 1, j)];
-					riemann_para.prim_right(iVal) = (*prim[iVal])[NodeIndex(i + 1, j)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
+					grad(0) = m_PrimGradX[iVal][iNode];
+					grad(1) = m_PrimGradY[iVal][iNode];
+					riemann_para.prim_left(iVal) = m_prim[iVal][iNode] /*+ 0.5 * m_limiter[iVal][iNode] * grad.dot(r)*/;
+					grad(0) = m_PrimGradX[iVal][NodeIndex(i + 1, j)];
+					grad(1) = m_PrimGradY[iVal][NodeIndex(i + 1, j)];
+					riemann_para.prim_right(iVal) = m_prim[iVal][NodeIndex(i + 1, j)] /*- 0.5 * m_limiter[iVal][NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 				}
 				riemannSolver_->Solver(riemann_para);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-					(*res[iVal])[iNode] += riemann_para.flux[iVal] / jacobi;
+					m_residual[iVal][iNode] += riemann_para.flux[iVal] / jacobi;
 				r[0] = nodeCoord[NodeIndex(i - 1, j)][0] - nodeCoord[NodeIndex(i, j)][0];
 				r[1] = nodeCoord[NodeIndex(i - 1, j)][1] - nodeCoord[NodeIndex(i, j)][1];
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
-					grad(0) = (*primGradX[iVal])[iNode];
-					grad(1) = (*primGradY[iVal])[iNode];
-					riemann_para.prim_right(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
-					grad(0) = (*primGradX[iVal])[NodeIndex(i - 1, j)];
-					grad(1) = (*primGradY[iVal])[NodeIndex(i - 1, j)];
-					riemann_para.prim_left(iVal) = (*prim[iVal])[NodeIndex(i - 1, j)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
+					grad(0) = m_PrimGradX[iVal][iNode];
+					grad(1) = m_PrimGradY[iVal][iNode];
+					riemann_para.prim_right(iVal) = m_prim[iVal][iNode] /*+ 0.5 * m_limiter[iVal][iNode] * grad.dot(r)*/;
+					grad(0) = m_PrimGradX[iVal][NodeIndex(i - 1, j)];
+					grad(1) = m_PrimGradY[iVal][NodeIndex(i - 1, j)];
+					riemann_para.prim_left(iVal) = m_prim[iVal][NodeIndex(i - 1, j)] /*- 0.5 * m_limiter[iVal][NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 				}
 				riemannSolver_->Solver(riemann_para);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-					(*res[iVal])[iNode] -= riemann_para.flux[iVal] / jacobi;
+					m_residual[iVal][iNode] -= riemann_para.flux[iVal] / jacobi;
 
 				// j direction
-				riemann_para.norm(0) = (*coordTrans[20])[iNode];
-				riemann_para.norm(1) = (*coordTrans[21])[iNode];
-				riemann_para.norm(2) = (*coordTrans[22])[iNode];
-				riemann_para.nt = (*coordTrans[23])[iNode];
+				riemann_para.norm(0) = m_metric[20][iNode];
+				riemann_para.norm(1) = m_metric[21][iNode];
+				riemann_para.norm(2) = m_metric[22][iNode];
+				riemann_para.nt = m_metric[23][iNode];
 				r[0] = nodeCoord[NodeIndex(i, j + 1)][0] - nodeCoord[NodeIndex(i, j)][0];
 				r[1] = nodeCoord[NodeIndex(i, j + 1)][1] - nodeCoord[NodeIndex(i, j)][1];
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
-					grad(0) = (*primGradX[iVal])[iNode];
-					grad(1) = (*primGradY[iVal])[iNode];
-					riemann_para.prim_left(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
-					grad(0) = (*primGradX[iVal])[NodeIndex(i, j + 1)];
-					grad(1) = (*primGradY[iVal])[NodeIndex(i, j + 1)];
-					riemann_para.prim_right(iVal) = (*prim[iVal])[NodeIndex(i + 1, j)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
+					grad(0) = m_PrimGradX[iVal][iNode];
+					grad(1) = m_PrimGradY[iVal][iNode];
+					riemann_para.prim_left(iVal) = m_prim[iVal][iNode] /*+ 0.5 * m_limiter[iVal][iNode] * grad.dot(r)*/;
+					grad(0) = m_PrimGradX[iVal][NodeIndex(i, j + 1)];
+					grad(1) = m_PrimGradY[iVal][NodeIndex(i, j + 1)];
+					riemann_para.prim_right(iVal) = m_prim[iVal][NodeIndex(i + 1, j)] /*- 0.5 * m_limiter[iVal][NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 				}
 				riemannSolver_->Solver(riemann_para);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-					(*res[iVal])[iNode] += riemann_para.flux[iVal] / jacobi;
+					m_residual[iVal][iNode] += riemann_para.flux[iVal] / jacobi;
 				r[0] = nodeCoord[NodeIndex(i, j - 1)][0] - nodeCoord[NodeIndex(i, j)][0];
 				r[1] = nodeCoord[NodeIndex(i, j - 1)][1] - nodeCoord[NodeIndex(i, j)][1];
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
-					grad(0) = (*primGradX[iVal])[iNode];
-					grad(1) = (*primGradY[iVal])[iNode];
-					riemann_para.prim_right(iVal) = (*prim[iVal])[iNode] /*+ 0.5 * (*limiterCoef[iVal])[iNode] * grad.dot(r)*/;
-					grad(0) = (*primGradX[iVal])[NodeIndex(i, j - 1)];
-					grad(1) = (*primGradY[iVal])[NodeIndex(i, j - 1)];
-					riemann_para.prim_left(iVal) = (*prim[iVal])[NodeIndex(i - 1, j)] /*- 0.5 * (*limiterCoef[iVal])[NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
+					grad(0) = m_PrimGradX[iVal][iNode];
+					grad(1) = m_PrimGradY[iVal][iNode];
+					riemann_para.prim_right(iVal) = m_prim[iVal][iNode] /*+ 0.5 * m_limiter[iVal][iNode] * grad.dot(r)*/;
+					grad(0) = m_PrimGradX[iVal][NodeIndex(i, j - 1)];
+					grad(1) = m_PrimGradY[iVal][NodeIndex(i, j - 1)];
+					riemann_para.prim_left(iVal) = m_prim[iVal][NodeIndex(i - 1, j)] /*- 0.5 * m_limiter[iVal][NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 				}
 				riemannSolver_->Solver(riemann_para);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-					(*res[iVal])[iNode] -= riemann_para.flux[iVal] / jacobi;
+					m_residual[iVal][iNode] -= riemann_para.flux[iVal] / jacobi;
 			}
 		}
 	}
@@ -315,18 +292,18 @@ namespace zaran
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
-		auto& prim = m_Primitive;
-		auto& cons = m_Conservative;
-		auto& limiterCoef = m_LimiterCoef;
-		auto& res = m_Residual;
-		auto& coordTrans = m_CoordTrans;
+		auto& prim = m_prim;
+		auto& cons = m_cons;
+		auto& limiterCoef = m_limiter;
+		auto& res = m_residual;
+		auto& coordTrans = m_metric;
 		// 起始点和终止点的编号,s: start, e: end
 		int is, ie, js, je;
 		grid->GetRange(is, ie, js, je);
 		int iNode;
 		// grid->GetNodeIndex(i, j, k)的lamda表达式
 		auto NodeIndex = [&](int i, int j) {return grid->GetNodeIndex(i, j); };
-		auto Prim = [&](int iVal, int i, int j) {return (*m_Primitive[iVal])[NodeIndex(i, j)]; };
+		auto Prim = [&](int iVal, int i, int j) {return m_prim[iVal][NodeIndex(i, j)]; };
 		RiemannSolverPara riemann_para;
 		riemann_para.gamma_left = riemann_para.gamma_right = 1.4;
 		double k = GlobalData::GetDouble("muscl_k");
@@ -335,12 +312,12 @@ namespace zaran
 			for (int i = is; i < ie; i++)
 			{
 				iNode = NodeIndex(i, j);
-				auto& jacobi = (*coordTrans[32])[iNode];
+				auto& jacobi = m_metric[32][iNode];
 				// i direction
-				riemann_para.norm(0) = (*coordTrans[16])[iNode];
-				riemann_para.norm(1) = (*coordTrans[17])[iNode];
-				riemann_para.norm(2) = (*coordTrans[18])[iNode];
-				riemann_para.nt = (*coordTrans[19])[iNode];
+				riemann_para.norm(0) = m_metric[16][iNode];
+				riemann_para.norm(1) = m_metric[17][iNode];
+				riemann_para.norm(2) = m_metric[18][iNode];
+				riemann_para.nt = m_metric[19][iNode];
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
 					riemann_para.prim_left(iVal) = Prim(iVal, i, j) +
@@ -352,7 +329,7 @@ namespace zaran
 				}
 				riemannSolver_->Solver(riemann_para);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-					(*res[iVal])[iNode] += riemann_para.flux[iVal] / jacobi;
+					m_residual[iVal][iNode] += riemann_para.flux[iVal] / jacobi;
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
 					riemann_para.prim_left(iVal) = Prim(iVal, i - 1, j) +
@@ -364,13 +341,13 @@ namespace zaran
 				}
 				riemannSolver_->Solver(riemann_para);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-					(*res[iVal])[iNode] -= riemann_para.flux[iVal] / jacobi;
+					m_residual[iVal][iNode] -= riemann_para.flux[iVal] / jacobi;
 
 				// j direction
-				riemann_para.norm(0) = (*coordTrans[20])[iNode];
-				riemann_para.norm(1) = (*coordTrans[21])[iNode];
-				riemann_para.norm(2) = (*coordTrans[22])[iNode];
-				riemann_para.nt = (*coordTrans[23])[iNode];
+				riemann_para.norm(0) = m_metric[20][iNode];
+				riemann_para.norm(1) = m_metric[21][iNode];
+				riemann_para.norm(2) = m_metric[22][iNode];
+				riemann_para.nt = m_metric[23][iNode];
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
 					riemann_para.prim_left(iVal) = Prim(iVal, i, j) +
@@ -382,7 +359,7 @@ namespace zaran
 				}
 				riemannSolver_->Solver(riemann_para);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-					(*res[iVal])[iNode] += riemann_para.flux[iVal] / jacobi;
+					m_residual[iVal][iNode] += riemann_para.flux[iVal] / jacobi;
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
 					riemann_para.prim_left(iVal) = Prim(iVal, i - 1, j) +
@@ -394,7 +371,7 @@ namespace zaran
 				}
 				riemannSolver_->Solver(riemann_para);
 				for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-					(*res[iVal])[iNode] -= riemann_para.flux[iVal] / jacobi;
+					m_residual[iVal][iNode] -= riemann_para.flux[iVal] / jacobi;
 			}
 		}
 	}
@@ -404,11 +381,6 @@ namespace zaran
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
-		auto& prim = m_Primitive;
-		auto& limiterCoef = m_LimiterCoef;
-		auto& primGradX = m_PrimGradX;
-		auto& primGradY = m_PrimGradY;
-		auto& primGradZ = m_PrimGradZ;
 		// 起始点和终止点的编号,s: start, e: end
 		int is, ie, js, je;
 		grid->GetRange(is, ie, js, je);
@@ -428,35 +400,35 @@ namespace zaran
 				neighborNodeIndex[3] = NodeIndex(i, j - 1);
 				for (size_t iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 				{
-					maxVal = minVal = (*prim[iVal])[iNode];
+					maxVal = minVal = m_prim[iVal][iNode];
 					for (size_t iNeib = 0; iNeib < neighborNodeIndex.size(); ++iNeib)
 					{
-						maxVal = Max(maxVal, (*prim[iVal])[neighborNodeIndex[iNeib]]);
-						minVal = Min(minVal, (*prim[iVal])[neighborNodeIndex[iNeib]]);
+						maxVal = Max(maxVal, m_prim[iVal][neighborNodeIndex[iNeib]]);
+						minVal = Min(minVal, m_prim[iVal][neighborNodeIndex[iNeib]]);
 					}
-					double gradx = (*primGradX[iVal])[iNode];
-					double grady = (*primGradY[iVal])[iNode];
-					double deltaMax = maxVal - (*prim[iVal])[iNode];
-					double deltaMin = minVal - (*prim[iVal])[iNode];
+					double gradx = m_PrimGradX[iVal][iNode];
+					double grady = m_PrimGradY[iVal][iNode];
+					double deltaMax = maxVal - m_prim[iVal][iNode];
+					double deltaMin = minVal - m_prim[iVal][iNode];
 					double tempCoef = LARGE_NUMBER;
-					(*limiterCoef[iVal])[iNode] = LARGE_NUMBER;
+					m_limiter[iVal][iNode] = LARGE_NUMBER;
 					for (int iNeighbor = 0; iNeighbor < neighborNodeIndex.size(); ++iNeighbor)
 					{
 						auto current2Neighbor = nodeCoord[neighborNodeIndex[iNeighbor]] - nodeCoord[iNode];
 						double delta2 = 0.5 * (current2Neighbor(0) * gradx + current2Neighbor(1) * grady);
 						if (delta2 > 0)
 						{
-							tempCoef = limiter(maxVal - (*prim[iVal])[iNode], delta2);
+							tempCoef = limiter(maxVal - m_prim[iVal][iNode], delta2);
 						}
 						else if (delta2 < 0)
 						{
-							tempCoef = limiter(minVal - (*prim[iVal])[iNode], delta2);
+							tempCoef = limiter(minVal - m_prim[iVal][iNode], delta2);
 						}
 						else
 						{
 							tempCoef = 1.0;
 						}
-						(*limiterCoef[iVal])[iNode] = Min((*limiterCoef[iVal])[iNode], tempCoef);
+						m_limiter[iVal][iNode] = Min(m_limiter[iVal][iNode], tempCoef);
 					}
 				}
 			}
@@ -465,52 +437,30 @@ namespace zaran
 	}
 	void Solver_NS_2D_Struct::InletBC(Boundary& bound)
 	{
-		FlowSolverParaPtr para = GetPara();
+		FlowSolverPara* para = GetPara();
 		int  ghostIndex = bound.GetGhostIndex();
-		auto& rho = *m_Primitive[0];
-		auto& u = *m_Primitive[1];
-		auto& v = *m_Primitive[2];
-		auto& w = *m_Primitive[3];
-		auto& p = *m_Primitive[4];
-		auto& cons0 = *m_Conservative[0];
-		auto& cons1 = *m_Conservative[1];
-		auto& cons2 = *m_Conservative[2];
-		auto& cons3 = *m_Conservative[3];
-		auto& cons4 = *m_Conservative[4];
 		double prim_init[5];
 		prim_init[0] = para->GetInflowDensity();
 		prim_init[1] = para->GetInflowVelocityX();
 		prim_init[2] = para->GetInflowVelocityY();
 		prim_init[3] = para->GetInflowVelocityZ();
 		prim_init[4] = para->GetInflowPressure();
-		rho[ghostIndex] = prim_init[0];
-		u[ghostIndex] = prim_init[1];
-		v[ghostIndex] = prim_init[2];
-		w[ghostIndex] = prim_init[3];
-		p[ghostIndex] = prim_init[4];
-		Prim2Cons(rho[ghostIndex], u[ghostIndex], v[ghostIndex], w[ghostIndex], p[ghostIndex],
-			cons0[ghostIndex], cons1[ghostIndex], cons2[ghostIndex], cons3[ghostIndex], cons4[ghostIndex]);
+		m_prim[0][ghostIndex] = prim_init[0];
+		m_prim[1][ghostIndex] = prim_init[1];
+		m_prim[2][ghostIndex] = prim_init[2];
+		m_prim[3][ghostIndex] = prim_init[3];
+		m_prim[4][ghostIndex] = prim_init[4];
+		Prim2Cons(m_prim[0][ghostIndex], m_prim[1][ghostIndex], m_prim[2][ghostIndex], m_prim[3][ghostIndex], m_prim[4][ghostIndex], m_cons[0][ghostIndex], m_cons[1][ghostIndex], m_cons[2][ghostIndex], m_cons[3][ghostIndex], m_cons[4][ghostIndex]);
 	}
 	void Solver_NS_2D_Struct::OutletBC(Boundary& bound)
 	{
-		auto& rho = *m_Primitive[0];
-		auto& u = *m_Primitive[1];
-		auto& v = *m_Primitive[2];
-		auto& w = *m_Primitive[3];
-		auto& p = *m_Primitive[4];
-		auto& cons0 = *m_Conservative[0];
-		auto& cons1 = *m_Conservative[1];
-		auto& cons2 = *m_Conservative[2];
-		auto& cons3 = *m_Conservative[3];
-		auto& cons4 = *m_Conservative[4];
 		int boundIndex = bound.GetIndex();
 		int ghostIndex = bound.GetGhostIndex();
-		rho[ghostIndex] = rho[boundIndex];
-		u[ghostIndex] = u[boundIndex];
-		v[ghostIndex] = v[boundIndex];
-		w[ghostIndex] = w[boundIndex];
-		p[ghostIndex] = p[boundIndex];
-		Prim2Cons(rho[ghostIndex], u[ghostIndex], v[ghostIndex], w[ghostIndex], p[ghostIndex],
-			cons0[ghostIndex], cons1[ghostIndex], cons2[ghostIndex], cons3[ghostIndex], cons4[ghostIndex]);
+		m_prim[0][ghostIndex] = m_prim[0][boundIndex];
+		m_prim[1][ghostIndex] = m_prim[1][boundIndex];
+		m_prim[2][ghostIndex] = m_prim[2][boundIndex];
+		m_prim[3][ghostIndex] = m_prim[3][boundIndex];
+		m_prim[4][ghostIndex] = m_prim[4][boundIndex];
+		Prim2Cons(m_prim[0][ghostIndex], m_prim[1][ghostIndex], m_prim[2][ghostIndex], m_prim[3][ghostIndex], m_prim[4][ghostIndex], m_cons[0][ghostIndex], m_cons[1][ghostIndex], m_cons[2][ghostIndex], m_cons[3][ghostIndex], m_cons[4][ghostIndex]);
 	}
 }

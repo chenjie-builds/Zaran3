@@ -24,12 +24,13 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 	auto& cellTopo = grid->GetCellTopo();
 	auto& cell2node = cellTopo->GetNodeIndex();
 	auto& data = solver->GetFieldData();
-	auto& rho = data->GetData("rho");
-	auto& u = data->GetData("u");
-	auto& v = data->GetData("v");
-	auto& w = data->GetData("w");
-	auto& p = data->GetData("p");
-	auto& jacobi = data->GetData("coordTransJ");
+	double* density, * velocity_x, * velocity_y, * velocity_z, * pressure, * jacobi;
+	data->GetData("rho", density);
+	data->GetData("u", velocity_x);
+	data->GetData("v", velocity_y);
+	data->GetData("w", velocity_z);
+	data->GetData("p", pressure);
+	data->GetData("coordTransJ", jacobi);
 	fout << "ZONE T= grid_" << grid->GetName() << std::endl;
 	fout << "N=" << grid->GetTotalNodeNum() << ", E= " << cell2node.size() << ", F=FEPOINT, ET=Brick" << std::endl;
 	fout << "solutiontime= " << GlobalData::GetDouble("currentTime") << std::endl;
@@ -37,7 +38,7 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 	{
 		auto& currentCoord = nodeCoord[iNode];
 		fout << currentCoord(0) << "  " << currentCoord(1) << "  " << currentCoord(2) << "  ";
-		fout << rho[iNode] << "  " << u[iNode] << "  " << v[iNode] << "  " << w[iNode] << "  " << p[iNode] << "  " << jacobi[iNode];
+		fout << density[iNode] << "  " << velocity_x[iNode] << "  " << velocity_y[iNode] << "  " << velocity_z[iNode] << "  " << pressure[iNode] << "  " << jacobi[iNode];
 		fout << std::endl;
 	}
 	int nCell = cell2node.size();
@@ -54,11 +55,12 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 {
 	auto& data = solver->GetFieldData();
-	auto& rho = data->GetData("rho");
-	auto& u = data->GetData("u");
-	auto& v = data->GetData("v");
-	auto& w = data->GetData("w");
-	auto& p = data->GetData("p");
+	double* density, * velocity_x, * velocity_y, * velocity_z, * pressure;
+	data->GetData("rho", density);
+	data->GetData("u", velocity_x);
+	data->GetData("v", velocity_y);
+	data->GetData("w", velocity_z);
+	data->GetData("p", pressure);
 	auto& grid = solver->GetGrid();
 	auto& cellTopo = grid->GetCellTopo();
 	auto& cell2node = cellTopo->GetNodeIndex();
@@ -77,7 +79,7 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 		z[iNode] = node_coord[iNode].z();
 	}
 	INTEGER4 file_format = 0;
-	INTEGER4 debug = 0;
+	INTEGER4 debug = 1;
 	INTEGER4 vIsDouble = 1;
 	INTEGER4 fileType = 0;
 	string grid_name = "grid_" + grid->GetName();
@@ -131,11 +133,11 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 	i = TECDAT142(&node_num, x.data(), &vIsDouble);
 	i = TECDAT142(&node_num, y.data(), &vIsDouble);
 	i = TECDAT142(&node_num, z.data(), &vIsDouble);
-	i = TECDAT142(&node_num, rho.data(), &vIsDouble);
-	i = TECDAT142(&node_num, u.data(), &vIsDouble);
-	i = TECDAT142(&node_num, v.data(), &vIsDouble);
-	i = TECDAT142(&node_num, w.data(), &vIsDouble);
-	i = TECDAT142(&node_num, p.data(), &vIsDouble);
+	i = TECDAT142(&node_num, density, &vIsDouble);
+	i = TECDAT142(&node_num, velocity_x, &vIsDouble);
+	i = TECDAT142(&node_num, velocity_y, &vIsDouble);
+	i = TECDAT142(&node_num, velocity_z, &vIsDouble);
+	i = TECDAT142(&node_num, pressure, &vIsDouble);
 	INTEGER4 connectivityCount = cell_num * 8;
 	Array<INTEGER4> cell_nodes(connectivityCount);
 	for (int iCell = 0; iCell < cell_num; ++iCell)
@@ -187,11 +189,11 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 	i = TECDAT142(&node_num, x.data(), &vIsDouble);
 	i = TECDAT142(&node_num, y.data(), &vIsDouble);
 	i = TECDAT142(&node_num, z.data(), &vIsDouble);
-	i = TECDAT142(&node_num, rho.data(), &vIsDouble);
-	i = TECDAT142(&node_num, u.data(), &vIsDouble);
-	i = TECDAT142(&node_num, v.data(), &vIsDouble);
-	i = TECDAT142(&node_num, w.data(), &vIsDouble);
-	i = TECDAT142(&node_num, p.data(), &vIsDouble);
+	i = TECDAT142(&node_num, density, &vIsDouble);
+	i = TECDAT142(&node_num, velocity_x, &vIsDouble);
+	i = TECDAT142(&node_num, velocity_y, &vIsDouble);
+	i = TECDAT142(&node_num, velocity_z, &vIsDouble);
+	i = TECDAT142(&node_num, pressure, &vIsDouble);	
 	int node_num_per_cell = 4;
 	connectivityCount = cell_num * node_num_per_cell;
 	Array<INTEGER4> face_nodes(connectivityCount);
@@ -203,13 +205,13 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 		{
 			face_nodes[iFace * node_num_per_cell + iNode] = face2node[iNode] + 1;
 		}
-		// if (face2node[iFace].size() < 8)
-		// {
-		// 	for (int i = face2node[iFace].size();i < 8;++i)
-		// 	{
-		// 		cell_nodes[iFace * 8 + i] = face2node[iFace][0] + 1;
-		// 	}
-		// }
+		if(n_node<4)
+		{
+			for (int i = n_node; i < 4; ++i)
+			{
+				face_nodes[iFace * node_num_per_cell + i] = face2node[0] + 1;
+			}
+		}
 	}
 
 	i = TECNODE142(&connectivityCount, face_nodes.data());
@@ -233,26 +235,28 @@ void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
 	auto& nodeCoord = nodeTopo->GetCoordinate();
 	auto& cellTopo = grid->GetCellTopo();
 	auto& cell2node = cellTopo->GetNodeIndex();
-	auto& data = solver->GetFieldData();
-	auto& rho = data->GetData("rho");
-	auto& u = data->GetData("u");
-	auto& v = data->GetData("v");
-	auto& w = data->GetData("w");
-	auto& p = data->GetData("p");
-	auto& jacobi = data->GetData("coordTransJ");
-	auto& rhoGradX = data->GetData("rhoGradX");
-	auto& rhoGradY = data->GetData("rhoGradY");
-	auto& uGradX = data->GetData("uGradX");
-	auto& uGradY = data->GetData("uGradY");
-	auto& vGradX = data->GetData("vGradX");
-	auto& vGradY = data->GetData("vGradY");
-	auto& pGradX = data->GetData("pGradX");
-	auto& pGradY = data->GetData("pGradY");
-	auto& limiterCoef0 = data->GetData("limiterCoef0");
-	auto& limiterCoef1 = data->GetData("limiterCoef1");
-	auto& limiterCoef2 = data->GetData("limiterCoef2");
-	auto& limiterCoef3 = data->GetData("limiterCoef3");
-	auto& limiterCoef4 = data->GetData("limiterCoef4");
+	auto& data = *solver->GetFieldData();
+	double* rho, * u, * v, * w, * p, * jacobi, * limiterCoef0, * limiterCoef1, * limiterCoef2, * limiterCoef3, * limiterCoef4;
+	double* rhoGradX, * rhoGradY, * uGradX, * uGradY, * vGradX, * vGradY, * pGradX, * pGradY;
+	data.GetData("rho", rho);
+	data.GetData("u", u);
+	data.GetData("v", v);
+	data.GetData("w", w);
+	data.GetData("p", p);
+	data.GetData("coordTransJ", jacobi);
+	data.GetData("limiterCoef0", limiterCoef0);
+	data.GetData("limiterCoef1", limiterCoef1);
+	data.GetData("limiterCoef2", limiterCoef2);
+	data.GetData("limiterCoef3", limiterCoef3);
+	data.GetData("limiterCoef4", limiterCoef4);
+	data.GetData("rhoGradX", rhoGradX);
+	data.GetData("rhoGradY", rhoGradY);
+	data.GetData("uGradX", uGradX);
+	data.GetData("uGradY", uGradY);
+	data.GetData("vGradX", vGradX);
+	data.GetData("vGradY", vGradY);
+	data.GetData("pGradX", pGradX);
+	data.GetData("pGradY", pGradY);
 	fout << "ZONE T= grid_" << grid->GetName() << std::endl;
 	fout << "N=" << grid->GetTotalNodeNum() << ", E= " << cell2node.size() << ", F=FEPOINT, ET=QUADRILATERAL" << std::endl;
 	fout << "solutiontime= " << GlobalData::GetDouble("currentTime") << std::endl;
@@ -289,12 +293,13 @@ void zaran::Visual::WriteTecplotPoint(Ptr<FieldSolver>& solver)
 	auto& grid = solver->GetGrid();
 	auto& nodeTopo = grid->GetNodeTopo();
 	auto& nodeCoord = nodeTopo->GetCoordinate();
-	auto& data = solver->GetFieldData();
-	auto& rho = data->GetData("rho");
-	auto& u = data->GetData("u");
-	auto& v = data->GetData("v");
-	auto& w = data->GetData("w");
-	auto& p = data->GetData("p");
+	auto& data = *solver->GetFieldData();
+	double* rho, * u, * v, * w, * p;
+	data.GetData("rho", rho);
+	data.GetData("u", u);
+	data.GetData("v", v);
+	data.GetData("w", w);
+	data.GetData("p", p);
 	//fout << "solutiontime= " << GlobalData::GetDouble("globalTime") << std::endl;
 	for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
@@ -425,13 +430,14 @@ void zaran::Visual::WriteTecplotZaran3D(Ptr<FieldSolver>& solver)
 	std::string filename = "result/" + std::to_string(currentIter) + ".dat";
 	std::ofstream fout(filename);
 	fout << "variables=x,y,z,rho,u,v,w,p\n";
-	auto& data = solver->GetFieldData();
-	auto& rho = data->GetData("rho");
-	auto& u = data->GetData("u");
-	auto& v = data->GetData("v");
-	auto& w = data->GetData("w");
-	auto& p = data->GetData("p");
-	auto& jacobi = data->GetData("coordTransJ");
+	auto& data = *solver->GetFieldData();
+	double* rho, * u, * v, * w, * p, * jacobi;
+	data.GetData("rho", rho);
+	data.GetData("u", u);
+	data.GetData("v", v);
+	data.GetData("w", w);
+	data.GetData("p", p);
+	data.GetData("coordTransJ", jacobi);
 	Ptr<Grid_Zaran_3D>& grid = std::static_pointer_cast<Grid_Zaran_3D>(solver->GetGrid());
 	auto& cellTopo = grid->GetCellTopo();
 	auto& cell_type = cellTopo->GetType();
@@ -577,13 +583,15 @@ void zaran::Visual::WriteTecplotZaran3D(Ptr<FieldSolver>& solver)
 
 void zaran::Visual::WriteTecplotZaran3DBinary(Ptr<FieldSolver>& solver)
 {
-	auto& data = solver->GetFieldData();
-	auto& rho = data->GetData("rho");
-	auto& u = data->GetData("u");
-	auto& v = data->GetData("v");
-	auto& w = data->GetData("w");
-	auto& p = data->GetData("p");
-	auto& jacobi = data->GetData("coordTransJ");
+	auto& data = *solver->GetFieldData();
+	double* rho, * u, * v, * w, * p, * jacobi;
+	data.GetData("rho", rho);
+	data.GetData("u", u);
+	data.GetData("v", v);
+	data.GetData("w", w);
+	data.GetData("p", p);
+	data.GetData("coordTransJ", jacobi);
+
 	Ptr<Grid_Zaran_3D>& grid = std::static_pointer_cast<Grid_Zaran_3D>(solver->GetGrid());
 	auto& cellTopo = grid->GetCellTopo();
 	auto& cell_type = cellTopo->GetType();

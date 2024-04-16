@@ -50,7 +50,7 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE ${inc_dir})
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 
 # OMP并行
-option(USE_OMP "ON to use OMP, OFF to serial" ON)
+option(USE_OMP "ON to use OMP, OFF to serial" OFF)
 
 if(USE_OMP)
 add_definitions(-DUSE_OMP)

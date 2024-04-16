@@ -16,7 +16,7 @@ namespace zaran
 	class Solver_NS_3D :public NSSolver
 	{
 	public:
-		Solver_NS_3D() {}
+		Solver_NS_3D()  {}
 		~Solver_NS_3D() {}
 		void CalcMetric()override;
 	protected:

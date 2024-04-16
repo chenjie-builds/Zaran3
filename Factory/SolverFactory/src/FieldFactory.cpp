@@ -47,7 +47,6 @@ namespace zaran
             m_field_array[i] = std::make_shared<Field>();
             m_field_array[i]->SetGrid(grid_list->GetGrid(i));
             m_field_array[i]->SetSolver(std::dynamic_pointer_cast<FieldSolver> (solver_vec->GetSolver(i)));
-            m_field_array[i]->SetSolverPara(solver_vec->GetSolver(i)->GetPara());
         }
     }
 

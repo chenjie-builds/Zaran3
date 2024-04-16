@@ -25,17 +25,17 @@ namespace zaran
 	class NSSolver :public FlowSolver
 	{
 	public:
-		NSSolver() {}
+		NSSolver() :FlowSolver() {}
 		~NSSolver() {}
 		void Init()override;
-		void InitField()override;
+		void InitData()override;
 		void InitFieldFarField();
 		void InitFieldFarFieldNoVelocity();
 		void InitFieldRestart();
 		void InitSolver()override;
 		void Solve() override;
 		void UpdateField()override;
-		void CreateFieldData()override;
+		void CreateData()override;
 		void RegisterFieldData()override;
 		virtual void CalcMetric() = 0;
 		double ComputeMaxResidual()override;
@@ -103,6 +103,7 @@ namespace zaran
 		void MidPointReconstruct(int index_left, int index_right, double* value_rec_left, double* value_rec_right);
 		void MidPointReconstructFirstOrder(int index_left, int index_right, double* value_rec_left, double* value_rec_right);
 	protected:
+
 		void BoundaryCondition()override;
 		// 超声速入口边界条件
 		virtual void InletBC(Boundary& bound);
@@ -111,9 +112,9 @@ namespace zaran
 		// 壁面边界条件
 		virtual void  WallBC(Boundary& bound);
 		// 原始变量梯度
-		Array<DArray*> m_PrimGradX;
-		Array<DArray*> m_PrimGradY;
-		Array<DArray*> m_PrimGradZ;
+		double** m_PrimGradX;
+		double** m_PrimGradY;
+		double** m_PrimGradZ;
 		//通量求解器
 		Ptr<RiemannSolver> riemannSolver_;
 		//降阶标识，对于二阶精度的格式，降阶到一阶

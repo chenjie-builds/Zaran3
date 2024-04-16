@@ -37,7 +37,7 @@ namespace zaran
 		void SetGradScheme(const GradScheme& gradScheme);
 		void SetLimiterType(const LimiterType& limiterType);
 	public:
-		const int& GetInflowDensity()const;
+		const double& GetInflowDensity()const;
 		const double& GetInflowVelocityX()const;
 		const double& GetInflowVelocityY()const;
 		const double& GetInflowVelocityZ()const;

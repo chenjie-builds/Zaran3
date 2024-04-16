@@ -3,165 +3,163 @@
 namespace zaran
 {
 
-    void Solver_NS_3D_Zaran::CreateFieldData()
+    void Solver_NS_3D_Zaran::CreateData()
     {
         auto grid = GetGrid();
         int ni, nj, nk;
         grid->GetNodeNum(ni, nj, nk);
         int cell_num = (ni - 1) * (nj - 1) * (nk - 1);
-        DArray empty_data(cell_num);
         auto& dataPtr = GetFieldData();
         auto& data = *dataPtr;
+        FieldDataType type = FieldDataType::real;
         //添加单元数据
-        data.AddData("rho", empty_data);
-        data.AddData("u", empty_data);
-        data.AddData("v", empty_data);
-        data.AddData("w", empty_data);
-        data.AddData("p", empty_data);
-        data.AddData("cons0", empty_data);
-        data.AddData("cons1", empty_data);
-        data.AddData("cons2", empty_data);
-        data.AddData("cons3", empty_data);
-        data.AddData("cons4", empty_data);
-        data.AddData("res0", empty_data);
-        data.AddData("res1", empty_data);
-        data.AddData("res2", empty_data);
-        data.AddData("res3", empty_data);
-        data.AddData("res4", empty_data);
-        data.AddData("dt", empty_data);
-        data.AddData("limiterCoef0", empty_data);
-        data.AddData("limiterCoef1", empty_data);
-        data.AddData("limiterCoef2", empty_data);
-        data.AddData("limiterCoef3", empty_data);
-        data.AddData("limiterCoef4", empty_data);
-        data.AddData("rhoGradX", empty_data);
-        data.AddData("rhoGradY", empty_data);
-        data.AddData("rhoGradZ", empty_data);
-        data.AddData("uGradX", empty_data);
-        data.AddData("uGradY", empty_data);
-        data.AddData("uGradZ", empty_data);
-        data.AddData("vGradX", empty_data);
-        data.AddData("vGradY", empty_data);
-        data.AddData("vGradZ", empty_data);
-        data.AddData("wGradX", empty_data);
-        data.AddData("wGradY", empty_data);
-        data.AddData("wGradZ", empty_data);
-        data.AddData("pGradX", empty_data);
-        data.AddData("pGradY", empty_data);
-        data.AddData("pGradZ", empty_data);
-        data.AddData("consRK0", empty_data);
-        data.AddData("consRK1", empty_data);
-        data.AddData("consRK2", empty_data);
-        data.AddData("consRK3", empty_data);
-        data.AddData("consRK4", empty_data);
-        data.AddData("coordTransXXi", empty_data);
-        data.AddData("coordTransXEta", empty_data);
-        data.AddData("coordTransXZeta", empty_data);
-        data.AddData("coordTransXTau", empty_data);
-        data.AddData("coordTransYXi", empty_data);
-        data.AddData("coordTransYEta", empty_data);
-        data.AddData("coordTransYZeta", empty_data);
-        data.AddData("coordTransYTau", empty_data);
-        data.AddData("coordTransZXi", empty_data);
-        data.AddData("coordTransZEta", empty_data);
-        data.AddData("coordTransZZeta", empty_data);
-        data.AddData("coordTransZTau", empty_data);
-        data.AddData("coordTransTXi", empty_data);
-        data.AddData("coordTransTEta", empty_data);
-        data.AddData("coordTransTZeta", empty_data);
-        data.AddData("coordTransTTau", empty_data);
-        data.AddData("coordTransXiX", empty_data);
-        data.AddData("coordTransXiY", empty_data);
-        data.AddData("coordTransXiZ", empty_data);
-        data.AddData("coordTransXiT", empty_data);
-        data.AddData("coordTransEtaX", empty_data);
-        data.AddData("coordTransEtaY", empty_data);
-        data.AddData("coordTransEtaZ", empty_data);
-        data.AddData("coordTransEtaT", empty_data);
-        data.AddData("coordTransZetaX", empty_data);
-        data.AddData("coordTransZetaY", empty_data);
-        data.AddData("coordTransZetaZ", empty_data);
-        data.AddData("coordTransZetaT", empty_data);
-        data.AddData("coordTransTauX", empty_data);
-        data.AddData("coordTransTauY", empty_data);
-        data.AddData("coordTransTauZ", empty_data);
-        data.AddData("coordTransTauT", empty_data);
-        data.AddData("coordTransJ", empty_data);
+        data.AddData("rho", type, cell_num);
+        data.AddData("u", type, cell_num);
+        data.AddData("v", type, cell_num);
+        data.AddData("w", type, cell_num);
+        data.AddData("p", type, cell_num);
+        data.AddData("cons0", type, cell_num);
+        data.AddData("cons1", type, cell_num);
+        data.AddData("cons2", type, cell_num);
+        data.AddData("cons3", type, cell_num);
+        data.AddData("cons4", type, cell_num);
+        data.AddData("res0", type, cell_num);
+        data.AddData("res1", type, cell_num);
+        data.AddData("res2", type, cell_num);
+        data.AddData("res3", type, cell_num);
+        data.AddData("res4", type, cell_num);
+        data.AddData("dt", type, cell_num);
+        data.AddData("limiterCoef0", type, cell_num);
+        data.AddData("limiterCoef1", type, cell_num);
+        data.AddData("limiterCoef2", type, cell_num);
+        data.AddData("limiterCoef3", type, cell_num);
+        data.AddData("limiterCoef4", type, cell_num);
+        data.AddData("rhoGradX", type, cell_num);
+        data.AddData("rhoGradY", type, cell_num);
+        data.AddData("rhoGradZ", type, cell_num);
+        data.AddData("uGradX", type, cell_num);
+        data.AddData("uGradY", type, cell_num);
+        data.AddData("uGradZ", type, cell_num);
+        data.AddData("vGradX", type, cell_num);
+        data.AddData("vGradY", type, cell_num);
+        data.AddData("vGradZ", type, cell_num);
+        data.AddData("wGradX", type, cell_num);
+        data.AddData("wGradY", type, cell_num);
+        data.AddData("wGradZ", type, cell_num);
+        data.AddData("pGradX", type, cell_num);
+        data.AddData("pGradY", type, cell_num);
+        data.AddData("pGradZ", type, cell_num);
+        data.AddData("consRK0", type, cell_num);
+        data.AddData("consRK1", type, cell_num);
+        data.AddData("consRK2", type, cell_num);
+        data.AddData("consRK3", type, cell_num);
+        data.AddData("consRK4", type, cell_num);
+        data.AddData("coordTransXXi", type, cell_num);
+        data.AddData("coordTransXEta", type, cell_num);
+        data.AddData("coordTransXZeta", type, cell_num);
+        data.AddData("coordTransXTau", type, cell_num);
+        data.AddData("coordTransYXi", type, cell_num);
+        data.AddData("coordTransYEta", type, cell_num);
+        data.AddData("coordTransYZeta", type, cell_num);
+        data.AddData("coordTransYTau", type, cell_num);
+        data.AddData("coordTransZXi", type, cell_num);
+        data.AddData("coordTransZEta", type, cell_num);
+        data.AddData("coordTransZZeta", type, cell_num);
+        data.AddData("coordTransZTau", type, cell_num);
+        data.AddData("coordTransTXi", type, cell_num);
+        data.AddData("coordTransTEta", type, cell_num);
+        data.AddData("coordTransTZeta", type, cell_num);
+        data.AddData("coordTransTTau", type, cell_num);
+        data.AddData("coordTransXiX", type, cell_num);
+        data.AddData("coordTransXiY", type, cell_num);
+        data.AddData("coordTransXiZ", type, cell_num);
+        data.AddData("coordTransXiT", type, cell_num);
+        data.AddData("coordTransEtaX", type, cell_num);
+        data.AddData("coordTransEtaY", type, cell_num);
+        data.AddData("coordTransEtaZ", type, cell_num);
+        data.AddData("coordTransEtaT", type, cell_num);
+        data.AddData("coordTransZetaX", type, cell_num);
+        data.AddData("coordTransZetaY", type, cell_num);
+        data.AddData("coordTransZetaZ", type, cell_num);
+        data.AddData("coordTransZetaT", type, cell_num);
+        data.AddData("coordTransTauX", type, cell_num);
+        data.AddData("coordTransTauY", type, cell_num);
+        data.AddData("coordTransTauZ", type, cell_num);
+        data.AddData("coordTransTauT", type, cell_num);
+        data.AddData("coordTransJ", type, cell_num);
         //添加边界节点数据
         auto& bound_patch = grid->GetBoundPatch();
         int bound_node_num = bound_patch.GetPatchNum();
-        empty_data.resize(bound_node_num);
-        data.AddData("rhoB", empty_data);
-        data.AddData("uB", empty_data);
-        data.AddData("vB", empty_data);
-        data.AddData("wB", empty_data);
-        data.AddData("pB", empty_data);
-        data.AddData("rhoGradXB", empty_data);
-        data.AddData("rhoGradYB", empty_data);
-        data.AddData("rhoGradZB", empty_data);
-        data.AddData("uGradXB", empty_data);
-        data.AddData("uGradYB", empty_data);
-        data.AddData("uGradZB", empty_data);
-        data.AddData("vGradXB", empty_data);
-        data.AddData("vGradYB", empty_data);
-        data.AddData("vGradZB", empty_data);
-        data.AddData("wGradXB", empty_data);
-        data.AddData("wGradYB", empty_data);
-        data.AddData("wGradZB", empty_data);
-        data.AddData("pGradXB", empty_data);
-        data.AddData("pGradYB", empty_data);
-        data.AddData("pGradZB", empty_data);
-        data.AddData("limiterCoef0B", empty_data);
-        data.AddData("limiterCoef1B", empty_data);
-        data.AddData("limiterCoef2B", empty_data);
-        data.AddData("limiterCoef3B", empty_data);
-        data.AddData("limiterCoef4B", empty_data);
+        data.AddData("rhoB", type, bound_node_num);
+        data.AddData("uB", type, bound_node_num);
+        data.AddData("vB", type, bound_node_num);
+        data.AddData("wB", type, bound_node_num);
+        data.AddData("pB", type, bound_node_num);
+        data.AddData("rhoGradXB", type, bound_node_num);
+        data.AddData("rhoGradYB", type, bound_node_num);
+        data.AddData("rhoGradZB", type, bound_node_num);
+        data.AddData("uGradXB", type, bound_node_num);
+        data.AddData("uGradYB", type, bound_node_num);
+        data.AddData("uGradZB", type, bound_node_num);
+        data.AddData("vGradXB", type, bound_node_num);
+        data.AddData("vGradYB", type, bound_node_num);
+        data.AddData("vGradZB", type, bound_node_num);
+        data.AddData("wGradXB", type, bound_node_num);
+        data.AddData("wGradYB", type, bound_node_num);
+        data.AddData("wGradZB", type, bound_node_num);
+        data.AddData("pGradXB", type, bound_node_num);
+        data.AddData("pGradYB", type, bound_node_num);
+        data.AddData("pGradZB", type, bound_node_num);
+        data.AddData("limiterCoef0B", type, bound_node_num);
+        data.AddData("limiterCoef1B", type, bound_node_num);
+        data.AddData("limiterCoef2B", type, bound_node_num);
+        data.AddData("limiterCoef3B", type, bound_node_num);
+        data.AddData("limiterCoef4B", type, bound_node_num);
 
     }
 
     void Solver_NS_3D_Zaran::RegisterFieldData()
     {
         NSSolver::RegisterFieldData();
-        auto data = GetFieldData();
-        m_prim_bound.reserve(5);
-        m_prim_bound_gradX.reserve(5);
-        m_prim_bound_gradY.reserve(5);
-        m_prim_bound_gradZ.reserve(5);
-        m_limiter_bound.reserve(5);
-        auto addDataToVector = [&data](Array<DArray*>& vec, const std::string& name) {
-            vec.push_back(&data->GetData(name));
-            };
-
-        addDataToVector(m_prim_bound, "rhoB");
-        addDataToVector(m_prim_bound, "uB");
-        addDataToVector(m_prim_bound, "vB");
-        addDataToVector(m_prim_bound, "wB");
-        addDataToVector(m_prim_bound, "pB");
-        addDataToVector(m_prim_bound_gradX, "rhoGradXB");
-        addDataToVector(m_prim_bound_gradX, "uGradXB");
-        addDataToVector(m_prim_bound_gradX, "vGradXB");
-        addDataToVector(m_prim_bound_gradX, "wGradXB");
-        addDataToVector(m_prim_bound_gradX, "pGradXB");
-        addDataToVector(m_prim_bound_gradY, "rhoGradYB");
-        addDataToVector(m_prim_bound_gradY, "uGradYB");
-        addDataToVector(m_prim_bound_gradY, "vGradYB");
-        addDataToVector(m_prim_bound_gradY, "wGradYB");
-        addDataToVector(m_prim_bound_gradY, "pGradYB");
-        addDataToVector(m_prim_bound_gradZ, "rhoGradZB");
-        addDataToVector(m_prim_bound_gradZ, "uGradZB");
-        addDataToVector(m_prim_bound_gradZ, "vGradZB");
-        addDataToVector(m_prim_bound_gradZ, "wGradZB");
-        addDataToVector(m_prim_bound_gradZ, "pGradZB");
-        addDataToVector(m_limiter_bound, "limiterCoef0B");
-        addDataToVector(m_limiter_bound, "limiterCoef1B");
-        addDataToVector(m_limiter_bound, "limiterCoef2B");
-        addDataToVector(m_limiter_bound, "limiterCoef3B");
-        addDataToVector(m_limiter_bound, "limiterCoef4B");
+        auto& data = *GetFieldData();
+        m_prim_bound = new double* [5];
+        m_prim_bound_gradX = new double* [5];
+        m_prim_bound_gradY = new double* [5];
+        m_prim_bound_gradZ = new double* [5];
+        m_limiter_bound = new double* [5];
+        auto grid = GetGrid();
+        auto& bound_patch = grid->GetBoundPatch();
+        int bound_node_num = bound_patch.GetPatchNum();
+        data.GetData("rhoB", m_prim_bound[0]);
+        data.GetData("uB", m_prim_bound[1]);
+        data.GetData("vB", m_prim_bound[2]);
+        data.GetData("wB", m_prim_bound[3]);
+        data.GetData("pB", m_prim_bound[4]);
+        data.GetData("rhoGradXB", m_prim_bound_gradX[0]);
+        data.GetData("uGradXB", m_prim_bound_gradX[1]);
+        data.GetData("vGradXB", m_prim_bound_gradX[2]);
+        data.GetData("wGradXB", m_prim_bound_gradX[3]);
+        data.GetData("pGradXB", m_prim_bound_gradX[4]);
+        data.GetData("rhoGradYB", m_prim_bound_gradY[0]);
+        data.GetData("uGradYB", m_prim_bound_gradY[1]);
+        data.GetData("vGradYB", m_prim_bound_gradY[2]);
+        data.GetData("wGradYB", m_prim_bound_gradY[3]);
+        data.GetData("pGradYB", m_prim_bound_gradY[4]);
+        data.GetData("rhoGradZB", m_prim_bound_gradZ[0]);
+        data.GetData("uGradZB", m_prim_bound_gradZ[1]);
+        data.GetData("vGradZB", m_prim_bound_gradZ[2]);
+        data.GetData("wGradZB", m_prim_bound_gradZ[3]);
+        data.GetData("pGradZB", m_prim_bound_gradZ[4]);
+        data.GetData("limiterCoef0B", m_limiter_bound[0]);
+        data.GetData("limiterCoef1B", m_limiter_bound[1]);
+        data.GetData("limiterCoef2B", m_limiter_bound[2]);
+        data.GetData("limiterCoef3B", m_limiter_bound[3]);
+        data.GetData("limiterCoef4B", m_limiter_bound[4]);
     }
-    void Solver_NS_3D_Zaran::InitField()
+    void Solver_NS_3D_Zaran::InitData()
     {
-        NSSolver::InitField();
-        auto para = GetPara();
+        NSSolver::InitData();
+        FlowSolverPara* para = GetPara();
         double prim_init[5];
         prim_init[0] = para->GetInflowDensity();
         prim_init[1] = para->GetInflowVelocityX();
@@ -172,11 +170,11 @@ namespace zaran
         int n_patch = grid->GetBoundPatch().GetPatchNum();
         for (int iPatch = 0;iPatch < n_patch;++iPatch)
         {
-            (*m_prim_bound[0])[iPatch] = prim_init[0];
-            (*m_prim_bound[1])[iPatch] = prim_init[1];
-            (*m_prim_bound[2])[iPatch] = prim_init[2];
-            (*m_prim_bound[3])[iPatch] = prim_init[3];
-            (*m_prim_bound[4])[iPatch] = prim_init[4];
+            m_prim_bound[0][iPatch] = prim_init[0];
+            m_prim_bound[1][iPatch] = prim_init[1];
+            m_prim_bound[2][iPatch] = prim_init[2];
+            m_prim_bound[3][iPatch] = prim_init[3];
+            m_prim_bound[4][iPatch] = prim_init[4];
         }
     }
     void Solver_NS_3D_Zaran::CalcMetric()
@@ -241,28 +239,21 @@ namespace zaran
     void Solver_NS_3D_Zaran::RungeKutta()
     {
         auto& grid = GetGrid();
-        FlowSolverParaPtr para = GetPara();
+        FlowSolverPara* para = GetPara();
         const DArray& rkCoef = para->GetRKCoef();
         int rkStage = rkCoef.size();
-        auto& cons = m_Conservative;
-        auto& cons_RK = m_ConservativeRK;
-        auto& dt = *m_TimeStep;
-        auto& res = m_Residual;
-        auto& coordTrans = m_CoordTrans;
-        int n_data = cons[0]->size();
+        int ni, nj, nk;
+        grid->GetNodeNum(ni, nj, nk);
+        int cell_num = (ni - 1) * (nj - 1) * (nk - 1);
         for (int iStage = 0; iStage < rkStage; ++iStage)
         {
             CalcResidual();
 #pragma omp parallel for
-            for (int iNode = 0; iNode < n_data; ++iNode)
+            for (int iNode = 0; iNode < cell_num; ++iNode)
             {
                 for (int iVal = 0; iVal < 5; ++iVal)
                 {
-                    auto& currentCons = (*cons[iVal])[iNode];
-                    auto& currentCons_RK = (*cons_RK[iVal])[iNode];
-                    auto& currentDt = dt[iNode];
-                    auto& currentRes = (*res[iVal])[iNode];
-                    currentCons = currentCons - rkCoef[iStage] * currentDt * currentRes * (*coordTrans[32])[iNode];
+                    m_cons[iVal][iNode] = m_cons[iVal][iNode] - rkCoef[iStage] * m_dt[iNode] * m_residual[iVal][iNode];
                 }
             }
         }
@@ -278,7 +269,6 @@ namespace zaran
         auto CellIndex = [&](int i, int j, int k) {return grid->GetCellIndex(i, j, k); };
         auto& cell_topo = grid->GetCellTopo();
         auto& cell_center_coord = cell_topo->GetCenterCoord();
-        auto& coord_trans_coef = m_CoordTrans;
         CoordTrans coordTrans;
         for (int k = ks; k < ke - 1; k++)
         {
@@ -288,39 +278,39 @@ namespace zaran
                 {
                     iCell = CellIndex(i, j, k);
                     coordTrans.CalcCoordTrans(3, cell_center_coord[CellIndex(i + 1, j, k)], cell_center_coord[CellIndex(i - 1, j, k)], cell_center_coord[CellIndex(i, j + 1, k)], cell_center_coord[CellIndex(i, j - 1, k)], cell_center_coord[CellIndex(i, j, k + 1)], cell_center_coord[CellIndex(i, j, k - 1)]);
-                    (*coord_trans_coef[0])[iCell] = coordTrans.GetX()[0];
-                    (*coord_trans_coef[1])[iCell] = coordTrans.GetX()[1];
-                    (*coord_trans_coef[2])[iCell] = coordTrans.GetX()[2];
-                    (*coord_trans_coef[3])[iCell] = coordTrans.GetX()[3];
-                    (*coord_trans_coef[4])[iCell] = coordTrans.GetY()[0];
-                    (*coord_trans_coef[5])[iCell] = coordTrans.GetY()[1];
-                    (*coord_trans_coef[6])[iCell] = coordTrans.GetY()[2];
-                    (*coord_trans_coef[7])[iCell] = coordTrans.GetY()[3];
-                    (*coord_trans_coef[8])[iCell] = coordTrans.GetZ()[0];
-                    (*coord_trans_coef[9])[iCell] = coordTrans.GetZ()[1];
-                    (*coord_trans_coef[10])[iCell] = coordTrans.GetZ()[2];
-                    (*coord_trans_coef[11])[iCell] = coordTrans.GetZ()[3];
-                    (*coord_trans_coef[12])[iCell] = coordTrans.GetT()[0];
-                    (*coord_trans_coef[13])[iCell] = coordTrans.GetT()[1];
-                    (*coord_trans_coef[14])[iCell] = coordTrans.GetT()[2];
-                    (*coord_trans_coef[15])[iCell] = coordTrans.GetT()[3];
-                    (*coord_trans_coef[16])[iCell] = coordTrans.GetXi()[0];
-                    (*coord_trans_coef[17])[iCell] = coordTrans.GetXi()[1];
-                    (*coord_trans_coef[18])[iCell] = coordTrans.GetXi()[2];
-                    (*coord_trans_coef[19])[iCell] = coordTrans.GetXi()[3];
-                    (*coord_trans_coef[20])[iCell] = coordTrans.GetEta()[0];
-                    (*coord_trans_coef[21])[iCell] = coordTrans.GetEta()[1];
-                    (*coord_trans_coef[22])[iCell] = coordTrans.GetEta()[2];
-                    (*coord_trans_coef[23])[iCell] = coordTrans.GetEta()[3];
-                    (*coord_trans_coef[24])[iCell] = coordTrans.GetZeta()[0];
-                    (*coord_trans_coef[25])[iCell] = coordTrans.GetZeta()[1];
-                    (*coord_trans_coef[26])[iCell] = coordTrans.GetZeta()[2];
-                    (*coord_trans_coef[27])[iCell] = coordTrans.GetZeta()[3];
-                    (*coord_trans_coef[28])[iCell] = coordTrans.GetTau()[0];
-                    (*coord_trans_coef[29])[iCell] = coordTrans.GetTau()[1];
-                    (*coord_trans_coef[30])[iCell] = coordTrans.GetTau()[2];
-                    (*coord_trans_coef[31])[iCell] = coordTrans.GetTau()[3];
-                    (*coord_trans_coef[32])[iCell] = coordTrans.J();
+                    m_metric[0][iCell] = coordTrans.GetX()[0];
+                    m_metric[1][iCell] = coordTrans.GetX()[1];
+                    m_metric[2][iCell] = coordTrans.GetX()[2];
+                    m_metric[3][iCell] = coordTrans.GetX()[3];
+                    m_metric[4][iCell] = coordTrans.GetY()[0];
+                    m_metric[5][iCell] = coordTrans.GetY()[1];
+                    m_metric[6][iCell] = coordTrans.GetY()[2];
+                    m_metric[7][iCell] = coordTrans.GetY()[3];
+                    m_metric[8][iCell] = coordTrans.GetZ()[0];
+                    m_metric[9][iCell] = coordTrans.GetZ()[1];
+                    m_metric[10][iCell] = coordTrans.GetZ()[2];
+                    m_metric[11][iCell] = coordTrans.GetZ()[3];
+                    m_metric[12][iCell] = coordTrans.GetT()[0];
+                    m_metric[13][iCell] = coordTrans.GetT()[1];
+                    m_metric[14][iCell] = coordTrans.GetT()[2];
+                    m_metric[15][iCell] = coordTrans.GetT()[3];
+                    m_metric[16][iCell] = coordTrans.GetXi()[0];
+                    m_metric[17][iCell] = coordTrans.GetXi()[1];
+                    m_metric[18][iCell] = coordTrans.GetXi()[2];
+                    m_metric[19][iCell] = coordTrans.GetXi()[3];
+                    m_metric[20][iCell] = coordTrans.GetEta()[0];
+                    m_metric[21][iCell] = coordTrans.GetEta()[1];
+                    m_metric[22][iCell] = coordTrans.GetEta()[2];
+                    m_metric[23][iCell] = coordTrans.GetEta()[3];
+                    m_metric[24][iCell] = coordTrans.GetZeta()[0];
+                    m_metric[25][iCell] = coordTrans.GetZeta()[1];
+                    m_metric[26][iCell] = coordTrans.GetZeta()[2];
+                    m_metric[27][iCell] = coordTrans.GetZeta()[3];
+                    m_metric[28][iCell] = coordTrans.GetTau()[0];
+                    m_metric[29][iCell] = coordTrans.GetTau()[1];
+                    m_metric[30][iCell] = coordTrans.GetTau()[2];
+                    m_metric[31][iCell] = coordTrans.GetTau()[3];
+                    m_metric[32][iCell] = coordTrans.J();
                 }
             }
         }
@@ -341,7 +331,6 @@ namespace zaran
         auto& cell_topo = grid->GetCellTopo();
         auto& cell_center_coord = cell_topo->GetCenterCoord();
         auto& cell_type = cell_topo->GetType();
-        auto& coord_trans_coef = m_CoordTrans;
         CoordTrans coordTrans;
         int i, j, k;
         Array<DVector3D*> neighbor_node_coord(6);
@@ -366,39 +355,39 @@ namespace zaran
                     neighbor_node_coord[iNeighbor] = &bound_node_coord[iPatch];
             }
             coordTrans.CalcCoordTrans(3, *neighbor_node_coord[0], *neighbor_node_coord[1], *neighbor_node_coord[2], *neighbor_node_coord[3], *neighbor_node_coord[4], *neighbor_node_coord[5]);
-            (*coord_trans_coef[0])[iCell] = coordTrans.GetX()[0];
-            (*coord_trans_coef[1])[iCell] = coordTrans.GetX()[1];
-            (*coord_trans_coef[2])[iCell] = coordTrans.GetX()[2];
-            (*coord_trans_coef[3])[iCell] = coordTrans.GetX()[3];
-            (*coord_trans_coef[4])[iCell] = coordTrans.GetY()[0];
-            (*coord_trans_coef[5])[iCell] = coordTrans.GetY()[1];
-            (*coord_trans_coef[6])[iCell] = coordTrans.GetY()[2];
-            (*coord_trans_coef[7])[iCell] = coordTrans.GetY()[3];
-            (*coord_trans_coef[8])[iCell] = coordTrans.GetZ()[0];
-            (*coord_trans_coef[9])[iCell] = coordTrans.GetZ()[1];
-            (*coord_trans_coef[10])[iCell] = coordTrans.GetZ()[2];
-            (*coord_trans_coef[11])[iCell] = coordTrans.GetZ()[3];
-            (*coord_trans_coef[12])[iCell] = coordTrans.GetT()[0];
-            (*coord_trans_coef[13])[iCell] = coordTrans.GetT()[1];
-            (*coord_trans_coef[14])[iCell] = coordTrans.GetT()[2];
-            (*coord_trans_coef[15])[iCell] = coordTrans.GetT()[3];
-            (*coord_trans_coef[16])[iCell] = coordTrans.GetXi()[0];
-            (*coord_trans_coef[17])[iCell] = coordTrans.GetXi()[1];
-            (*coord_trans_coef[18])[iCell] = coordTrans.GetXi()[2];
-            (*coord_trans_coef[19])[iCell] = coordTrans.GetXi()[3];
-            (*coord_trans_coef[20])[iCell] = coordTrans.GetEta()[0];
-            (*coord_trans_coef[21])[iCell] = coordTrans.GetEta()[1];
-            (*coord_trans_coef[22])[iCell] = coordTrans.GetEta()[2];
-            (*coord_trans_coef[23])[iCell] = coordTrans.GetEta()[3];
-            (*coord_trans_coef[24])[iCell] = coordTrans.GetZeta()[0];
-            (*coord_trans_coef[25])[iCell] = coordTrans.GetZeta()[1];
-            (*coord_trans_coef[26])[iCell] = coordTrans.GetZeta()[2];
-            (*coord_trans_coef[27])[iCell] = coordTrans.GetZeta()[3];
-            (*coord_trans_coef[28])[iCell] = coordTrans.GetTau()[0];
-            (*coord_trans_coef[29])[iCell] = coordTrans.GetTau()[1];
-            (*coord_trans_coef[30])[iCell] = coordTrans.GetTau()[2];
-            (*coord_trans_coef[31])[iCell] = coordTrans.GetTau()[3];
-            (*coord_trans_coef[32])[iCell] = coordTrans.J();
+            m_metric[0][iCell] = coordTrans.GetX()[0];
+            m_metric[1][iCell] = coordTrans.GetX()[1];
+            m_metric[2][iCell] = coordTrans.GetX()[2];
+            m_metric[3][iCell] = coordTrans.GetX()[3];
+            m_metric[4][iCell] = coordTrans.GetY()[0];
+            m_metric[5][iCell] = coordTrans.GetY()[1];
+            m_metric[6][iCell] = coordTrans.GetY()[2];
+            m_metric[7][iCell] = coordTrans.GetY()[3];
+            m_metric[8][iCell] = coordTrans.GetZ()[0];
+            m_metric[9][iCell] = coordTrans.GetZ()[1];
+            m_metric[10][iCell] = coordTrans.GetZ()[2];
+            m_metric[11][iCell] = coordTrans.GetZ()[3];
+            m_metric[12][iCell] = coordTrans.GetT()[0];
+            m_metric[13][iCell] = coordTrans.GetT()[1];
+            m_metric[14][iCell] = coordTrans.GetT()[2];
+            m_metric[15][iCell] = coordTrans.GetT()[3];
+            m_metric[16][iCell] = coordTrans.GetXi()[0];
+            m_metric[17][iCell] = coordTrans.GetXi()[1];
+            m_metric[18][iCell] = coordTrans.GetXi()[2];
+            m_metric[19][iCell] = coordTrans.GetXi()[3];
+            m_metric[20][iCell] = coordTrans.GetEta()[0];
+            m_metric[21][iCell] = coordTrans.GetEta()[1];
+            m_metric[22][iCell] = coordTrans.GetEta()[2];
+            m_metric[23][iCell] = coordTrans.GetEta()[3];
+            m_metric[24][iCell] = coordTrans.GetZeta()[0];
+            m_metric[25][iCell] = coordTrans.GetZeta()[1];
+            m_metric[26][iCell] = coordTrans.GetZeta()[2];
+            m_metric[27][iCell] = coordTrans.GetZeta()[3];
+            m_metric[28][iCell] = coordTrans.GetTau()[0];
+            m_metric[29][iCell] = coordTrans.GetTau()[1];
+            m_metric[30][iCell] = coordTrans.GetTau()[2];
+            m_metric[31][iCell] = coordTrans.GetTau()[3];
+            m_metric[32][iCell] = coordTrans.J();
             if (isinf(coordTrans.J()))
                 Log::error("i:{},j:{},k:{},J:{}", i, j, k, coordTrans.J());
         }
@@ -425,15 +414,7 @@ namespace zaran
         auto CellIndex = [&](int i, int j, int k) {return grid->GetCellIndex(i, j, k); };
         auto& cell_topo = grid->GetCellTopo();
         auto& cell_type = cell_topo->GetType();
-        auto& coord_trans_coef = m_CoordTrans;
-        auto& rho = *m_Primitive[0];
-        auto& u = *m_Primitive[1];
-        auto& v = *m_Primitive[2];
-        auto& w = *m_Primitive[3];
-        auto& p = *m_Primitive[4];
-        auto& coordTrans = m_CoordTrans;
-        auto& dt = *m_TimeStep;
-        auto para = GetPara();
+        FlowSolverPara* para = GetPara();
         double cfl = para->GetCflNumber();
         double min_dt = LARGE_NUMBER;
         double gamma = 1.4;
@@ -447,16 +428,16 @@ namespace zaran
                     iCell = CellIndex(i, j, k);
                     if (cell_type[iCell] != CellType::Fluid && cell_type[iCell] != CellType::FluidSolid)
                         continue;
-                    double c = sqrt(gamma * p[iCell] / rho[iCell]);
-                    double normXi = sqrt((*coordTrans[16])[iCell] * (*coordTrans[16])[iCell] + (*coordTrans[17])[iCell] * (*coordTrans[17])[iCell] + (*coordTrans[18])[iCell] * (*coordTrans[19])[iCell]);
-                    double normEta = sqrt((*coordTrans[20])[iCell] * (*coordTrans[20])[iCell] + (*coordTrans[21])[iCell] * (*coordTrans[21])[iCell] + (*coordTrans[22])[iCell] * (*coordTrans[22])[iCell]);
-                    double normZeta = sqrt((*coordTrans[24])[iCell] * (*coordTrans[24])[iCell] + (*coordTrans[25])[iCell] * (*coordTrans[25])[iCell] + (*coordTrans[26])[iCell] * (*coordTrans[26])[iCell]);
-                    double uXi = u[iCell] * (*coordTrans[16])[iCell] + v[iCell] * (*coordTrans[17])[iCell] + w[iCell] * (*coordTrans[18])[iCell] + (*coordTrans[19])[iCell];
-                    double uEta = u[iCell] * (*coordTrans[20])[iCell] + v[iCell] * (*coordTrans[21])[iCell] + w[iCell] * (*coordTrans[22])[iCell] + (*coordTrans[23])[iCell];
-                    double uZeta = u[iCell] * (*coordTrans[24])[iCell] + v[iCell] * (*coordTrans[25])[iCell] + w[iCell] * (*coordTrans[26])[iCell] + (*coordTrans[27])[iCell];
+                    double c = sqrt(gamma * m_prim[4][iCell] / m_prim[0][iCell]);
+                    double normXi = sqrt(m_metric[16][iCell] * m_metric[16][iCell] + m_metric[17][iCell] * m_metric[17][iCell] + m_metric[18][iCell] * m_metric[18][iCell]);
+                    double normEta = sqrt(m_metric[20][iCell] * m_metric[20][iCell] + m_metric[21][iCell] * m_metric[21][iCell] + m_metric[22][iCell] * m_metric[22][iCell]);
+                    double normZeta = sqrt(m_metric[24][iCell] * m_metric[24][iCell] + m_metric[25][iCell] * m_metric[25][iCell] + m_metric[26][iCell] * m_metric[26][iCell]);
+                    double uXi = m_prim[1][iCell] * m_metric[16][iCell] + m_prim[2][iCell] * m_metric[17][iCell] + m_prim[3][iCell] * m_metric[18][iCell];
+                    double uEta = m_prim[1][iCell] * m_metric[20][iCell] + m_prim[2][iCell] * m_metric[21][iCell] + m_prim[3][iCell] * m_metric[22][iCell];
+                    double uZeta = m_prim[1][iCell] * m_metric[24][iCell] + m_prim[2][iCell] * m_metric[25][iCell] + m_prim[3][iCell] * m_metric[26][iCell];
                     double lambda = abs(uXi) + abs(uEta) + abs(uZeta) + c * (normXi + normEta + normZeta);
-                    dt[iCell] = cfl / lambda;
-                    min_dt = Min(min_dt, dt[iCell]);
+                    m_dt[iCell] = cfl / lambda;
+                    min_dt = Min(min_dt, m_dt[iCell]);
                 }
             }
         }
@@ -473,14 +454,6 @@ namespace zaran
         auto& cell_topo = grid->GetCellTopo();
         auto& cell_type = cell_topo->GetType();
         auto& cell_center_coord = cell_topo->GetCenterCoord();
-        auto& prim = m_Primitive;
-        auto& cons = m_Conservative;
-        auto& primGradX = m_PrimGradX;
-        auto& primGradY = m_PrimGradY;
-        auto& primGradZ = m_PrimGradZ;
-        auto& limiterCoef = m_LimiterCoef;
-        auto& res = m_Residual;
-        auto& coordTrans = m_CoordTrans;
         // 起始点和终止点的编号,s: start, e: end
         int is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
@@ -499,12 +472,12 @@ namespace zaran
                     iCell = grid->GetCellIndex(i, j, k);
                     if (cell_type[iCell] != CellType::Fluid)
                         continue;
-                    auto& jacobi = (*coordTrans[32])[iCell];
+                    auto& jacobi = m_metric[32][iCell];
                     // i direction
-                    riemann_para.norm(0) = (*coordTrans[16])[iCell];
-                    riemann_para.norm(1) = (*coordTrans[17])[iCell];
-                    riemann_para.norm(2) = (*coordTrans[18])[iCell];
-                    riemann_para.nt = (*coordTrans[19])[iCell];
+                    riemann_para.norm(0) = m_metric[16][iCell];
+                    riemann_para.norm(1) = m_metric[17][iCell];
+                    riemann_para.norm(2) = m_metric[18][iCell];
+                    riemann_para.nt = m_metric[19][iCell];
                     left_index = grid->GetCellIndex(i, j, k);
                     right_index = grid->GetCellIndex(i + 1, j, k);
                     r[0] = cell_center_coord[right_index].x() - cell_center_coord[left_index].x();
@@ -512,20 +485,20 @@ namespace zaran
                     r[2] = cell_center_coord[right_index].z() - cell_center_coord[left_index].z();
                     for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                     {
-                        grad(0) = (*primGradX[iVal])[left_index];
-                        grad(1) = (*primGradY[iVal])[left_index];
-                        grad(2) = (*primGradZ[iVal])[left_index];
-                        riemann_para.prim_left(iVal) = (*prim[iVal])[left_index] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
-                        grad(0) = (*primGradX[iVal])[right_index];
-                        grad(1) = (*primGradY[iVal])[right_index];
-                        grad(2) = (*primGradZ[iVal])[right_index];
-                        riemann_para.prim_right(iVal) = (*prim[iVal])[right_index] - 0.5 * (*limiterCoef[iVal])[right_index] * grad.dot(r);
+                        grad(0) = m_PrimGradX[iVal][left_index];
+                        grad(1) = m_PrimGradY[iVal][left_index];
+                        grad(2) = m_PrimGradZ[iVal][left_index];
+                        riemann_para.prim_left(iVal) = m_prim[iVal][left_index] + 0.5 * m_limiter[iVal][left_index] * grad.dot(r);
+                        grad(0) = m_PrimGradX[iVal][right_index];
+                        grad(1) = m_PrimGradY[iVal][right_index];
+                        grad(2) = m_PrimGradZ[iVal][right_index];
+                        riemann_para.prim_right(iVal) = m_prim[iVal][right_index] - 0.5 * m_limiter[iVal][right_index] * grad.dot(r);
                     }
                     riemannSolver_->Solver(riemann_para);
 
                     for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                     {
-                        (*res[iVal])[iCell] += riemann_para.flux(iVal) / jacobi;
+                        m_residual[iVal][iCell] += riemann_para.flux(iVal) / jacobi;
                     }
 
                     left_index = grid->GetCellIndex(i - 1, j, k);
@@ -536,25 +509,25 @@ namespace zaran
                     r[2] = cell_center_coord[right_index].z() - cell_center_coord[left_index].z();
                     for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                     {
-                        grad(0) = (*primGradX[iVal])[left_index];
-                        grad(1) = (*primGradY[iVal])[left_index];
-                        grad(2) = (*primGradZ[iVal])[left_index];
-                        riemann_para.prim_left(iVal) = (*prim[iVal])[left_index] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
-                        grad(0) = (*primGradX[iVal])[right_index];
-                        grad(1) = (*primGradY[iVal])[right_index];
-                        grad(2) = (*primGradZ[iVal])[right_index];
-                        riemann_para.prim_right(iVal) = (*prim[iVal])[right_index] - 0.5 * (*limiterCoef[iVal])[right_index] * grad.dot(r);
+                        grad(0) = m_PrimGradX[iVal][left_index];
+                        grad(1) = m_PrimGradY[iVal][left_index];
+                        grad(2) = m_PrimGradZ[iVal][left_index];
+                        riemann_para.prim_left(iVal) =  m_prim[iVal][left_index] + 0.5 * m_limiter[iVal][left_index] * grad.dot(r);
+                        grad(0) = m_PrimGradX[iVal][right_index];
+                        grad(1) = m_PrimGradY[iVal][right_index];
+                        grad(2) = m_PrimGradZ[iVal][right_index];
+                        riemann_para.prim_right(iVal) =  m_prim[iVal][right_index] - 0.5 * m_limiter[iVal][right_index] * grad.dot(r);
                     }
                     riemannSolver_->Solver(riemann_para);
                     for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                     {
-                        (*res[iVal])[iCell] -= riemann_para.flux(iVal) / jacobi;
+                        m_residual[iVal][iCell] -= riemann_para.flux(iVal) / jacobi;
                     }
                     // j direction
-                    riemann_para.norm(0) = (*coordTrans[20])[iCell];
-                    riemann_para.norm(1) = (*coordTrans[21])[iCell];
-                    riemann_para.norm(2) = (*coordTrans[22])[iCell];
-                    riemann_para.nt = (*coordTrans[23])[iCell];
+                    riemann_para.norm(0) = m_metric[20][iCell];
+                    riemann_para.norm(1) = m_metric[21][iCell];
+                    riemann_para.norm(2) = m_metric[22][iCell];
+                    riemann_para.nt = m_metric[23][iCell];
                     left_index = grid->GetCellIndex(i, j, k);
                     right_index = grid->GetCellIndex(i, j + 1, k);
                     r[0] = cell_center_coord[right_index].x() - cell_center_coord[left_index].x();
@@ -562,19 +535,19 @@ namespace zaran
                     r[2] = cell_center_coord[right_index].z() - cell_center_coord[left_index].z();
                     for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                     {
-                        grad(0) = (*primGradX[iVal])[left_index];
-                        grad(1) = (*primGradY[iVal])[left_index];
-                        grad(2) = (*primGradZ[iVal])[left_index];
-                        riemann_para.prim_left(iVal) = (*prim[iVal])[left_index] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
-                        grad(0) = (*primGradX[iVal])[right_index];
-                        grad(1) = (*primGradY[iVal])[right_index];
-                        grad(2) = (*primGradZ[iVal])[right_index];
-                        riemann_para.prim_right(iVal) = (*prim[iVal])[right_index] - 0.5 * (*limiterCoef[iVal])[right_index] * grad.dot(r);
+                        grad(0) = m_PrimGradX[iVal][left_index];
+                        grad(1) = m_PrimGradY[iVal][left_index];
+                        grad(2) = m_PrimGradZ[iVal][left_index];
+                        riemann_para.prim_left(iVal) =  m_prim[iVal][left_index] + 0.5 * m_limiter[iVal][left_index] * grad.dot(r);
+                        grad(0) = m_PrimGradX[iVal][right_index];
+                        grad(1) = m_PrimGradY[iVal][right_index];
+                        grad(2) = m_PrimGradZ[iVal][right_index];
+                        riemann_para.prim_right(iVal) =  m_prim[iVal][right_index] - 0.5 * m_limiter[iVal][right_index] * grad.dot(r);
                     }
                     riemannSolver_->Solver(riemann_para);
                     for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                     {
-                        (*res[iVal])[iCell] += riemann_para.flux(iVal) / jacobi;
+                        m_residual[iVal][iCell] += riemann_para.flux(iVal) / jacobi;
                     }
                     left_index = grid->GetCellIndex(i, j - 1, k);
                     right_index = grid->GetCellIndex(i, j, k);
@@ -584,25 +557,25 @@ namespace zaran
                     r[2] = cell_center_coord[right_index].z() - cell_center_coord[left_index].z();
                     for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                     {
-                        grad(0) = (*primGradX[iVal])[left_index];
-                        grad(1) = (*primGradY[iVal])[left_index];
-                        grad(2) = (*primGradZ[iVal])[left_index];
-                        riemann_para.prim_left(iVal) = (*prim[iVal])[left_index] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
-                        grad(0) = (*primGradX[iVal])[right_index];
-                        grad(1) = (*primGradY[iVal])[right_index];
-                        grad(2) = (*primGradZ[iVal])[right_index];
-                        riemann_para.prim_right(iVal) = (*prim[iVal])[right_index] - 0.5 * (*limiterCoef[iVal])[right_index] * grad.dot(r);
+                        grad(0) = m_PrimGradX[iVal][left_index];
+                        grad(1) = m_PrimGradY[iVal][left_index];
+                        grad(2) = m_PrimGradZ[iVal][left_index];
+                        riemann_para.prim_left(iVal) =  m_prim[iVal][left_index] + 0.5 * m_limiter[iVal][left_index] * grad.dot(r);
+                        grad(0) = m_PrimGradX[iVal][right_index];
+                        grad(1) = m_PrimGradY[iVal][right_index];
+                        grad(2) = m_PrimGradZ[iVal][right_index];
+                        riemann_para.prim_right(iVal) =  m_prim[iVal][right_index] - 0.5 * m_limiter[iVal][right_index] * grad.dot(r);
                     }
                     riemannSolver_->Solver(riemann_para);
                     for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                     {
-                        (*res[iVal])[iCell] -= riemann_para.flux(iVal) / jacobi;
+                        m_residual[iVal][iCell] -= riemann_para.flux(iVal) / jacobi;
                     }
                     // k direction
-                    riemann_para.norm(0) = (*coordTrans[24])[iCell];
-                    riemann_para.norm(1) = (*coordTrans[25])[iCell];
-                    riemann_para.norm(2) = (*coordTrans[26])[iCell];
-                    riemann_para.nt = (*coordTrans[27])[iCell];
+                    riemann_para.norm(0) = m_metric[24][iCell];
+                    riemann_para.norm(1) = m_metric[25][iCell];
+                    riemann_para.norm(2) = m_metric[26][iCell];
+                    riemann_para.nt = m_metric[27][iCell];
                     left_index = grid->GetCellIndex(i, j, k);
                     right_index = grid->GetCellIndex(i, j, k + 1);
                     r[0] = cell_center_coord[right_index].x() - cell_center_coord[left_index].x();
@@ -610,19 +583,19 @@ namespace zaran
                     r[2] = cell_center_coord[right_index].z() - cell_center_coord[left_index].z();
                     for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                     {
-                        grad(0) = (*primGradX[iVal])[left_index];
-                        grad(1) = (*primGradY[iVal])[left_index];
-                        grad(2) = (*primGradZ[iVal])[left_index];
-                        riemann_para.prim_left(iVal) = (*prim[iVal])[left_index] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
-                        grad(0) = (*primGradX[iVal])[right_index];
-                        grad(1) = (*primGradY[iVal])[right_index];
-                        grad(2) = (*primGradZ[iVal])[right_index];
-                        riemann_para.prim_right(iVal) = (*prim[iVal])[right_index] - 0.5 * (*limiterCoef[iVal])[right_index] * grad.dot(r);
+                        grad(0) = m_PrimGradX[iVal][left_index];
+                        grad(1) = m_PrimGradY[iVal][left_index];
+                        grad(2) = m_PrimGradZ[iVal][left_index];
+                        riemann_para.prim_left(iVal) =  m_prim[iVal][left_index] + 0.5 * m_limiter[iVal][left_index] * grad.dot(r);
+                        grad(0) = m_PrimGradX[iVal][right_index];
+                        grad(1) = m_PrimGradY[iVal][right_index];
+                        grad(2) = m_PrimGradZ[iVal][right_index];
+                        riemann_para.prim_right(iVal) =  m_prim[iVal][right_index] - 0.5 * m_limiter[iVal][right_index] * grad.dot(r);
                     }
                     riemannSolver_->Solver(riemann_para);
                     for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                     {
-                        (*res[iVal])[iCell] += riemann_para.flux(iVal) / jacobi;
+                        m_residual[iVal][iCell] += riemann_para.flux(iVal) / jacobi;
                     }
                     left_index = grid->GetCellIndex(i, j, k - 1);
                     right_index = grid->GetCellIndex(i, j, k);
@@ -632,22 +605,22 @@ namespace zaran
                     r[2] = cell_center_coord[right_index].z() - cell_center_coord[left_index].z();
                     for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                     {
-                        grad(0) = (*primGradX[iVal])[left_index];
-                        grad(1) = (*primGradY[iVal])[left_index];
-                        grad(2) = (*primGradZ[iVal])[left_index];
-                        riemann_para.prim_left(iVal) = (*prim[iVal])[left_index] + 0.5 * (*limiterCoef[iVal])[left_index] * grad.dot(r);
-                        grad(0) = (*primGradX[iVal])[right_index];
-                        grad(1) = (*primGradY[iVal])[right_index];
-                        grad(2) = (*primGradZ[iVal])[right_index];
-                        riemann_para.prim_right(iVal) = (*prim[iVal])[right_index] - 0.5 * (*limiterCoef[iVal])[right_index] * grad.dot(r);
+                        grad(0) = m_PrimGradX[iVal][left_index];
+                        grad(1) = m_PrimGradY[iVal][left_index];
+                        grad(2) = m_PrimGradZ[iVal][left_index];
+                        riemann_para.prim_left(iVal) =  m_prim[iVal][left_index] + 0.5 * m_limiter[iVal][left_index] * grad.dot(r);
+                        grad(0) = m_PrimGradX[iVal][right_index];
+                        grad(1) = m_PrimGradY[iVal][right_index];
+                        grad(2) = m_PrimGradZ[iVal][right_index];
+                        riemann_para.prim_right(iVal) =  m_prim[iVal][right_index] - 0.5 * m_limiter[iVal][right_index] * grad.dot(r);
                     }
                     riemannSolver_->Solver(riemann_para);
                     for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                     {
-                        (*res[iVal])[iCell] -= riemann_para.flux(iVal) / jacobi;
+                        m_residual[iVal][iCell] -= riemann_para.flux(iVal) / jacobi;
                     }
 
-                    if (isnan((*res[0])[iCell]) || isnan((*res[1])[iCell]) || isnan((*res[2])[iCell]) || isnan((*res[3])[iCell]) || isnan((*res[4])[iCell]))
+                    if (isnan(m_residual[0][iCell]) || isnan(m_residual[1][iCell]) || isnan(m_residual[2][iCell]) || isnan(m_residual[3][iCell]) || isnan(m_residual[4][iCell]))
                     {
 #ifdef USE_OMP
 
@@ -676,19 +649,6 @@ namespace zaran
         auto& bound_node_index = bound_patch.GetIndex();
         auto& bound_node_coord = bound_patch.GetCoordinate();
 
-        auto& prim = m_Primitive;
-        auto& cons = m_Conservative;
-        auto& primGradX = m_PrimGradX;
-        auto& primGradY = m_PrimGradY;
-        auto& primGradZ = m_PrimGradZ;
-        auto& limiterCoef = m_LimiterCoef;
-        auto& res = m_Residual;
-        auto& coordTrans = m_CoordTrans;
-
-        auto& prim_bound = m_prim_bound;
-        auto& prim_bound_gradX = m_prim_bound_gradX;
-        auto& prim_bound_gradY = m_prim_bound_gradY;
-        auto& prim_bound_gradZ = m_prim_bound_gradZ;
         // 起始点和终止点的编号,s: start, e: end
         int is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
@@ -709,33 +669,33 @@ namespace zaran
             j = bound_node_index[iPatch][1];
             k = bound_node_index[iPatch][2];
             iCell = CellIndex(i, j, k);
-            auto& jacobi = (*coordTrans[32])[iCell];
+            auto& jacobi = m_metric[32][iCell];
             // i direction
-            riemann_para.norm(0) = (*coordTrans[16])[iCell];
-            riemann_para.norm(1) = (*coordTrans[17])[iCell];
-            riemann_para.norm(2) = (*coordTrans[18])[iCell];
-            riemann_para.nt = (*coordTrans[19])[iCell];
+            riemann_para.norm(0) = m_metric[16][iCell];
+            riemann_para.norm(1) = m_metric[17][iCell];
+            riemann_para.norm(2) = m_metric[18][iCell];
+            riemann_para.nt = m_metric[19][iCell];
             left_index = CellIndex(i, j, k);
             right_index = CellIndex(i + 1, j, k);
             coord_left = cell_center_coord[left_index];
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
-                prim_left[iVal] = (*prim[iVal])[left_index];
-                prim_left_gradX[iVal] = (*primGradX[iVal])[left_index];
-                prim_left_gradY[iVal] = (*primGradY[iVal])[left_index];
-                prim_left_gradZ[iVal] = (*primGradZ[iVal])[left_index];
-                limiterCoef_left[iVal] = (*limiterCoef[iVal])[left_index];
+                prim_left[iVal] =  m_prim[iVal][left_index];
+                prim_left_gradX[iVal] = m_PrimGradX[iVal][left_index];
+                prim_left_gradY[iVal] = m_PrimGradY[iVal][left_index];
+                prim_left_gradZ[iVal] = m_PrimGradZ[iVal][left_index];
+                limiterCoef_left[iVal] = m_limiter[iVal][left_index];
             }
             if (cell_type[right_index] == CellType::Solid)
             {
                 coord_right = bound_node_coord[iPatch];
                 for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                 {
-                    prim_right[iVal] = (*prim_bound[iVal])[iPatch];
-                    prim_right_gradX[iVal] = (*prim_bound_gradX[iVal])[iPatch];
-                    prim_right_gradY[iVal] = (*prim_bound_gradY[iVal])[iPatch];
-                    prim_right_gradZ[iVal] = (*prim_bound_gradZ[iVal])[iPatch];
-                    limiterCoef_right[iVal] = (*m_limiter_bound[iVal])[iPatch];
+                    prim_right[iVal] =m_prim_bound[iVal][iPatch];
+                    prim_right_gradX[iVal] =m_prim_bound_gradX[iVal][iPatch];
+                    prim_right_gradY[iVal] =m_prim_bound_gradY[iVal][iPatch];
+                    prim_right_gradZ[iVal] =m_prim_bound_gradZ[iVal][iPatch];
+                    limiterCoef_right[iVal] = m_limiter_bound[iVal][iPatch];
                 }
             }
             else
@@ -743,11 +703,11 @@ namespace zaran
                 coord_right = cell_center_coord[right_index];
                 for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                 {
-                    prim_right[iVal] = (*prim[iVal])[right_index];
-                    prim_right_gradX[iVal] = (*primGradX[iVal])[right_index];
-                    prim_right_gradY[iVal] = (*primGradY[iVal])[right_index];
-                    prim_right_gradZ[iVal] = (*primGradZ[iVal])[right_index];
-                    limiterCoef_right[iVal] = (*limiterCoef[iVal])[right_index];
+                    prim_right[iVal] =  m_prim[iVal][right_index];
+                    prim_right_gradX[iVal] = m_PrimGradX[iVal][right_index];
+                    prim_right_gradY[iVal] = m_PrimGradY[iVal][right_index];
+                    prim_right_gradZ[iVal] = m_PrimGradZ[iVal][right_index];
+                    limiterCoef_right[iVal] = m_limiter[iVal][right_index];
                 }
             }
             r[0] = coord_right.x() - coord_left.x();
@@ -767,7 +727,7 @@ namespace zaran
             riemannSolver_->Solver(riemann_para);
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
-                (*res[iVal])[iCell] += riemann_para.flux(iVal) / jacobi;
+                m_residual[iVal][iCell] += riemann_para.flux(iVal) / jacobi;
             }
 
             left_index = CellIndex(i - 1, j, k);
@@ -775,11 +735,11 @@ namespace zaran
             coord_right = cell_center_coord[right_index];
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
-                prim_right[iVal] = (*prim[iVal])[right_index];
-                prim_right_gradX[iVal] = (*primGradX[iVal])[right_index];
-                prim_right_gradY[iVal] = (*primGradY[iVal])[right_index];
-                prim_right_gradZ[iVal] = (*primGradZ[iVal])[right_index];
-                limiterCoef_right[iVal] = (*limiterCoef[iVal])[right_index];
+                prim_right[iVal] =  m_prim[iVal][right_index];
+                prim_right_gradX[iVal] = m_PrimGradX[iVal][right_index];
+                prim_right_gradY[iVal] = m_PrimGradY[iVal][right_index];
+                prim_right_gradZ[iVal] = m_PrimGradZ[iVal][right_index];
+                limiterCoef_right[iVal] = m_limiter[iVal][right_index];
 
             }
             if (cell_type[left_index] == CellType::Solid)
@@ -787,11 +747,11 @@ namespace zaran
                 coord_left = bound_node_coord[iPatch];
                 for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                 {
-                    prim_left[iVal] = (*prim_bound[iVal])[iPatch];
-                    prim_left_gradX[iVal] = (*prim_bound_gradX[iVal])[iPatch];
-                    prim_left_gradY[iVal] = (*prim_bound_gradY[iVal])[iPatch];
-                    prim_left_gradZ[iVal] = (*prim_bound_gradZ[iVal])[iPatch];
-                    limiterCoef_left[iVal] = (*m_limiter_bound[iVal])[iPatch];
+                    prim_left[iVal] =m_prim_bound[iVal][iPatch];
+                    prim_left_gradX[iVal] =m_prim_bound_gradX[iVal][iPatch];
+                    prim_left_gradY[iVal] =m_prim_bound_gradY[iVal][iPatch];
+                    prim_left_gradZ[iVal] =m_prim_bound_gradZ[iVal][iPatch];
+                    limiterCoef_left[iVal] = m_limiter_bound[iVal][iPatch];
                 }
             }
             else
@@ -799,11 +759,11 @@ namespace zaran
                 coord_left = cell_center_coord[left_index];
                 for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                 {
-                    prim_left[iVal] = (*prim[iVal])[left_index];
-                    prim_left_gradX[iVal] = (*primGradX[iVal])[left_index];
-                    prim_left_gradY[iVal] = (*primGradY[iVal])[left_index];
-                    prim_left_gradZ[iVal] = (*primGradZ[iVal])[left_index];
-                    limiterCoef_left[iVal] = (*limiterCoef[iVal])[left_index];
+                    prim_left[iVal] =  m_prim[iVal][left_index];
+                    prim_left_gradX[iVal] = m_PrimGradX[iVal][left_index];
+                    prim_left_gradY[iVal] = m_PrimGradY[iVal][left_index];
+                    prim_left_gradZ[iVal] = m_PrimGradZ[iVal][left_index];
+                    limiterCoef_left[iVal] = m_limiter[iVal][left_index];
                 }
             }
             r[0] = coord_right.x() - coord_left.x();
@@ -823,23 +783,23 @@ namespace zaran
             riemannSolver_->Solver(riemann_para);
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
-                (*res[iVal])[iCell] -= riemann_para.flux(iVal) / jacobi;
+                m_residual[iVal][iCell] -= riemann_para.flux(iVal) / jacobi;
             }
             // j direction
-            riemann_para.norm(0) = (*coordTrans[20])[iCell];
-            riemann_para.norm(1) = (*coordTrans[21])[iCell];
-            riemann_para.norm(2) = (*coordTrans[22])[iCell];
-            riemann_para.nt = (*coordTrans[23])[iCell];
+            riemann_para.norm(0) = m_metric[20][iCell];
+            riemann_para.norm(1) = m_metric[21][iCell];
+            riemann_para.norm(2) = m_metric[22][iCell];
+            riemann_para.nt = m_metric[23][iCell];
             left_index = CellIndex(i, j, k);
             right_index = CellIndex(i, j + 1, k);
             coord_left = cell_center_coord[left_index];
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
-                prim_left[iVal] = (*prim[iVal])[left_index];
-                prim_left_gradX[iVal] = (*primGradX[iVal])[left_index];
-                prim_left_gradY[iVal] = (*primGradY[iVal])[left_index];
-                prim_left_gradZ[iVal] = (*primGradZ[iVal])[left_index];
-                limiterCoef_left[iVal] = (*limiterCoef[iVal])[left_index];
+                prim_left[iVal] =  m_prim[iVal][left_index];
+                prim_left_gradX[iVal] = m_PrimGradX[iVal][left_index];
+                prim_left_gradY[iVal] = m_PrimGradY[iVal][left_index];
+                prim_left_gradZ[iVal] = m_PrimGradZ[iVal][left_index];
+                limiterCoef_left[iVal] = m_limiter[iVal][left_index];
 
             }
             if (cell_type[right_index] == CellType::Solid)
@@ -847,11 +807,11 @@ namespace zaran
                 coord_right = bound_node_coord[iPatch];
                 for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                 {
-                    prim_right[iVal] = (*prim_bound[iVal])[iPatch];
-                    prim_right_gradX[iVal] = (*prim_bound_gradX[iVal])[iPatch];
-                    prim_right_gradY[iVal] = (*prim_bound_gradY[iVal])[iPatch];
-                    prim_right_gradZ[iVal] = (*prim_bound_gradZ[iVal])[iPatch];
-                    limiterCoef_right[iVal] = (*m_limiter_bound[iVal])[iPatch];
+                    prim_right[iVal] =m_prim_bound[iVal][iPatch];
+                    prim_right_gradX[iVal] =m_prim_bound_gradX[iVal][iPatch];
+                    prim_right_gradY[iVal] =m_prim_bound_gradY[iVal][iPatch];
+                    prim_right_gradZ[iVal] =m_prim_bound_gradZ[iVal][iPatch];
+                    limiterCoef_right[iVal] = m_limiter_bound[iVal][iPatch];
                 }
             }
             else
@@ -859,11 +819,11 @@ namespace zaran
                 coord_right = cell_center_coord[right_index];
                 for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                 {
-                    prim_right[iVal] = (*prim[iVal])[right_index];
-                    prim_right_gradX[iVal] = (*primGradX[iVal])[right_index];
-                    prim_right_gradY[iVal] = (*primGradY[iVal])[right_index];
-                    prim_right_gradZ[iVal] = (*primGradZ[iVal])[right_index];
-                    limiterCoef_right[iVal] = (*limiterCoef[iVal])[right_index];
+                    prim_right[iVal] =  m_prim[iVal][right_index];
+                    prim_right_gradX[iVal] = m_PrimGradX[iVal][right_index];
+                    prim_right_gradY[iVal] = m_PrimGradY[iVal][right_index];
+                    prim_right_gradZ[iVal] = m_PrimGradZ[iVal][right_index];
+                    limiterCoef_right[iVal] = m_limiter[iVal][right_index];
                 }
             }
             r[0] = coord_right.x() - coord_left.x();
@@ -883,7 +843,7 @@ namespace zaran
             riemannSolver_->Solver(riemann_para);
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
-                (*res[iVal])[iCell] += riemann_para.flux(iVal) / jacobi;
+                m_residual[iVal][iCell] += riemann_para.flux(iVal) / jacobi;
             }
 
             left_index = CellIndex(i, j - 1, k);
@@ -891,11 +851,11 @@ namespace zaran
             coord_right = cell_center_coord[right_index];
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
-                prim_right[iVal] = (*prim[iVal])[right_index];
-                prim_right_gradX[iVal] = (*primGradX[iVal])[right_index];
-                prim_right_gradY[iVal] = (*primGradY[iVal])[right_index];
-                prim_right_gradZ[iVal] = (*primGradZ[iVal])[right_index];
-                limiterCoef_right[iVal] = (*limiterCoef[iVal])[right_index];
+                prim_right[iVal] =  m_prim[iVal][right_index];
+                prim_right_gradX[iVal] = m_PrimGradX[iVal][right_index];
+                prim_right_gradY[iVal] = m_PrimGradY[iVal][right_index];
+                prim_right_gradZ[iVal] = m_PrimGradZ[iVal][right_index];
+                limiterCoef_right[iVal] = m_limiter[iVal][right_index];
 
             }
             if (cell_type[left_index] == CellType::Solid)
@@ -903,11 +863,11 @@ namespace zaran
                 coord_left = bound_node_coord[iPatch];
                 for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                 {
-                    prim_left[iVal] = (*prim_bound[iVal])[iPatch];
-                    prim_left_gradX[iVal] = (*prim_bound_gradX[iVal])[iPatch];
-                    prim_left_gradY[iVal] = (*prim_bound_gradY[iVal])[iPatch];
-                    prim_left_gradZ[iVal] = (*prim_bound_gradZ[iVal])[iPatch];
-                    limiterCoef_left[iVal] = (*m_limiter_bound[iVal])[iPatch];
+                    prim_left[iVal] =m_prim_bound[iVal][iPatch];
+                    prim_left_gradX[iVal] =m_prim_bound_gradX[iVal][iPatch];
+                    prim_left_gradY[iVal] =m_prim_bound_gradY[iVal][iPatch];
+                    prim_left_gradZ[iVal] =m_prim_bound_gradZ[iVal][iPatch];
+                    limiterCoef_left[iVal] = m_limiter_bound[iVal][iPatch];
                 }
             }
             else
@@ -915,11 +875,11 @@ namespace zaran
                 coord_left = cell_center_coord[left_index];
                 for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                 {
-                    prim_left[iVal] = (*prim[iVal])[left_index];
-                    prim_left_gradX[iVal] = (*primGradX[iVal])[left_index];
-                    prim_left_gradY[iVal] = (*primGradY[iVal])[left_index];
-                    prim_left_gradZ[iVal] = (*primGradZ[iVal])[left_index];
-                    limiterCoef_left[iVal] = (*limiterCoef[iVal])[left_index];
+                    prim_left[iVal] =  m_prim[iVal][left_index];
+                    prim_left_gradX[iVal] = m_PrimGradX[iVal][left_index];
+                    prim_left_gradY[iVal] = m_PrimGradY[iVal][left_index];
+                    prim_left_gradZ[iVal] = m_PrimGradZ[iVal][left_index];
+                    limiterCoef_left[iVal] = m_limiter[iVal][left_index];
                 }
             }
             r[0] = coord_right.x() - coord_left.x();
@@ -939,23 +899,23 @@ namespace zaran
             riemannSolver_->Solver(riemann_para);
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
-                (*res[iVal])[iCell] -= riemann_para.flux(iVal) / jacobi;
+                m_residual[iVal][iCell] -= riemann_para.flux(iVal) / jacobi;
             }
             // k direction
-            riemann_para.norm(0) = (*coordTrans[24])[iCell];
-            riemann_para.norm(1) = (*coordTrans[25])[iCell];
-            riemann_para.norm(2) = (*coordTrans[26])[iCell];
-            riemann_para.nt = (*coordTrans[27])[iCell];
+            riemann_para.norm(0) = m_metric[24][iCell];
+            riemann_para.norm(1) = m_metric[25][iCell];
+            riemann_para.norm(2) = m_metric[26][iCell];
+            riemann_para.nt = m_metric[27][iCell];
             left_index = CellIndex(i, j, k);
             right_index = CellIndex(i, j, k + 1);
             coord_left = cell_center_coord[left_index];
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
-                prim_left[iVal] = (*prim[iVal])[left_index];
-                prim_left_gradX[iVal] = (*primGradX[iVal])[left_index];
-                prim_left_gradY[iVal] = (*primGradY[iVal])[left_index];
-                prim_left_gradZ[iVal] = (*primGradZ[iVal])[left_index];
-                limiterCoef_left[iVal] = (*limiterCoef[iVal])[left_index];
+                prim_left[iVal] =  m_prim[iVal][left_index];
+                prim_left_gradX[iVal] = m_PrimGradX[iVal][left_index];
+                prim_left_gradY[iVal] = m_PrimGradY[iVal][left_index];
+                prim_left_gradZ[iVal] = m_PrimGradZ[iVal][left_index];
+                limiterCoef_left[iVal] = m_limiter[iVal][left_index];
 
             }
             if (cell_type[right_index] == CellType::Solid)
@@ -963,11 +923,11 @@ namespace zaran
                 coord_right = bound_node_coord[iPatch];
                 for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                 {
-                    prim_right[iVal] = (*prim_bound[iVal])[iPatch];
-                    prim_right_gradX[iVal] = (*prim_bound_gradX[iVal])[iPatch];
-                    prim_right_gradY[iVal] = (*prim_bound_gradY[iVal])[iPatch];
-                    prim_right_gradZ[iVal] = (*prim_bound_gradZ[iVal])[iPatch];
-                    limiterCoef_right[iVal] = (*m_limiter_bound[iVal])[iPatch];
+                    prim_right[iVal] =m_prim_bound[iVal][iPatch];
+                    prim_right_gradX[iVal] =m_prim_bound_gradX[iVal][iPatch];
+                    prim_right_gradY[iVal] =m_prim_bound_gradY[iVal][iPatch];
+                    prim_right_gradZ[iVal] =m_prim_bound_gradZ[iVal][iPatch];
+                    limiterCoef_right[iVal] = m_limiter_bound[iVal][iPatch];
                 }
             }
             else
@@ -975,11 +935,11 @@ namespace zaran
                 coord_right = cell_center_coord[right_index];
                 for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                 {
-                    prim_right[iVal] = (*prim[iVal])[right_index];
-                    prim_right_gradX[iVal] = (*primGradX[iVal])[right_index];
-                    prim_right_gradY[iVal] = (*primGradY[iVal])[right_index];
-                    prim_right_gradZ[iVal] = (*primGradZ[iVal])[right_index];
-                    limiterCoef_right[iVal] = (*limiterCoef[iVal])[right_index];
+                    prim_right[iVal] =  m_prim[iVal][right_index];
+                    prim_right_gradX[iVal] = m_PrimGradX[iVal][right_index];
+                    prim_right_gradY[iVal] = m_PrimGradY[iVal][right_index];
+                    prim_right_gradZ[iVal] = m_PrimGradZ[iVal][right_index];
+                    limiterCoef_right[iVal] = m_limiter[iVal][right_index];
                 }
             }
             r[0] = coord_right.x() - coord_left.x();
@@ -999,7 +959,7 @@ namespace zaran
             riemannSolver_->Solver(riemann_para);
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
-                (*res[iVal])[iCell] += riemann_para.flux(iVal) / jacobi;
+                m_residual[iVal][iCell] += riemann_para.flux(iVal) / jacobi;
             }
 
             left_index = CellIndex(i, j, k - 1);
@@ -1007,11 +967,11 @@ namespace zaran
             coord_right = cell_center_coord[right_index];
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
-                prim_right[iVal] = (*prim[iVal])[right_index];
-                prim_right_gradX[iVal] = (*primGradX[iVal])[right_index];
-                prim_right_gradY[iVal] = (*primGradY[iVal])[right_index];
-                prim_right_gradZ[iVal] = (*primGradZ[iVal])[right_index];
-                limiterCoef_right[iVal] = (*limiterCoef[iVal])[right_index];
+                prim_right[iVal] =  m_prim[iVal][right_index];
+                prim_right_gradX[iVal] = m_PrimGradX[iVal][right_index];
+                prim_right_gradY[iVal] = m_PrimGradY[iVal][right_index];
+                prim_right_gradZ[iVal] = m_PrimGradZ[iVal][right_index];
+                limiterCoef_right[iVal] = m_limiter[iVal][right_index];
 
             }
             if (cell_type[left_index] == CellType::Solid)
@@ -1019,11 +979,11 @@ namespace zaran
                 coord_left = bound_node_coord[iPatch];
                 for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                 {
-                    prim_left[iVal] = (*prim_bound[iVal])[iPatch];
-                    prim_left_gradX[iVal] = (*prim_bound_gradX[iVal])[iPatch];
-                    prim_left_gradY[iVal] = (*prim_bound_gradY[iVal])[iPatch];
-                    prim_left_gradZ[iVal] = (*prim_bound_gradZ[iVal])[iPatch];
-                    limiterCoef_left[iVal] = (*m_limiter_bound[iVal])[iPatch];
+                    prim_left[iVal] =m_prim_bound[iVal][iPatch];
+                    prim_left_gradX[iVal] =m_prim_bound_gradX[iVal][iPatch];
+                    prim_left_gradY[iVal] =m_prim_bound_gradY[iVal][iPatch];
+                    prim_left_gradZ[iVal] =m_prim_bound_gradZ[iVal][iPatch];
+                    limiterCoef_left[iVal] = m_limiter_bound[iVal][iPatch];
                 }
             }
             else
@@ -1031,11 +991,11 @@ namespace zaran
                 coord_left = cell_center_coord[left_index];
                 for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
                 {
-                    prim_left[iVal] = (*prim[iVal])[left_index];
-                    prim_left_gradX[iVal] = (*primGradX[iVal])[left_index];
-                    prim_left_gradY[iVal] = (*primGradY[iVal])[left_index];
-                    prim_left_gradZ[iVal] = (*primGradZ[iVal])[left_index];
-                    limiterCoef_left[iVal] = (*limiterCoef[iVal])[left_index];
+                    prim_left[iVal] =  m_prim[iVal][left_index];
+                    prim_left_gradX[iVal] = m_PrimGradX[iVal][left_index];
+                    prim_left_gradY[iVal] = m_PrimGradY[iVal][left_index];
+                    prim_left_gradZ[iVal] = m_PrimGradZ[iVal][left_index];
+                    limiterCoef_left[iVal] = m_limiter[iVal][left_index];
                 }
             }
             r[0] = coord_right.x() - coord_left.x();
@@ -1055,7 +1015,7 @@ namespace zaran
             riemannSolver_->Solver(riemann_para);
             for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
             {
-                (*res[iVal])[iCell] -= riemann_para.flux(iVal) / jacobi;
+                m_residual[iVal][iCell] -= riemann_para.flux(iVal) / jacobi;
             }
         }
     }
@@ -1099,79 +1059,46 @@ namespace zaran
 
     void Solver_NS_3D_Zaran::OutletBC(Boundary& bound)
     {
-        auto& rho = *m_Primitive[0];
-        auto& u = *m_Primitive[1];
-        auto& v = *m_Primitive[2];
-        auto& w = *m_Primitive[3];
-        auto& p = *m_Primitive[4];
-        auto& cons0 = *m_Conservative[0];
-        auto& cons1 = *m_Conservative[1];
-        auto& cons2 = *m_Conservative[2];
-        auto& cons3 = *m_Conservative[3];
-        auto& cons4 = *m_Conservative[4];
         int boundIndex = bound.GetIndex();
         int innerIndex = bound.GetInnerIndex();
         int ghost_index = bound.GetGhostIndex();
-        rho[ghost_index] = rho[boundIndex];
-        u[ghost_index] = u[boundIndex];
-        v[ghost_index] = v[boundIndex];
-        w[ghost_index] = w[boundIndex];
-        p[ghost_index] = p[boundIndex];
-        Prim2Cons(rho[ghost_index], u[ghost_index], v[ghost_index], w[ghost_index], p[ghost_index],
-            cons0[ghost_index], cons1[ghost_index], cons2[ghost_index], cons3[ghost_index], cons4[ghost_index]);
+        m_prim[0][ghost_index] = m_prim[0][boundIndex];
+        m_prim[1][ghost_index] = m_prim[1][boundIndex];
+        m_prim[2][ghost_index] = m_prim[2][boundIndex];
+        m_prim[3][ghost_index] = m_prim[3][boundIndex];
+        m_prim[4][ghost_index] = m_prim[4][boundIndex];
+        Prim2Cons(m_prim[0][ghost_index], m_prim[1][ghost_index], m_prim[2][ghost_index], m_prim[3][ghost_index], m_prim[4][ghost_index], m_cons[0][ghost_index], m_cons[1][ghost_index], m_cons[2][ghost_index], m_cons[3][ghost_index], m_cons[4][ghost_index]);
 
     }
 
     void Solver_NS_3D_Zaran::InletBC(Boundary& bound)
     {
-        FlowSolverParaPtr para = GetPara();
-        auto& rho = *m_Primitive[0];
-        auto& u = *m_Primitive[1];
-        auto& v = *m_Primitive[2];
-        auto& w = *m_Primitive[3];
-        auto& p = *m_Primitive[4];
-        auto& cons0 = *m_Conservative[0];
-        auto& cons1 = *m_Conservative[1];
-        auto& cons2 = *m_Conservative[2];
-        auto& cons3 = *m_Conservative[3];
-        auto& cons4 = *m_Conservative[4];
+        FlowSolverPara* para = GetPara();
         int ghost_index = bound.GetGhostIndex();
-        rho[ghost_index] = para->GetInflowDensity();
-        u[ghost_index] = para->GetInflowVelocityX();
-        v[ghost_index] = para->GetInflowVelocityY();
-        w[ghost_index] = para->GetInflowVelocityZ();
-        p[ghost_index] = para->GetInflowPressure();
-        Prim2Cons(rho[ghost_index], u[ghost_index], v[ghost_index], w[ghost_index], p[ghost_index],
-            cons0[ghost_index], cons1[ghost_index], cons2[ghost_index], cons3[ghost_index], cons4[ghost_index]);
+        m_prim[0][ghost_index] = para->GetInflowDensity();
+        m_prim[1][ghost_index] = para->GetInflowVelocityX();
+        m_prim[2][ghost_index] = para->GetInflowVelocityY();
+        m_prim[3][ghost_index] = para->GetInflowVelocityZ();
+        m_prim[4][ghost_index] = para->GetInflowPressure();
+        Prim2Cons(m_prim[0][ghost_index], m_prim[1][ghost_index], m_prim[2][ghost_index], m_prim[3][ghost_index], m_prim[4][ghost_index],m_cons[0][ghost_index], m_cons[1][ghost_index], m_cons[2][ghost_index], m_cons[3][ghost_index], m_cons[4][ghost_index]);
     }
 
     void Solver_NS_3D_Zaran::WallBC(Boundary& bound)
     {
         int& inner_index = bound.GetInnerIndex();
         int bound_index = bound.GetIndex();
-        auto& rho = *m_Primitive[0];
-        auto& u = *m_Primitive[1];
-        auto& v = *m_Primitive[2];
-        auto& w = *m_Primitive[3];
-        auto& p = *m_Primitive[4];
-        auto& cons0 = *m_Conservative[0];
-        auto& cons1 = *m_Conservative[1];
-        auto& cons2 = *m_Conservative[2];
-        auto& cons3 = *m_Conservative[3];
-        auto& cons4 = *m_Conservative[4];
         auto& bound_norm = bound.GetNorm();
-        rho[bound_index] = rho[inner_index];
-        u[bound_index] = u[inner_index];
-        v[bound_index] = v[inner_index];
-        w[bound_index] = w[inner_index];
-        p[bound_index] = p[inner_index];
-        DVector3D inner_vel(u[inner_index], v[inner_index], w[inner_index]);
+        m_prim[0][bound_index] = m_prim[0][inner_index];
+        m_prim[1][bound_index] = m_prim[1][inner_index];
+        m_prim[2][bound_index] = m_prim[2][inner_index];
+        m_prim[3][bound_index] = m_prim[3][inner_index];
+        m_prim[4][bound_index] = m_prim[4][inner_index];
+        DVector3D inner_vel(m_prim[1][inner_index], m_prim[2][inner_index], m_prim[3][inner_index]);
         DVector3D bound_vel = inner_vel - (inner_vel.dot(bound_norm)) * bound_norm / (bound_norm.norm() * bound_norm.norm());
-        u[bound_index] = bound_vel(0);
-        v[bound_index] = bound_vel(1);
-        w[bound_index] = bound_vel(2);
-        Prim2Cons(rho[bound_index], u[bound_index], v[bound_index], w[bound_index], p[bound_index],
-            cons0[bound_index], cons1[bound_index], cons2[bound_index], cons3[bound_index], cons4[bound_index]);
+        m_prim[1][bound_index] = bound_vel(0);
+        m_prim[2][bound_index] = bound_vel(1);
+        m_prim[3][bound_index] = bound_vel(2);
+        Prim2Cons(m_prim[0][bound_index], m_prim[1][bound_index], m_prim[2][bound_index], m_prim[3][bound_index], m_prim[4][bound_index], m_cons[0][bound_index], m_cons[1][bound_index], m_cons[2][bound_index], m_cons[3][bound_index], m_cons[4][bound_index]);
     }
 
     void Solver_NS_3D_Zaran::BoundPatchBC()
@@ -1185,19 +1112,6 @@ namespace zaran
         auto& bound_node_coord = bound_patch.GetCoordinate();
         auto& bound_norm = bound_patch.GetNormal();
 
-        auto& prim = m_Primitive;
-        auto& cons = m_Conservative;
-        auto& primGradX = m_PrimGradX;
-        auto& primGradY = m_PrimGradY;
-        auto& primGradZ = m_PrimGradZ;
-        auto& limiterCoef = m_LimiterCoef;
-        auto& res = m_Residual;
-        auto& coordTrans = m_CoordTrans;
-
-        auto& prim_bound = m_prim_bound;
-        auto& prim_bound_gradX = m_prim_bound_gradX;
-        auto& prim_bound_gradY = m_prim_bound_gradY;
-        auto& prim_bound_gradZ = m_prim_bound_gradZ;
         int i, j, k, iCell;
         auto CellIndex = [&](int i, int j, int k) {return grid->GetCellIndex(i, j, k); };
         DVector3D inner_vel, bound_vel;
@@ -1209,20 +1123,20 @@ namespace zaran
             j = bound_node_index[iPatch][1];
             k = bound_node_index[iPatch][2];
             iCell = CellIndex(i, j, k);
-            // ZaranLog::info("iPatch:{},iCell:{},inner prim:{},{},{},{},{}", iPatch, iCell, (*prim[0])[iCell], (*prim[1])[iCell], (*prim[2])[iCell], (*prim[3])[iCell], (*prim[4])[iCell]);
-            (*prim_bound[0])[iPatch] = (*prim[0])[iCell];
-            (*prim_bound[1])[iPatch] = (*prim[1])[iCell];
-            (*prim_bound[2])[iPatch] = (*prim[2])[iCell];
-            (*prim_bound[3])[iPatch] = (*prim[3])[iCell];
-            (*prim_bound[4])[iPatch] = (*prim[4])[iCell];
-            inner_vel = { (*prim[1])[iCell],(*prim[2])[iCell],(*prim[3])[iCell] };
+           m_prim_bound[0][iPatch] =m_prim[0][iCell];
+           m_prim_bound[1][iPatch] =m_prim[1][iCell];
+           m_prim_bound[2][iPatch] = m_prim[2][iCell];
+           m_prim_bound[3][iPatch] = m_prim[3][iCell];
+           m_prim_bound[4][iPatch] =m_prim[4][iCell];
+            inner_vel = { m_prim[1][iCell], m_prim[2][iCell], m_prim[3][iCell] };
             bound_vel = inner_vel - (inner_vel.dot(bound_norm[iPatch])) * bound_norm[iPatch] / (bound_norm[iPatch].norm() * bound_norm[iPatch].norm());
-            (*prim_bound[1])[iPatch] = bound_vel(0);
-            (*prim_bound[2])[iPatch] = bound_vel(1);
-            (*prim_bound[3])[iPatch] = bound_vel(2);
-            (*prim_bound[1])[iPatch] = bound_vel(0);
-            (*prim_bound[2])[iPatch] = bound_vel(1);
-            (*prim_bound[3])[iPatch] = bound_vel(2);
+           m_prim_bound[1][iPatch] = bound_vel(0);
+           m_prim_bound[2][iPatch] = bound_vel(1);
+           m_prim_bound[3][iPatch] = bound_vel(2);
+           m_prim_bound[1][iPatch] = bound_vel(0);
+           m_prim_bound[2][iPatch] = bound_vel(1);
+           m_prim_bound[3][iPatch] = bound_vel(2);
+            
         }
     }
 

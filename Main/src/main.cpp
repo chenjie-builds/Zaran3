@@ -6,8 +6,9 @@ int main()
 {
 	using namespace zaran;
 	Logger::Start();
-	Ptr< Simulation > simulation = std::make_shared<Simulation>();
+	Simulation* simulation = new Simulation();
 	simulation->Run();
+	delete[] simulation;
 	Log::info("计算结束！按任意键退出……");
 	system("pause");
 }

@@ -19,7 +19,7 @@ namespace zaran
 		Solver_NS_2D() {}
 		~Solver_NS_2D() {}
 		void CalcMetric()override;
-		void InitField()override;
+		void InitData()override;
 		void InitFieldFarField();//初始化为来流
 		void InitFieldNoFlow();//初始化为静止流场
 		void InitFieldShockReflection();//初始化为激波反射

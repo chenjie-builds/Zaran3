@@ -20,7 +20,6 @@ namespace zaran
 	//网格指针
 	using GridPtr =Ptr<Grid>;
 	using GridListPtr = Ptr<GridList>;
-	using SolverParaPtr = Ptr<SolverPara>;
 	class Solver
 	{
 	public:
@@ -29,13 +28,13 @@ namespace zaran
 	public:
 		void SetIndex(const int& index) { index_ = index; }
 		void SetName(const string& name) { name_ = name; }
-		void SetPara(SolverParaPtr para) { para_ = para; }
+		void SetPara(SolverPara* para) { para_ = para; }
 		void SetGridList(GridListPtr& gridList) { gridList_ = gridList; }
 		void SetGridIndex(const int& gridIndex) { gridIndex_ = gridIndex; }
 		const string& GetName()const { return name_; }
 		GridPtr& GetGrid() { return gridList_->GetGrid(gridIndex_); }
 		const int& GetIndex()const { return index_; }
-		SolverParaPtr& GetPara();
+		SolverPara* GetPara();
 	public:
 		virtual void Init() = 0;
 		virtual void Solve() = 0;
@@ -56,6 +55,6 @@ namespace zaran
 		//! solver 作用的网格id
 		int gridIndex_;
 		// solver 的参数
-		SolverParaPtr para_;
+		SolverPara* para_;
 	};
 }

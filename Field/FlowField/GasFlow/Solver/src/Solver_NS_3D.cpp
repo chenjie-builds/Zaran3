@@ -11,7 +11,7 @@ namespace zaran
 		auto& tempI = nodeTopo->GetTemplateI();
 		auto& tempJ = nodeTopo->GetTemplateJ();
 		auto& tempK = nodeTopo->GetTemplateK();
-		auto& coordTransCoef = m_CoordTrans;
+		auto& coordTransCoef = m_metric;
 		int nInnerNode = grid->GetInnerNodeNum();
 		CoordTrans coordTrans;
 		DVector3D xRight, xLeft, yRight, yLeft, zRight, zLeft;
@@ -62,40 +62,39 @@ namespace zaran
 				Log::info("zLeft index={}: {},{},{}", tempK[iNode][0], zLeft.x(), zLeft.y(), zLeft.z());
 				Log::info("zRight index={}: {},{},{}", tempK[iNode][2], zRight.x(), zRight.y(), zRight.z());
 			}
-
-			(*coordTransCoef[0])[iNode] = coordTrans.GetX()[0];
-			(*coordTransCoef[1])[iNode] = coordTrans.GetX()[1];
-			(*coordTransCoef[2])[iNode] = coordTrans.GetX()[2];
-			(*coordTransCoef[3])[iNode] = coordTrans.GetX()[3];
-			(*coordTransCoef[4])[iNode] = coordTrans.GetY()[0];
-			(*coordTransCoef[5])[iNode] = coordTrans.GetY()[1];
-			(*coordTransCoef[6])[iNode] = coordTrans.GetY()[2];
-			(*coordTransCoef[7])[iNode] = coordTrans.GetY()[3];
-			(*coordTransCoef[8])[iNode] = coordTrans.GetZ()[0];
-			(*coordTransCoef[9])[iNode] = coordTrans.GetZ()[1];
-			(*coordTransCoef[10])[iNode] = coordTrans.GetZ()[2];
-			(*coordTransCoef[11])[iNode] = coordTrans.GetZ()[3];
-			(*coordTransCoef[12])[iNode] = coordTrans.GetT()[0];
-			(*coordTransCoef[13])[iNode] = coordTrans.GetT()[1];
-			(*coordTransCoef[14])[iNode] = coordTrans.GetT()[2];
-			(*coordTransCoef[15])[iNode] = coordTrans.GetT()[3];
-			(*coordTransCoef[16])[iNode] = coordTrans.GetXi()[0];
-			(*coordTransCoef[17])[iNode] = coordTrans.GetXi()[1];
-			(*coordTransCoef[18])[iNode] = coordTrans.GetXi()[2];
-			(*coordTransCoef[19])[iNode] = coordTrans.GetXi()[3];
-			(*coordTransCoef[20])[iNode] = coordTrans.GetEta()[0];
-			(*coordTransCoef[21])[iNode] = coordTrans.GetEta()[1];
-			(*coordTransCoef[22])[iNode] = coordTrans.GetEta()[2];
-			(*coordTransCoef[23])[iNode] = coordTrans.GetEta()[3];
-			(*coordTransCoef[24])[iNode] = coordTrans.GetZeta()[0];
-			(*coordTransCoef[25])[iNode] = coordTrans.GetZeta()[1];
-			(*coordTransCoef[26])[iNode] = coordTrans.GetZeta()[2];
-			(*coordTransCoef[27])[iNode] = coordTrans.GetZeta()[3];
-			(*coordTransCoef[28])[iNode] = coordTrans.GetTau()[0];
-			(*coordTransCoef[29])[iNode] = coordTrans.GetTau()[1];
-			(*coordTransCoef[30])[iNode] = coordTrans.GetTau()[2];
-			(*coordTransCoef[31])[iNode] = coordTrans.GetTau()[3];
-			(*coordTransCoef[32])[iNode] = coordTrans.J();
+			m_metric[0][iNode] = coordTrans.GetX()[0];
+			m_metric[1][iNode] = coordTrans.GetX()[1];
+			m_metric[2][iNode] = coordTrans.GetX()[2];
+			m_metric[3][iNode] = coordTrans.GetX()[3];
+			m_metric[4][iNode] = coordTrans.GetY()[0];
+			m_metric[5][iNode] = coordTrans.GetY()[1];
+			m_metric[6][iNode] = coordTrans.GetY()[2];
+			m_metric[7][iNode] = coordTrans.GetY()[3];
+			m_metric[8][iNode] = coordTrans.GetZ()[0];
+			m_metric[9][iNode] = coordTrans.GetZ()[1];
+			m_metric[10][iNode] = coordTrans.GetZ()[2];
+			m_metric[11][iNode] = coordTrans.GetZ()[3];
+			m_metric[12][iNode] = coordTrans.GetT()[0];
+			m_metric[13][iNode] = coordTrans.GetT()[1];
+			m_metric[14][iNode] = coordTrans.GetT()[2];
+			m_metric[15][iNode] = coordTrans.GetT()[3];
+			m_metric[16][iNode] = coordTrans.GetXi()[0];
+			m_metric[17][iNode] = coordTrans.GetXi()[1];
+			m_metric[18][iNode] = coordTrans.GetXi()[2];
+			m_metric[19][iNode] = coordTrans.GetXi()[3];
+			m_metric[20][iNode] = coordTrans.GetEta()[0];
+			m_metric[21][iNode] = coordTrans.GetEta()[1];
+			m_metric[22][iNode] = coordTrans.GetEta()[2];
+			m_metric[23][iNode] = coordTrans.GetEta()[3];
+			m_metric[24][iNode] = coordTrans.GetZeta()[0];
+			m_metric[25][iNode] = coordTrans.GetZeta()[1];
+			m_metric[26][iNode] = coordTrans.GetZeta()[2];
+			m_metric[27][iNode] = coordTrans.GetZeta()[3];
+			m_metric[28][iNode] = coordTrans.GetTau()[0];
+			m_metric[29][iNode] = coordTrans.GetTau()[1];
+			m_metric[30][iNode] = coordTrans.GetTau()[2];
+			m_metric[31][iNode] = coordTrans.GetTau()[3];
+			m_metric[32][iNode] = coordTrans.J();
 			if (coordTrans.J() > max_jacobi)
 			{
 				max_jacobi = coordTrans.J();
@@ -118,8 +117,8 @@ namespace zaran
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
-		auto& prim = m_Primitive;
-		auto& limiterCoef = m_LimiterCoef;
+		auto& prim = m_prim;
+		auto& limiterCoef = m_limiter;
 		auto& primGradX = m_PrimGradX;
 		auto& primGradY = m_PrimGradY;
 		auto& primGradZ = m_PrimGradZ;
@@ -165,7 +164,7 @@ namespace zaran
 					if (abs(omega) < SMALL_NUMBER)
 						continue;
 					omega = 1.0 / omega;
-					deltaVal = (*prim[iVal])[neighborNodeVec[iNeib]] - (*prim[iVal])[iNode];
+					deltaVal = m_prim[iVal][neighborNodeVec[iNeib]] - m_prim[iVal][iNode];
 					deltaX = nodeCoord[neighborNodeVec[iNeib]].x() - nodeCoord[iNode].x();
 					deltaY = nodeCoord[neighborNodeVec[iNeib]].y() - nodeCoord[iNode].y();
 					deltaZ = nodeCoord[neighborNodeVec[iNeib]].z() - nodeCoord[iNode].z();
@@ -174,9 +173,9 @@ namespace zaran
 					b(2) += omega * deltaVal * deltaZ;
 				}
 				grad = A_inv * b;
-				(*primGradX[iVal])[iNode] = grad.x();
-				(*primGradY[iVal])[iNode] = grad.y();
-				(*primGradZ[iVal])[iNode] = grad.z();
+				m_PrimGradX[iVal][iNode] = grad.x();
+				m_PrimGradY[iVal][iNode] = grad.y();
+				m_PrimGradZ[iVal][iNode] = grad.z();
 			}
 		}
 	}
@@ -186,36 +185,29 @@ namespace zaran
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
-		FlowSolverParaPtr para = GetPara();
-		auto& rho = *m_Primitive[0];
-		auto& u = *m_Primitive[1];
-		auto& v = *m_Primitive[2];
-		auto& w = *m_Primitive[3];
-		auto& p = *m_Primitive[4];
-		auto& dt = *m_TimeStep;
-		auto& coordTrans = m_CoordTrans;
+		FlowSolverPara* para = GetPara();
 		double cfl = para->GetCflNumber();
 		int nInnerNode = grid->GetInnerNodeNum();
 		double min_dt = LARGE_NUMBER;
-#pragma omp parallel for reduction(min:min_dt)
+		#pragma omp parallel for reduction(min:min_dt)
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
 
 			double gamma = 1.4;
 			if (nodeType[iNode] != NodeType::inner)
 				continue;
-			double c = sqrt(gamma * p[iNode] / rho[iNode]);
-			double normXi = sqrt((*coordTrans[16])[iNode] * (*coordTrans[16])[iNode] + (*coordTrans[17])[iNode] * (*coordTrans[17])[iNode] + (*coordTrans[18])[iNode] * (*coordTrans[19])[iNode]);
-			double normEta = sqrt((*coordTrans[20])[iNode] * (*coordTrans[20])[iNode] + (*coordTrans[21])[iNode] * (*coordTrans[21])[iNode] + (*coordTrans[22])[iNode] * (*coordTrans[22])[iNode]);
-			double normZeta = sqrt((*coordTrans[24])[iNode] * (*coordTrans[24])[iNode] + (*coordTrans[25])[iNode] * (*coordTrans[25])[iNode] + (*coordTrans[26])[iNode] * (*coordTrans[26])[iNode]);
-			double uXi = u[iNode] * (*coordTrans[16])[iNode] + v[iNode] * (*coordTrans[17])[iNode] + w[iNode] * (*coordTrans[18])[iNode] + (*coordTrans[19])[iNode];
-			double uEta = u[iNode] * (*coordTrans[20])[iNode] + v[iNode] * (*coordTrans[21])[iNode] + w[iNode] * (*coordTrans[22])[iNode] + (*coordTrans[23])[iNode];
-			double uZeta = u[iNode] * (*coordTrans[24])[iNode] + v[iNode] * (*coordTrans[25])[iNode] + w[iNode] * (*coordTrans[26])[iNode] + (*coordTrans[27])[iNode];
+			double c = sqrt(gamma * m_prim[4][iNode] / m_prim[0][iNode]);
+			double normXi = sqrt(m_metric[16][iNode] * m_metric[16][iNode] + m_metric[17][iNode] * m_metric[17][iNode] + m_metric[18][iNode] * m_metric[19][iNode]);
+			double normEta = sqrt(m_metric[20][iNode] * m_metric[20][iNode] + m_metric[21][iNode] * m_metric[21][iNode] + m_metric[22][iNode] * m_metric[22][iNode]);
+			double normZeta = sqrt(m_metric[24][iNode] * m_metric[24][iNode] + m_metric[25][iNode] * m_metric[25][iNode] + m_metric[26][iNode] * m_metric[26][iNode]);
+			double uXi = m_prim[1][iNode] * m_metric[16][iNode] + m_prim[2][iNode] * m_metric[17][iNode] + m_prim[3][iNode] * m_metric[18][iNode];
+			double uEta = m_prim[1][iNode] * m_metric[20][iNode] + m_prim[2][iNode] * m_metric[21][iNode] + m_prim[3][iNode] * m_metric[22][iNode];
+			double uZeta = m_prim[1][iNode] * m_metric[24][iNode] + m_prim[2][iNode] * m_metric[25][iNode] + m_prim[3][iNode] * m_metric[26][iNode];
 			double lamda = abs(uXi) + abs(uEta) + abs(uZeta) + c * (normXi + normEta + normZeta);
-			dt[iNode] = cfl / lamda;
-			if (dt[iNode] < min_dt)
+			m_dt[iNode] = cfl / lamda;
+			if (m_dt[iNode] < min_dt)
 			{
-				min_dt = dt[iNode];
+				min_dt = m_dt[iNode];
 			}
 
 		}
@@ -230,56 +222,50 @@ namespace zaran
 		auto& templateI = nodeTopo->GetTemplateI();
 		auto& templateJ = nodeTopo->GetTemplateJ();
 		auto& templateK = nodeTopo->GetTemplateK();
-		auto& primGradX = m_PrimGradX;
-		auto& primGradY = m_PrimGradY;
-		auto& primGradZ = m_PrimGradZ;
-		auto& limiterCoef = m_LimiterCoef;
-		auto& res = m_Residual;
-		auto& coordTrans = m_CoordTrans;
 		RiemannSolverPara riemann_para[6];
 		for (int i = 0; i < 6; ++i)
 		{
 			riemann_para[i].gamma_left = riemann_para[i].gamma_right = 1.4;
 		}
 		bool exist_negative = false;
-#pragma omp parallel for private(riemann_para,exist_negative)
+		#pragma omp parallel for private(riemann_para,exist_negative)
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
 			if (nodeType[iNode] != NodeType::inner)
 				continue;
 			exist_negative = false;
-			auto& jacobi = (*coordTrans[32])[iNode];
+			auto& jacobi = m_metric[32][iNode];
 			// i direction
-			riemann_para[0].norm(0) = (*coordTrans[16])[iNode];
-			riemann_para[0].norm(1) = (*coordTrans[17])[iNode];
-			riemann_para[0].norm(2) = (*coordTrans[18])[iNode];
-			riemann_para[0].nt = (*coordTrans[19])[iNode];
-			riemann_para[1].norm(0) = (*coordTrans[16])[iNode];
-			riemann_para[1].norm(1) = (*coordTrans[17])[iNode];
-			riemann_para[1].norm(2) = (*coordTrans[18])[iNode];
-			riemann_para[1].nt = (*coordTrans[19])[iNode];
+			riemann_para[0].norm(0) = m_metric[16][iNode];
+			riemann_para[0].norm(1) = m_metric[17][iNode];
+			riemann_para[0].norm(2) = m_metric[18][iNode];
+			riemann_para[0].nt = m_metric[19][iNode];
+			riemann_para[1].norm(0) = m_metric[16][iNode];
+			riemann_para[1].norm(1) = m_metric[17][iNode];
+			riemann_para[1].norm(2) = m_metric[18][iNode];
+			riemann_para[1].nt = m_metric[19][iNode];
 			MidPointReconstruct(templateI[iNode][1], templateI[iNode][2], &riemann_para[0].prim_left(0), &riemann_para[0].prim_right(0));
 			MidPointReconstruct(templateI[iNode][0], templateI[iNode][1], &riemann_para[1].prim_left(0), &riemann_para[1].prim_right(0));
 			// j direction
-			riemann_para[2].norm(0) = (*coordTrans[20])[iNode];
-			riemann_para[2].norm(1) = (*coordTrans[21])[iNode];
-			riemann_para[2].norm(2) = (*coordTrans[22])[iNode];
-			riemann_para[2].nt = (*coordTrans[23])[iNode];
-			riemann_para[3].norm(0) = (*coordTrans[20])[iNode];
-			riemann_para[3].norm(1) = (*coordTrans[21])[iNode];
-			riemann_para[3].norm(2) = (*coordTrans[22])[iNode];
-			riemann_para[3].nt = (*coordTrans[23])[iNode];
+			riemann_para[2].norm(0) = m_metric[20][iNode];
+			riemann_para[2].norm(1) = m_metric[21][iNode];
+			riemann_para[2].norm(2) = m_metric[22][iNode];
+			riemann_para[2].nt = m_metric[23][iNode];
+			riemann_para[3].norm(0) = m_metric[20][iNode];
+			riemann_para[3].norm(1) = m_metric[21][iNode];
+			riemann_para[3].norm(2) = m_metric[22][iNode];
+			riemann_para[3].nt = m_metric[23][iNode];
 			MidPointReconstruct(templateJ[iNode][1], templateJ[iNode][2], &riemann_para[2].prim_left(0), &riemann_para[2].prim_right(0));
 			MidPointReconstruct(templateJ[iNode][0], templateJ[iNode][1], &riemann_para[3].prim_left(0), &riemann_para[3].prim_right(0));
 			// k direction
-			riemann_para[4].norm(0) = (*coordTrans[24])[iNode];
-			riemann_para[4].norm(1) = (*coordTrans[25])[iNode];
-			riemann_para[4].norm(2) = (*coordTrans[26])[iNode];
-			riemann_para[4].nt = (*coordTrans[27])[iNode];
-			riemann_para[5].norm(0) = (*coordTrans[24])[iNode];
-			riemann_para[5].norm(1) = (*coordTrans[25])[iNode];
-			riemann_para[5].norm(2) = (*coordTrans[26])[iNode];
-			riemann_para[5].nt = (*coordTrans[27])[iNode];
+			riemann_para[4].norm(0) = m_metric[24][iNode];
+			riemann_para[4].norm(1) = m_metric[25][iNode];
+			riemann_para[4].norm(2) = m_metric[26][iNode];
+			riemann_para[4].nt = m_metric[27][iNode];
+			riemann_para[5].norm(0) = m_metric[24][iNode];
+			riemann_para[5].norm(1) = m_metric[25][iNode];
+			riemann_para[5].norm(2) = m_metric[26][iNode];
+			riemann_para[5].nt = m_metric[27][iNode];
 			MidPointReconstruct(templateK[iNode][1], templateK[iNode][2], &riemann_para[4].prim_left(0), &riemann_para[4].prim_right(0));
 			MidPointReconstruct(templateK[iNode][0], templateK[iNode][1], &riemann_para[5].prim_left(0), &riemann_para[5].prim_right(0));
 			// check negative density and pressure
@@ -291,7 +277,7 @@ namespace zaran
 					break;
 				}
 			}
-			if (exist_negative || (*m_non_physical)[iNode] > 0)
+			if (exist_negative || m_non_physical[iNode] > 0)
 			{
 				MidPointReconstructFirstOrder(templateI[iNode][1], templateI[iNode][2], &riemann_para[0].prim_left(0), &riemann_para[0].prim_right(0));
 				MidPointReconstructFirstOrder(templateI[iNode][0], templateI[iNode][1], &riemann_para[1].prim_left(0), &riemann_para[1].prim_right(0));
@@ -307,8 +293,13 @@ namespace zaran
 			}
 			for (int iVar = 0;iVar < GetNumberOfEquations();++iVar)
 			{
-				(*res[iVar])[iNode] = (riemann_para[0].flux[iVar] - riemann_para[1].flux[iVar] + riemann_para[2].flux[iVar] - riemann_para[3].flux[iVar] + riemann_para[4].flux[iVar] - riemann_para[5].flux[iVar]) / jacobi;
+				m_residual[iVar][iNode] = (riemann_para[0].flux[iVar] - riemann_para[1].flux[iVar] + riemann_para[2].flux[iVar] - riemann_para[3].flux[iVar] + riemann_para[4].flux[iVar] - riemann_para[5].flux[iVar]) / jacobi;
+				// if(abs(m_residual[iVar][iNode])>1e-6)
+				// {
+				// 	Log::info("residual={}, iNode={}, iVar={}", m_residual[iVar][iNode], iNode, iVar);
+				// }
 			}
+
 		}
 	}
 
@@ -323,7 +314,6 @@ namespace zaran
 	void Solver_NS_3D::CalcForce()
 	{
 		GridPtr grid = GetGrid();
-		auto& prim = m_Primitive;
 		auto& faceTopo = grid->GetFaceTopo();
 		int nFace = faceTopo->GetFaceNum();
 		double face_pressure;
@@ -334,7 +324,7 @@ namespace zaran
 			int* face2node = faceTopo->GetFace2Node(iFace);
 			for (int iNode = 0;iNode < faceTopo->GetFaceNodeNum(iFace);++iNode)
 			{
-				face_pressure += prim[4]->at(face2node[iNode]);
+				face_pressure += m_prim[4][face2node[iNode]];
 			}
 			face_pressure /= faceTopo->GetFaceNodeNum(iFace);
 			force[0] += face_pressure * faceTopo->GetArea(iFace) * faceTopo->GetNormal(iFace)[0];
