@@ -182,7 +182,7 @@ namespace zaran {
 		data.AddData("coordTransTauZ", type, nTotalNodeNum);
 		data.AddData("coordTransTauT", type, nTotalNodeNum);
 		data.AddData("coordTransJ", type, nTotalNodeNum);
-		data.AddData("nonPhysical", type, nTotalNodeNum);
+		data.AddData("nonPhysical", FieldDataType::integer, nTotalNodeNum);
 	}
 	void NSSolver::RegisterFieldData()
 	{
@@ -270,6 +270,7 @@ namespace zaran {
 
 	void NSSolver::Solve()
 	{
+		int iNode = 9587;
 		CalcTimeStep();
 		CalcPrimGrad();
 		CalcLimiter();
@@ -278,6 +279,7 @@ namespace zaran {
 		UpdateField();
 		CheckPrimtive();
 		FixPrimtive();
+		CalcForce();
 	}
 	double NSSolver::ComputeMaxResidual()
 	{
@@ -512,14 +514,15 @@ namespace zaran {
 		for (int iStage = 0; iStage < rkStage; ++iStage)
 		{
 			CalcResidual();
-			for (int iVal = 0; iVal < 5; ++iVal)
-			{
 #pragma omp parallel for
-				for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
+			for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
+			{
+				for (int iVal = 0; iVal < 5; ++iVal)
 				{
 					m_cons[iVal][iNode] = m_cons[iVal][iNode] - rk_coef[iStage] * m_dt[iNode] * m_residual[iVal][iNode] * m_metric[32][iNode];
 				}
 			}
+
 		}
 	}
 
@@ -609,7 +612,6 @@ namespace zaran {
 		m_prim[2][boundIndex] = m_prim[2][innerIndex];
 		m_prim[3][boundIndex] = m_prim[3][innerIndex];
 		m_prim[4][boundIndex] = m_prim[4][innerIndex];
-
 		Prim2Cons(m_prim[0][boundIndex], m_prim[1][boundIndex], m_prim[2][boundIndex], m_prim[3][boundIndex], m_prim[4][boundIndex],
 			m_cons[0][boundIndex], m_cons[1][boundIndex], m_cons[2][boundIndex], m_cons[3][boundIndex], m_cons[4][boundIndex]);
 
@@ -628,9 +630,9 @@ namespace zaran {
 		m_prim[4][boundIndex] = m_prim[4][innerIndex];
 		DVector3D innerVel(m_prim[1][innerIndex], m_prim[2][innerIndex], m_prim[3][innerIndex]);
 		DVector3D boundVel = innerVel - (innerVel.dot(boundNorm)) * boundNorm / (boundNorm.norm() * boundNorm.norm());
-		m_prim[1][boundIndex] = boundVel.x();
-		m_prim[2][boundIndex] = boundVel.y();
-		m_prim[3][boundIndex] = boundVel.z();
+		m_prim[1][boundIndex] = boundVel(0);
+		m_prim[2][boundIndex] = boundVel(1);
+		m_prim[3][boundIndex] = boundVel(2);
 		Prim2Cons(m_prim[0][boundIndex], m_prim[1][boundIndex], m_prim[2][boundIndex], m_prim[3][boundIndex], m_prim[4][boundIndex],
 			m_cons[0][boundIndex], m_cons[1][boundIndex], m_cons[2][boundIndex], m_cons[3][boundIndex], m_cons[4][boundIndex]);
 	}
@@ -672,9 +674,9 @@ namespace zaran {
 		double maxVal, minVal;
 		double eps = 1e-6;
 		double venkatCoeff = 1.0e-5;
+#pragma omp parallel for private(maxVal, minVal, eps)
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
-#pragma omp parallel for private(maxVal, minVal, eps)
 			for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 			{
 				if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
@@ -728,9 +730,9 @@ namespace zaran {
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
 		int nTotalNodeNum = grid->GetTotalNodeNum();
 		double maxVal, minVal;
+#pragma omp parallel for private(maxVal, minVal)
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
-#pragma omp parallel for private(maxVal, minVal)
 			for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 			{
 				if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
@@ -804,7 +806,7 @@ namespace zaran {
 			{
 				if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
 					continue;
-				m_limiter[iVal][iNode] = 1.0;
+				m_limiter[iVal][iNode] = 0.0;
 			}
 		}
 	}
@@ -845,7 +847,7 @@ namespace zaran {
 		for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 		{
 			bool exist_nonphysical = false;
-			m_non_physical[iNode] = -1.0;
+			m_non_physical[iNode] = -1;
 			if (nodeType[iNode] != NodeType::inner && nodeType[iNode] != NodeType::hole)
 				continue;
 			if (m_prim[0][iNode] < 0 || m_prim[4][iNode] < 0)
@@ -865,7 +867,7 @@ namespace zaran {
 			}
 			if (exist_nonphysical)
 			{
-				m_non_physical[iNode] = 1.0;
+				m_non_physical[iNode] = 1;
 				nonphysical_node_num++;
 				Log::info("Non-physical Node: {}, neighbor num: {}, prim: {},{},{},{},{}", iNode, nodeNeighbor[iNode].size(), m_prim[0][iNode], m_prim[1][iNode], m_prim[2][iNode], m_prim[3][iNode], m_prim[4][iNode]);
 				Log::info("Non-physical Node: {}, coord: {},{},{},", iNode, nodeCoord[iNode].x(), nodeCoord[iNode].y(), nodeCoord[iNode].z());
@@ -920,13 +922,13 @@ namespace zaran {
 		{
 			if (node_type[iNode] != NodeType::inner && node_type[iNode] != NodeType::hole)
 				continue;
-			if (m_non_physical[iNode] < 0)
+			if (m_non_physical[iNode] == -1)
 				continue;
 			physical_neighbor.clear();
 			auto& neighborNode = node_neighbor[iNode];
 			for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
 			{
-				if (m_non_physical[neighborNode[iNeighbor]] > 0)
+				if (m_non_physical[neighborNode[iNeighbor]] == 1)
 					continue;
 				physical_neighbor.push_back(neighborNode[iNeighbor]);
 			}
@@ -935,14 +937,14 @@ namespace zaran {
 			sum = 0;
 			for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
 			{
-				if (m_non_physical[physical_neighbor[iNeighbor]] > 0)
+				if (m_non_physical[physical_neighbor[iNeighbor]] == 1)
 					continue;
 				distance[iNeighbor] = (node_coord[physical_neighbor[iNeighbor]] - node_coord[iNode]).norm();
 				sum += 1.0 / distance[iNeighbor];
 			}
 			for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
 			{
-				if (m_non_physical[physical_neighbor[iNeighbor]] > 0)
+				if (m_non_physical[physical_neighbor[iNeighbor]] == 1)
 					continue;
 				weight[iNeighbor] = 1.0 / (distance[iNeighbor] * sum);
 			}
@@ -953,7 +955,7 @@ namespace zaran {
 					m_prim[iVal][iNode] = 0;
 					for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
 					{
-						if (m_non_physical[physical_neighbor[iNeighbor]] > 0)
+						if (m_non_physical[physical_neighbor[iNeighbor]] == 1)
 							continue;
 						m_prim[iVal][iNode] += m_prim[iVal][physical_neighbor[iNeighbor]] * weight[iNeighbor];
 					}
@@ -963,7 +965,7 @@ namespace zaran {
 				m_prim[0][iNode] = 0;
 			for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
 			{
-				if (m_non_physical[physical_neighbor[iNeighbor]] > 0)
+				if (m_non_physical[physical_neighbor[iNeighbor]] == 1)
 					continue;
 				m_prim[0][iNode] += m_prim[0][physical_neighbor[iNeighbor]] * weight[iNeighbor];
 
@@ -972,7 +974,7 @@ namespace zaran {
 				m_prim[4][iNode] = 0;
 			for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
 			{
-				if (m_non_physical[physical_neighbor[iNeighbor]] > 0)
+				if (m_non_physical[physical_neighbor[iNeighbor]] == 1)
 					continue;
 				m_prim[4][iNode] += m_prim[4][physical_neighbor[iNeighbor]] * weight[iNeighbor];
 			}

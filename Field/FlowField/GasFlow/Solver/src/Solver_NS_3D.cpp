@@ -11,7 +11,6 @@ namespace zaran
 		auto& tempI = nodeTopo->GetTemplateI();
 		auto& tempJ = nodeTopo->GetTemplateJ();
 		auto& tempK = nodeTopo->GetTemplateK();
-		auto& coordTransCoef = m_metric;
 		int nInnerNode = grid->GetInnerNodeNum();
 		CoordTrans coordTrans;
 		DVector3D xRight, xLeft, yRight, yLeft, zRight, zLeft;
@@ -117,11 +116,6 @@ namespace zaran
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
-		auto& prim = m_prim;
-		auto& limiterCoef = m_limiter;
-		auto& primGradX = m_PrimGradX;
-		auto& primGradY = m_PrimGradY;
-		auto& primGradZ = m_PrimGradZ;
 		int nInnerNode = grid->GetInnerNodeNum();
 		int nBoundNode = grid->GetBoundNodeNum();
 		Matrix3d A, A_inv;
@@ -189,7 +183,7 @@ namespace zaran
 		double cfl = para->GetCflNumber();
 		int nInnerNode = grid->GetInnerNodeNum();
 		double min_dt = LARGE_NUMBER;
-		#pragma omp parallel for reduction(min:min_dt)
+#pragma omp parallel for reduction(min:min_dt)
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
 
@@ -197,7 +191,7 @@ namespace zaran
 			if (nodeType[iNode] != NodeType::inner)
 				continue;
 			double c = sqrt(gamma * m_prim[4][iNode] / m_prim[0][iNode]);
-			double normXi = sqrt(m_metric[16][iNode] * m_metric[16][iNode] + m_metric[17][iNode] * m_metric[17][iNode] + m_metric[18][iNode] * m_metric[19][iNode]);
+			double normXi = sqrt(m_metric[16][iNode] * m_metric[16][iNode] + m_metric[17][iNode] * m_metric[17][iNode] + m_metric[18][iNode] * m_metric[18][iNode]);
 			double normEta = sqrt(m_metric[20][iNode] * m_metric[20][iNode] + m_metric[21][iNode] * m_metric[21][iNode] + m_metric[22][iNode] * m_metric[22][iNode]);
 			double normZeta = sqrt(m_metric[24][iNode] * m_metric[24][iNode] + m_metric[25][iNode] * m_metric[25][iNode] + m_metric[26][iNode] * m_metric[26][iNode]);
 			double uXi = m_prim[1][iNode] * m_metric[16][iNode] + m_prim[2][iNode] * m_metric[17][iNode] + m_prim[3][iNode] * m_metric[18][iNode];
@@ -228,7 +222,7 @@ namespace zaran
 			riemann_para[i].gamma_left = riemann_para[i].gamma_right = 1.4;
 		}
 		bool exist_negative = false;
-		#pragma omp parallel for private(riemann_para,exist_negative)
+#pragma omp parallel for private(riemann_para,exist_negative)
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
 			if (nodeType[iNode] != NodeType::inner)
@@ -294,12 +288,7 @@ namespace zaran
 			for (int iVar = 0;iVar < GetNumberOfEquations();++iVar)
 			{
 				m_residual[iVar][iNode] = (riemann_para[0].flux[iVar] - riemann_para[1].flux[iVar] + riemann_para[2].flux[iVar] - riemann_para[3].flux[iVar] + riemann_para[4].flux[iVar] - riemann_para[5].flux[iVar]) / jacobi;
-				// if(abs(m_residual[iVar][iNode])>1e-6)
-				// {
-				// 	Log::info("residual={}, iNode={}, iVar={}", m_residual[iVar][iNode], iNode, iVar);
-				// }
 			}
-
 		}
 	}
 
@@ -313,6 +302,7 @@ namespace zaran
 
 	void Solver_NS_3D::CalcForce()
 	{
+		return;
 		GridPtr grid = GetGrid();
 		auto& faceTopo = grid->GetFaceTopo();
 		int nFace = faceTopo->GetFaceNum();
@@ -331,6 +321,7 @@ namespace zaran
 			force[1] += face_pressure * faceTopo->GetArea(iFace) * faceTopo->GetNormal(iFace)[1];
 			force[2] += face_pressure * faceTopo->GetArea(iFace) * faceTopo->GetNormal(iFace)[2];
 		}
+		Log::info("Force: {}, {}, {}", force[0], force[1], force[2]);
 	}
 
 

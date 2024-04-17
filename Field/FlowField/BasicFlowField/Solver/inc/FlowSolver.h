@@ -51,6 +51,6 @@ namespace zaran
 		double* m_dt;
 		double** m_residual;
 		double** m_limiter;
-		double* m_non_physical;
+		int* m_non_physical;
 	};
 }

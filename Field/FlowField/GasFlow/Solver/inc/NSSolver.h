@@ -102,6 +102,8 @@ namespace zaran
 		/// @param value_rec_right reconstructed value of right side at mid point
 		void MidPointReconstruct(int index_left, int index_right, double* value_rec_left, double* value_rec_right);
 		void MidPointReconstructFirstOrder(int index_left, int index_right, double* value_rec_left, double* value_rec_right);
+		virtual	void CalcForce() {};
+
 	protected:
 
 		void BoundaryCondition()override;

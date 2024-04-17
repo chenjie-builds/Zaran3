@@ -30,7 +30,7 @@ namespace zaran
 		void SourceFlux() override;
 		void InviscidFluxNew();
 		/// 计算气动力
-		void CalcForce();
+		void CalcForce()override;
 		
 
 	};
