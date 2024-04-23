@@ -48,7 +48,6 @@ namespace zaran
 					coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, yLeft, zLeft, zRight);
 				}
 			}
-
 			// check coordinate
 			if (coordTrans.J() > 1e15 || coordTrans.J() < 0 || isnan(coordTrans.J()) || isinf(coordTrans.J()))
 			{
@@ -159,7 +158,7 @@ namespace zaran
 		double cfl = para->GetCflNumber();
 		int nInnerNode = grid->GetInnerNodeNum();
 		double min_dt = LARGE_NUMBER;
-		// #pragma omp parallel for reduction(min:min_dt)
+#pragma omp parallel for reduction(min:min_dt)
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
 
@@ -197,7 +196,7 @@ namespace zaran
 			riemann_para[i].gamma_left = riemann_para[i].gamma_right = 1.4;
 		}
 		bool exist_negative = false;
-		// #pragma omp parallel for private(riemann_para,exist_negative)
+#pragma omp parallel for private(riemann_para,exist_negative)
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
 			if (nodeType[iNode] != NodeType::inner)
@@ -264,14 +263,7 @@ namespace zaran
 			{
 				GetResidual(iNode, iVar) = (riemann_para[0].flux[iVar] - riemann_para[1].flux[iVar] + riemann_para[2].flux[iVar] - riemann_para[3].flux[iVar] + riemann_para[4].flux[iVar] - riemann_para[5].flux[iVar]) / jacobi;
 			}
-			if (abs(GetResidual(iNode, 0)) > 1e-10)
-				Log::info("Node: {}, Residual: {}, {}, {}, {}, {}", iNode, GetResidual(iNode, 0), GetResidual(iNode, 1), GetResidual(iNode, 2), GetResidual(iNode, 3), GetResidual(iNode, 4));
 		}
-		Log::info("");
-		Log::info("");
-		Log::info("");
-		Log::info("");
-		Log::info("");
 	}
 
 	void Solver_NS_3D::ViscousResidual()

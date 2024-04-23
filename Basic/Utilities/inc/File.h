@@ -14,3 +14,5 @@
 bool IsFileExist(const std::string& fileName);
 //判断文件夹是否存在
 bool IsFolderExist(const std::string& folderName);
+//创建文件夹
+bool CreateFolder(const std::string& folderName);

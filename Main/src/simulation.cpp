@@ -5,7 +5,7 @@
 #include"FieldFactory.h"
 #include"ReadSTL.h"
 #include"PolyData.h"
-#include <filesystem>
+#include"File.h"
 using namespace zaran;
 void Simulation::Run()
 {
@@ -33,7 +33,7 @@ void Simulation::Run()
 
 void Simulation::ReadGlobalData()
 {
-	if (!std::filesystem::exists(globalDataFileName_))
+	if (!IsFileExist(globalDataFileName_))
 	{
 		Log::warn("Control File:{}, is NOT exist! Please Check!", globalDataFileName_);
 		system("pause");
@@ -121,6 +121,7 @@ void zaran::Simulation::SolveField()
 {
 	GridType grid_type;
 	FieldSolverType solver_type;
+	CreateFolder("reslut");
 	string grid_type_name = GlobalData::GetString("gridType");
 	string solver_type_name = GlobalData::GetString("solverType");
 	if (solver_type_name == "NS")

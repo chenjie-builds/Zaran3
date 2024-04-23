@@ -359,12 +359,7 @@ namespace zaran {
 					auto& boundIndex = bound[iBound].GetIndex();
 					auto& innerIndex = bound[iBound].GetInnerIndex();
 					int boundNeighborNum = nodeTopo->GetNeighborCloud()[boundIndex].size();
-					// if (boundNeighborNum <= 6)
-					// 	ZaranLog::info("Boundary {} has {} neighbors", boundIndex, boundNeighborNum);
 					GetPrimGrad(boundIndex, iVal, 0) = GetPrimGrad(boundIndex, iVal, 1) = GetPrimGrad(boundIndex, iVal, 2) = 0.0;
-					// m_PrimGradX[iVal][boundIndex] = m_PrimGradX[iVal][innerIndex];
-					// m_PrimGradY[iVal][boundIndex] = m_PrimGradY[iVal][innerIndex];
-					// m_PrimGradZ[iVal][boundIndex] = m_PrimGradZ[iVal][innerIndex];
 				}
 			}
 		}
@@ -382,7 +377,7 @@ namespace zaran {
 		for (int iStage = 0; iStage < rkStage; ++iStage)
 		{
 			CalcResidual();
-// #pragma omp parallel for
+#pragma omp parallel for
 			for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 			{
 				for (int iVal = 0; iVal < 5; ++iVal)
@@ -541,7 +536,7 @@ namespace zaran {
 		double maxVal, minVal;
 		double eps = 1e-6;
 		double venkatCoeff = 1.0e-5;
-// #pragma omp parallel for private(maxVal, minVal, eps)
+		// #pragma omp parallel for private(maxVal, minVal, eps)
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
 			for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
