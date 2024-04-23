@@ -38,7 +38,7 @@ namespace zaran
 	public:
 		virtual void Init() = 0;
 		virtual void Solve() = 0;
-		virtual void Post() = 0;
+		virtual void Postprocess() = 0;
 
 		
 		// 初始化自己

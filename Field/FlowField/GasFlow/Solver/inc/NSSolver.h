@@ -74,11 +74,11 @@ namespace zaran
 		void Cons2Prim();
 		void Cons2Prim(double& cons0, double& cons1, double& cons2, double& cons3, double& cons4, double& rho, double& u, double& v, double& w, double& p);
 		// 计算流动通量
-		virtual void InviscidFlux() = 0;
+		virtual void ConvectiveResidual() = 0;
 		//计算粘性通量
-		virtual void ViscousFlux() = 0;
+		virtual void ViscousResidual() = 0;
 		//计算源项
-		virtual void SourceFlux() = 0;
+		virtual void SourceTermResidual() = 0;
 		// 计算流场残差，即右端项
 		virtual void CalcResidual();
 		// 计算限制器系数
@@ -87,7 +87,6 @@ namespace zaran
 		virtual void CalcLimiterBJ();
 		virtual void CalcLimiterNone();
 		virtual void CalcLimiterFirstOrder();
-
 		virtual void CalcLimiterBound();
 		/// @brief 检查原始变量
 		virtual void CheckPrimtive();
@@ -103,6 +102,8 @@ namespace zaran
 		void MidPointReconstruct(int index_left, int index_right, double* value_rec_left, double* value_rec_right);
 		void MidPointReconstructFirstOrder(int index_left, int index_right, double* value_rec_left, double* value_rec_right);
 		virtual	void CalcForce() {};
+		double* GetPrimGrad(int iNode, int iVar) { return m_prim_grad + iNode * GetNumberOfEquations() * 3 + iVar * 3; }
+		double& GetPrimGrad(int iNode, int iVar, int iDim) { return m_prim_grad[iNode * GetNumberOfEquations() * 3 + iVar * 3 + iDim]; }
 
 	protected:
 
@@ -114,9 +115,7 @@ namespace zaran
 		// 壁面边界条件
 		virtual void  WallBC(Boundary& bound);
 		// 原始变量梯度
-		double** m_PrimGradX;
-		double** m_PrimGradY;
-		double** m_PrimGradZ;
+		double* m_prim_grad;
 		//通量求解器
 		Ptr<RiemannSolver> riemannSolver_;
 		//降阶标识，对于二阶精度的格式，降阶到一阶

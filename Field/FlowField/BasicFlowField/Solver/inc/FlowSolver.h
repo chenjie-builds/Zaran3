@@ -26,7 +26,7 @@ namespace zaran
 		// 计算时间步长
 		virtual void CalcTimeStep() = 0;
 		void Solve() override;
-		void Post()override;
+		void Postprocess()override;
 		// 同步时间步长为全局时间步
 		virtual void SnycTimeStepWithGlobal(double& dt) = 0;
 		virtual	double ComputeMaxResidual() = 0;
@@ -44,13 +44,31 @@ namespace zaran
 		virtual void TimeAdvance() = 0;
 		// 计算变量梯度
 		virtual void CalcPrimGrad() = 0;
+
+		//访问数据
+	public:
+		double* GetLimiter(int iNode) { return m_limiter + iNode * GetNumberOfEquations(); }
+		double& GetLimiter(int iNode, int iEqu) { return m_limiter[iNode * GetNumberOfEquations() + iEqu]; }
+		double* GetCons(int iNode) { return m_cons + iNode * GetNumberOfEquations(); }
+		double& GetCons(int iNode, int iEqu) { return m_cons[iNode * GetNumberOfEquations() + iEqu]; }
+		double* GetResidual(int iNode) { return m_residual + iNode * GetNumberOfEquations(); }
+		double& GetResidual(int iNode, int iEqu) { return m_residual[iNode * GetNumberOfEquations() + iEqu]; }
+		double& GetTemperture(int iNode, int iEqu) { return m_temperture[iNode]; }
+		double* GetMetric(int iNode) { return m_metric + iNode * 17; }
+		double* GetMetricXi(int iNode) { return m_metric + iNode * 17; }
+		double* GetMetricEta(int iNode) { return m_metric + iNode * 17 + 4; }
+		double* GetMetricZeta(int iNode) { return m_metric + iNode * 17 + 8; }
+		double* GetMetricTau(int iNode) { return m_metric + iNode * 17 + 12; }
+		double& GetMetricJacob(int iNode) { return m_metric[iNode * 17 + 16]; }
 	protected:
 		double** m_prim;
-		double**m_cons;
-		double** m_metric;
+		//守恒变量
+		double* m_cons;
+		double* m_metric;
 		double* m_dt;
-		double** m_residual;
-		double** m_limiter;
+		double* m_residual;
+		double* m_limiter;
+		double* m_temperture;
 		int* m_non_physical;
 	};
 }

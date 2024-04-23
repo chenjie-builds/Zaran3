@@ -26,7 +26,7 @@ void FlowSolver::Solve()
 
 }
 
-void FlowSolver::Post()
+void FlowSolver::Postprocess()
 {
 
 }
@@ -39,15 +39,15 @@ double FlowSolver::ComputeCFL()
 void FlowSolver::ZeroResidual()
 {
 	GridPtr& grid = GetGrid();
-	int n_equation = GetNumberOfEquations();
+	int n_equ = GetNumberOfEquations();
 	int n_node = grid->GetTotalNodeNum();
 
-	for (int i = 0;i < n_equation;i++)
+	for (int iEqu = 0;iEqu < n_equ;iEqu++)
 	{
 #pragma omp parallel for
-		for (int j = 0;j < n_node;j++)
+		for (int iNode = 0;iNode < n_node;iNode++)
 		{
-			m_residual[i][j] = 0.0;
+			GetResidual(iNode, iEqu) = 0.0;
 		}
 	}
 

@@ -27,11 +27,11 @@ namespace zaran
         void CalcGradWLS()override;
         void CalcTimeStepLocal() override;
         // 计算流动通量
-        void InviscidFlux()override;
+        void ConvectiveResidual()override;
         //计算粘性通量
-        void ViscousFlux() override;
+        void ViscousResidual() override;
         //计算源项
-        void SourceFlux() override;
+        void SourceTermResidual() override;
         void CalcLimiterVK()override;
         void CalcLimiterBJ()override;
         void CalcLimiterNone()override;
@@ -60,14 +60,20 @@ namespace zaran
         void WallBC(Boundary& bound)override;
         void BoundPatchBC();
 
+    protected:
+        double* GetPrimGradBound(int iBound, int iEqu) { return m_prim_grad_bound + iBound * GetNumberOfEquations() + iEqu; }
+        double& GetPrimGradBound(int iBound, int iEqu, int iDim) { return m_prim_grad_bound[iBound * GetNumberOfEquations() * 3 + iEqu * 3 + iDim]; }
+
+        double* GetLimiterBound(int iBound) { return m_limiter_bound + iBound; }
+        double& GetLimiterBound(int iBound, int iEqu) { return m_limiter_bound[iBound * GetNumberOfEquations() + iEqu]; }
+
+
     private:
         Ptr<Grid_Zaran_3D> GetGrid() { return std::static_pointer_cast<Grid_Zaran_3D>(gridList_->GetGrid(gridIndex_)); }
     private:
         double** m_prim_bound;
-        double** m_prim_bound_gradX;
-        double** m_prim_bound_gradY;
-        double** m_prim_bound_gradZ;
-        double** m_limiter_bound;//边界节点限制器系数
+        double* m_prim_grad_bound;
+        double* m_limiter_bound;//边界节点限制器系数
 
     };
 }

@@ -133,11 +133,8 @@ void zaran::Controller::CalcResidual()
         auto& currentSolver = std::dynamic_pointer_cast<FlowSolver>(m_field[iField]->GetSolver());
         auto& currentGrid = m_field[iField]->GetGrid();
         auto& fieldData = m_field[iField]->GetFieldData();
-        double* rho, * res0;
-        fieldData->GetData("rho", rho);
-        fieldData->GetData("res0", res0);
         int n_data;
-        fieldData->GetDataSize("rho", n_data);
+        fieldData->GetDataSize("density", n_data);
         auto& nodeTopo = currentGrid->GetNodeTopo();
         auto& nodeCoord = nodeTopo->GetCoordinate();
         auto& nodeType = nodeTopo->GetType();
@@ -146,8 +143,8 @@ void zaran::Controller::CalcResidual()
 #pragma omp parallel for reduction(max:maxResidual) reduction(+:aveResidual)
         for (int iNode = 0;iNode < n_data;++iNode)
         {
-            maxResidual = Max(maxResidual, abs(res0[iNode]));
-            aveResidual += pow(res0[iNode], 2);
+            maxResidual = Max(maxResidual, abs(currentSolver->GetResidual(iNode, 0)));
+            aveResidual += pow(currentSolver->GetResidual(iNode, 0), 2);
         }
         aveResidual /= n_data;
         aveResidual = sqrt(aveResidual);

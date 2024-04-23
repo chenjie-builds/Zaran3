@@ -525,16 +525,20 @@ namespace zaran
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeibor = nodeTopo->GetNeighborCloud();
 		auto& nodeType = nodeTopo->GetType();
+		//初始化vtk点
 		vtkNew<vtkPoints> points;
 		for (int i = 0; i < nodeCoord.size(); ++i)
 		{
 			points->InsertNextPoint(nodeCoord[i].data());
 		}
+		//把vtk点转换为vtkploydata
 		vtkNew<vtkPolyData> polydata;
 		polydata->SetPoints(points);
+		//将vtkploydata转换为vtk点定位器
 		vtkNew<vtkVertexGlyphFilter> glyphFilter;
 		glyphFilter->SetInputData(polydata);
 		glyphFilter->Update();
+		//构建KD树
 		vtkNew<vtkKdTreePointLocator> kdTree;
 		kdTree->SetDataSet(glyphFilter->GetOutput());
 		kdTree->BuildLocator();
@@ -591,7 +595,6 @@ namespace zaran
 				Log::info("node:{} neibor num before:{} neibor num after:{}", iNode, neibor_num_before, neibor_num_after);
 		}
 		Log::info("min neibor num:{} max neibor num:{}", min_neibor_num, max_neibor_num);
-
 	}
 
 	void GridListFactoryFNFDM3D::ReadCellFile(Ptr<GridList>& gridList)

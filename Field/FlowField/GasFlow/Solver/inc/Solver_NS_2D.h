@@ -28,7 +28,7 @@ namespace zaran
 		void CalcGradWLS()override;
 		void CalcTimeStepLocal() override;
 		// 计算流动通量
-		void InviscidFlux()override;
+		void ConvectiveResidual()override;
 		void SolveHoleNode();
 		void SolveHoleNodeFNFDM();//使用自由节点有限差分法
 		void SolveHoleNodeIDW();//逆距离加权法
@@ -37,8 +37,8 @@ namespace zaran
 
 		void BoundaryCondition()override;
 		//计算粘性通量
-		void ViscousFlux() override;
+		void ViscousResidual() override;
 		//计算源项
-		void SourceFlux() override;
+		void SourceTermResidual() override;
 	};
 }

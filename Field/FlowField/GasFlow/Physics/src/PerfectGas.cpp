@@ -10,7 +10,7 @@ PerfectGas::PerfectGas(const double& Mw, const double& gamma, const Dimensionles
 }
 double PerfectGas::GetSonicSpeed(const double& T)
 {
-	return sqrt(gamma_ * T);
+	return sqrt(T);
 }
 double PerfectGas::GetTemp(const double& density, const double& p)
 {

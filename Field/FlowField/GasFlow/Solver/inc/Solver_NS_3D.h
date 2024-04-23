@@ -23,11 +23,11 @@ namespace zaran
 		void CalcGradWLS()override;
 		void CalcTimeStepLocal() override;
 		// 计算流动通量
-		void InviscidFlux()override;
+		void ConvectiveResidual()override;
 		//计算粘性通量
-		void ViscousFlux() override;
+		void ViscousResidual() override;
 		//计算源项
-		void SourceFlux() override;
+		void SourceTermResidual() override;
 		void InviscidFluxNew();
 		/// 计算气动力
 		void CalcForce()override;

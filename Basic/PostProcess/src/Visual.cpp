@@ -25,11 +25,11 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 	auto& cell2node = cellTopo->GetNodeIndex();
 	auto& data = solver->GetFieldData();
 	double* density, * velocity_x, * velocity_y, * velocity_z, * pressure, * jacobi;
-	data->GetData("rho", density);
-	data->GetData("u", velocity_x);
-	data->GetData("v", velocity_y);
-	data->GetData("w", velocity_z);
-	data->GetData("p", pressure);
+	data->GetData("density", density);
+	data->GetData("velocity_x", velocity_x);
+	data->GetData("velocity_y", velocity_y);
+	data->GetData("velocity_w", velocity_z);
+	data->GetData("pressure", pressure);
 	data->GetData("coordTransJ", jacobi);
 	fout << "ZONE T= grid_" << grid->GetName() << std::endl;
 	fout << "N=" << grid->GetTotalNodeNum() << ", E= " << cell2node.size() << ", F=FEPOINT, ET=Brick" << std::endl;
@@ -56,11 +56,11 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 {
 	auto& data = solver->GetFieldData();
 	double* density, * velocity_x, * velocity_y, * velocity_z, * pressure;
-	data->GetData("rho", density);
-	data->GetData("u", velocity_x);
-	data->GetData("v", velocity_y);
-	data->GetData("w", velocity_z);
-	data->GetData("p", pressure);
+	data->GetData("density", density);
+	data->GetData("velocity_x", velocity_x);
+	data->GetData("velocity_y", velocity_y);
+	data->GetData("velocity_w", velocity_z);
+	data->GetData("pressure", pressure);
 	auto& grid = solver->GetGrid();
 	auto& cellTopo = grid->GetCellTopo();
 	auto& cell2node = cellTopo->GetNodeIndex();
@@ -238,11 +238,11 @@ void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
 	auto& data = *solver->GetFieldData();
 	double* rho, * u, * v, * w, * p, * jacobi, * limiterCoef0, * limiterCoef1, * limiterCoef2, * limiterCoef3, * limiterCoef4;
 	double* rhoGradX, * rhoGradY, * uGradX, * uGradY, * vGradX, * vGradY, * pGradX, * pGradY;
-	data.GetData("rho", rho);
-	data.GetData("u", u);
-	data.GetData("v", v);
-	data.GetData("w", w);
-	data.GetData("p", p);
+	data.GetData("density", rho);
+	data.GetData("velocity_x", u);
+	data.GetData("velocity_y", v);
+	data.GetData("velocity_w", w);
+	data.GetData("pressure", p);
 	data.GetData("coordTransJ", jacobi);
 	data.GetData("limiterCoef0", limiterCoef0);
 	data.GetData("limiterCoef1", limiterCoef1);
@@ -295,11 +295,11 @@ void zaran::Visual::WriteTecplotPoint(Ptr<FieldSolver>& solver)
 	auto& nodeCoord = nodeTopo->GetCoordinate();
 	auto& data = *solver->GetFieldData();
 	double* rho, * u, * v, * w, * p;
-	data.GetData("rho", rho);
-	data.GetData("u", u);
-	data.GetData("v", v);
-	data.GetData("w", w);
-	data.GetData("p", p);
+	data.GetData("density", rho);
+	data.GetData("velocity_x", u);
+	data.GetData("velocity_y", v);
+	data.GetData("velocity_w", w);
+	data.GetData("pressure", p);
 	//fout << "solutiontime= " << GlobalData::GetDouble("globalTime") << std::endl;
 	for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 	{
@@ -432,11 +432,11 @@ void zaran::Visual::WriteTecplotZaran3D(Ptr<FieldSolver>& solver)
 	fout << "variables=x,y,z,rho,u,v,w,p\n";
 	auto& data = *solver->GetFieldData();
 	double* rho, * u, * v, * w, * p, * jacobi;
-	data.GetData("rho", rho);
-	data.GetData("u", u);
-	data.GetData("v", v);
-	data.GetData("w", w);
-	data.GetData("p", p);
+	data.GetData("density", rho);
+	data.GetData("velocity_x", u);
+	data.GetData("velocity_y", v);
+	data.GetData("velocity_w", w);
+	data.GetData("pressure", p);
 	data.GetData("coordTransJ", jacobi);
 	Ptr<Grid_Zaran_3D>& grid = std::static_pointer_cast<Grid_Zaran_3D>(solver->GetGrid());
 	auto& cellTopo = grid->GetCellTopo();
@@ -585,11 +585,11 @@ void zaran::Visual::WriteTecplotZaran3DBinary(Ptr<FieldSolver>& solver)
 {
 	auto& data = *solver->GetFieldData();
 	double* rho, * u, * v, * w, * p, * jacobi;
-	data.GetData("rho", rho);
-	data.GetData("u", u);
-	data.GetData("v", v);
-	data.GetData("w", w);
-	data.GetData("p", p);
+	data.GetData("density", rho);
+	data.GetData("velocity_x", u);
+	data.GetData("velocity_y", v);
+	data.GetData("velocity_w", w);
+	data.GetData("pressure", p);
 	data.GetData("coordTransJ", jacobi);
 
 	Ptr<Grid_Zaran_3D>& grid = std::static_pointer_cast<Grid_Zaran_3D>(solver->GetGrid());

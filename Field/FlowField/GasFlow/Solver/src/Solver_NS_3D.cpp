@@ -61,39 +61,14 @@ namespace zaran
 				Log::info("zLeft index={}: {},{},{}", tempK[iNode][0], zLeft.x(), zLeft.y(), zLeft.z());
 				Log::info("zRight index={}: {},{},{}", tempK[iNode][2], zRight.x(), zRight.y(), zRight.z());
 			}
-			m_metric[0][iNode] = coordTrans.GetX()[0];
-			m_metric[1][iNode] = coordTrans.GetX()[1];
-			m_metric[2][iNode] = coordTrans.GetX()[2];
-			m_metric[3][iNode] = coordTrans.GetX()[3];
-			m_metric[4][iNode] = coordTrans.GetY()[0];
-			m_metric[5][iNode] = coordTrans.GetY()[1];
-			m_metric[6][iNode] = coordTrans.GetY()[2];
-			m_metric[7][iNode] = coordTrans.GetY()[3];
-			m_metric[8][iNode] = coordTrans.GetZ()[0];
-			m_metric[9][iNode] = coordTrans.GetZ()[1];
-			m_metric[10][iNode] = coordTrans.GetZ()[2];
-			m_metric[11][iNode] = coordTrans.GetZ()[3];
-			m_metric[12][iNode] = coordTrans.GetT()[0];
-			m_metric[13][iNode] = coordTrans.GetT()[1];
-			m_metric[14][iNode] = coordTrans.GetT()[2];
-			m_metric[15][iNode] = coordTrans.GetT()[3];
-			m_metric[16][iNode] = coordTrans.GetXi()[0];
-			m_metric[17][iNode] = coordTrans.GetXi()[1];
-			m_metric[18][iNode] = coordTrans.GetXi()[2];
-			m_metric[19][iNode] = coordTrans.GetXi()[3];
-			m_metric[20][iNode] = coordTrans.GetEta()[0];
-			m_metric[21][iNode] = coordTrans.GetEta()[1];
-			m_metric[22][iNode] = coordTrans.GetEta()[2];
-			m_metric[23][iNode] = coordTrans.GetEta()[3];
-			m_metric[24][iNode] = coordTrans.GetZeta()[0];
-			m_metric[25][iNode] = coordTrans.GetZeta()[1];
-			m_metric[26][iNode] = coordTrans.GetZeta()[2];
-			m_metric[27][iNode] = coordTrans.GetZeta()[3];
-			m_metric[28][iNode] = coordTrans.GetTau()[0];
-			m_metric[29][iNode] = coordTrans.GetTau()[1];
-			m_metric[30][iNode] = coordTrans.GetTau()[2];
-			m_metric[31][iNode] = coordTrans.GetTau()[3];
-			m_metric[32][iNode] = coordTrans.J();
+			for (int iDim = 0;iDim < 4;++iDim)
+			{
+				GetMetricXi(iNode)[iDim] = coordTrans.GetXi()[iDim];
+				GetMetricEta(iNode)[iDim] = coordTrans.GetEta()[iDim];
+				GetMetricZeta(iNode)[iDim] = coordTrans.GetZeta()[iDim];
+				GetMetricTau(iNode)[iDim] = coordTrans.GetTau()[iDim];
+			}
+			GetMetricJacob(iNode) = coordTrans.J();
 			if (coordTrans.J() > max_jacobi)
 			{
 				max_jacobi = coordTrans.J();
@@ -167,9 +142,10 @@ namespace zaran
 					b(2) += omega * deltaVal * deltaZ;
 				}
 				grad = A_inv * b;
-				m_PrimGradX[iVal][iNode] = grad.x();
-				m_PrimGradY[iVal][iNode] = grad.y();
-				m_PrimGradZ[iVal][iNode] = grad.z();
+				GetPrimGrad(iNode, iVal, 0) = grad.x();
+				GetPrimGrad(iNode, iVal, 1) = grad.y();
+				GetPrimGrad(iNode, iVal, 2) = grad.z();
+
 			}
 		}
 	}
@@ -183,7 +159,7 @@ namespace zaran
 		double cfl = para->GetCflNumber();
 		int nInnerNode = grid->GetInnerNodeNum();
 		double min_dt = LARGE_NUMBER;
-#pragma omp parallel for reduction(min:min_dt)
+		// #pragma omp parallel for reduction(min:min_dt)
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
 
@@ -191,24 +167,23 @@ namespace zaran
 			if (nodeType[iNode] != NodeType::inner)
 				continue;
 			double c = sqrt(gamma * m_prim[4][iNode] / m_prim[0][iNode]);
-			double normXi = sqrt(m_metric[16][iNode] * m_metric[16][iNode] + m_metric[17][iNode] * m_metric[17][iNode] + m_metric[18][iNode] * m_metric[18][iNode]);
-			double normEta = sqrt(m_metric[20][iNode] * m_metric[20][iNode] + m_metric[21][iNode] * m_metric[21][iNode] + m_metric[22][iNode] * m_metric[22][iNode]);
-			double normZeta = sqrt(m_metric[24][iNode] * m_metric[24][iNode] + m_metric[25][iNode] * m_metric[25][iNode] + m_metric[26][iNode] * m_metric[26][iNode]);
-			double uXi = m_prim[1][iNode] * m_metric[16][iNode] + m_prim[2][iNode] * m_metric[17][iNode] + m_prim[3][iNode] * m_metric[18][iNode];
-			double uEta = m_prim[1][iNode] * m_metric[20][iNode] + m_prim[2][iNode] * m_metric[21][iNode] + m_prim[3][iNode] * m_metric[22][iNode];
-			double uZeta = m_prim[1][iNode] * m_metric[24][iNode] + m_prim[2][iNode] * m_metric[25][iNode] + m_prim[3][iNode] * m_metric[26][iNode];
-			double lamda = abs(uXi) + abs(uEta) + abs(uZeta) + c * (normXi + normEta + normZeta);
+			double norm_xi = sqrt(GetMetricXi(iNode)[0] * GetMetricXi(iNode)[0] + GetMetricXi(iNode)[1] * GetMetricXi(iNode)[1] + GetMetricXi(iNode)[2] * GetMetricXi(iNode)[2]);
+			double norm_eta = sqrt(GetMetricEta(iNode)[0] * GetMetricEta(iNode)[0] + GetMetricEta(iNode)[1] * GetMetricEta(iNode)[1] + GetMetricEta(iNode)[2] * GetMetricEta(iNode)[2]);
+			double norm_zeta = sqrt(GetMetricZeta(iNode)[0] * GetMetricZeta(iNode)[0] + GetMetricZeta(iNode)[1] * GetMetricZeta(iNode)[1] + GetMetricZeta(iNode)[2] * GetMetricZeta(iNode)[2]);
+			double u_xi = m_prim[1][iNode] * GetMetricXi(iNode)[0] + m_prim[2][iNode] * GetMetricXi(iNode)[1] + m_prim[3][iNode] * GetMetricXi(iNode)[2];
+			double u_eta = m_prim[1][iNode] * GetMetricEta(iNode)[0] + m_prim[2][iNode] * GetMetricEta(iNode)[1] + m_prim[3][iNode] * GetMetricEta(iNode)[2];
+			double u_zeta = m_prim[1][iNode] * GetMetricZeta(iNode)[0] + m_prim[2][iNode] * GetMetricZeta(iNode)[1] + m_prim[3][iNode] * GetMetricZeta(iNode)[2];
+			double lamda = abs(u_xi) + abs(u_eta) + abs(u_zeta) + c * (norm_xi + norm_eta + norm_zeta);
 			m_dt[iNode] = cfl / lamda;
 			if (m_dt[iNode] < min_dt)
 			{
 				min_dt = m_dt[iNode];
 			}
-
 		}
 		GlobalData::Update("dt", min_dt);
 	}
 
-	void Solver_NS_3D::InviscidFlux()
+	void Solver_NS_3D::ConvectiveResidual()
 	{
 		GridPtr grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
@@ -222,44 +197,44 @@ namespace zaran
 			riemann_para[i].gamma_left = riemann_para[i].gamma_right = 1.4;
 		}
 		bool exist_negative = false;
-#pragma omp parallel for private(riemann_para,exist_negative)
+		// #pragma omp parallel for private(riemann_para,exist_negative)
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
 			if (nodeType[iNode] != NodeType::inner)
 				continue;
 			exist_negative = false;
-			auto& jacobi = m_metric[32][iNode];
+			auto& jacobi = GetMetricJacob(iNode);
 			// i direction
-			riemann_para[0].norm(0) = m_metric[16][iNode];
-			riemann_para[0].norm(1) = m_metric[17][iNode];
-			riemann_para[0].norm(2) = m_metric[18][iNode];
-			riemann_para[0].nt = m_metric[19][iNode];
-			riemann_para[1].norm(0) = m_metric[16][iNode];
-			riemann_para[1].norm(1) = m_metric[17][iNode];
-			riemann_para[1].norm(2) = m_metric[18][iNode];
-			riemann_para[1].nt = m_metric[19][iNode];
+			riemann_para[0].norm(0) = GetMetricXi(iNode)[0];
+			riemann_para[0].norm(1) = GetMetricXi(iNode)[1];
+			riemann_para[0].norm(2) = GetMetricXi(iNode)[2];
+			riemann_para[0].nt = GetMetricXi(iNode)[3];
+			riemann_para[1].norm(0) = GetMetricXi(iNode)[0];
+			riemann_para[1].norm(1) = GetMetricXi(iNode)[1];
+			riemann_para[1].norm(2) = GetMetricXi(iNode)[2];
+			riemann_para[1].nt = GetMetricXi(iNode)[3];
 			MidPointReconstruct(templateI[iNode][1], templateI[iNode][2], &riemann_para[0].prim_left(0), &riemann_para[0].prim_right(0));
 			MidPointReconstruct(templateI[iNode][0], templateI[iNode][1], &riemann_para[1].prim_left(0), &riemann_para[1].prim_right(0));
 			// j direction
-			riemann_para[2].norm(0) = m_metric[20][iNode];
-			riemann_para[2].norm(1) = m_metric[21][iNode];
-			riemann_para[2].norm(2) = m_metric[22][iNode];
-			riemann_para[2].nt = m_metric[23][iNode];
-			riemann_para[3].norm(0) = m_metric[20][iNode];
-			riemann_para[3].norm(1) = m_metric[21][iNode];
-			riemann_para[3].norm(2) = m_metric[22][iNode];
-			riemann_para[3].nt = m_metric[23][iNode];
+			riemann_para[2].norm(0) = GetMetricEta(iNode)[0];
+			riemann_para[2].norm(1) = GetMetricEta(iNode)[1];
+			riemann_para[2].norm(2) = GetMetricEta(iNode)[2];
+			riemann_para[2].nt = GetMetricEta(iNode)[3];
+			riemann_para[3].norm(0) = GetMetricEta(iNode)[0];
+			riemann_para[3].norm(1) = GetMetricEta(iNode)[1];
+			riemann_para[3].norm(2) = GetMetricEta(iNode)[2];
+			riemann_para[3].nt = GetMetricEta(iNode)[3];
 			MidPointReconstruct(templateJ[iNode][1], templateJ[iNode][2], &riemann_para[2].prim_left(0), &riemann_para[2].prim_right(0));
 			MidPointReconstruct(templateJ[iNode][0], templateJ[iNode][1], &riemann_para[3].prim_left(0), &riemann_para[3].prim_right(0));
 			// k direction
-			riemann_para[4].norm(0) = m_metric[24][iNode];
-			riemann_para[4].norm(1) = m_metric[25][iNode];
-			riemann_para[4].norm(2) = m_metric[26][iNode];
-			riemann_para[4].nt = m_metric[27][iNode];
-			riemann_para[5].norm(0) = m_metric[24][iNode];
-			riemann_para[5].norm(1) = m_metric[25][iNode];
-			riemann_para[5].norm(2) = m_metric[26][iNode];
-			riemann_para[5].nt = m_metric[27][iNode];
+			riemann_para[4].norm(0) = GetMetricZeta(iNode)[0];
+			riemann_para[4].norm(1) = GetMetricZeta(iNode)[1];
+			riemann_para[4].norm(2) = GetMetricZeta(iNode)[2];
+			riemann_para[4].nt = GetMetricZeta(iNode)[3];
+			riemann_para[5].norm(0) = GetMetricZeta(iNode)[0];
+			riemann_para[5].norm(1) = GetMetricZeta(iNode)[1];
+			riemann_para[5].norm(2) = GetMetricZeta(iNode)[2];
+			riemann_para[5].nt = GetMetricZeta(iNode)[3];
 			MidPointReconstruct(templateK[iNode][1], templateK[iNode][2], &riemann_para[4].prim_left(0), &riemann_para[4].prim_right(0));
 			MidPointReconstruct(templateK[iNode][0], templateK[iNode][1], &riemann_para[5].prim_left(0), &riemann_para[5].prim_right(0));
 			// check negative density and pressure
@@ -287,16 +262,23 @@ namespace zaran
 			}
 			for (int iVar = 0;iVar < GetNumberOfEquations();++iVar)
 			{
-				m_residual[iVar][iNode] = (riemann_para[0].flux[iVar] - riemann_para[1].flux[iVar] + riemann_para[2].flux[iVar] - riemann_para[3].flux[iVar] + riemann_para[4].flux[iVar] - riemann_para[5].flux[iVar]) / jacobi;
+				GetResidual(iNode, iVar) = (riemann_para[0].flux[iVar] - riemann_para[1].flux[iVar] + riemann_para[2].flux[iVar] - riemann_para[3].flux[iVar] + riemann_para[4].flux[iVar] - riemann_para[5].flux[iVar]) / jacobi;
 			}
+			if (abs(GetResidual(iNode, 0)) > 1e-10)
+				Log::info("Node: {}, Residual: {}, {}, {}, {}, {}", iNode, GetResidual(iNode, 0), GetResidual(iNode, 1), GetResidual(iNode, 2), GetResidual(iNode, 3), GetResidual(iNode, 4));
 		}
+		Log::info("");
+		Log::info("");
+		Log::info("");
+		Log::info("");
+		Log::info("");
 	}
 
-	void Solver_NS_3D::ViscousFlux()
+	void Solver_NS_3D::ViscousResidual()
 	{
 	}
 
-	void Solver_NS_3D::SourceFlux()
+	void Solver_NS_3D::SourceTermResidual()
 	{
 	}
 

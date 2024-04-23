@@ -26,7 +26,7 @@ namespace zaran
 		Ptr<Grid_Struct_3D> GetGrid();
 		virtual void CalcTimeStepLocal()override;
 		// 计算流动通量
-		virtual void InviscidFlux()override;
+		virtual void ConvectiveResidual()override;
 		// 计算限制器系数
 		virtual void CalcLimiter()override;
 	private:
