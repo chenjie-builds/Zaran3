@@ -121,7 +121,7 @@ void zaran::Simulation::SolveField()
 {
 	GridType grid_type;
 	FieldSolverType solver_type;
-	CreateFolder("reslut");
+	CreateFolder("result");
 	string grid_type_name = GlobalData::GetString("gridType");
 	string solver_type_name = GlobalData::GetString("solverType");
 	if (solver_type_name == "NS")

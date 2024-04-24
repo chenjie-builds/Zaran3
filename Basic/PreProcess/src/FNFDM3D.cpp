@@ -65,6 +65,9 @@ namespace zaran
 		auto& nodeNeibor = nodeTopo->GetNeighborCloud();
 		nodeNeibor.resize(m_NodeNum);
 		double delta = 1e-5;
+		double min_angle = LARGE_NUMBER;
+		int min_angle_index;
+		int min_angle_neibor_index1, min_angle_neibor_index2;
 		for (size_t i = 0; i < innerNodeNum; i++)
 		{
 			fin >> innerNodeIndex;
@@ -121,12 +124,44 @@ namespace zaran
 			{
 				std::swap(neibor_index[4], neibor_index[5]);
 			}
+			//计算坐标轴之间的最小夹角
+			double temp_min = LARGE_NUMBER;
+			int temp_index1, temp_index2;
+			for (int iNode = 0;iNode < 6;++iNode)
+			{
+				vec[0] = nodeCoord[neibor_index[iNode]] - nodeCoord[innerNodeIndex];
+				for (int jNode = iNode + 1;jNode < 6;++jNode)
+				{
+					vec[1] = nodeCoord[neibor_index[jNode]] - nodeCoord[innerNodeIndex];
+					double angle = AngleOfTwoArray3D(vec[0].data(), vec[1].data());
+					if (angle < temp_min)
+					{
+						temp_min = angle;
+						temp_index1 = neibor_index[iNode];
+						temp_index2 = neibor_index[jNode];
+					}
+
+				}
+			}
+			if (temp_min < PI / 18)
+				Log::warn("Min axis Angle: {}, Node index: {} is less than 10 degree", temp_min, innerNodeIndex);
+			if (temp_min < min_angle)
+			{
+				min_angle = temp_min;
+				min_angle_index = innerNodeIndex;
+				min_angle_neibor_index1 = temp_index1;
+				min_angle_neibor_index2 = temp_index2;
+			}
+
+
 			temp_i[innerNodeIndex] = IArray{ neibor_index[0],innerNodeIndex,neibor_index[1] };
 			temp_j[innerNodeIndex] = IArray{ neibor_index[2],innerNodeIndex,neibor_index[3] };
 			temp_k[innerNodeIndex] = IArray{ neibor_index[4],innerNodeIndex,neibor_index[5] };
-
-
 		}
+		Log::info("Min axis Angle: {}, Node index: {}", min_angle, min_angle_index);
+		Log::info("-------- Coord: {}, {}, {}", nodeCoord[min_angle_index][0], nodeCoord[min_angle_index][1], nodeCoord[min_angle_index][2]);
+		Log::info("-------- Neighbor: {}, {}, {}, {}, {}, {}", nodeNeibor[min_angle_index][0], nodeNeibor[min_angle_index][1], nodeNeibor[min_angle_index][2], nodeNeibor[min_angle_index][3], nodeNeibor[min_angle_index][4], nodeNeibor[min_angle_index][5]);
+		Log::info("-------- Axis Node 1: {}, Node 2: {}", min_angle_neibor_index1, min_angle_neibor_index2);
 		//读取所有边界节点邻居节点
 		auto& boundMap = grid->GetBoundaryMap();
 		m_BoundNodeNum = 0;
@@ -212,7 +247,6 @@ namespace zaran
 			boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,connectNodeIndex,0,wallNorm });
 			nodeType[boundNodeIndex] = NodeType::slipWall;
 		}
-
 		fin.close();
 
 		//查找邻居节点，看自身是否是其邻居，如不是，则加进去
@@ -300,15 +334,6 @@ namespace zaran
 			auto& currentNodeCoord = nodeCoord[iNode];
 			auto& currentNeibor = nodeNeibor[iNode];
 			//ZaranLog::info("node:{}\n", iNode);
-			if (iNode == 15896)
-			{
-				Log::info("node before:{}", iNode);
-				Log::info("{} {} {}", currentNodeCoord.x(), currentNodeCoord.y(), currentNodeCoord.z());
-				for (auto& i : currentNeibor)
-				{
-					Log::info("{} {} {}", nodeCoord[i].x(), nodeCoord[i].y(), nodeCoord[i].z());
-				}
-			}
 			//删除邻居节点中与当地节点距离小于小量的节点
 			for (int i = 0; i < currentNeibor.size(); ++i)
 			{
@@ -394,15 +419,6 @@ namespace zaran
 			for (auto& i : node_angle_map)
 			{
 				currentNeibor.push_back(i.second);
-			}
-			if (iNode == 15896)
-			{
-				Log::info("node after:{}", iNode);
-				Log::info("{} {} {}", currentNodeCoord.x(), currentNodeCoord.y(), currentNodeCoord.z());
-				for (auto& i : currentNeibor)
-				{
-					Log::info("{} {} {}", nodeCoord[i].x(), nodeCoord[i].y(), nodeCoord[i].z());
-				}
 			}
 			//求出邻居节点与当地节点之间的距离
 			map<int, double> node_dis_map;
@@ -503,15 +519,6 @@ namespace zaran
 			temp_j[iNode][2] = currentNeibor[1];
 			currentNeibor.push_back(main_pair.node1);
 			currentNeibor.push_back(main_pair.node2);
-			if (iNode == 15896)
-			{
-				Log::info("node after:{}", iNode);
-				Log::info("{} {} {}", currentNodeCoord.x(), currentNodeCoord.y(), currentNodeCoord.z());
-				for (auto& i : currentNeibor)
-				{
-					Log::info("{} {} {}", nodeCoord[i].x(), nodeCoord[i].y(), nodeCoord[i].z());
-				}
-			}
 		}
 
 

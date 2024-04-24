@@ -501,7 +501,6 @@ namespace zaran {
 
 	void NSSolver::CalcLimiter()
 	{
-
 		string limiterType = GlobalData::GetString("limiterType");
 		if (limiterType != "1st-order")
 		{
@@ -536,7 +535,7 @@ namespace zaran {
 		double maxVal, minVal;
 		double eps = 1e-6;
 		double venkatCoeff = 1.0e-5;
-		// #pragma omp parallel for private(maxVal, minVal, eps)
+		#pragma omp parallel for private(maxVal, minVal, eps)
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
 			for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
@@ -558,7 +557,6 @@ namespace zaran {
 				double deltaMin = minVal - m_prim[iVal][iNode];
 				double tempCoef = LARGE_NUMBER;
 				GetLimiter(iNode, iVal) = LARGE_NUMBER;
-
 				for (int iNeighbor = 0; iNeighbor < neighborNode.size(); ++iNeighbor)
 				{
 					auto current2Neighbor = nodeCoord[neighborNode[iNeighbor]] - nodeCoord[iNode];
