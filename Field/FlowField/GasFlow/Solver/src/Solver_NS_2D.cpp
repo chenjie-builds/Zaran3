@@ -2,19 +2,19 @@
 #include"SpecialField.h"
 namespace zaran
 {
-	void Solver_NS_2D::InitData()
+	void Solver_NS_2D::InitField()
 	{
 		// InitFieldShockReflection();
 		// InitFieldIsentropicVortex();
 		InitFieldNoFlow();
 	}
-	void Solver_NS_2D::InitFieldFarField()
+	void Solver_NS_2D::InitFieldFarFlow()
 	{
 		GridPtr grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		FlowSolverPara* para = GetPara();
-		int init_type = para->GetInitFieldType();
+		const InitFieldType&  init_type = para->GetInitFieldType();
 		double prim_init[5];
 		prim_init[0] = para->GetInflowDensity();
 		prim_init[1] = para->GetInflowVelocityX();
@@ -38,7 +38,7 @@ namespace zaran
 		auto& node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		FlowSolverPara* para = GetPara();
-		int init_type = para->GetInitFieldType();
+		const InitFieldType&  init_type = para->GetInitFieldType();
 		double prim_init[5];
 		prim_init[0] = para->GetInflowDensity();
 		prim_init[1] = para->GetInflowVelocityX();
@@ -62,7 +62,7 @@ namespace zaran
 		auto& node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		FlowSolverPara* para = GetPara();
-		int init_type = para->GetInitFieldType();
+		const InitFieldType&  init_type = para->GetInitFieldType();
 		double prim_init[5];
 		prim_init[0] = 6.4;
 		prim_init[1] = 3.125;

@@ -4,6 +4,7 @@
 #include"FlowSolver.h"
 #include"MathBasic.h"
 #include "SpecialField.h"
+#include"File.h"
 using namespace zaran;
 
 
@@ -156,6 +157,71 @@ void zaran::Controller::CalcResidual()
 void Controller::SaveFieldData()
 {
     SaveDataTecplot();
+    std::string back_dir = GlobalData::GetString("backupFieldFolder");
+    int currentIter = GlobalData::GetInt("currentIter");
+    back_dir += "/iter=" + std::to_string(currentIter);
+    CreateFolder(back_dir);
+    BackupFieldData(back_dir);
+    BackupResidual(back_dir);
+    BackupLog(back_dir);
+    BackupGlobalData(back_dir);
+}
+
+void Controller::BackupFieldData(std::string& back_folder)
+{
+    for (size_t iField = 0; iField < m_field.size(); iField++)
+    {
+        auto& currentSolver = m_field[iField]->GetSolver();
+        currentSolver->BackupField(back_folder);
+    }
+}
+
+void Controller::BackupResidual(std::string& back_folder)
+{
+    std::string residual_file = GlobalData::GetString("residualFileName");
+    std::string residual_file_back = back_folder + "/" + residual_file;
+    if (IsFileExist(residual_file) == false)
+    {
+        Log::warn("residual file:{} is not exist!", residual_file);
+        return;
+    }
+    if (IsFileExist(residual_file_back) == true)
+    {
+        DeleteFile(residual_file_back);
+    }
+    CopyFile(residual_file, residual_file_back);
+}
+
+void Controller::BackupLog(std::string& back_folder)
+{
+    std::string log_file = "log.txt";
+    std::string log_file_back = back_folder + "/" + log_file;
+    if (IsFileExist(log_file) == false)
+    {
+        Log::warn("logFile:{} is not exist!", log_file);
+        return;
+    }
+    if (IsFileExist(log_file_back) == true)
+    {
+        DeleteFile(log_file_back);
+    }
+    CopyFile(log_file, log_file_back);
+}
+
+void zaran::Controller::BackupGlobalData(std::string& back_folder)
+{
+    std::string global_file = "zaran.ini";
+    std::string global_file_back = back_folder + "/" + global_file;
+    if (IsFileExist(global_file) == false)
+    {
+        Log::warn("gloabal data file:{} is not exist!", global_file);
+        return;
+    }
+    if (IsFileExist(global_file_back) == true)
+    {
+        DeleteFile(global_file_back);
+    }
+    GlobalData::Backup(back_folder);
 }
 
 bool Controller::IsStopSolve()
@@ -183,15 +249,18 @@ bool Controller::IsStopSolve()
 void Controller::SaveResidual()
 {
     int currentIter = GlobalData::GetInt("currentIter");
+    string residual_file = GlobalData::GetString("residualFileName");
+
+
     if (currentIter == 0)
     {
-        std::ofstream fout("res.dat");
-        fout << "variables=step,time,MaxRes,AveRes\n";
+        std::ofstream fout(residual_file);
+        fout << "variables=step, time, MaxRes, AveRes\n";
         fout.close();
     }
     else
     {
-        std::ofstream fout("res.dat", std::ios::app);
+        std::ofstream fout(residual_file, std::ios::app);
         fout << currentIter << "\t\t" << GlobalData::GetDouble("currentTime") << "\t\t" << maxResidual_ << "\t\t" << aveResidual_ << std::endl;
         fout.close();
     }
@@ -214,7 +283,6 @@ void Controller::PreSolve()
 
 void Controller::PostSolve()
 {
-
     CommInterNodeData();
     int currentIter = GlobalData::GetInt("currentIter");
     int calResidualIter = GlobalData::GetInt("calResidualIter");

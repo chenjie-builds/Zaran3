@@ -58,9 +58,9 @@ namespace zaran
         data.GetData("prim_grad_patch", m_prim_grad_bound);
         data.GetData("limiter_patch", m_limiter_bound);
     }
-    void Solver_NS_3D_Zaran::InitData()
+    void Solver_NS_3D_Zaran::InitField()
     {
-        NSSolver::InitData();
+        NSSolver::InitField();
         FlowSolverPara* para = GetPara();
         double prim_init[5];
         prim_init[0] = para->GetInflowDensity();

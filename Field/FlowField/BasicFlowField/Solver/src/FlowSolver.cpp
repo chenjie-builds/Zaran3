@@ -9,7 +9,7 @@ zaran::FlowSolver::~FlowSolver()
 {
 	delete[] para_;
 }
-void FlowSolver::InitData()
+void FlowSolver::InitField()
 {
 
 }

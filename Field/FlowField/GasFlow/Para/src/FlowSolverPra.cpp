@@ -32,7 +32,23 @@ void FlowSolverPara::Init()
 	m_inflow_velocity_z = inflow_Ma * inflow_sonic_speed * sin(inflow_slide_angle);
 	m_inflow_density =m_dimensionless.GetDensityDL(inflow_density);
 	m_inflow_pressure =gas.GetPressureFromDensityAndTemperature(m_inflow_density, m_dimensionless.GetTempDL(inflow_temperature));
-	m_init_field_type = GlobalData::GetInt("initFieldType");
+	string inflow_type = GlobalData::GetString("initFieldType");
+	if (inflow_type == "FarFlow")
+	{
+		m_init_field_type = InitFieldType::FarFlow;
+	}
+	else if(inflow_type == "FarFieldNoVelocity")
+	{
+		m_init_field_type = InitFieldType::FarFieldNoVelocity;
+	}
+	else if (inflow_type == "Backup")
+	{
+		m_init_field_type = InitFieldType::Backup;
+	}
+	else
+	{
+		m_init_field_type = InitFieldType::FarFlow;
+	}
 	m_is_viscous = GlobalData::GetInt("isViscous");
 	m_cfl = GlobalData::GetDouble("cflNumber");
 	Log::info("Inflow Parameters: Density: {}, Velocity: ({},{},{}), Pressure: {}", m_inflow_density, m_inflow_velocity_x, m_inflow_velocity_y, m_inflow_velocity_z, m_inflow_pressure);
@@ -99,10 +115,11 @@ void FlowSolverPara::Init()
 		Log::warn("Unsupportted Limiter: {}, Please Check Control File!", limiter_type);
 		system("pause");
 	}
+	m_backup_field_file_name = GlobalData::GetString("backupFieldFileName");
 
 }
 
-const int& FlowSolverPara::GetInitFieldType() const
+const InitFieldType& FlowSolverPara::GetInitFieldType() const
 {
 	return m_init_field_type;
 }
@@ -124,7 +141,7 @@ const DArray& FlowSolverPara::GetRKCoef() const
 
 
 
-void FlowSolverPara::SetInitFieldType(const int& initflowType)
+void FlowSolverPara::SetInitFieldType( InitFieldType&  initflowType)
 {
 	m_init_field_type = initflowType;
 }
@@ -154,6 +171,11 @@ const LimiterType& FlowSolverPara::GetLimiterType() const
 	return n_limiter_type;
 }
 
+const std::string& zaran::FlowSolverPara::GetBackupFieldFileName() const
+{
+	return m_backup_field_file_name;
+}
+
 void FlowSolverPara::SetGradScheme(const GradScheme& gradScheme)
 {
 	m_grad_scheme = gradScheme;
@@ -162,6 +184,11 @@ void FlowSolverPara::SetGradScheme(const GradScheme& gradScheme)
 void FlowSolverPara::SetLimiterType(const LimiterType& limiterType)
 {
 	n_limiter_type = limiterType;
+}
+
+void zaran::FlowSolverPara::SetBackupFieldFileName(const std::string& backupFieldFileName)
+{
+	m_backup_field_file_name = backupFieldFileName;
 }
 
 const double& zaran::FlowSolverPara::GetInflowDensity() const

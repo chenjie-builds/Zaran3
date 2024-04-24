@@ -3,13 +3,13 @@
 #include"MathBasic.h"
 namespace zaran
 {
-	void Solver_NS_2D_Struct::InitData()
+	void Solver_NS_2D_Struct::InitField()
 	{
 		GridPtr grid = GetGrid();
 		auto& NodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = NodeTopo->GetCoordinate();
 		FlowSolverPara* para = GetPara();
-		int initType = para->GetInitFieldType();
+		const InitFieldType&  initType = para->GetInitFieldType();
 		double prim_init[5];
 		prim_init[0] = para->GetInflowDensity();
 		prim_init[1] = para->GetInflowVelocityX();

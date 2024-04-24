@@ -28,10 +28,10 @@ namespace zaran
 		NSSolver() :FlowSolver() {}
 		~NSSolver() {}
 		void Init()override;
-		void InitData()override;
-		void InitFieldFarField();
+		void InitField()override;
+		void InitFieldFarFlow();
 		void InitFieldFarFieldNoVelocity();
-		void InitFieldRestart();
+		void InitFieldBackup();
 		void InitSolver()override;
 		void Solve() override;
 		void UpdateField()override;
@@ -39,7 +39,7 @@ namespace zaran
 		void RegisterFieldData()override;
 		virtual void CalcMetric() = 0;
 		double ComputeMaxResidual()override;
-		void BackupField();
+		void BackupField(std::string&back_folder)override;
 		/*
 		* 梯度计算函数
 		* 目前包括最小二乘法、非结构有限差分法

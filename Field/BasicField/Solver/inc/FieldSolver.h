@@ -32,7 +32,7 @@ namespace zaran
 		virtual ~FieldSolver() {}
 	public:
 		// 初始化流场数据
-		virtual void InitData() = 0;
+		virtual void InitField() = 0;
 		// 边界处理
 		virtual void BoundaryCondition() = 0;
 		// 生成场数据, 开辟内存
@@ -41,6 +41,8 @@ namespace zaran
 		virtual void RegisterFieldData() = 0;
 		// 更新场数据, 根据迭代中间结果更新场数据
 		virtual void UpdateField() = 0;
+		// 备份场数据
+		virtual void BackupField(std::string&back_folder) = 0;
 
 		// 获取求解器求解方程的个数
 		int GetNumberOfEquations() { return m_NumberOfEquations; }

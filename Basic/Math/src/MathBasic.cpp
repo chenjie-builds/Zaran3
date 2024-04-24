@@ -31,7 +31,7 @@ namespace zaran
 	{
 		return rand() / double(RAND_MAX) * (range_high - range_low) + range_low;
 	}
-	//southerland¹«Ê½
+	//southerland formula
 	double Southerland(double T, double mu0, double T0, double Ts)
 	{
 		return mu0 * pow(T / T0, 1.5) * (T0 + Ts) / (T + Ts);

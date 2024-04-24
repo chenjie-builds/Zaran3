@@ -21,3 +21,15 @@ bool CreateFolder(const std::string& folderName)
 		return true;
 	return false;
 }
+
+bool CopyFile(const std::string& src_file, const std::string& dest_file)
+{
+	std::filesystem::copy_file(src_file, dest_file);
+	return true;
+}
+bool DeleteFile(const std::string& fileName)
+{
+	if (std::filesystem::remove(fileName))
+		return true;
+	return false;
+}

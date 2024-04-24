@@ -16,3 +16,7 @@ bool IsFileExist(const std::string& fileName);
 bool IsFolderExist(const std::string& folderName);
 //创建文件夹
 bool CreateFolder(const std::string& folderName);
+//复制文件
+bool CopyFile(const std::string& src_file, const std::string& dest_file);
+//删除文件
+bool DeleteFile(const std::string& fileName);

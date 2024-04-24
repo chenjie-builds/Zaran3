@@ -19,7 +19,7 @@ namespace zaran
     public:
         Solver_NS_3D_Zaran() {}
         ~Solver_NS_3D_Zaran() {}
-        void InitData()override;
+        void InitField()override;
         void CalcMetric()override;
         void CreateData()override;
         void RegisterFieldData()override;

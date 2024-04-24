@@ -21,7 +21,7 @@ namespace zaran
 		FlowSolver();
 		virtual ~FlowSolver();
 	public:
-		void InitData() override;
+		void InitField() override;
 		void InitSolver() override;
 		// 计算时间步长
 		virtual void CalcTimeStep() = 0;

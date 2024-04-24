@@ -43,8 +43,9 @@ namespace zaran
         // 是否停止计算
         bool IsStopSolve();
     protected:
-        //备份流场数据
+        //输出流场数据
         void SaveFieldData();
+
         // 备份边界节点数据
         void SaveWallNode();
         // 备份残差
@@ -53,6 +54,17 @@ namespace zaran
         void SaveDataVTK(std::ostream& os);
         // 输出流场为Tecplot格式
         void SaveDataTecplot();
+
+
+
+        // 备份流场数据，用于续算
+        void BackupFieldData(std::string& back_folder);
+        // 备份残差文件
+        void BackupResidual(std::string& back_folder);
+        // 备份日志文件
+        void BackupLog(std::string& back_folder);
+        // 备份全局参数
+        void BackupGlobalData(std::string& back_folder);
     private:
         Array<Ptr<Field>> m_field;
         Ptr<Visual> m_visual;

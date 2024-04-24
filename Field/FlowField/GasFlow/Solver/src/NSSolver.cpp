@@ -1,40 +1,41 @@
 #include "NSSolver.h"
+#include"File.h"
 #include<fstream>
 namespace zaran {
 	void NSSolver::Init()
 	{
 		InitSolver();
-		InitData();
+		InitField();
 		CalcMetric();
 	}
-	void NSSolver::InitData()
+	void NSSolver::InitField()
 	{
 		GridPtr grid = GetGrid();
 		FlowSolverPara* para = GetPara();
-		int initType = para->GetInitFieldType();
-		if (initType == 0)
+		const InitFieldType& init_type = para->GetInitFieldType();
+		if (init_type == InitFieldType::FarFieldNoVelocity)
 		{
 			InitFieldFarFieldNoVelocity();
 		}
-		else if (initType == 1)
+		else if (init_type == InitFieldType::FarFlow)
 		{
-			InitFieldFarField();
+			InitFieldFarFlow();
 		}
-		else if (initType == 2)
+		else if (init_type == InitFieldType::Backup)
 		{
-			InitFieldRestart();
+			InitFieldBackup();
 		}
 		else
 		{
 			Log::warn("Initialize Failed!");
-			Log::warn("Wrong Flow field init parameter:{}", initType);
+			Log::warn("Wrong Flow field init parameter:{}", GlobalData::GetString("initFieldType"));
 			exit(0);
 		}
 		Prim2Cons();
 		Log::info("Flow Field Initialize Finished!");
 	}
 
-	void NSSolver::InitFieldFarField()
+	void NSSolver::InitFieldFarFlow()
 	{
 		GridPtr grid = GetGrid();
 		FlowSolverPara* para = GetPara();
@@ -72,15 +73,15 @@ namespace zaran {
 		}
 	}
 
-	void NSSolver::InitFieldRestart()
+	void NSSolver::InitFieldBackup()
 	{
 		GridPtr grid = GetGrid();
 		FlowSolverPara* para = GetPara();
-		std::string restartFileName = "backup.dat";
+		std::string restartFileName = para->GetBackupFieldFileName();
 		std::ifstream fin(restartFileName);
 		if (!fin.is_open())
 		{
-			Log::warn("Restart file not found!");
+			Log::warn("Backup file not found!");
 			exit(0);
 		}
 		int n_node = grid->GetTotalNodeNum();
@@ -105,7 +106,6 @@ namespace zaran {
 
 	void NSSolver::CreateData()
 	{
-
 		auto& grid = *GetGrid();
 		int nTotalNodeNum = grid.GetTotalNodeNum();
 		FieldDataType type = FieldDataType::real;
@@ -170,11 +170,16 @@ namespace zaran {
 		return maxRes;
 	}
 
-	void NSSolver::BackupField()
+	void NSSolver::BackupField(std::string&back_folder)
 	{
 		GridPtr grid = GetGrid();
 		FlowSolverPara* para = GetPara();
-		std::string backupFileName = "backup.dat";
+		std::string backupFileName = para->GetBackupFieldFileName();
+		backupFileName = back_folder + "/" + backupFileName;
+		if (IsFileExist(backupFileName))
+		{
+			DeleteFile(backupFileName);
+		}
 		std::ofstream fout(backupFileName);
 		int n_node = grid->GetTotalNodeNum();
 		for (int iNode = 0; iNode < n_node; ++iNode)
@@ -192,20 +197,20 @@ namespace zaran {
 	{
 		GlobalData::Update("dt", LARGE_NUMBER);
 		CalcTimeStepLocal();
+		double dt = GlobalData::GetDouble("dt");
+		double current_time = GlobalData::GetDouble("currentTime");
+		double endTime = GlobalData::GetDouble("endTime");
+		if (current_time + dt > endTime)
+		{
+			dt = endTime - current_time;
+			current_time = endTime;
+		}
+		else
+			current_time += dt;
+		GlobalData::Update("currentTime", current_time);
 		int isSteady = GlobalData::GetInt("isSteady");
 		if (isSteady == 0)
 		{
-			double dt = GlobalData::GetDouble("dt");
-			double current_time = GlobalData::GetDouble("currentTime");
-			double endTime = GlobalData::GetDouble("endTime");
-			if (current_time + dt > endTime)
-			{
-				dt = endTime - current_time;
-				current_time = endTime;
-			}
-			else
-				current_time += dt;
-			GlobalData::Update("currentTime", current_time);
 			SnycTimeStepWithGlobal(dt);
 		}
 	}
@@ -535,7 +540,7 @@ namespace zaran {
 		double maxVal, minVal;
 		double eps = 1e-6;
 		double venkatCoeff = 1.0e-5;
-		#pragma omp parallel for private(maxVal, minVal, eps)
+#pragma omp parallel for private(maxVal, minVal, eps)
 		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 		{
 			for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)

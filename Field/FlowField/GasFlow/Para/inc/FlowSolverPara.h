@@ -23,6 +23,13 @@ namespace zaran
 		wls,//最小二乘法
 		noGrad//不计算梯度
 	};
+	//流场初始化方式
+	enum class InitFieldType
+	{
+		FarFlow,//远场
+		FarFieldNoVelocity,//远场无速度
+		Backup//备份文件
+	};
 	class FlowSolverPara :public SolverPara
 	{
 	public:
@@ -30,12 +37,13 @@ namespace zaran
 		virtual ~FlowSolverPara();
 		void Init() override;
 	public:
-		void SetInitFieldType(const int& initflowType);
+		void SetInitFieldType( InitFieldType&  initflowType);
 		void SetIsViscous(const int& isViscous);
 		void SetCflNumber(const double& cfl);
 		void SetRKCoef(const DArray& rkCoef);
 		void SetGradScheme(const GradScheme& gradScheme);
 		void SetLimiterType(const LimiterType& limiterType);
+		void SetBackupFieldFileName(const std::string& backupFieldFileName);
 	public:
 		const double& GetInflowDensity()const;
 		const double& GetInflowVelocityX()const;
@@ -43,12 +51,13 @@ namespace zaran
 		const double& GetInflowVelocityZ()const;
 		const double& GetInflowPressure()const;
 		const double& GetInflowTemperature()const;
-		const int& GetInitFieldType()const;
+		const InitFieldType& GetInitFieldType()const;
 		const int& GetIsViscous()const;
 		const double& GetCflNumber()const;
 		const DArray& GetRKCoef()const;
 		const GradScheme& GetGradScheme()const;
 		const LimiterType& GetLimiterType()const;
+		const std::string& GetBackupFieldFileName()const;
 	private:
 		// 无量纲参数
 		Dimensionless m_dimensionless;
@@ -59,9 +68,7 @@ namespace zaran
 		double m_inflow_pressure;
 		double m_inflow_temperature;
 		// 流场初始化方式
-		// =0 为静止流场
-		// =1 为来流
-		int m_init_field_type;
+		InitFieldType m_init_field_type;
 		// 是否为粘性
 		int m_is_viscous;
 		// CFL数, 决定计算步长
@@ -72,5 +79,7 @@ namespace zaran
 		GradScheme m_grad_scheme;
 		// 限制器
 		LimiterType n_limiter_type;
+		// 备份流场文件名，用于续算
+		std::string m_backup_field_file_name;
 	};
 }
