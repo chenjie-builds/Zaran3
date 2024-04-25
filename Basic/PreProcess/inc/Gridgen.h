@@ -5,7 +5,7 @@ namespace zaran
 	class Gridgen :public GridListFactory
 	{
 	public:
-		void Create(Ptr<GridList>& gridList) override;
+		void Create(Grid*& grid) override;
 	private:
 		void ReadGridgenCoord();
 		void SetGridFileName(std::string& fileName);

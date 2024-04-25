@@ -21,7 +21,6 @@ Dimensionless::Dimensionless()
 	double T0 = 273.0 / m_temperature;
 	double Ts = 110.4 / m_temperature;
 	m_Re = 1.0 / Southerland(1.0, mu0, T0, Ts) * m_length;
-
 }
 Dimensionless::Dimensionless(const double& refDensity, const double& refGamma, const double& refMw, const double& refLength, const double& refTemp)
 {

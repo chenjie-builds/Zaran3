@@ -4,7 +4,7 @@ namespace zaran
 	void Solver_NS_3D::CalcMetric()
 	{
 		Log::info("Compute NS 3D Coordination Transformation Coefficients");
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeType = nodeTopo->GetType();
@@ -86,7 +86,7 @@ namespace zaran
 
 	void Solver_NS_3D::CalcGradWLS()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
@@ -151,7 +151,7 @@ namespace zaran
 
 	void Solver_NS_3D::CalcTimeStepLocal()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		FlowSolverPara* para = GetPara();
@@ -184,7 +184,7 @@ namespace zaran
 
 	void Solver_NS_3D::ConvectiveResidual()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		auto& templateI = nodeTopo->GetTemplateI();
@@ -276,9 +276,10 @@ namespace zaran
 
 	void Solver_NS_3D::CalcForce()
 	{
-		return;
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& faceTopo = grid->GetFaceTopo();
+		FlowSolverPara* para = GetPara();
+		const Dimensionless& dimensionless = para->GetDimensionless();
 		int nFace = faceTopo->GetFaceNum();
 		double face_pressure;
 		double force[3] = { 0 };
@@ -291,13 +292,14 @@ namespace zaran
 				face_pressure += m_prim[4][face2node[iNode]];
 			}
 			face_pressure /= faceTopo->GetFaceNodeNum(iFace);
-			force[0] += face_pressure * faceTopo->GetArea(iFace) * faceTopo->GetNormal(iFace)[0];
-			force[1] += face_pressure * faceTopo->GetArea(iFace) * faceTopo->GetNormal(iFace)[1];
-			force[2] += face_pressure * faceTopo->GetArea(iFace) * faceTopo->GetNormal(iFace)[2];
+			face_pressure-=dimensionless.GetPressureDL(0);
+			force[0] -= face_pressure * faceTopo->GetArea(iFace) * faceTopo->GetNormal(iFace)[0];
+			force[1] -= face_pressure * faceTopo->GetArea(iFace) * faceTopo->GetNormal(iFace)[1];
+			force[2] -= face_pressure * faceTopo->GetArea(iFace) * faceTopo->GetNormal(iFace)[2];
 		}
+		force[0] = dimensionless.GetForceReal(force[0]);
+		force[1] = dimensionless.GetForceReal(force[1]);
+		force[2] = dimensionless.GetForceReal(force[2]);
 		Log::info("Force: {}, {}, {}", force[0], force[1], force[2]);
 	}
-
-
-
 }

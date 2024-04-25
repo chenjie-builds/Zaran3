@@ -10,44 +10,64 @@ namespace zaran
 {
     void FieldFactory::Create()
     {
-        Ptr<GridListFactory> grid_list_factory;
-        Ptr<GridList> grid_list;
-        if (m_grid_type == GridType::Structured_2D)
+        GridListFactory* grid_factory;
+        if (m_dim == Dimension::two)
         {
-            grid_list_factory = std::make_shared<GridListFactoryStruct2D>();
+            if (m_grid_type == GridType::Structured)
+            {
+                grid_factory = new GridFactoryStruct2D();
+            }
+            else if (m_grid_type == GridType::Flexible)
+            {
+                grid_factory = new GridFactoryFNFDM2D();
+            }
+
         }
-        // else if(m_grid_type == GridType::Structured_3D)
-        // {
-        //     grid_list_factory=std::make_shared<GridListFactoryStruct3D>();
-        // }
-        else if (m_grid_type == GridType::Flexible_2D)
+        else if (m_dim == Dimension::three)
         {
-            grid_list_factory = std::make_shared<GridListFactoryFNFDM2D>();
-        }
-        else if (m_grid_type == GridType::Flexible_3D)
-        {
-            grid_list_factory = std::make_shared<GridListFactoryFNFDM3D>();
-        }
-        else if (m_grid_type == GridType::Zaran_3D)
-        {
-            grid_list_factory = std::make_shared<GridListFactoryZaran3D>();
+            if (m_grid_type == GridType::Flexible)
+            {
+                grid_factory = new GridFactoryFNFDM3D();
+            }
+            else if (m_grid_type == GridType::Zaran)
+            {
+                grid_factory = new GridFactoryZaran3D();
+            }
         }
         else
         {
-            Log::warn("Unsupported Grid Type! Please Check!");
+            Log::warn("Unsupported Dimension! Please Check!");
             system("pause");
         }
-        grid_list_factory->Create(grid_list);
-        Ptr<SolverVec> solver_vec;
-        Ptr<SolverFactory> solver_factory = std::make_shared<SolverFactory>();
-        solver_factory->Create(grid_list, solver_vec, m_solver_type);
-        m_field_array.resize(solver_vec->GetSolverNumber());
-        for (int i = 0; i < solver_vec->GetSolverNumber(); ++i)
+        Grid* grid = nullptr;
+        grid_factory->Create(grid);
+        Solver* solver=nullptr;
+        SolverFactory* solver_factory = new SolverFactory();
+        solver_factory->Create(grid, solver, m_solver_type);
+        m_field = new Field * [1];
+        for (int i = 0; i < 1; ++i)
         {
-            m_field_array[i] = std::make_shared<Field>();
-            m_field_array[i]->SetGrid(grid_list->GetGrid(i));
-            m_field_array[i]->SetSolver(std::dynamic_pointer_cast<FieldSolver> (solver_vec->GetSolver(i)));
+            m_field[i] = new Field();
+            m_field[i]->SetGrid(grid);
+            m_field[i]->SetSolver(static_cast<FieldSolver*> (solver));
         }
+        delete[] grid_factory;
+        delete[] solver_factory;
+    }
+
+    void FieldFactory::CreateGrid()
+    {
+
+    }
+
+    void FieldFactory::CreateField()
+    {
+
+    }
+
+    void FieldFactory::CreateSolver()
+    {
+
     }
 
 

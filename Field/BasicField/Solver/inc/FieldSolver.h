@@ -28,15 +28,15 @@ namespace zaran
 	class FieldSolver :public Solver
 	{
 	public:
-		FieldSolver() {}
-		virtual ~FieldSolver() {}
+		FieldSolver();
+		virtual ~FieldSolver();
 	public:
 		// 初始化流场数据
 		virtual void InitField() = 0;
 		// 边界处理
 		virtual void BoundaryCondition() = 0;
 		// 生成场数据, 开辟内存
-		virtual void CreateData() = 0;
+		virtual void CreateFieldData() = 0;
 		// 注册场数据, 根据求解器类型对场数据分类注册
 		virtual void RegisterFieldData() = 0;
 		// 更新场数据, 根据迭代中间结果更新场数据
@@ -46,14 +46,14 @@ namespace zaran
 
 		// 获取求解器求解方程的个数
 		int GetNumberOfEquations() { return m_NumberOfEquations; }
-		void SetFieldData(Ptr<FieldData>& fieldData) { m_FieldData = fieldData; }
+		void SetFieldData(FieldData* fieldData) ;
 		// 获取Field Data
-		Ptr<FieldData>& GetFieldData() { return m_FieldData; }
+		FieldData* GetFieldData() { return m_field_data; }
 	protected:
 		void SetNumberOfEquations(int n) { m_NumberOfEquations = n; }
 	private:
 		// 求解器求解方程的个数
 		int m_NumberOfEquations;
-		Ptr<FieldData> m_FieldData;
+		FieldData* m_field_data;
 	};
 }

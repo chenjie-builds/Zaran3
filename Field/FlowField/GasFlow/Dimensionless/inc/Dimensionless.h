@@ -34,6 +34,7 @@ public:
 	double GetPressureReal(double pressureDL) const { return pressureDL * m_pressure; }
 	double GetTimeReal(double timeDL) const { return timeDL * m_time; }
 	double GetMassReal(double massDL) const { return massDL * m_mass; }
+	double GetForceReal(double forceDL) const { return forceDL * GetRefForce(); }
 
 	//  获取参考量（有量纲）
 	double GetRefGamma()const { return m_gamma; }
@@ -46,8 +47,10 @@ public:
 	double GetRefPressure() const { return m_pressure; }
 	double GetRefTime() const { return m_time; }
 	double GetRefMass() const { return m_mass; }
-
 	double GetRe() const { return m_Re; }
+	double GetRefArea() const { return m_length * m_length; }
+	double GetRefVolume() const { return m_length * m_length * m_length; }
+	double GetRefForce() const { return m_density * m_length * m_length * m_velocity * m_velocity; }
 
 
 

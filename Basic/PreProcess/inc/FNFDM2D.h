@@ -13,11 +13,11 @@
 #include"GridListFactory.h"
 namespace zaran
 {
-	class GridListFactoryFNFDM2D :public GridListFactory
+	class GridFactoryFNFDM2D :public GridListFactory
 	{
 	public:
-		GridListFactoryFNFDM2D() {};
-		void Create(Ptr<GridList>& gridList) override;
+		GridFactoryFNFDM2D() {};
+		void Create(Grid*& grid) override;
 	};
 
 }

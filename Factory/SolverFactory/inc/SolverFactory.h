@@ -24,8 +24,6 @@ namespace zaran
 	class SolverFactory
 	{
 	public:
-		void Create(Ptr<GridList>& gridList, Ptr<SolverVec>& solverVecPtr, FieldSolverType& solverType);
-	private:
-		Ptr<SolverVec> m_solverVec;
+		void Create(Grid* grid, Solver*& solver, FieldSolverType& solverType);
 	};
 }

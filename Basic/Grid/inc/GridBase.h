@@ -16,12 +16,9 @@ namespace zaran
 {
     enum class GridType
     {
-        Structured_2D,
-        Structured_3D,
-        Flexible_2D,
-        Flexible_3D,
-        Zaran_2D,
-        Zaran_3D,
+        Structured,
+        Flexible,
+        Zaran,
 		Unkown,
     };
 	class GridBase

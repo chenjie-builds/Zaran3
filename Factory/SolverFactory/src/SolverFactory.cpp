@@ -3,33 +3,29 @@
 #include "GridList.h"
 
 using namespace zaran;
-void SolverFactory::Create(Ptr<GridList>& gridList, Ptr<SolverVec>& solverVecPtr, FieldSolverType& solverType)
+void SolverFactory::Create(Grid* grid, Solver*& solver, FieldSolverType& solverType)
 {
-	if (solverVecPtr.get() == nullptr)
+	if (solver != nullptr)
 	{
-		solverVecPtr = std::make_shared<SolverVec>();
+		delete[] solver;
+		solver = nullptr;
 	}
-	for (int iSolver = 0; iSolver < gridList->GetGridNumber(); ++iSolver)
+	if (solverType == FieldSolverType::NS_2D)
+		solver = new Solver_NS_2D();
+	else if (solverType == FieldSolverType::NS_3D)
+		solver = new Solver_NS_3D();
+	else if (solverType == FieldSolverType::NS_2D_Struct)
+		solver = new Solver_NS_2D_Struct();
+	else if (solverType == FieldSolverType::NS_3D_Struct)
+		solver = new Solver_NS_3D_Struct();
+	else if (solverType == FieldSolverType::NS_ZaRan_3D)
+		solver = new Solver_NS_3D_Zaran();
+	else
 	{
-		Ptr<Solver> newSolver ;
-		if (solverType == FieldSolverType::NS_2D)
-			newSolver = std::make_shared<Solver_NS_2D>();
-		else if (solverType == FieldSolverType::NS_3D)
-			newSolver = std::make_shared<Solver_NS_3D>();
-		else if (solverType == FieldSolverType::NS_2D_Struct)
-			newSolver = std::make_shared<Solver_NS_2D_Struct>();
-		else if (solverType == FieldSolverType::NS_3D_Struct)
-			newSolver = std::make_shared<Solver_NS_3D_Struct>();
-		else if (solverType == FieldSolverType::NS_ZaRan_3D)
-			newSolver = std::make_shared<Solver_NS_3D_Zaran>();
-		else
-		{
-			Log::warn("Unsupported Solver Type! Please Check!");
-			system("pause");
-		}
-		newSolver->SetGridList(gridList);
-		newSolver->SetGridIndex(iSolver);
-		newSolver->SetName("test");
-		solverVecPtr->AddSolver(newSolver);
+		Log::warn("Unsupported Solver Type! Please Check!");
+		system("pause");
 	}
+	solver->SetGrid(grid);
+	solver->SetName("test");
 }
+

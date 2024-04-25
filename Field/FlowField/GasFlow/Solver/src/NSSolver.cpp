@@ -10,7 +10,7 @@ namespace zaran {
 	}
 	void NSSolver::InitField()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		FlowSolverPara* para = GetPara();
 		const InitFieldType& init_type = para->GetInitFieldType();
 		if (init_type == InitFieldType::FarFieldNoVelocity)
@@ -37,7 +37,7 @@ namespace zaran {
 
 	void NSSolver::InitFieldFarFlow()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		FlowSolverPara* para = GetPara();
 		double inflow_prim[5];
 		inflow_prim[0] = para->GetInflowDensity();
@@ -55,7 +55,7 @@ namespace zaran {
 
 	void NSSolver::InitFieldFarFieldNoVelocity()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		FlowSolverPara* para = GetPara();
 		double* inflow_prim = new double[5];
 		inflow_prim[0] = para->GetInflowDensity();
@@ -75,7 +75,7 @@ namespace zaran {
 
 	void NSSolver::InitFieldBackup()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		FlowSolverPara* para = GetPara();
 		std::string restartFileName = para->GetBackupFieldFileName();
 		std::ifstream fin(restartFileName);
@@ -104,57 +104,66 @@ namespace zaran {
 		Log::info("NS Solver Initialize Finished!");
 	}
 
-	void NSSolver::CreateData()
+	void NSSolver::CreateFieldData()
 	{
-		auto& grid = *GetGrid();
-		int nTotalNodeNum = grid.GetTotalNodeNum();
+		Grid* grid = GetGrid();
+		int nTotalNodeNum = grid->GetTotalNodeNum();
 		FieldDataType type = FieldDataType::real;
-		auto& dataPtr = GetFieldData();
-		auto& data = *dataPtr;
-		data.AddData("density", type, nTotalNodeNum);
-		data.AddData("velocity_x", type, nTotalNodeNum);
-		data.AddData("velocity_y", type, nTotalNodeNum);
-		data.AddData("velocity_w", type, nTotalNodeNum);
-		data.AddData("pressure", type, nTotalNodeNum);
-		data.AddData("conservative", type, nTotalNodeNum * GetNumberOfEquations());
-		data.AddData("residual", type, nTotalNodeNum * GetNumberOfEquations());
-		data.AddData("limiter_coef", type, nTotalNodeNum * GetNumberOfEquations());
-		data.AddData("prim_grad", type, nTotalNodeNum * GetNumberOfEquations() * 3);
-		data.AddData("dt", type, nTotalNodeNum);
-		data.AddData("temperture", type, nTotalNodeNum);
-		data.AddData("metrics", type, nTotalNodeNum * 17);
-		data.AddData("nonPhysical", FieldDataType::integer, nTotalNodeNum);
+		FieldData* data = GetFieldData();
+		data->AddData("density", type, nTotalNodeNum);
+		data->AddData("velocity_x", type, nTotalNodeNum);
+		data->AddData("velocity_y", type, nTotalNodeNum);
+		data->AddData("velocity_w", type, nTotalNodeNum);
+		data->AddData("pressure", type, nTotalNodeNum);
+		data->AddData("conservative", type, nTotalNodeNum * GetNumberOfEquations());
+		data->AddData("residual", type, nTotalNodeNum * GetNumberOfEquations());
+		data->AddData("limiter_coef", type, nTotalNodeNum * GetNumberOfEquations());
+		data->AddData("prim_grad", type, nTotalNodeNum * GetNumberOfEquations() * 3);
+		data->AddData("dt", type, nTotalNodeNum);
+		data->AddData("temperture", type, nTotalNodeNum);
+		data->AddData("metrics", type, nTotalNodeNum * 17);
+		data->AddData("nonPhysical", FieldDataType::integer, nTotalNodeNum);
 	}
 	void NSSolver::RegisterFieldData()
 	{
 		FlowSolverPara* para = GetPara();
-		auto& data = *GetFieldData();
+		FieldData* data = GetFieldData();
 		m_prim = new double* [5];
-		data.GetData("density", m_prim[0]);
-		data.GetData("velocity_x", m_prim[1]);
-		data.GetData("velocity_y", m_prim[2]);
-		data.GetData("velocity_w", m_prim[3]);
-		data.GetData("pressure", m_prim[4]);
-		data.GetData("conservative", m_cons);
-		data.GetData("residual", m_residual);
-		data.GetData("limiter_coef", m_limiter);
-		data.GetData("prim_grad", m_prim_grad);
-		data.GetData("metrics", m_metric);
-		data.GetData("dt", m_dt);
-		data.GetData("nonPhysical", m_non_physical);
+		data->GetData("density", m_prim[0]);
+		data->GetData("velocity_x", m_prim[1]);
+		data->GetData("velocity_y", m_prim[2]);
+		data->GetData("velocity_w", m_prim[3]);
+		data->GetData("pressure", m_prim[4]);
+		data->GetData("conservative", m_cons);
+		data->GetData("residual", m_residual);
+		data->GetData("limiter_coef", m_limiter);
+		data->GetData("prim_grad", m_prim_grad);
+		data->GetData("metrics", m_metric);
+		data->GetData("dt", m_dt);
+		data->GetData("nonPhysical", m_non_physical);
 	}
 
-	void NSSolver::Solve()
+	void NSSolver::Preprocess()
 	{
 		CalcTimeStep();
 		CalcPrimGrad();
 		CalcLimiter();
-		BoundaryCondition();
-		TimeAdvance();
+	}
+
+	void NSSolver::Postprocess()
+	{
 		UpdateField();
 		CheckPrimtive();
 		FixPrimtive();
 		CalcForce();
+	}
+
+	void NSSolver::Solve()
+	{
+
+		BoundaryCondition();
+		TimeAdvance();
+
 	}
 	double NSSolver::ComputeMaxResidual()
 	{
@@ -170,9 +179,9 @@ namespace zaran {
 		return maxRes;
 	}
 
-	void NSSolver::BackupField(std::string&back_folder)
+	void NSSolver::BackupField(std::string& back_folder)
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		FlowSolverPara* para = GetPara();
 		std::string backupFileName = para->GetBackupFieldFileName();
 		backupFileName = back_folder + "/" + backupFileName;
@@ -217,7 +226,7 @@ namespace zaran {
 
 	void NSSolver::SnycTimeStepWithGlobal(double& dt)
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		FlowSolverPara* para = GetPara();
 #pragma omp parallel for
 		for (int iNode = 0;iNode < grid->GetTotalNodeNum();++iNode)
@@ -233,7 +242,7 @@ namespace zaran {
 
 	void NSSolver::MidPointReconstruct(int index_left, int index_right, double* value_rec_left, double* value_rec_right)
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		DVector3D r = nodeCoord[index_right] - nodeCoord[index_left];
@@ -291,7 +300,7 @@ namespace zaran {
 
 	void NSSolver::MidPointReconstructFirstOrder(int index_left, int index_right, double* value_rec_left, double* value_rec_right)
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		DVector3D r = nodeCoord[index_right] - nodeCoord[index_left];
@@ -304,7 +313,7 @@ namespace zaran {
 
 	void NSSolver::BoundaryCondition()
 	{
-		GridPtr& grid = GetGrid();
+		Grid* grid = GetGrid();
 		BoundaryMapPtr& boundaryMapPtr = grid->GetBoundaryMap();
 		auto& boundaryMap = boundaryMapPtr->GetBoundaryMap();
 		auto& wallBound = boundaryMap["slipWall"];
@@ -346,7 +355,7 @@ namespace zaran {
 	}
 	void NSSolver::CalcPrimGradBound()
 	{
-		auto& grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		BoundaryMapPtr& boundaryMapPtr = grid->GetBoundaryMap();
 		auto& boundaryMap = boundaryMapPtr->GetBoundaryMap();
@@ -372,7 +381,7 @@ namespace zaran {
 
 	void NSSolver::RungeKutta()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		FlowSolverPara* para = GetPara();
 		const DArray& rk_coef = para->GetRKCoef();
 		int rkStage = rk_coef.size();
@@ -397,7 +406,7 @@ namespace zaran {
 	void NSSolver::Prim2Cons()
 	{
 		double gamma = 1.4;
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		int n_node = grid->GetTotalNodeNum();
 #pragma omp parallel for
 		for (int iNode = 0; iNode < n_node; ++iNode)
@@ -418,7 +427,7 @@ namespace zaran {
 	void NSSolver::Cons2Prim()
 	{
 
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		int n_node = grid->GetTotalNodeNum();
 #pragma omp parallel for
 		for (int iNode = 0; iNode < n_node; ++iNode)
@@ -531,7 +540,7 @@ namespace zaran {
 	}
 	void NSSolver::CalcLimiterVK()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
@@ -586,7 +595,7 @@ namespace zaran {
 	}
 	void NSSolver::CalcLimiterBJ()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
@@ -636,7 +645,7 @@ namespace zaran {
 	}
 	void NSSolver::CalcLimiterNone()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		auto& limiterCoef = m_limiter;
@@ -653,7 +662,7 @@ namespace zaran {
 	}
 	void NSSolver::CalcLimiterFirstOrder()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
@@ -672,7 +681,7 @@ namespace zaran {
 	}
 	void NSSolver::CalcLimiterBound()
 	{
-		auto& grid = GetGrid();
+		Grid* grid = GetGrid();
 		BoundaryMapPtr& boundaryMapPtr = grid->GetBoundaryMap();
 		auto& boundaryMap = boundaryMapPtr->GetBoundaryMap();
 		for (auto& boundary : boundaryMap)
@@ -694,7 +703,7 @@ namespace zaran {
 	}
 	void NSSolver::CheckPrimtive()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
@@ -766,7 +775,7 @@ namespace zaran {
 
 	void NSSolver::FixPrimtive()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
 		auto& node_type = node_topo->GetType();
 		auto& node_coord = node_topo->GetCoordinate();

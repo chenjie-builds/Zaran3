@@ -13,19 +13,19 @@
 #include"GridListFactory.h"
 namespace zaran
 {
-	class GridListFactoryFNFDM3D :public GridListFactory
+	class GridFactoryFNFDM3D :public GridListFactory
 	{
 	public:
-		GridListFactoryFNFDM3D();
-		void Create(Ptr<GridList>& gridList) override;
+		GridFactoryFNFDM3D();
+		void Create(Grid*& gridList) override;
 	private:
-		void ReadFile(Ptr<GridList>& gridList);
-		void SortNeiborNode(Ptr<GridList>& gridList);
+		void ReadFile(Grid* gridList);
+		void SortNeiborNode(Grid* gridList);
 		/// @brief 扩展邻居节点，使用kd树，找到范围内的节点
 		/// @param gridList 
-		void ExtendNeighborNode(Ptr<GridList>& gridList);
-		void ReadCellFile(Ptr<GridList>& gridList);
-		void ReadBoundFaceFile(Ptr<GridList>& gridList);
+		void ExtendNeighborNode(Grid* gridList);
+		void ReadCellFile(Grid* gridList);
+		void ReadBoundFaceFile(Grid* gridList);
 	private:
 		string m_node_file_name;
 		string m_ele_file_name;

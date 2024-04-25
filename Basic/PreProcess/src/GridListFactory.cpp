@@ -6,7 +6,7 @@
 namespace zaran
 {
 
-	void GridListFactory::Create(Ptr<GridList>& gridList)
+	void GridListFactory::Create(Grid*& grid)
 	{
 		std::string createMethod = GlobalData::GetString("createGridMethod");
 		if (createMethod == "Plot3D")
@@ -14,7 +14,7 @@ namespace zaran
 			//CreateByTest(gridList);
 			//CreateStructGrid3D(gridList);
 			//CreateGridFNFDM2D(gridList);
-			CreateStructGrid2D(gridList);
+			CreateStructGrid2D(grid);
 		}
 		else
 		{
@@ -23,34 +23,33 @@ namespace zaran
 		}
 	}
 
-	void GridListFactory::ReadPlot3D(Ptr<GridList>& gridList)
+	void GridListFactory::ReadPlot3D(Grid*& grid)
 	{
-		if (gridList.get() == nullptr)
+		if (grid != nullptr)
 		{
-			gridList = std::make_shared<GridList>();
+			delete[] grid;
 		}
-		Ptr<Grid>testGrid = std::make_shared<Grid>();
-		testGrid->SetDimension(Dimension::three);
-		testGrid->SetIndex(0);
-		testGrid->SetLevel(0);
-		testGrid->SetName("noname");
-		testGrid->SetType(GridType::Unkown);
-		gridList->AddGrid(testGrid);
+		grid = new Grid();
+		grid->SetDimension(Dimension::three);
+		grid->SetIndex(0);
+		grid->SetLevel(0);
+		grid->SetName("noname");
+		grid->SetType(GridType::Unkown);
 	}
 
-	void GridListFactory::CreateByTest(Ptr<GridList>& gridList)
+	void GridListFactory::CreateByTest(Grid*& grid)
 	{
-		if (gridList.get() == nullptr)
+		if (grid != nullptr)
 		{
-			gridList = std::make_shared<GridList>();
+			delete[] grid;
 		}
-		Ptr<Grid>testGrid = std::make_shared<Grid>();
-		testGrid->SetDimension(Dimension::three);
-		testGrid->SetIndex(0);
-		testGrid->SetLevel(0);
-		testGrid->SetName("noname");
-		testGrid->SetType(GridType::Unkown);
-		auto& nodeTopo = testGrid->GetNodeTopo();
+		grid = new Grid();
+		grid->SetDimension(Dimension::three);
+		grid->SetIndex(0);
+		grid->SetLevel(0);
+		grid->SetName("noname");
+		grid->SetType(GridType::Unkown);
+		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		int xNodeNum = 31;
 		int yNodeNum = 31;
@@ -336,13 +335,13 @@ namespace zaran
 				}
 			}
 		}
-		testGrid->SetInnerNodeNum((xNodeNum - 2) * (yNodeNum - 2) * (zNodeNum - 2));
-		testGrid->SetTotalNodeNum((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
-		testGrid->SetBoundNodeNum(xNodeNum * yNodeNum * zNodeNum - testGrid->GetInnerNodeNum());
-		testGrid->SetInterNodeInfo(std::make_shared<InterNodeInfo>());
-		testGrid->SetBoundaryMap(std::make_shared<BoundaryMap>());
+		grid->SetInnerNodeNum((xNodeNum - 2) * (yNodeNum - 2) * (zNodeNum - 2));
+		grid->SetTotalNodeNum((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
+		grid->SetBoundNodeNum(xNodeNum * yNodeNum * zNodeNum - grid->GetInnerNodeNum());
+		grid->SetInterNodeInfo(std::make_shared<InterNodeInfo>());
+		grid->SetBoundaryMap(std::make_shared<BoundaryMap>());
 
-		auto& cellTopo = testGrid->GetCellTopo();
+		auto& cellTopo = grid->GetCellTopo();
 		auto& cell2node = cellTopo->GetNodeIndex();
 		cell2node.resize((xNodeNum - 1) * (yNodeNum - 1) * (zNodeNum - 1));
 		auto& iterCell = cell2node.begin();
@@ -359,7 +358,7 @@ namespace zaran
 			}
 		}
 
-		auto boundMap = testGrid->GetBoundaryMap();
+		auto boundMap = grid->GetBoundaryMap();
 		int nodeIndex, innerNodeIndex, ghostNodeIndex;
 		DVector3D boundNorm;
 		Boundary bound;
@@ -446,23 +445,20 @@ namespace zaran
 				boundMap->AddBoundary("slipWall", bound);
 			}
 		}
-		gridList->AddGrid(testGrid);
-
 	}
-	void GridListFactory::CreateStructGrid3D(Ptr<GridList>& gridList)
+	void GridListFactory::CreateStructGrid3D(Grid*& grid)
 	{
-		if (gridList.get() == nullptr)
+		if (grid != nullptr)
 		{
-			gridList = std::make_shared<GridList>();
+			delete grid;
 		}
-
-		Ptr<Grid_Struct_3D>grid = std::make_shared<Grid_Struct_3D>();
-		grid->SetDimension(Dimension::three);
-		grid->SetIndex(0);
-		grid->SetLevel(0);
-		grid->SetName("noname");
-		grid->SetType(GridType::Unkown);
-		auto& nodeTopo = grid->GetNodeTopo();
+		Grid_Struct_3D* struct_grid = new Grid_Struct_3D();
+		struct_grid->SetDimension(Dimension::three);
+		struct_grid->SetIndex(0);
+		struct_grid->SetLevel(0);
+		struct_grid->SetName("noname");
+		struct_grid->SetType(GridType::Structured);
+		auto& nodeTopo = struct_grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		int xNodeNum = 31;
 		int yNodeNum = 31;
@@ -479,7 +475,7 @@ namespace zaran
 		double dz = (zMax - zMin) / (zNodeNum - 1);
 		int i, j, k;
 		double x, y, z;
-		grid->SetNodeNum((xNodeNum + 2), (yNodeNum + 2), (zNodeNum + 2));
+		struct_grid->SetNodeNum((xNodeNum + 2), (yNodeNum + 2), (zNodeNum + 2));
 		nodeCoord.resize((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
 
 		auto& nodeType = nodeTopo->GetType();
@@ -500,7 +496,7 @@ namespace zaran
 				for (i = 0; i < xNodeNum + 2; ++i)
 				{
 					x = i * dx + xMin - dx;
-					iNode = grid->GetNodeIndex(i, j, k);
+					iNode = struct_grid->GetNodeIndex(i, j, k);
 					nodeCoord[iNode] = { x,y,z };
 					if (i == 0 || j == 0 || k == 0 || i == xNodeNum + 1 || j == yNodeNum + 1 || k == zNodeNum + 1)
 					{
@@ -511,9 +507,9 @@ namespace zaran
 					{
 						nodeType[iNode] = NodeType::inlet;
 					}
-					tempI[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i, j, k), grid->GetNodeIndex(i + 1, j, k) };
-					tempJ[iNode] = { grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j, k), grid->GetNodeIndex(i, j + 1, k) };
-					tempK[iNode] = { grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k), grid->GetNodeIndex(i, j, k + 1) };
+					tempI[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k), struct_grid->GetNodeIndex(i, j, k), struct_grid->GetNodeIndex(i + 1, j, k) };
+					tempJ[iNode] = { struct_grid->GetNodeIndex(i, j - 1, k), struct_grid->GetNodeIndex(i, j, k), struct_grid->GetNodeIndex(i, j + 1, k) };
+					tempK[iNode] = { struct_grid->GetNodeIndex(i, j, k - 1), struct_grid->GetNodeIndex(i, j, k), struct_grid->GetNodeIndex(i, j, k + 1) };
 				}
 			}
 		}
@@ -525,40 +521,40 @@ namespace zaran
 			{
 				for (i = 0; i < xNodeNum + 2; ++i)
 				{
-					iNode = grid->GetNodeIndex(i, j, k);
+					iNode = struct_grid->GetNodeIndex(i, j, k);
 					if (i == 0)
 					{
 						if (j == 0)
 						{
 							if (k == 0)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k),  grid->GetNodeIndex(i, j + 1, k),  grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i + 1, j, k),  struct_grid->GetNodeIndex(i, j + 1, k),  struct_grid->GetNodeIndex(i, j, k + 1) };
 							}
 							else if (k == zNodeNum + 1)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k),  grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i + 1, j, k),  struct_grid->GetNodeIndex(i, j + 1, k), struct_grid->GetNodeIndex(i, j, k - 1) };
 							}
 							else
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k),  grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i + 1, j, k),  struct_grid->GetNodeIndex(i, j + 1, k), struct_grid->GetNodeIndex(i, j, k - 1), struct_grid->GetNodeIndex(i, j, k + 1) };
 							}
 						}
 						else if (j == yNodeNum + 1)
 						{
 							if (k == 0)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i + 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k), struct_grid->GetNodeIndex(i, j, k + 1) };
 
 							}
 							else if (k == zNodeNum + 1)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k),  grid->GetNodeIndex(i, j, k - 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i + 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k),  struct_grid->GetNodeIndex(i, j, k - 1) };
 
 
 							}
 							else
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k),  grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i + 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k),  struct_grid->GetNodeIndex(i, j, k - 1), struct_grid->GetNodeIndex(i, j, k + 1) };
 
 							}
 						}
@@ -566,17 +562,17 @@ namespace zaran
 						{
 							if (k == 0)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k),  grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i + 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k), struct_grid->GetNodeIndex(i, j + 1, k),  struct_grid->GetNodeIndex(i, j, k + 1) };
 
 							}
 							else if (k == zNodeNum + 1)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i + 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k), struct_grid->GetNodeIndex(i, j + 1, k), struct_grid->GetNodeIndex(i, j, k - 1) };
 
 							}
 							else
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i + 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k), struct_grid->GetNodeIndex(i, j + 1, k), struct_grid->GetNodeIndex(i, j, k - 1), struct_grid->GetNodeIndex(i, j, k + 1) };
 							}
 						}
 					}
@@ -586,34 +582,34 @@ namespace zaran
 						{
 							if (k == 0)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k),  grid->GetNodeIndex(i, j + 1, k),  grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k),  struct_grid->GetNodeIndex(i, j + 1, k),  struct_grid->GetNodeIndex(i, j, k + 1) };
 
 							}
 							else if (k == zNodeNum + 1)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k),  grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k),  struct_grid->GetNodeIndex(i, j + 1, k), struct_grid->GetNodeIndex(i, j, k - 1) };
 							}
 							else
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k),  grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k),  struct_grid->GetNodeIndex(i, j + 1, k), struct_grid->GetNodeIndex(i, j, k - 1), struct_grid->GetNodeIndex(i, j, k + 1) };
 							}
 						}
 						else if (j == yNodeNum + 1)
 						{
 							if (k == 0)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k), struct_grid->GetNodeIndex(i, j, k + 1) };
 
 
 							}
 							else if (k == zNodeNum + 1)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i, j - 1, k),  grid->GetNodeIndex(i, j, k - 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k),  struct_grid->GetNodeIndex(i, j, k - 1) };
 
 							}
 							else
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i, j - 1, k),  grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k),  struct_grid->GetNodeIndex(i, j, k - 1), struct_grid->GetNodeIndex(i, j, k + 1) };
 
 							}
 						}
@@ -621,17 +617,17 @@ namespace zaran
 						{
 							if (k == 0)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k),  grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k), struct_grid->GetNodeIndex(i, j + 1, k),  struct_grid->GetNodeIndex(i, j, k + 1) };
 
 							}
 							else if (k == zNodeNum + 1)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k), struct_grid->GetNodeIndex(i, j + 1, k), struct_grid->GetNodeIndex(i, j, k - 1) };
 
 							}
 							else
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k), struct_grid->GetNodeIndex(i, j + 1, k), struct_grid->GetNodeIndex(i, j, k - 1), struct_grid->GetNodeIndex(i, j, k + 1) };
 
 							}
 						}
@@ -642,17 +638,17 @@ namespace zaran
 						{
 							if (k == 0)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j + 1, k),  grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k), struct_grid->GetNodeIndex(i + 1, j, k), struct_grid->GetNodeIndex(i, j + 1, k),  struct_grid->GetNodeIndex(i, j, k + 1) };
 
 							}
 							else if (k == zNodeNum + 1)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k), struct_grid->GetNodeIndex(i + 1, j, k), struct_grid->GetNodeIndex(i, j + 1, k), struct_grid->GetNodeIndex(i, j, k - 1) };
 
 							}
 							else
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k),  grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k), struct_grid->GetNodeIndex(i + 1, j, k),  struct_grid->GetNodeIndex(i, j + 1, k), struct_grid->GetNodeIndex(i, j, k - 1), struct_grid->GetNodeIndex(i, j, k + 1) };
 
 							}
 						}
@@ -660,17 +656,17 @@ namespace zaran
 						{
 							if (k == 0)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k),   grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k), struct_grid->GetNodeIndex(i + 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k),   struct_grid->GetNodeIndex(i, j, k + 1) };
 
 							}
 							else if (k == zNodeNum + 1)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k),  grid->GetNodeIndex(i, j, k - 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k), struct_grid->GetNodeIndex(i + 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k),  struct_grid->GetNodeIndex(i, j, k - 1) };
 
 							}
 							else
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k),  grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k), struct_grid->GetNodeIndex(i + 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k),  struct_grid->GetNodeIndex(i, j, k - 1), struct_grid->GetNodeIndex(i, j, k + 1) };
 
 							}
 						}
@@ -678,29 +674,29 @@ namespace zaran
 						{
 							if (k == 0)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k),  grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k), struct_grid->GetNodeIndex(i + 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k), struct_grid->GetNodeIndex(i, j + 1, k),  struct_grid->GetNodeIndex(i, j, k + 1) };
 							}
 							else if (k == zNodeNum + 1)
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k), struct_grid->GetNodeIndex(i + 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k), struct_grid->GetNodeIndex(i, j + 1, k), struct_grid->GetNodeIndex(i, j, k - 1) };
 
 							}
 							else
 							{
-								nodeNeighbor[iNode] = { grid->GetNodeIndex(i - 1, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i, j - 1, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k - 1), grid->GetNodeIndex(i, j, k + 1) };
+								nodeNeighbor[iNode] = { struct_grid->GetNodeIndex(i - 1, j, k), struct_grid->GetNodeIndex(i + 1, j, k), struct_grid->GetNodeIndex(i, j - 1, k), struct_grid->GetNodeIndex(i, j + 1, k), struct_grid->GetNodeIndex(i, j, k - 1), struct_grid->GetNodeIndex(i, j, k + 1) };
 							}
 						}
 					}
 				}
 			}
 		}
-		grid->SetInnerNodeNum((xNodeNum - 2) * (yNodeNum - 2) * (zNodeNum - 2));
-		grid->SetTotalNodeNum((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
-		grid->SetBoundNodeNum(xNodeNum * yNodeNum * zNodeNum - grid->GetInnerNodeNum());
-		grid->SetInterNodeInfo(std::make_shared<InterNodeInfo>());
-		grid->SetBoundaryMap(std::make_shared<BoundaryMap>());
+		struct_grid->SetInnerNodeNum((xNodeNum - 2) * (yNodeNum - 2) * (zNodeNum - 2));
+		struct_grid->SetTotalNodeNum((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
+		struct_grid->SetBoundNodeNum(xNodeNum * yNodeNum * zNodeNum - struct_grid->GetInnerNodeNum());
+		struct_grid->SetInterNodeInfo(std::make_shared<InterNodeInfo>());
+		struct_grid->SetBoundaryMap(std::make_shared<BoundaryMap>());
 
-		auto& cellTopo = grid->GetCellTopo();
+		auto& cellTopo = struct_grid->GetCellTopo();
 		auto& cell2node = cellTopo->GetNodeIndex();
 		cell2node.resize((xNodeNum + 1) * (yNodeNum + 1) * (zNodeNum + 1));
 		int iCell;
@@ -711,13 +707,13 @@ namespace zaran
 
 				for (i = 0; i < xNodeNum + 1; ++i)
 				{
-					iCell = grid->GetCellIndex(i, j, k);
-					cell2node[iCell] = (IArray{ grid->GetNodeIndex(i, j, k), grid->GetNodeIndex(i + 1, j, k), grid->GetNodeIndex(i + 1, j + 1, k), grid->GetNodeIndex(i, j + 1, k), grid->GetNodeIndex(i, j, k + 1), grid->GetNodeIndex(i + 1, j, k + 1), grid->GetNodeIndex(i + 1, j + 1, k + 1), grid->GetNodeIndex(i, j + 1, k + 1) });
+					iCell = struct_grid->GetCellIndex(i, j, k);
+					cell2node[iCell] = (IArray{ struct_grid->GetNodeIndex(i, j, k), struct_grid->GetNodeIndex(i + 1, j, k), struct_grid->GetNodeIndex(i + 1, j + 1, k), struct_grid->GetNodeIndex(i, j + 1, k), struct_grid->GetNodeIndex(i, j, k + 1), struct_grid->GetNodeIndex(i + 1, j, k + 1), struct_grid->GetNodeIndex(i + 1, j + 1, k + 1), struct_grid->GetNodeIndex(i, j + 1, k + 1) });
 				}
 			}
 		}
 
-		auto boundMap = grid->GetBoundaryMap();
+		auto boundMap = struct_grid->GetBoundaryMap();
 		int nodeIndex, innerNodeIndex, ghostNodeIndex;
 		DVector3D boundNorm;
 		Boundary bound;
@@ -728,22 +724,22 @@ namespace zaran
 			for (j = 1; j < yNodeNum + 1; ++j)
 			{
 				i = 1;
-				nodeIndex = grid->GetNodeIndex(i, j, k);
+				nodeIndex = struct_grid->GetNodeIndex(i, j, k);
 				bound.SetNodeIndex(nodeIndex);
-				innerNodeIndex = grid->GetNodeIndex(i + 1, j, k);
+				innerNodeIndex = struct_grid->GetNodeIndex(i + 1, j, k);
 				bound.SetInnerIndex(innerNodeIndex);
-				ghostNodeIndex = grid->GetNodeIndex(i - 1, j, k);
+				ghostNodeIndex = struct_grid->GetNodeIndex(i - 1, j, k);
 				bound.SetGhostIndex(ghostNodeIndex);
 				boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 				bound.SetNorm(boundNorm);
 				boundMap->AddBoundary("inlet", bound);
 
 				i = xNodeNum;
-				nodeIndex = grid->GetNodeIndex(i, j, k);
+				nodeIndex = struct_grid->GetNodeIndex(i, j, k);
 				bound.SetNodeIndex(nodeIndex);
-				innerNodeIndex = grid->GetNodeIndex(i - 1, j, k);
+				innerNodeIndex = struct_grid->GetNodeIndex(i - 1, j, k);
 				bound.SetInnerIndex(innerNodeIndex);
-				ghostNodeIndex = grid->GetNodeIndex(i + 1, j, k);
+				ghostNodeIndex = struct_grid->GetNodeIndex(i + 1, j, k);
 				bound.SetGhostIndex(ghostNodeIndex);
 				boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 				bound.SetNorm(boundNorm);
@@ -758,21 +754,21 @@ namespace zaran
 			for (k = 1; k < zNodeNum + 1; ++k)
 			{
 				j = 1;
-				nodeIndex = grid->GetNodeIndex(i, j, k);
+				nodeIndex = struct_grid->GetNodeIndex(i, j, k);
 				bound.SetNodeIndex(nodeIndex);
-				innerNodeIndex = grid->GetNodeIndex(i, j + 1, k);
+				innerNodeIndex = struct_grid->GetNodeIndex(i, j + 1, k);
 				bound.SetInnerIndex(innerNodeIndex);
-				ghostNodeIndex = grid->GetNodeIndex(i, j - 1, k);
+				ghostNodeIndex = struct_grid->GetNodeIndex(i, j - 1, k);
 				bound.SetGhostIndex(ghostNodeIndex);
 				boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 				bound.SetNorm(boundNorm);
 				boundMap->AddBoundary("wall", bound);
 				j = yNodeNum;
-				nodeIndex = grid->GetNodeIndex(i, j, k);
+				nodeIndex = struct_grid->GetNodeIndex(i, j, k);
 				bound.SetNodeIndex(nodeIndex);
-				innerNodeIndex = grid->GetNodeIndex(i, j - 1, k);
+				innerNodeIndex = struct_grid->GetNodeIndex(i, j - 1, k);
 				bound.SetInnerIndex(innerNodeIndex);
-				ghostNodeIndex = grid->GetNodeIndex(i, j + 1, k);
+				ghostNodeIndex = struct_grid->GetNodeIndex(i, j + 1, k);
 				bound.SetGhostIndex(ghostNodeIndex);
 				boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 				bound.SetNorm(boundNorm);
@@ -783,42 +779,42 @@ namespace zaran
 			for (j = 1; j < yNodeNum + 1; ++j)
 			{
 				k = 1;
-				nodeIndex = grid->GetNodeIndex(i, j, k);
+				nodeIndex = struct_grid->GetNodeIndex(i, j, k);
 				bound.SetNodeIndex(nodeIndex);
-				innerNodeIndex = grid->GetNodeIndex(i, j, k + 1);
+				innerNodeIndex = struct_grid->GetNodeIndex(i, j, k + 1);
 				bound.SetInnerIndex(innerNodeIndex);
-				ghostNodeIndex = grid->GetNodeIndex(i, j, k - 1);
+				ghostNodeIndex = struct_grid->GetNodeIndex(i, j, k - 1);
 				bound.SetGhostIndex(ghostNodeIndex);
 				boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 				bound.SetNorm(boundNorm);
 				boundMap->AddBoundary("wall", bound);
 				k = zNodeNum;
-				nodeIndex = grid->GetNodeIndex(i, j, k);
+				nodeIndex = struct_grid->GetNodeIndex(i, j, k);
 				bound.SetNodeIndex(nodeIndex);
-				innerNodeIndex = grid->GetNodeIndex(i, j, k - 1);
+				innerNodeIndex = struct_grid->GetNodeIndex(i, j, k - 1);
 				bound.SetInnerIndex(innerNodeIndex);
-				ghostNodeIndex = grid->GetNodeIndex(i, j, k + 1);
+				ghostNodeIndex = struct_grid->GetNodeIndex(i, j, k + 1);
 				bound.SetGhostIndex(ghostNodeIndex);
 				boundNorm = nodeCoord[ghostNodeIndex] - nodeCoord[nodeIndex];
 				bound.SetNorm(boundNorm);
 				boundMap->AddBoundary("wall", bound);
 			}
 		}
-		gridList->AddGrid(grid);
+		grid = dynamic_cast<Grid*>(struct_grid);
 	}
-	void GridListFactory::CreateStructGrid2D(Ptr<GridList>& gridList)
+	void GridListFactory::CreateStructGrid2D(Grid*& grid)
 	{
-		if (gridList.get() == nullptr)
+		if (grid != nullptr)
 		{
-			gridList = std::make_shared<GridList>();
+			delete[] grid;
 		}
-		Ptr<Grid_Struct_2D>grid = std::make_shared<Grid_Struct_2D>();
-		grid->SetDimension(Dimension::two);
-		grid->SetIndex(0);
-		grid->SetLevel(0);
-		grid->SetName("fnfdm-structred-grid-2d");
-		grid->SetType(GridType::Unkown);
-		auto& nodeTopo = grid->GetNodeTopo();
+		Grid_Struct_2D* struct_grid = new Grid_Struct_2D();
+		struct_grid->SetDimension(Dimension::two);
+		struct_grid->SetIndex(0);
+		struct_grid->SetLevel(0);
+		struct_grid->SetName("fnfdm-structred-grid-2d");
+		struct_grid->SetType(GridType::Unkown);
+		auto& nodeTopo = struct_grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		int xNodeNum = 101;
 		int yNodeNum = 101;
@@ -831,7 +827,7 @@ namespace zaran
 		double dy = (yMax - yMin) / (yNodeNum - 1);
 		int i, j;
 		double x, y;
-		grid->SetNodeNum((xNodeNum + 2), (yNodeNum + 2));
+		struct_grid->SetNodeNum((xNodeNum + 2), (yNodeNum + 2));
 		nodeCoord.resize((xNodeNum + 2) * (yNodeNum + 2));
 		auto& nodeType = nodeTopo->GetType();
 		nodeType.resize((xNodeNum + 2) * (yNodeNum + 2));
@@ -851,7 +847,7 @@ namespace zaran
 			for (i = 0; i < xNodeNum + 2; ++i)
 			{
 				x = i * dx + xMin - dx;
-				iNode = grid->GetNodeIndex(i, j);
+				iNode = struct_grid->GetNodeIndex(i, j);
 				nodeCoord[iNode] = { x,y,0.0 };
 				if (i == 0 || j == 0 || i == xNodeNum + 1 || j == yNodeNum + 1)
 				{
@@ -919,11 +915,11 @@ namespace zaran
 				}
 			}
 		}
-		grid->SetInnerNodeNum((xNodeNum - 2) * (yNodeNum - 2));
-		grid->SetBoundNodeNum(xNodeNum * yNodeNum - grid->GetInnerNodeNum());
-		grid->SetInterNodeInfo(std::make_shared<InterNodeInfo>());
-		grid->SetBoundaryMap(std::make_shared<BoundaryMap>());
-		auto& cellTopo = grid->GetCellTopo();
+		struct_grid->SetInnerNodeNum((xNodeNum - 2) * (yNodeNum - 2));
+		struct_grid->SetBoundNodeNum(xNodeNum * yNodeNum - struct_grid->GetInnerNodeNum());
+		struct_grid->SetInterNodeInfo(std::make_shared<InterNodeInfo>());
+		struct_grid->SetBoundaryMap(std::make_shared<BoundaryMap>());
+		auto& cellTopo = struct_grid->GetCellTopo();
 		auto& cell2node = cellTopo->GetNodeIndex();
 		cell2node.resize((xNodeNum + 1) * (yNodeNum + 1));
 		int iCell;
@@ -936,7 +932,7 @@ namespace zaran
 			}
 		}
 
-		auto& boundMap = grid->GetBoundaryMap();
+		auto& boundMap = struct_grid->GetBoundaryMap();
 		int nodeIndex, innerNodeIndex, ghostNodeIndex;
 		DVector3D boundNorm;
 		Boundary bound;
@@ -989,21 +985,20 @@ namespace zaran
 			bound.SetNorm(boundNorm);
 			boundMap->AddBoundary("inlet", bound);
 		}
-		gridList->AddGrid(grid);
+		grid = dynamic_cast<Grid*>(struct_grid);
 	}
-	void GridListFactory::CreateGridFNFDM2D(Ptr<GridList>& gridList)
+	void GridListFactory::CreateGridFNFDM2D(Grid*& grid)
 	{
-		if (gridList.get() == nullptr)
+		if (grid != nullptr)
 		{
-			gridList = std::make_shared<GridList>();
+			delete[] grid;
 		}
-
-		Ptr<Grid>grid = std::make_shared<Grid>();
+		grid = new Grid();
 		grid->SetDimension(Dimension::two);
 		grid->SetIndex(0);
 		grid->SetLevel(0);
 		grid->SetName("fnfdm-structred-grid");
-		grid->SetType(GridType::Unkown);
+		grid->SetType(GridType::Flexible);
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		int xNodeNum = 31;
@@ -1175,6 +1170,5 @@ namespace zaran
 			bound.SetNorm(boundNorm);
 			boundMap->AddBoundary("slipWall", bound);
 		}
-		gridList->AddGrid(grid);
 	}
 }

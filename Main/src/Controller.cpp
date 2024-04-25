@@ -9,9 +9,10 @@ using namespace zaran;
 
 
 
-zaran::Controller::Controller(Array<Ptr<Field>>& field)
+zaran::Controller::Controller(Field** field, int field_size)
 {
     m_field = field;
+    m_field_size = field_size;
 }
 
 Controller::~Controller()
@@ -29,7 +30,7 @@ void Controller::Initialize()
         double startTime = GlobalData::GetDouble("startTime");
         GlobalData::Update("currentTime", startTime);
     }
-    for (size_t iField = 0; iField < m_field.size(); iField++)
+    for (size_t iField = 0; iField < m_field_size; iField++)
     {
         m_field[iField]->GetSolver()->Init();
     }
@@ -38,9 +39,9 @@ void Controller::SaveWallNode()
 {
     std::ofstream fout("boundNode.dat");
     fout << "variables=x,y,p" << std::endl;
-    for (size_t iField = 0; iField < m_field.size(); iField++)
+    for (size_t iField = 0; iField < m_field_size; iField++)
     {
-        auto& currentGrid = m_field[iField]->GetGrid();
+        Grid* currentGrid = m_field[iField]->GetGrid();
         auto& nodeTopo = currentGrid->GetNodeTopo();
         auto& boundNode = currentGrid->GetBoundaryMap();
     }
@@ -48,10 +49,10 @@ void Controller::SaveWallNode()
 }
 void Controller::SaveDataTecplot()
 {
-    for (size_t iField = 0; iField < m_field.size(); iField++)
+    for (size_t iField = 0; iField < m_field_size; iField++)
     {
-        auto& currentSolver = m_field[iField]->GetSolver();
-        m_visual->WriteTecplot(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
+        FieldSolver* solver = m_field[iField]->GetSolver();
+        m_visual->WriteTecplot(solver);
         // m_visual->WriteTecplot2D(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
         //  m_visual->WriteTecplotZaran3D(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
         // m_visual->WriteTecplotZaran3DBinary(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
@@ -119,24 +120,24 @@ void Controller::SolveField()
 double Controller::CalcMaxAveResidual()
 {
     double maxResidual = 0.0;
-    for (size_t iField = 0; iField < m_field.size(); iField++)
+    for (size_t iField = 0; iField < m_field_size; iField++)
     {
-        auto& currentSolver = std::dynamic_pointer_cast<FlowSolver>(m_field[iField]->GetSolver());
-        maxResidual = Max(maxResidual, currentSolver->ComputeMaxResidual());
+        FlowSolver* solver = dynamic_cast<FlowSolver*>(m_field[iField]->GetSolver());
+        maxResidual = Max(maxResidual, solver->ComputeMaxResidual());
     }
     return maxResidual;
 }
 
 void zaran::Controller::CalcResidual()
 {
-    for (size_t iField = 0; iField < m_field.size(); iField++)
+    for (size_t iField = 0; iField < m_field_size; iField++)
     {
-        auto& currentSolver = std::dynamic_pointer_cast<FlowSolver>(m_field[iField]->GetSolver());
-        auto& currentGrid = m_field[iField]->GetGrid();
-        auto& fieldData = m_field[iField]->GetFieldData();
+        FlowSolver* solver = dynamic_cast<FlowSolver*>(m_field[iField]->GetSolver());
+        Grid* grid = m_field[iField]->GetGrid();
+        FieldData* fieldData = m_field[iField]->GetFieldData();
         int n_data;
         fieldData->GetDataSize("density", n_data);
-        auto& nodeTopo = currentGrid->GetNodeTopo();
+        auto& nodeTopo = grid->GetNodeTopo();
         auto& nodeCoord = nodeTopo->GetCoordinate();
         auto& nodeType = nodeTopo->GetType();
         double maxResidual = 0.0;
@@ -144,8 +145,8 @@ void zaran::Controller::CalcResidual()
 #pragma omp parallel for reduction(max:maxResidual) reduction(+:aveResidual)
         for (int iNode = 0;iNode < n_data;++iNode)
         {
-            maxResidual = Max(maxResidual, abs(currentSolver->GetResidual(iNode, 0)));
-            aveResidual += pow(currentSolver->GetResidual(iNode, 0), 2);
+            maxResidual = Max(maxResidual, abs(solver->GetResidual(iNode, 0)));
+            aveResidual += pow(solver->GetResidual(iNode, 0), 2);
         }
         aveResidual /= n_data;
         aveResidual = sqrt(aveResidual);
@@ -169,10 +170,10 @@ void Controller::SaveFieldData()
 
 void Controller::BackupFieldData(std::string& back_folder)
 {
-    for (size_t iField = 0; iField < m_field.size(); iField++)
+    for (size_t iField = 0; iField < m_field_size; iField++)
     {
-        auto& currentSolver = m_field[iField]->GetSolver();
-        currentSolver->BackupField(back_folder);
+        FieldSolver* solver = m_field[iField]->GetSolver();
+        solver->BackupField(back_folder);
     }
 }
 
@@ -232,13 +233,13 @@ bool Controller::IsStopSolve()
     int maxIter = GlobalData::GetInt("maxIter");
     double minResidual = GlobalData::GetDouble("minResidual");
     double currentTime = GlobalData::GetDouble("currentTime");
-    //达到最大迭代次数
+    //达到最大迭代次�?
     if (currentIter > maxIter || maxResidual_ < minResidual && currentIter > calResidualIter)
     {
         Log::info("Max Residual is small than {}, stop compute!", minResidual);
         return true;
     }
-    //达到最大计算时间
+    //达到最大计算时�?
     if (currentTime > endTime || abs(currentTime - endTime) < SMALL_NUMBER)
     {
         Log::info("Max time={}, stop compute!", endTime);
@@ -268,10 +269,10 @@ void Controller::SaveResidual()
 
 void Controller::SolveFieldOneStep()
 {
-    for (size_t iField = 0; iField < m_field.size(); iField++)
+    for (size_t iField = 0; iField < m_field_size; iField++)
     {
-        auto& currentSolver = m_field[iField]->GetSolver();
-        currentSolver->Solve();
+        FieldSolver* solver = m_field[iField]->GetSolver();
+        solver->Solve();
     }
 }
 
@@ -279,10 +280,20 @@ void Controller::PreSolve()
 {
     int currentIter = GlobalData::GetInt("currentIter");
     GlobalData::Update("currentIter", ++currentIter);
+    for (size_t iField = 0; iField < m_field_size; iField++)
+    {
+        FieldSolver* solver = m_field[iField]->GetSolver();
+        solver->Preprocess();
+    }
 }
 
 void Controller::PostSolve()
 {
+    for (size_t iField = 0; iField < m_field_size; iField++)
+    {
+        FieldSolver* solver = m_field[iField]->GetSolver();
+        solver->Postprocess();
+    }
     CommInterNodeData();
     int currentIter = GlobalData::GetInt("currentIter");
     int calResidualIter = GlobalData::GetInt("calResidualIter");

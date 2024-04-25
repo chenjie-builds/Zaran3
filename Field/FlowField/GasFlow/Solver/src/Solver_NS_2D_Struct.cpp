@@ -5,11 +5,11 @@ namespace zaran
 {
 	void Solver_NS_2D_Struct::InitField()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& NodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = NodeTopo->GetCoordinate();
 		FlowSolverPara* para = GetPara();
-		const InitFieldType&  initType = para->GetInitFieldType();
+		const InitFieldType& initType = para->GetInitFieldType();
 		double prim_init[5];
 		prim_init[0] = para->GetInflowDensity();
 		prim_init[1] = para->GetInflowVelocityX();
@@ -50,7 +50,7 @@ namespace zaran
 	}
 	void Solver_NS_2D_Struct::CalcMetric()
 	{
-		auto& grid = GetGrid();
+		Grid_Struct_2D* grid = GetGrid();
 		// 起始点和终止点的编号,s: start, e: end
 		int is, ie, js, je;
 		grid->GetRange(is, ie, js, je);
@@ -81,7 +81,7 @@ namespace zaran
 	}
 	void Solver_NS_2D_Struct::CalcGradWLS()
 	{
-		auto& grid = GetGrid();
+		Grid_Struct_2D* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		FlowSolverPara* para = GetPara();
@@ -133,13 +133,13 @@ namespace zaran
 			}
 		}
 	}
-	Ptr<Grid_Struct_2D> Solver_NS_2D_Struct::GetGrid()
+	Grid_Struct_2D* Solver_NS_2D_Struct::GetGrid()
 	{
-		return std::static_pointer_cast<Grid_Struct_2D>(Solver::GetGrid());
+		return static_cast<Grid_Struct_2D*>(Solver::GetGrid());
 	}
 	void Solver_NS_2D_Struct::CalcTimeStepLocal()
 	{
-		auto& grid = GetGrid();
+		Grid_Struct_2D* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		FlowSolverPara* para = GetPara();
@@ -172,7 +172,7 @@ namespace zaran
 	}
 	void Solver_NS_2D_Struct::ConvectiveResidual()
 	{
-		auto& grid = GetGrid();
+		Grid_Struct_2D* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
@@ -263,7 +263,7 @@ namespace zaran
 	}
 	void Solver_NS_2D_Struct::InviscidFluxMUSCL()
 	{
-		auto& grid = GetGrid();
+		Grid_Struct_2D* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
@@ -348,7 +348,7 @@ namespace zaran
 	}
 	void Solver_NS_2D_Struct::CalcLimiter()
 	{
-		auto& grid = GetGrid();
+		Grid_Struct_2D* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();

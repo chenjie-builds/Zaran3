@@ -58,6 +58,7 @@ namespace zaran
 		const GradScheme& GetGradScheme()const;
 		const LimiterType& GetLimiterType()const;
 		const std::string& GetBackupFieldFileName()const;
+		const Dimensionless& GetDimensionless()const;
 	private:
 		// 无量纲参数
 		Dimensionless m_dimensionless;

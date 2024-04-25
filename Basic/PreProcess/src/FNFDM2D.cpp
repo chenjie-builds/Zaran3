@@ -5,16 +5,16 @@
 #include<set>
 namespace zaran
 {
-	void GridListFactoryFNFDM2D::Create(Ptr<GridList>& gridList)
+	void GridFactoryFNFDM2D::Create(Grid*& grid)
 	{
-		if (!gridList)
+		if (grid != nullptr)
 		{
-			gridList = std::make_shared<GridList>();
+			delete[] grid;
 		}
-		Ptr<Grid> gridPtr = std::make_shared<Grid>();
-		gridPtr->SetDimension(Dimension::two);
-		gridPtr->SetName("FNFDM2D");
-		gridList->AddGrid(gridPtr);
+		grid= new Grid();
+		grid->SetDimension(Dimension::two);
+		grid->SetName("FNFDM2D");
+		grid->SetType(GridType::Flexible);
 		std::string fileName = "grid.dat";
 		std::ifstream fin;
 		fin.open(fileName, std::ios_base::in);
@@ -25,8 +25,8 @@ namespace zaran
 		}
 		int nNode;
 		fin >> nNode;
-		gridPtr->SetTotalNodeNum(nNode);
-		auto& nodeTopo = gridPtr->GetNodeTopo();
+		grid->SetTotalNodeNum(nNode);
+		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeType = nodeTopo->GetType();
 		nodeType.resize(nNode);
@@ -61,7 +61,7 @@ namespace zaran
 			temp_j[nodeIndex] = IArray{ neiborNodeIndex[2],nodeIndex,neiborNodeIndex[3] };
 			nodeNeibor[nodeIndex] = neiborNodeIndex;
 		}
-		auto& boundMap = gridPtr->GetBoundaryMap();
+		auto& boundMap = grid->GetBoundaryMap();
 		int nBoundNode;
 		fin >> nBoundNode;
 		int boundNodeIndex, boundType, innerNodeIndex;
@@ -101,7 +101,7 @@ namespace zaran
 		}
 		int nCell;
 		fin >> nCell;
-		auto& cellTopo = gridPtr->GetCellTopo();
+		auto& cellTopo = grid->GetCellTopo();
 		auto& cell_node = cellTopo->GetNodeIndex();
 		cell_node.resize(nCell);
 		IArray cellNeiborNodeIndex(4);

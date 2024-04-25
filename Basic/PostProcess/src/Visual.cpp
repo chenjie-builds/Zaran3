@@ -6,7 +6,7 @@
 #include <string>
 #include"Log.h"
 using namespace zaran;
-void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
+void Visual::WriteTecplot(FieldSolver* solver)
 {
 	WriteTecplotBinary(solver);
 
@@ -15,7 +15,7 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 	std::string filename = "result/" + std::to_string(currentIter) + ".dat";
 	std::ofstream fout(filename);
 	fout << "variables=x,y,z,rho,u,v,w,p,jacobi\n";
-	auto& grid = solver->GetGrid();
+	Grid* grid = solver->GetGrid();
 	int nInnerNum = grid->GetInnerNodeNum();
 	int nBoundNum = grid->GetBoundNodeNum();
 	int nTotalNum = grid->GetTotalNodeNum();
@@ -23,7 +23,7 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 	auto& nodeCoord = nodeTopo->GetCoordinate();
 	auto& cellTopo = grid->GetCellTopo();
 	auto& cell2node = cellTopo->GetNodeIndex();
-	auto& data = solver->GetFieldData();
+	FieldData* data = solver->GetFieldData();
 	double* density, * velocity_x, * velocity_y, * velocity_z, * pressure, * jacobi;
 	data->GetData("density", density);
 	data->GetData("velocity_x", velocity_x);
@@ -52,16 +52,16 @@ void Visual::WriteTecplot(Ptr<FieldSolver>& solver)
 	}
 	fout.close();
 }
-void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
+void zaran::Visual::WriteTecplotBinary(FieldSolver* solver)
 {
-	auto& data = solver->GetFieldData();
+	FieldData* data = solver->GetFieldData();
 	double* density, * velocity_x, * velocity_y, * velocity_z, * pressure;
 	data->GetData("density", density);
 	data->GetData("velocity_x", velocity_x);
 	data->GetData("velocity_y", velocity_y);
 	data->GetData("velocity_w", velocity_z);
 	data->GetData("pressure", pressure);
-	auto& grid = solver->GetGrid();
+	Grid* grid = solver->GetGrid();
 	auto& cellTopo = grid->GetCellTopo();
 	auto& cell2node = cellTopo->GetNodeIndex();
 	auto& node_topo = grid->GetNodeTopo();
@@ -193,7 +193,7 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 	i = TECDAT142(&node_num, velocity_x, &vIsDouble);
 	i = TECDAT142(&node_num, velocity_y, &vIsDouble);
 	i = TECDAT142(&node_num, velocity_z, &vIsDouble);
-	i = TECDAT142(&node_num, pressure, &vIsDouble);	
+	i = TECDAT142(&node_num, pressure, &vIsDouble);
 	int node_num_per_cell = 4;
 	connectivityCount = cell_num * node_num_per_cell;
 	Array<INTEGER4> face_nodes(connectivityCount);
@@ -205,7 +205,7 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 		{
 			face_nodes[iFace * node_num_per_cell + iNode] = face2node[iNode] + 1;
 		}
-		if(n_node<4)
+		if (n_node < 4)
 		{
 			for (int i = n_node; i < 4; ++i)
 			{
@@ -221,13 +221,13 @@ void zaran::Visual::WriteTecplotBinary(Ptr<FieldSolver>& solver)
 	i = TECEND142();
 
 }
-void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
+void zaran::Visual::WriteTecplot2D(FieldSolver* solver)
 {
 	int currentIter = GlobalData::GetInt("currentIter");
 	std::string filename = "result/" + std::to_string(currentIter) + ".dat";
 	std::ofstream fout(filename);
 	fout << "variables=x,y,rho,u,v,w,p,J,lim0,lim1,lim2,lim3,lim4,rhoGradX,rhoGradY,uGradX,uGradY,vGradX,vGradY,pGradX,pGradY\n";
-	auto& grid = solver->GetGrid();
+	Grid* grid = solver->GetGrid();
 	int nInnerNum = grid->GetInnerNodeNum();
 	int nBoundNum = grid->GetBoundNodeNum();
 	int nTotalNum = grid->GetTotalNodeNum();
@@ -284,13 +284,13 @@ void zaran::Visual::WriteTecplot2D(Ptr<FieldSolver>& solver)
 	}
 	fout.close();
 }
-void zaran::Visual::WriteTecplotPoint(Ptr<FieldSolver>& solver)
+void zaran::Visual::WriteTecplotPoint(FieldSolver* solver)
 {
 	int currentIter = GlobalData::GetInt("currentIter");
 	std::string filename = "result/" + std::to_string(currentIter) + ".dat";
 	std::ofstream fout(filename);
 	fout << "variables=x,y,z,rho,u,v,w,p\n";
-	auto& grid = solver->GetGrid();
+	Grid* grid = solver->GetGrid();
 	auto& nodeTopo = grid->GetNodeTopo();
 	auto& nodeCoord = nodeTopo->GetCoordinate();
 	auto& data = *solver->GetFieldData();
@@ -419,12 +419,12 @@ void zaran::Visual::WriteTecplotPoint(Ptr<FieldSolver>& solver)
 
 
 }
-void Visual::WriteVTK(Ptr<FieldSolver>& solver)
+void Visual::WriteVTK(FieldSolver* solver)
 {
 	// TO DO
 }
 
-void zaran::Visual::WriteTecplotZaran3D(Ptr<FieldSolver>& solver)
+void zaran::Visual::WriteTecplotZaran3D(FieldSolver* solver)
 {
 	int currentIter = GlobalData::GetInt("currentIter");
 	std::string filename = "result/" + std::to_string(currentIter) + ".dat";
@@ -438,7 +438,7 @@ void zaran::Visual::WriteTecplotZaran3D(Ptr<FieldSolver>& solver)
 	data.GetData("velocity_w", w);
 	data.GetData("pressure", p);
 	data.GetData("coordTransJ", jacobi);
-	Ptr<Grid_Zaran_3D>& grid = std::static_pointer_cast<Grid_Zaran_3D>(solver->GetGrid());
+	Grid_Zaran_3D* grid = static_cast<Grid_Zaran_3D*>(solver->GetGrid());
 	auto& cellTopo = grid->GetCellTopo();
 	auto& cell_type = cellTopo->GetType();
 	auto& cell_center = cellTopo->GetCenterCoord();
@@ -581,7 +581,7 @@ void zaran::Visual::WriteTecplotZaran3D(Ptr<FieldSolver>& solver)
 
 }
 
-void zaran::Visual::WriteTecplotZaran3DBinary(Ptr<FieldSolver>& solver)
+void zaran::Visual::WriteTecplotZaran3DBinary(FieldSolver* solver)
 {
 	auto& data = *solver->GetFieldData();
 	double* rho, * u, * v, * w, * p, * jacobi;
@@ -592,7 +592,7 @@ void zaran::Visual::WriteTecplotZaran3DBinary(Ptr<FieldSolver>& solver)
 	data.GetData("pressure", p);
 	data.GetData("coordTransJ", jacobi);
 
-	Ptr<Grid_Zaran_3D>& grid = std::static_pointer_cast<Grid_Zaran_3D>(solver->GetGrid());
+	Grid_Zaran_3D* grid = static_cast<Grid_Zaran_3D*>(solver->GetGrid());
 	auto& cellTopo = grid->GetCellTopo();
 	auto& cell_type = cellTopo->GetType();
 	auto& cell_center = cellTopo->GetCenterCoord();

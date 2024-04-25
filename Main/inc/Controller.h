@@ -19,7 +19,7 @@ namespace zaran
     class Controller
     {
     public:
-        Controller(Array<Ptr<Field>>& field);
+        Controller(Field** field, int field_size);
         ~Controller();
     public:
         // 流场求解
@@ -66,7 +66,8 @@ namespace zaran
         // 备份全局参数
         void BackupGlobalData(std::string& back_folder);
     private:
-        Array<Ptr<Field>> m_field;
+        int m_field_size;
+        Field** m_field;
         Ptr<Visual> m_visual;
         double maxResidual_;
         double aveResidual_;

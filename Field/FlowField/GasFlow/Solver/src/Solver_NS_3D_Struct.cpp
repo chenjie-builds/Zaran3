@@ -7,7 +7,7 @@ namespace zaran
 
 	void Solver_NS_3D_Struct::CalcMetric()
 	{
-		auto& grid = GetGrid();
+		Grid_Struct_3D* grid = GetGrid();
 		// 起始点和终止点的编号,s: start, e: end
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
@@ -50,7 +50,7 @@ namespace zaran
 
 	void Solver_NS_3D_Struct::CalcGradWLS()
 	{
-		auto& grid = GetGrid();
+		Grid_Struct_3D* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		FlowSolverPara* para = GetPara();
@@ -119,13 +119,13 @@ namespace zaran
 		}
 	}
 
-	Ptr<Grid_Struct_3D> Solver_NS_3D_Struct::Solver_NS_3D_Struct::GetGrid()
+	Grid_Struct_3D* Solver_NS_3D_Struct::GetGrid()
 	{
-		return std::static_pointer_cast<Grid_Struct_3D> (Solver::GetGrid());
+		return static_cast<Grid_Struct_3D*>(Solver::GetGrid());
 	}
 	void Solver_NS_3D_Struct::ConvectiveResidual()
 	{
-		auto& grid = GetGrid();
+		Grid_Struct_3D* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
@@ -166,7 +166,7 @@ namespace zaran
 					}
 					riemannSolver_->Solver(riemann_para);
 					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-						GetResidual(iNode,iVal) += riemann_para.flux[iVal] / jacobi;
+						GetResidual(iNode, iVal) += riemann_para.flux[iVal] / jacobi;
 					r = nodeCoord[NodeIndex(i - 1, j, k)] - nodeCoord[NodeIndex(i, j, k)];
 					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 					{
@@ -181,7 +181,7 @@ namespace zaran
 					}
 					riemannSolver_->Solver(riemann_para);
 					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-						GetResidual(iNode,iVal) -= riemann_para.flux[iVal] / jacobi;
+						GetResidual(iNode, iVal) -= riemann_para.flux[iVal] / jacobi;
 
 					// j direction
 					riemann_para.norm(0) = GetMetricEta(iNode)[0];
@@ -202,7 +202,7 @@ namespace zaran
 					}
 					riemannSolver_->Solver(riemann_para);
 					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-						GetResidual(iNode,iVal) += riemann_para.flux[iVal] / jacobi;
+						GetResidual(iNode, iVal) += riemann_para.flux[iVal] / jacobi;
 					r = nodeCoord[NodeIndex(i, j - 1, k)] - nodeCoord[NodeIndex(i, j, k)];
 					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 					{
@@ -217,7 +217,7 @@ namespace zaran
 					}
 					riemannSolver_->Solver(riemann_para);
 					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-						GetResidual(iNode,iVal) -= riemann_para.flux[iVal] / jacobi;
+						GetResidual(iNode, iVal) -= riemann_para.flux[iVal] / jacobi;
 
 					// k direction
 					riemann_para.norm(0) = GetMetricZeta(iNode)[0];
@@ -238,7 +238,7 @@ namespace zaran
 					}
 					riemannSolver_->Solver(riemann_para);
 					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-						GetResidual(iNode,iVal) += riemann_para.flux[iVal] / jacobi;
+						GetResidual(iNode, iVal) += riemann_para.flux[iVal] / jacobi;
 					r = nodeCoord[NodeIndex(i, j, k - 1)] - nodeCoord[NodeIndex(i, j, k)];
 					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 					{
@@ -253,7 +253,7 @@ namespace zaran
 					}
 					riemannSolver_->Solver(riemann_para);
 					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-						GetResidual(iNode,iVal) -= riemann_para.flux[iVal] / jacobi;
+						GetResidual(iNode, iVal) -= riemann_para.flux[iVal] / jacobi;
 				}
 			}
 		}
@@ -261,7 +261,7 @@ namespace zaran
 
 	void Solver_NS_3D_Struct::CalcTimeStepLocal()
 	{
-		auto& grid = GetGrid();
+		Grid_Struct_3D* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeType = nodeTopo->GetType();
 		FlowSolverPara* para = GetPara();
@@ -298,7 +298,7 @@ namespace zaran
 	}
 	void Solver_NS_3D_Struct::CalcLimiter()
 	{
-		auto& grid = GetGrid();
+		Grid_Struct_3D* grid = GetGrid();
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
@@ -338,7 +338,7 @@ namespace zaran
 						double deltaMax = maxVal - m_prim[iVal][iNode];
 						double deltaMin = minVal - m_prim[iVal][iNode];
 						double tempCoef = LARGE_NUMBER;
-						GetLimiter(iNode,iVal) = LARGE_NUMBER;
+						GetLimiter(iNode, iVal) = LARGE_NUMBER;
 						for (int iNeighbor = 0; iNeighbor < neighborNodeIndex.size(); ++iNeighbor)
 						{
 							auto current2Neighbor = nodeCoord[neighborNodeIndex[iNeighbor]] - nodeCoord[iNode];
@@ -355,7 +355,7 @@ namespace zaran
 							{
 								tempCoef = 1.0;
 							}
-							GetLimiter(iNode,iVal) = Min(GetLimiter(iNode,iVal), tempCoef);
+							GetLimiter(iNode, iVal) = Min(GetLimiter(iNode, iVal), tempCoef);
 						}
 					}
 				}

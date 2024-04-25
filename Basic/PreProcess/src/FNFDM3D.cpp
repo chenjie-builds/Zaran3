@@ -11,25 +11,24 @@
 namespace zaran
 {
 
-	GridListFactoryFNFDM3D::GridListFactoryFNFDM3D()
+	GridFactoryFNFDM3D::GridFactoryFNFDM3D()
 	{
 		m_node_file_name = "node.dat";
 		m_ele_file_name = "cell.dat";
 		m_bnd_file_name = "bnd.dat";
 	}
-	void GridListFactoryFNFDM3D::Create(Ptr<GridList>& gridList)
+	void GridFactoryFNFDM3D::Create(Grid*& grid)
 	{
-		if (!gridList)
-			gridList = std::make_shared<GridList>();
-		ReadFile(gridList);
+		if (grid != nullptr)
+			delete[] grid;
+		grid = new Grid();
+		ReadFile(grid);
 		//	SortNeiborNode(gridList);
 	}
 
-	void GridListFactoryFNFDM3D::ReadFile(Ptr<GridList>& gridList)
+	void GridFactoryFNFDM3D::ReadFile(Grid* grid)
 	{
-		Ptr < Grid > grid = std::make_shared<Grid>();
 		grid->SetDimension(Dimension::three);
-		gridList->AddGrid(grid);
 		auto& nodeTopo = grid->GetNodeTopo();
 		std::ifstream fin(m_node_file_name);
 		//读取所有节点坐标
@@ -274,7 +273,7 @@ namespace zaran
 		}
 		//扩展内部节点邻居节点，用于计算梯度
 		Log::info("extend inner node neibor node");
-		ExtendNeighborNode(gridList);
+		ExtendNeighborNode(grid);
 		//查找邻居节点，看自身是否是其邻居，如不是，则加进去
 		Log::info("Add self to neibor node's neibor node");
 		for (int iNode = 0;iNode < m_NodeNum;iNode++)
@@ -297,8 +296,8 @@ namespace zaran
 				}
 			}
 		}
-		ReadCellFile(gridList);
-		ReadBoundFaceFile(gridList);
+		ReadCellFile(grid);
+		ReadBoundFaceFile(grid);
 		//检查未定义节点
 		Log::info("Check undefined node");
 		for (size_t i = 0; i < m_NodeNum; i++)
@@ -311,9 +310,8 @@ namespace zaran
 		Log::info("Check undefined node done");
 	}
 
-	void GridListFactoryFNFDM3D::SortNeiborNode(Ptr<GridList>& gridList)
+	void GridFactoryFNFDM3D::SortNeiborNode(Grid* grid)
 	{
-		auto& grid = gridList->GetGrid(0);
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeibor = nodeTopo->GetNeighborCloud();
@@ -524,10 +522,9 @@ namespace zaran
 
 	}
 
-	void GridListFactoryFNFDM3D::ExtendNeighborNode(Ptr<GridList>& gridList)
+	void GridFactoryFNFDM3D::ExtendNeighborNode(Grid* grid)
 	{
 		// 构建节点KD树
-		auto& grid = gridList->GetGrid(0);
 		auto& nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeibor = nodeTopo->GetNeighborCloud();
@@ -604,9 +601,8 @@ namespace zaran
 		Log::info("min neibor num:{} max neibor num:{}", min_neibor_num, max_neibor_num);
 	}
 
-	void GridListFactoryFNFDM3D::ReadCellFile(Ptr<GridList>& gridList)
+	void GridFactoryFNFDM3D::ReadCellFile(Grid* grid)
 	{
-		auto& grid = gridList->GetGrid(0);
 		std::ifstream fin;
 		fin.open("cell.dat");
 		int nodeNum;
@@ -666,9 +662,8 @@ namespace zaran
 		fin.close();
 	}
 
-	void GridListFactoryFNFDM3D::ReadBoundFaceFile(Ptr<GridList>& gridList)
+	void GridFactoryFNFDM3D::ReadBoundFaceFile(Grid* grid)
 	{
-		auto& grid = gridList->GetGrid(0);
 		std::ifstream fin;
 		fin.open("bound.dat");
 		int nodeNum;

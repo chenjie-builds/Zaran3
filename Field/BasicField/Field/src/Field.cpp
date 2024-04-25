@@ -3,11 +3,16 @@ namespace zaran
 {
     Field::Field()
     {
-        m_fieldData = std::make_shared<FieldData>();
+        m_fieldData =new FieldData();
     }
 
     Field::~Field()
     {
+        std::cout<<"FieldÎö¹¹º¯Êý"<<std::endl;
+        delete m_fieldData;
+        delete m_solver;
+        delete m_solverPara;
+        delete m_grid;
     }
 
 

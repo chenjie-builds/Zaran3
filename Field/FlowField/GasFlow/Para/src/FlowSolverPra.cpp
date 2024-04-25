@@ -22,7 +22,7 @@ void FlowSolverPara::Init()
 	double inflow_temperature = GlobalData::GetDouble("inflowTemperature");
 	double inflow_Mw = GlobalData::GetDouble("inflowMw");
 	double ref_length = GlobalData::GetDouble("refLength");
-	m_dimensionless.SetRefValue(inflow_density, inflow_gamma, inflow_Mw, 1.0, inflow_temperature);
+	m_dimensionless.SetRefValue(inflow_density, inflow_gamma, inflow_Mw,ref_length, inflow_temperature);
 	double inflow_attack_angle = GlobalData::GetDouble("inflowAttackAngle");
 	double inflow_slide_angle = GlobalData::GetDouble("inflowSlideAngle");
 	PerfectGas gas(inflow_Mw, inflow_gamma, m_dimensionless);
@@ -174,6 +174,11 @@ const LimiterType& FlowSolverPara::GetLimiterType() const
 const std::string& zaran::FlowSolverPara::GetBackupFieldFileName() const
 {
 	return m_backup_field_file_name;
+}
+
+const Dimensionless& zaran::FlowSolverPara::GetDimensionless() const
+{
+	return m_dimensionless;
 }
 
 void FlowSolverPara::SetGradScheme(const GradScheme& gradScheme)

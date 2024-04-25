@@ -25,12 +25,18 @@ namespace zaran
     class FieldFactory
     {
     public:
-        FieldFactory(GridType grid_type, FieldSolverType solver_type):m_grid_type(grid_type),m_solver_type(solver_type) {};
+        FieldFactory(GridType grid_type, FieldSolverType solver_type,Dimension dim) :m_grid_type(grid_type), m_solver_type(solver_type),m_dim(dim) {};
         void Create();
-        Array<Ptr<Field>>& GetField() { return m_field_array; }
+       Field** GetField() { return m_field; }
     private:
-        Array<Ptr<Field>> m_field_array;
+        void CreateGrid();
+        void CreateField();
+        void CreateSolver();
+    private:
+        Field** m_field;
         GridType m_grid_type;
         FieldSolverType m_solver_type;
+        Dimension m_dim;
+
     };
 }

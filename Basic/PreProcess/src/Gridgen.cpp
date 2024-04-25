@@ -11,20 +11,7 @@ using namespace zaran;
 		gridFileName_ = fileName;
 	}
 
-	void Gridgen::Create(Ptr<GridList>& gridList)
+	void Gridgen::Create(Grid*& gridList)
 	{
 
-		std::fstream fin;
-		fin.open(gridFileName_, std::ios_base::in);
-		fin >> nBlock_;
-		if (!gridList)
-		{
-			gridList = std::make_shared<GridList>();
-		}
-		gridList->Resize(nBlock_);
-		for (size_t i = 0; i < gridList->GetGridNumber(); i++)
-		{
-			auto& currentGridPtr = gridList->GetGrid(i);
-			currentGridPtr = std::make_shared<Grid>();
-		}
 	}

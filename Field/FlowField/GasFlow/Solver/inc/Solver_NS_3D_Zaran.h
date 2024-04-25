@@ -21,7 +21,7 @@ namespace zaran
         ~Solver_NS_3D_Zaran() {}
         void InitField()override;
         void CalcMetric()override;
-        void CreateData()override;
+        void CreateFieldData()override;
         void RegisterFieldData()override;
     protected:
         void CalcGradWLS()override;
@@ -69,7 +69,7 @@ namespace zaran
 
 
     private:
-        Ptr<Grid_Zaran_3D> GetGrid() { return std::static_pointer_cast<Grid_Zaran_3D>(gridList_->GetGrid(gridIndex_)); }
+        Grid_Zaran_3D* GetGrid();
     private:
         double** m_prim_bound;
         double* m_prim_grad_bound;

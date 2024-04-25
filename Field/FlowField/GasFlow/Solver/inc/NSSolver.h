@@ -35,8 +35,10 @@ namespace zaran
 		void InitSolver()override;
 		void Solve() override;
 		void UpdateField()override;
-		void CreateData()override;
+		void CreateFieldData()override;
 		void RegisterFieldData()override;
+		void Preprocess()override;
+		void Postprocess()override;
 		virtual void CalcMetric() = 0;
 		double ComputeMaxResidual()override;
 		void BackupField(std::string&back_folder)override;

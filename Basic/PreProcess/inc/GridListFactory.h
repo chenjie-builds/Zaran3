@@ -17,15 +17,15 @@ namespace zaran
 	class GridListFactory
 	{
 	public:
-		virtual void Create(Ptr<GridList>& gridList);
+		virtual void Create(Grid*& grid);
 	private:
-		void ReadPlot3D(Ptr<GridList>& gridList);
-		void CreateByTest(Ptr<GridList>& gridList);
+		void ReadPlot3D(Grid*& grid);
+		void CreateByTest(Grid*& grid);
 		// 生成测试的三维结构网格
-		void CreateStructGrid3D(Ptr<GridList>& gridList);
+		void CreateStructGrid3D(Grid*& grid);
 		// 生成测试的二维结构网格
-		void CreateStructGrid2D(Ptr<GridList>& gridList);
+		void CreateStructGrid2D(Grid*& grid);
 		// 生成测试的二维自由节点有限差分网格
-		void CreateGridFNFDM2D(Ptr<GridList>& gridList);
+		void CreateGridFNFDM2D(Grid*& grid);
 	};
 }

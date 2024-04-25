@@ -5,8 +5,7 @@ Solver::Solver()
 {
 	index_ = -1;
 	name_ = "notSet";
-	gridList_ = nullptr;
-	gridIndex_ = -1;
+	m_grid = nullptr;
 	para_ = nullptr;
 }
 

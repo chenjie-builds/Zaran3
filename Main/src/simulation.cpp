@@ -119,39 +119,45 @@ void Simulation::ShowInfo()
 
 void zaran::Simulation::SolveField()
 {
-	GridType grid_type;
-	FieldSolverType solver_type;
-	std::string reslut_folder=GlobalData::GetString("resultFolder");
+	std::string reslut_folder = GlobalData::GetString("resultFolder");
 	std::string backup_folder = GlobalData::GetString("backupFieldFolder");
 	CreateFolder(reslut_folder);
 	CreateFolder(backup_folder);
 	string grid_type_name = GlobalData::GetString("gridType");
 	string solver_type_name = GlobalData::GetString("solverType");
+	GridType grid_type;
+	FieldSolverType solver_type;
+	Dimension dim;
+	if (GlobalData::GetInt("Dimension") == 2)
+		dim = Dimension::two;
+	else if (GlobalData::GetInt("Dimension") == 3)
+		dim = Dimension::three;
+	else
+	{
+		Log::warn("Unsupported Dimension! Please Check!");
+		system("pause");
+	}
 	if (solver_type_name == "NS")
 	{
-		if (grid_type_name == "Structured_2D")
+		if (grid_type_name == "Structured")
 		{
-			grid_type = GridType::Structured_2D;
-			solver_type = FieldSolverType::NS_2D_Struct;
+			grid_type = GridType::Structured;
+			if (dim == Dimension::two)
+				solver_type = FieldSolverType::NS_2D_Struct;
+			else if (dim == Dimension::three)
+				solver_type = FieldSolverType::NS_3D_Struct;
 		}
-		else if (grid_type_name == "Structured_3D")
+		else if (grid_type_name == "Flexible")
 		{
-			grid_type = GridType::Structured_3D;
-			solver_type = FieldSolverType::NS_3D_Struct;
+			grid_type = GridType::Flexible;
+			if (dim == Dimension::two)
+				solver_type = FieldSolverType::NS_2D;
+			else if (dim == Dimension::three)
+				solver_type = FieldSolverType::NS_3D;
 		}
-		else if (grid_type_name == "Flexible_2D")
+		else if (grid_type_name == "Zaran")
 		{
-			grid_type = GridType::Flexible_2D;
-			solver_type = FieldSolverType::NS_2D;
-		}
-		else if (grid_type_name == "Flexible_3D")
-		{
-			grid_type = GridType::Flexible_3D;
-			solver_type = FieldSolverType::NS_3D;
-		}
-		else if (grid_type_name == "Zaran_3D")
-		{
-			grid_type = GridType::Zaran_3D;
+			grid_type = GridType::Zaran;
 			solver_type = FieldSolverType::NS_ZaRan_3D;
 		}
 		else
@@ -165,10 +171,10 @@ void zaran::Simulation::SolveField()
 		Log::warn("Unsupported Solver Type! Please Check!");
 		system("pause");
 	}
-	Ptr<FieldFactory> fieldFactory = std::make_shared<FieldFactory>(grid_type, solver_type);
+	FieldFactory* fieldFactory = new FieldFactory(grid_type, solver_type, dim);
 	fieldFactory->Create();
-	auto& field = fieldFactory->GetField();
-	Ptr<Controller> controller = std::make_shared<Controller>(field);
+	Field** field = fieldFactory->GetField();
+	Controller* controller = new Controller(field, 1);
 	controller->SolveField();
 }
 

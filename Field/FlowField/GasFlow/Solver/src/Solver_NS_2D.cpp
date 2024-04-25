@@ -10,7 +10,7 @@ namespace zaran
 	}
 	void Solver_NS_2D::InitFieldFarFlow()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		FlowSolverPara* para = GetPara();
@@ -34,7 +34,7 @@ namespace zaran
 	}
 	void Solver_NS_2D::InitFieldNoFlow()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		FlowSolverPara* para = GetPara();
@@ -58,7 +58,7 @@ namespace zaran
 	}
 	void Solver_NS_2D::InitFieldShockReflection()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		FlowSolverPara* para = GetPara();
@@ -96,7 +96,7 @@ namespace zaran
 	}
 	void Solver_NS_2D::InitFieldIsentropicVortex()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		int total_node_num = grid->GetTotalNodeNum();
@@ -118,7 +118,7 @@ namespace zaran
 	}
 	void Solver_NS_2D::CalcMetric()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		auto& node_type = node_topo->GetType();
@@ -185,7 +185,7 @@ namespace zaran
 	}
 	void Solver_NS_2D::CalcGradWLS()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
 		auto& node_type = node_topo->GetType();
 		auto& coord = node_topo->GetCoordinate();
@@ -232,7 +232,7 @@ namespace zaran
 	}
 	void Solver_NS_2D::CalcTimeStepLocal()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
 		auto& node_type = node_topo->GetType();
 		FlowSolverPara* para = GetPara();
@@ -259,7 +259,7 @@ namespace zaran
 
 	void Solver_NS_2D::ConvectiveResidual()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
 		auto& node_type = node_topo->GetType();
 		auto& node_coord = node_topo->GetCoordinate();
@@ -313,7 +313,7 @@ namespace zaran
 	}
 	void Solver_NS_2D::SolveHoleNodeFNFDM()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
 		auto& node_type = node_topo->GetType();
 		auto& template_i = node_topo->GetTemplateI();
@@ -393,7 +393,7 @@ namespace zaran
 	}
 	void Solver_NS_2D::SolveHoleNodeIDW()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
 		auto& node_type = node_topo->GetType();
 		auto& neibor = node_topo->GetNeighborCloud();
@@ -439,7 +439,7 @@ namespace zaran
 	}
 	void Solver_NS_2D::SolveUserDefinedBoundary()
 	{
-		GridPtr grid = GetGrid();
+		Grid* grid = GetGrid();
 		auto& node_topo = grid->GetNodeTopo();
 		auto& node_type = node_topo->GetType();
 		auto& neibor = node_topo->GetNeighborCloud();

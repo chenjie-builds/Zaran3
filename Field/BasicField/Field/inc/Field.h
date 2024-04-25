@@ -18,28 +18,30 @@
 #include <iostream>
 namespace zaran
 {
+	//场类，包含网格，求解器，求解器参数，场数据
 	class Field
 	{
 	public:
 		Field();
 		~Field();
 	public:
-		void SetSolverPara(Ptr<SolverPara>& para) { m_solverPara = para; }
-		void SetSolver(Ptr<FieldSolver>& solver) {
+		void SetSolverPara(SolverPara* para) { m_solverPara = para; }
+		void SetSolver(FieldSolver* solver) 
+		{
 			m_solver = solver;
 			m_solver->SetFieldData(m_fieldData);
 		}
-		void SetGrid(Ptr<Grid>& grid) { m_grid = grid; }
-		void SetFieldData(Ptr<FieldData>& fieldData) { m_fieldData = fieldData; }
+		void SetGrid(Grid* grid) { m_grid = grid; }
+		void SetFieldData(FieldData* fieldData) { m_fieldData = fieldData; }
 	public:
-		Ptr<Grid>& GetGrid() { return m_grid; }
-		Ptr<FieldSolver>& GetSolver() { return m_solver; }
-		Ptr<FieldData>& GetFieldData() { return m_fieldData; }
-		Ptr<SolverPara>& GetSolverPara() { return m_solverPara; }
+		Grid* GetGrid() { return m_grid; }
+		FieldSolver* GetSolver() { return m_solver; }
+		FieldData* GetFieldData() { return m_fieldData; }
+		SolverPara* GetSolverPara() { return m_solverPara; }
 	private:
-		Ptr<Grid> m_grid;
-		Ptr<FieldSolver> m_solver;
-		Ptr<FieldData> m_fieldData;
-		Ptr<SolverPara> m_solverPara;
+		Grid* m_grid;
+		FieldSolver* m_solver;
+		FieldData* m_fieldData;
+		SolverPara* m_solverPara;
 	};
 }

@@ -1,5 +1,4 @@
 #include "Create_Zaran_3D.h"
-#include "Grid_Zaran_3D.h"
 #include"ReadSTL.h"
 #include"PolyData.h"
 #include "Log.h"
@@ -8,36 +7,33 @@
 #include<vtkCellLocator.h>
 #include "MathBasic.h"
 #include<fstream>
-void zaran::GridListFactoryZaran3D::Create(Ptr<GridList>& gridList)
+void zaran::GridFactoryZaran3D::Create(Grid*& grid)
 {
-	if (gridList.get() == nullptr)
+	if (grid == nullptr)
 	{
-		gridList = std::make_shared<GridList>();
+		delete[] grid;
 	}
+	Grid_Zaran_3D* zaran_grid = new Grid_Zaran_3D();
+	grid = dynamic_cast<Grid*>(zaran_grid);
 	Log::info("Start create grid");
-	CreateStructPart(gridList);
+	CreateStructPart(zaran_grid);
 	Log::info("Create grid finished");
 	Log::info("Start read model");
 	ReadModel();
 	Log::info("Start tag cell type");
-	TagCell(gridList);
+	TagCell(zaran_grid);
 	Log::info("Tag cell type finished");
-	CrateBoundPatch(gridList);
+	CrateBoundPatch(zaran_grid);
 }
 
-void zaran::GridListFactoryZaran3D::CreateStructPart(Ptr<GridList>& gridList)
+void zaran::GridFactoryZaran3D::CreateStructPart(Grid_Zaran_3D* grid)
 {
-	if (gridList.get() == nullptr)
-	{
-		gridList = std::make_shared<GridList>();
-	}
 
-	Ptr<Grid_Zaran_3D>grid = std::make_shared<Grid_Zaran_3D>();
 	grid->SetDimension(Dimension::three);
 	grid->SetIndex(0);
 	grid->SetLevel(0);
 	grid->SetName("noname");
-	grid->SetType(GridType::Zaran_3D);
+	grid->SetType(GridType::Zaran);
 	auto& nodeTopo = grid->GetNodeTopo();
 	auto& nodeCoord = nodeTopo->GetCoordinate();
 	int xNodeNum = GlobalData::GetInt("nx");
@@ -212,13 +208,11 @@ void zaran::GridListFactoryZaran3D::CreateStructPart(Ptr<GridList>& gridList)
 			boundMap->AddBoundary("outlet", bound);
 		}
 	}
-	gridList->AddGrid(grid);
 }
 
-void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
+void zaran::GridFactoryZaran3D::TagCell(Grid_Zaran_3D* grid)
 {
-	Ptr<zaran::Grid_Zaran_3D> grid = std::static_pointer_cast<Grid_Zaran_3D>(gridList->GetGrid(0));
-	auto cellTopo = std::static_pointer_cast<CellTopoInfoZaran>(grid->GetCellTopo());
+	auto cellTopo = grid->GetCellTopo();
 	auto& cell_type = cellTopo->GetType();
 	auto& cell_center = cellTopo->GetCenterCoord();
 	int ni, nj, nk;
@@ -478,10 +472,9 @@ void zaran::GridListFactoryZaran3D::TagCell(Ptr<GridList>& gridList)
 
 }
 
-void zaran::GridListFactoryZaran3D::CrateBoundPatch(Ptr<GridList>& gridList)
+void zaran::GridFactoryZaran3D::CrateBoundPatch(Grid_Zaran_3D* grid)
 {
-	Ptr<zaran::Grid_Zaran_3D> grid = std::static_pointer_cast<Grid_Zaran_3D>(gridList->GetGrid(0));
-	auto cellTopo = std::static_pointer_cast<CellTopoInfoZaran>(grid->GetCellTopo());
+	auto cellTopo = grid->GetCellTopo();
 	auto& cell_type = cellTopo->GetType();
 	auto& cell_center = cellTopo->GetCenterCoord();
 	int ni, nj, nk;
@@ -540,7 +533,7 @@ void zaran::GridListFactoryZaran3D::CrateBoundPatch(Ptr<GridList>& gridList)
 		fout << bound_coord[iBound][0] << " " << bound_coord[iBound][1] << " " << bound_coord[iBound][2] << std::endl;
 	}
 }
-void zaran::GridListFactoryZaran3D::ReadModel()
+void zaran::GridFactoryZaran3D::ReadModel()
 {
 	string modelFileName = GlobalData::GetString("modelFileName");
 	STLReader reader;

@@ -17,7 +17,7 @@ void FlowSolver::InitField()
 void FlowSolver::InitSolver()
 {
 	para_->Init();
-	CreateData();
+	CreateFieldData();
 	RegisterFieldData();
 }
 
@@ -38,7 +38,7 @@ double FlowSolver::ComputeCFL()
 
 void FlowSolver::ZeroResidual()
 {
-	GridPtr& grid = GetGrid();
+	Grid* grid = GetGrid();
 	int n_equ = GetNumberOfEquations();
 	int n_node = grid->GetTotalNodeNum();
 

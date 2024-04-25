@@ -16,12 +16,12 @@ namespace zaran
 	class Visual
 	{
 	public:
-		void WriteTecplot(Ptr<FieldSolver>& solver);
-		void WriteTecplotBinary(Ptr<FieldSolver>& solver);
-		void WriteTecplot2D(Ptr<FieldSolver>& solver);
-		void WriteTecplotPoint(Ptr<FieldSolver>& solver);
-		void WriteVTK(Ptr<FieldSolver>& solver);
-		void WriteTecplotZaran3D(Ptr<FieldSolver>& solver);
-		void WriteTecplotZaran3DBinary(Ptr<FieldSolver>& solver);
+		void WriteTecplot(FieldSolver* solver);
+		void WriteTecplotBinary(FieldSolver* solver);
+		void WriteTecplot2D(FieldSolver* solver);
+		void WriteTecplotPoint(FieldSolver* solver);
+		void WriteVTK(FieldSolver* solver);
+		void WriteTecplotZaran3D(FieldSolver* solver);
+		void WriteTecplotZaran3DBinary(FieldSolver* solver);
 	};
 }

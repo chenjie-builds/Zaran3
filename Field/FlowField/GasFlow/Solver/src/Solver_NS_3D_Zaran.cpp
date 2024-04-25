@@ -3,60 +3,59 @@
 namespace zaran
 {
 
-    void Solver_NS_3D_Zaran::CreateData()
+    void Solver_NS_3D_Zaran::CreateFieldData()
     {
         auto grid = GetGrid();
         int ni, nj, nk;
         grid->GetNodeNum(ni, nj, nk);
         int cell_num = (ni - 1) * (nj - 1) * (nk - 1);
-        auto& dataPtr = GetFieldData();
-        auto& data = *dataPtr;
+        FieldData* data = GetFieldData();
         FieldDataType type = FieldDataType::real;
         //添加单元数据
-        data.AddData("density", type, cell_num);
-        data.AddData("velocity_x", type, cell_num);
-        data.AddData("velocity_y", type, cell_num);
-        data.AddData("velocity_w", type, cell_num);
-        data.AddData("pressure", type, cell_num);
-        data.AddData("conservative", type, cell_num * GetNumberOfEquations());
-        data.AddData("residual", type, cell_num * GetNumberOfEquations());
-        data.AddData("dt", type, cell_num);
-        data.AddData("limiter", type, cell_num * GetNumberOfEquations());
-        data.AddData("prim_grad", type, cell_num * GetNumberOfEquations() * 3);
-        data.AddData("consRK0", type, cell_num);
-        data.AddData("consRK1", type, cell_num);
-        data.AddData("consRK2", type, cell_num);
-        data.AddData("consRK3", type, cell_num);
-        data.AddData("consRK4", type, cell_num);
-        data.AddData("metrics", type, cell_num * 17);
+        data->AddData("density", type, cell_num);
+        data->AddData("velocity_x", type, cell_num);
+        data->AddData("velocity_y", type, cell_num);
+        data->AddData("velocity_w", type, cell_num);
+        data->AddData("pressure", type, cell_num);
+        data->AddData("conservative", type, cell_num * GetNumberOfEquations());
+        data->AddData("residual", type, cell_num * GetNumberOfEquations());
+        data->AddData("dt", type, cell_num);
+        data->AddData("limiter", type, cell_num * GetNumberOfEquations());
+        data->AddData("prim_grad", type, cell_num * GetNumberOfEquations() * 3);
+        data->AddData("consRK0", type, cell_num);
+        data->AddData("consRK1", type, cell_num);
+        data->AddData("consRK2", type, cell_num);
+        data->AddData("consRK3", type, cell_num);
+        data->AddData("consRK4", type, cell_num);
+        data->AddData("metrics", type, cell_num * 17);
         //添加边界节点数据
         auto& bound_patch = grid->GetBoundPatch();
         int bound_node_num = bound_patch.GetPatchNum();
-        data.AddData("density_patch", type, bound_node_num);
-        data.AddData("velocity_x_patch", type, bound_node_num);
-        data.AddData("velocity_y_patch", type, bound_node_num);
-        data.AddData("velocity_z_patch", type, bound_node_num);
-        data.AddData("pressure_patch", type, bound_node_num);
-        data.AddData("prim_grad_patch", type, bound_node_num * GetNumberOfEquations() * 3);
-        data.AddData("limiter_patch", type, bound_node_num * GetNumberOfEquations());
+        data->AddData("density_patch", type, bound_node_num);
+        data->AddData("velocity_x_patch", type, bound_node_num);
+        data->AddData("velocity_y_patch", type, bound_node_num);
+        data->AddData("velocity_z_patch", type, bound_node_num);
+        data->AddData("pressure_patch", type, bound_node_num);
+        data->AddData("prim_grad_patch", type, bound_node_num * GetNumberOfEquations() * 3);
+        data->AddData("limiter_patch", type, bound_node_num * GetNumberOfEquations());
 
     }
 
     void Solver_NS_3D_Zaran::RegisterFieldData()
     {
         NSSolver::RegisterFieldData();
-        auto& data = *GetFieldData();
+        FieldData* data = GetFieldData();
         m_prim_bound = new double* [5];
         auto grid = GetGrid();
         auto& bound_patch = grid->GetBoundPatch();
         int bound_node_num = bound_patch.GetPatchNum();
-        data.GetData("density_patch", m_prim_bound[0]);
-        data.GetData("velocity_x_patch", m_prim_bound[1]);
-        data.GetData("velocity_y_patch", m_prim_bound[2]);
-        data.GetData("velocity_y_patch", m_prim_bound[3]);
-        data.GetData("pressure_patch", m_prim_bound[4]);
-        data.GetData("prim_grad_patch", m_prim_grad_bound);
-        data.GetData("limiter_patch", m_limiter_bound);
+        data->GetData("density_patch", m_prim_bound[0]);
+        data->GetData("velocity_x_patch", m_prim_bound[1]);
+        data->GetData("velocity_y_patch", m_prim_bound[2]);
+        data->GetData("velocity_y_patch", m_prim_bound[3]);
+        data->GetData("pressure_patch", m_prim_bound[4]);
+        data->GetData("prim_grad_patch", m_prim_grad_bound);
+        data->GetData("limiter_patch", m_limiter_bound);
     }
     void Solver_NS_3D_Zaran::InitField()
     {
@@ -140,7 +139,7 @@ namespace zaran
     }
     void Solver_NS_3D_Zaran::RungeKutta()
     {
-        auto& grid = GetGrid();
+        Grid_Zaran_3D* grid = GetGrid();
         FlowSolverPara* para = GetPara();
         const DArray& rkCoef = para->GetRKCoef();
         int rkStage = rkCoef.size();
@@ -320,7 +319,7 @@ namespace zaran
     }
     void Solver_NS_3D_Zaran::InviscidFluxStruct()
     {
-        auto& grid = GetGrid();
+        Grid_Zaran_3D* grid = GetGrid();
         auto& cell_topo = grid->GetCellTopo();
         auto& cell_type = cell_topo->GetType();
         auto& cell_center_coord = cell_topo->GetCenterCoord();
@@ -512,7 +511,7 @@ namespace zaran
 
     void Solver_NS_3D_Zaran::InviscidFluxMid()
     {
-        auto& grid = GetGrid();
+        Grid_Zaran_3D* grid = GetGrid();
         auto& cell_topo = grid->GetCellTopo();
         auto& cell_type = cell_topo->GetType();
         auto& cell_center_coord = cell_topo->GetCenterCoord();
@@ -913,7 +912,7 @@ namespace zaran
 
     void Solver_NS_3D_Zaran::BoundaryCondition()
     {
-        auto& grid = GetGrid();
+        Grid_Zaran_3D* grid = GetGrid();
         BoundaryMapPtr& boundaryMapPtr = grid->GetBoundaryMap();
         auto& boundaryMap = boundaryMapPtr->GetBoundaryMap();
         auto& wallBound = boundaryMap["slipWall"];
@@ -974,7 +973,7 @@ namespace zaran
 
     void Solver_NS_3D_Zaran::BoundPatchBC()
     {
-        auto& grid = GetGrid();
+        Grid_Zaran_3D* grid = GetGrid();
         auto& cell_topo = grid->GetCellTopo();
         auto& cell_type = cell_topo->GetType();
         auto& cell_center_coord = cell_topo->GetCenterCoord();
@@ -1009,6 +1008,11 @@ namespace zaran
             m_prim_bound[3][iPatch] = bound_vel(2);
 
         }
+    }
+
+    Grid_Zaran_3D* Solver_NS_3D_Zaran::GetGrid()
+    {
+        return static_cast<Grid_Zaran_3D*>(Solver::GetGrid());
     }
 
 

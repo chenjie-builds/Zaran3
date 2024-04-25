@@ -23,7 +23,7 @@ namespace zaran
 		// 使用最小二乘求梯度
 		virtual void CalcGradWLS()override;
 	protected:
-		Ptr<Grid_Struct_3D> GetGrid();
+		Grid_Struct_3D* GetGrid();
 		virtual void CalcTimeStepLocal()override;
 		// 计算流动通量
 		virtual void ConvectiveResidual()override;

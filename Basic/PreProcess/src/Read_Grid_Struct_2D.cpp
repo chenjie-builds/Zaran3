@@ -2,16 +2,17 @@
 #include"Log.h"
 #include"Grid_Struct_2D.h"
 #include<fstream>
-void zaran::GridListFactoryStruct2D::Create(Ptr<GridList>& gridList)
+void zaran::GridFactoryStruct2D::Create(Grid*& grid)
 {
-	if (!gridList)
+	if (grid != nullptr)
 	{
-		gridList = std::make_shared<GridList>();
+		delete[] grid;
 	}
-	Ptr <Grid_Struct_2D> gridPtr = std::make_shared<Grid_Struct_2D>();
+	Grid_Struct_2D* gridPtr = new Grid_Struct_2D();
 	gridPtr->SetDimension(Dimension::two);
 	gridPtr->SetName("Struct_Grid_2D");
-	gridList->AddGrid(gridPtr);
+	gridPtr->SetType(GridType::Structured);
+	grid = dynamic_cast<Grid*>(gridPtr);
 	std::string fileName = "grid.dat";
 	std::ifstream fin;
 	fin.open(fileName, std::ios_base::in);
@@ -21,18 +22,18 @@ void zaran::GridListFactoryStruct2D::Create(Ptr<GridList>& gridList)
 		system("pause");
 	}
 	int ghostNum;
-	int ni,nj;
+	int ni, nj;
 	fin >> ni >> nj;
 	ni += ghostNum;
 	nj += ghostNum;
-	gridPtr->SetTotalNodeNum(ni*nj);
-	gridPtr->SetNodeNum(ni,nj);
+	gridPtr->SetTotalNodeNum(ni * nj);
+	gridPtr->SetNodeNum(ni, nj);
 	auto& nodeTopo = gridPtr->GetNodeTopo();
 	auto& nodeCoord = nodeTopo->GetCoordinate();
 	nodeCoord.resize(gridPtr->GetTotalNodeNum());
 	for (int j = ghostNum; j < nj + ghostNum; j++)
 	{
-		for (int i = ghostNum; i < ni + ghostNum ; i++)
+		for (int i = ghostNum; i < ni + ghostNum; i++)
 		{
 			fin >> nodeCoord[i + j * (ni + ghostNum * 2)][0] >> nodeCoord[i + j * (ni + ghostNum * 2)][1];
 		}
