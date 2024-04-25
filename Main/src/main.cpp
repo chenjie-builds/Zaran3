@@ -1,5 +1,5 @@
 #include"Simulation.h"
-#include "log.h"
+#include "Log.h"
 #include"BasicType.h"
 #include"Test.h"
 int main()
