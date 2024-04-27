@@ -37,7 +37,7 @@ namespace zaran
 		//将残差归零
 		void ZeroResidual();
 		//返回当前求解器的参数
-		FlowSolverPara* GetPara();
+		FlowSolverPara* GetPara()override;
 		//从网格中取数据，为了防止每次直接使用数据名称
 	public:
 		// 时间推进
@@ -60,6 +60,9 @@ namespace zaran
 		double* GetMetricZeta(int iNode) { return m_metric + iNode * 17 + 8; }
 		double* GetMetricTau(int iNode) { return m_metric + iNode * 17 + 12; }
 		double& GetMetricJacob(int iNode) { return m_metric[iNode * 17 + 16]; }
+		double* GetViscousFlux(int iNode) { return m_viscous_flux + iNode * GetNumberOfEquations(); }
+		double& GetViscousFlux(int iNode, int iEqu) { return m_viscous_flux[iNode * GetNumberOfEquations() + iEqu]; }
+
 	protected:
 		double** m_prim;
 		//守恒变量
@@ -69,6 +72,8 @@ namespace zaran
 		double* m_residual;
 		double* m_limiter;
 		double* m_temperture;
+		double* m_viscous_flux;
+		double* m_viscous_flux_grad;
 		int* m_non_physical;
 	};
 }

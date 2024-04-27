@@ -34,7 +34,8 @@ void zaran::GridFactoryZaran3D::CreateStructPart(Grid_Zaran_3D* grid)
 	grid->SetLevel(0);
 	grid->SetName("noname");
 	grid->SetType(GridType::Zaran);
-	auto& nodeTopo = grid->GetNodeTopo();
+	NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 	auto& nodeCoord = nodeTopo->GetCoordinate();
 	int xNodeNum = GlobalData::GetInt("nx");
 	int yNodeNum = GlobalData::GetInt("ny");
@@ -91,10 +92,8 @@ void zaran::GridFactoryZaran3D::CreateStructPart(Grid_Zaran_3D* grid)
 	grid->SetInnerNodeNum((xNodeNum - 4) * (yNodeNum - 4) * (zNodeNum - 4));
 	grid->SetTotalNodeNum((xNodeNum) * (yNodeNum) * (zNodeNum));
 	grid->SetBoundNodeNum(xNodeNum * yNodeNum * zNodeNum - grid->GetInnerNodeNum());
-	grid->SetInterNodeInfo(std::make_shared<InterNodeInfo>());
-	grid->SetBoundaryMap(std::make_shared<BoundaryMap>());
 	Log::info("Start create cell topo2");
-	Ptr<CellTopoInfoZaran>& cellTopo = grid->GetCellTopo();
+	CellTopoZaran* cellTopo = grid->GetCellTopo();
 	Log::info("Start create cell topo2");
 	auto& cell2node = cellTopo->GetNodeIndex();
 	auto& cell_center = cellTopo->GetCenterCoord();
@@ -489,16 +488,16 @@ void zaran::GridFactoryZaran3D::CrateBoundPatch(Grid_Zaran_3D* grid)
 	vtkNew<vtkCellLocator> cellLocator;
 	cellLocator->SetDataSet(poly_data);
 	cellLocator->BuildLocator();
-	ZaranBoundPatch& bound_patch = grid->GetBoundPatch();
+	ZaranBoundPatch* bound_patch = grid->GetBoundPatch();
 	int n_bound_patch = 0;
 	for (int iCell = 0;iCell < cell_type.size();iCell++)
 	{
 		if (cell_type[iCell] == CellType::FluidSolid)
 			n_bound_patch++;
 	}
-	auto& mid_index = bound_patch.GetIndex();
-	auto& bound_coord = bound_patch.GetCoordinate();
-	auto& bound_norm = bound_patch.GetNormal();
+	auto& mid_index = bound_patch->GetIndex();
+	auto& bound_coord = bound_patch->GetCoordinate();
+	auto& bound_norm = bound_patch->GetNormal();
 	mid_index.resize(n_bound_patch);
 	bound_coord.resize(n_bound_patch);
 	bound_norm.resize(n_bound_patch);

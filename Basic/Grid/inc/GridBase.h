@@ -25,6 +25,7 @@ namespace zaran
 	{
 	public:
 		GridBase() :name_(), index_(0), dim_(), type_(GridType::Unkown) {}
+		virtual ~GridBase() {}
 		void SetName(const std::string& name) { name_ = name; }
 		void SetIndex(const size_t& index) { index_ = index; }
 		void SetDimension(const Dimension& dim) { dim_ = dim; }

@@ -28,7 +28,7 @@ void zaran::GridFactoryStruct2D::Create(Grid*& grid)
 	nj += ghostNum;
 	gridPtr->SetTotalNodeNum(ni * nj);
 	gridPtr->SetNodeNum(ni, nj);
-	auto& nodeTopo = gridPtr->GetNodeTopo();
+	NodeTopo* nodeTopo = gridPtr->GetNodeTopo();
 	auto& nodeCoord = nodeTopo->GetCoordinate();
 	nodeCoord.resize(gridPtr->GetTotalNodeNum());
 	for (int j = ghostNum; j < nj + ghostNum; j++)

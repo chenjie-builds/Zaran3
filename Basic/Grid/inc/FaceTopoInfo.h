@@ -13,11 +13,11 @@
 #include"BasicType.h"
 namespace zaran
 {
-	class FaceTopoInfo
+	class FaceTopo
 	{
 	public:
-		FaceTopoInfo();
-		~FaceTopoInfo();
+		FaceTopo();
+		~FaceTopo();
 		void Allocate(int nFace, int* face_node_num);
 		void SetLeftCell(int iFace, int iCell) { m_face2cell[2 * iFace] = iCell; }
 		void SetRightCell(int iFace, int iCell) { m_face2cell[2 * iFace + 1] = iCell; }

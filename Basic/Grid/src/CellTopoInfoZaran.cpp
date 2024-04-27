@@ -2,22 +2,22 @@
 namespace zaran
 {
 
-    CellTopoInfoZaran::CellTopoInfoZaran()
+    CellTopoZaran::CellTopoZaran()
     {
-        CellTopoInfo::CellTopoInfo();
+        CellTopo::CellTopo();
         m_cellType.resize(0);
     }
 
-    CellTopoInfoZaran::~CellTopoInfoZaran()
+    CellTopoZaran::~CellTopoZaran()
     {
     }
 
-    void CellTopoInfoZaran::SetType(Array<CellType>& cellType)
+    void CellTopoZaran::SetType(Array<CellType>& cellType)
     {
         m_cellType = cellType;
     }
 
-    Array<CellType>& CellTopoInfoZaran::GetType()
+    Array<CellType>& CellTopoZaran::GetType()
     {
         return m_cellType;
     }

@@ -1,10 +1,10 @@
 #include "NodeTopoInfo.h"
 using namespace zaran;
-NodeTopoInfo::NodeTopoInfo()
+NodeTopo::NodeTopo()
 {
 }
 
-NodeTopoInfo::~NodeTopoInfo()
+NodeTopo::~NodeTopo()
 {
 
 }

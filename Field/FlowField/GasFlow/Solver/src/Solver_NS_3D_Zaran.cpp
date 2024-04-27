@@ -29,8 +29,8 @@ namespace zaran
         data->AddData("consRK4", type, cell_num);
         data->AddData("metrics", type, cell_num * 17);
         //添加边界节点数据
-        auto& bound_patch = grid->GetBoundPatch();
-        int bound_node_num = bound_patch.GetPatchNum();
+        ZaranBoundPatch* bound_patch = grid->GetBoundPatch();
+        int bound_node_num = bound_patch->GetPatchNum();
         data->AddData("density_patch", type, bound_node_num);
         data->AddData("velocity_x_patch", type, bound_node_num);
         data->AddData("velocity_y_patch", type, bound_node_num);
@@ -47,8 +47,8 @@ namespace zaran
         FieldData* data = GetFieldData();
         m_prim_bound = new double* [5];
         auto grid = GetGrid();
-        auto& bound_patch = grid->GetBoundPatch();
-        int bound_node_num = bound_patch.GetPatchNum();
+        ZaranBoundPatch* bound_patch = grid->GetBoundPatch();
+        int bound_node_num = bound_patch->GetPatchNum();
         data->GetData("density_patch", m_prim_bound[0]);
         data->GetData("velocity_x_patch", m_prim_bound[1]);
         data->GetData("velocity_y_patch", m_prim_bound[2]);
@@ -68,7 +68,7 @@ namespace zaran
         prim_init[3] = para->GetInflowVelocityZ();
         prim_init[4] = para->GetInflowPressure();
         auto grid = GetGrid();
-        int n_patch = grid->GetBoundPatch().GetPatchNum();
+        int n_patch = grid->GetBoundPatch()->GetPatchNum();
         for (int iPatch = 0;iPatch < n_patch;++iPatch)
         {
             m_prim_bound[0][iPatch] = prim_init[0];
@@ -168,7 +168,7 @@ namespace zaran
         int iCell;
         // grid->GetNodeIndex(i, j, k)的lamda表达式
         auto CellIndex = [&](int i, int j, int k) {return grid->GetCellIndex(i, j, k); };
-        auto& cell_topo = grid->GetCellTopo();
+        CellTopoZaran* cell_topo = grid->GetCellTopo();
         auto& cell_center_coord = cell_topo->GetCenterCoord();
         CoordTrans coordTrans;
         for (int k = ks; k < ke - 1; k++)
@@ -195,7 +195,7 @@ namespace zaran
                     GetMetricTau(iCell)[1] = coordTrans.GetTau()[1];
                     GetMetricTau(iCell)[2] = coordTrans.GetTau()[2];
                     GetMetricTau(iCell)[3] = coordTrans.GetTau()[3];
-                    GetMetricJacob(iCell) = coordTrans.J();
+                    GetMetricJacob(iCell) = coordTrans.Jacobian();
                 }
             }
         }
@@ -204,23 +204,23 @@ namespace zaran
     void Solver_NS_3D_Zaran::CalcMetricMid()
     {
         auto grid = GetGrid();
-        auto& bound_patch = grid->GetBoundPatch();
-        auto& bound_node_index = bound_patch.GetIndex();
-        auto& bound_node_coord = bound_patch.GetCoordinate();
+        ZaranBoundPatch* bound_patch = grid->GetBoundPatch();
+        auto& bound_node_index = bound_patch->GetIndex();
+        auto& bound_node_coord = bound_patch->GetCoordinate();
         // 起始点和终止点的编号,s: start, e: end
         int is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
         int iCell;
         // grid->GetNodeIndex(i, j, k)的lamda表达式
         auto CellIndex = [&](int i, int j, int k) {return grid->GetCellIndex(i, j, k); };
-        auto& cell_topo = grid->GetCellTopo();
+        CellTopoZaran* cell_topo = grid->GetCellTopo();
         auto& cell_center_coord = cell_topo->GetCenterCoord();
         auto& cell_type = cell_topo->GetType();
         CoordTrans coordTrans;
         int i, j, k;
         Array<DVector3D*> neighbor_node_coord(6);
         IArray neighbor_node_index(6);
-        for (int iPatch = 0;iPatch < bound_patch.GetPatchNum();iPatch++)
+        for (int iPatch = 0;iPatch < bound_patch->GetPatchNum();iPatch++)
         {
             i = bound_node_index[iPatch][0];
             j = bound_node_index[iPatch][1];
@@ -256,9 +256,9 @@ namespace zaran
             GetMetricTau(iCell)[1] = coordTrans.GetTau()[1];
             GetMetricTau(iCell)[2] = coordTrans.GetTau()[2];
             GetMetricTau(iCell)[3] = coordTrans.GetTau()[3];
-            GetMetricJacob(iCell) = coordTrans.J();
-            if (isinf(coordTrans.J()))
-                Log::error("i:{},j:{},k:{},J:{}", i, j, k, coordTrans.J());
+            GetMetricJacob(iCell) = coordTrans.Jacobian();
+            if (isinf(coordTrans.Jacobian()))
+                Log::error("i:{},j:{},k:{},J:{}", i, j, k, coordTrans.Jacobian());
         }
     }
 
@@ -281,7 +281,7 @@ namespace zaran
         int iCell;
         // grid->GetNodeIndex(i, j, k)的lamda表达式
         auto CellIndex = [&](int i, int j, int k) {return grid->GetCellIndex(i, j, k); };
-        auto& cell_topo = grid->GetCellTopo();
+        CellTopoZaran* cell_topo = grid->GetCellTopo();
         auto& cell_type = cell_topo->GetType();
         FlowSolverPara* para = GetPara();
         double cfl = para->GetCflNumber();
@@ -320,7 +320,7 @@ namespace zaran
     void Solver_NS_3D_Zaran::InviscidFluxStruct()
     {
         Grid_Zaran_3D* grid = GetGrid();
-        auto& cell_topo = grid->GetCellTopo();
+        CellTopoZaran* cell_topo = grid->GetCellTopo();
         auto& cell_type = cell_topo->GetType();
         auto& cell_center_coord = cell_topo->GetCenterCoord();
         // 起始点和终止点的编号,s: start, e: end
@@ -512,12 +512,12 @@ namespace zaran
     void Solver_NS_3D_Zaran::InviscidFluxMid()
     {
         Grid_Zaran_3D* grid = GetGrid();
-        auto& cell_topo = grid->GetCellTopo();
+        CellTopoZaran* cell_topo = grid->GetCellTopo();
         auto& cell_type = cell_topo->GetType();
         auto& cell_center_coord = cell_topo->GetCenterCoord();
-        auto& bound_patch = grid->GetBoundPatch();
-        auto& bound_node_index = bound_patch.GetIndex();
-        auto& bound_node_coord = bound_patch.GetCoordinate();
+        ZaranBoundPatch* bound_patch = grid->GetBoundPatch();
+        auto& bound_node_index = bound_patch->GetIndex();
+        auto& bound_node_coord = bound_patch->GetCoordinate();
 
         // 起始点和终止点的编号,s: start, e: end
         int is, ie, js, je, ks, ke;
@@ -533,7 +533,7 @@ namespace zaran
         DVector3D coord_left, coord_right, r, grad;
         RiemannSolverPara riemann_para;
         riemann_para.gamma_left = riemann_para.gamma_right = 1.4;
-        for (int iPatch = 0;iPatch < bound_patch.GetPatchNum();iPatch++)
+        for (int iPatch = 0;iPatch < bound_patch->GetPatchNum();iPatch++)
         {
             i = bound_node_index[iPatch][0];
             j = bound_node_index[iPatch][1];
@@ -913,7 +913,7 @@ namespace zaran
     void Solver_NS_3D_Zaran::BoundaryCondition()
     {
         Grid_Zaran_3D* grid = GetGrid();
-        BoundaryMapPtr& boundaryMapPtr = grid->GetBoundaryMap();
+        BoundaryMap* boundaryMapPtr = grid->GetBoundaryMap();
         auto& boundaryMap = boundaryMapPtr->GetBoundaryMap();
         auto& wallBound = boundaryMap["slipWall"];
         for (int iBound = 0; iBound < wallBound.size(); ++iBound)
@@ -974,19 +974,19 @@ namespace zaran
     void Solver_NS_3D_Zaran::BoundPatchBC()
     {
         Grid_Zaran_3D* grid = GetGrid();
-        auto& cell_topo = grid->GetCellTopo();
+        CellTopoZaran* cell_topo = grid->GetCellTopo();
         auto& cell_type = cell_topo->GetType();
         auto& cell_center_coord = cell_topo->GetCenterCoord();
-        auto& bound_patch = grid->GetBoundPatch();
-        auto& bound_node_index = bound_patch.GetIndex();
-        auto& bound_node_coord = bound_patch.GetCoordinate();
-        auto& bound_norm = bound_patch.GetNormal();
+        ZaranBoundPatch* bound_patch = grid->GetBoundPatch();
+        auto& bound_node_index = bound_patch->GetIndex();
+        auto& bound_node_coord = bound_patch->GetCoordinate();
+        auto& bound_norm = bound_patch->GetNormal();
 
         int i, j, k, iCell;
         auto CellIndex = [&](int i, int j, int k) {return grid->GetCellIndex(i, j, k); };
         DVector3D inner_vel, bound_vel;
         // #pragma omp parallel for private(iCell, i, j, k, inner_vel, bound_vel)
-        for (int iPatch = 0;iPatch < bound_patch.GetPatchNum();iPatch++)
+        for (int iPatch = 0;iPatch < bound_patch->GetPatchNum();iPatch++)
         {
 
             i = bound_node_index[iPatch][0];

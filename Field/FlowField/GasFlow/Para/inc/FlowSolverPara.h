@@ -27,7 +27,7 @@ namespace zaran
 	enum class InitFieldType
 	{
 		FarFlow,//远场
-		FarFieldNoVelocity,//远场无速度
+		FarFlowNoVelocity,//远场无速度
 		Backup//备份文件
 	};
 	class FlowSolverPara :public SolverPara

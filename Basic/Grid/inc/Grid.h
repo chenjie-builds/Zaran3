@@ -23,33 +23,30 @@
 // grid
 namespace zaran
 {
-	using BoundaryMapPtr = Ptr<BoundaryMap>;
-	using InterNodeInfoPtr = Ptr<InterNodeInfo>;
 	class Grid : public GridBase
 	{
 	public:
 		Grid();
 		Grid(const Grid& grid);
+		~Grid();
 	public:
 		void SetLevel(const int& level);
 		void SetInnerNodeNum(const int& innerNodeNum);
 		void SetBoundNodeNum(const int& boundNodeNum);
 		void SetTotalNodeNum(const int& totalNodeNum);
-		void SetNodeTopo(NodeTopoInfo& nodeTopo);
-		void SetFaceTopo(FaceTopoInfo& faceTopo);
-		void SetCellTopo(CellTopoInfo& cellTopo);
-		void SetInterNodeInfo(Ptr<InterNodeInfo> interNodeInfo);
-		void SetBoundaryMap(Ptr<BoundaryMap> boundaryMap);
+		void SetNodeTopo(NodeTopo* nodeTopo);
+		void SetFaceTopo(FaceTopo* faceTopo);
+		void SetCellTopo(CellTopo* cellTopo);
+		void SetBoundaryMap(BoundaryMap* boundaryMap);
 	public:
 		const int& GetLevel()const;
 		const int& GetTotalNodeNum()const;
 		const int& GetInnerNodeNum()const;
 		const int& GetBoundNodeNum()const;
-		Ptr<CellTopoInfo>& GetCellTopo();
-		Ptr<FaceTopoInfo>& GetFaceTopo();
-		Ptr<NodeTopoInfo>& GetNodeTopo();
-		InterNodeInfoPtr& GetInterNode();
-		BoundaryMapPtr& GetBoundaryMap();
+		virtual CellTopo* GetCellTopo();
+		virtual FaceTopo* GetFaceTopo();
+		virtual NodeTopo* GetNodeTopo();
+		BoundaryMap* GetBoundaryMap();
 	protected:
 		/// 网格的级别
 		int m_level;
@@ -60,14 +57,12 @@ namespace zaran
 		/// 节点总数
 		int m_num_total_node;
 		// 节点拓扑信息
-		Ptr<NodeTopoInfo> m_node_topo;
+		NodeTopo* m_node_topo;
 		// 单元拓扑信息
-		Ptr<CellTopoInfo> m_cell_topo;
+		CellTopo* m_cell_topo;
 		// 面元拓扑信息
-		Ptr<FaceTopoInfo> m_face_topo;
-		// 插值节点信息
-		InterNodeInfoPtr  m_inter_node_info;
+		FaceTopo* m_face_topo;
 		// 边界信息
-		BoundaryMapPtr m_bound_map;
+		BoundaryMap* m_bound_map;
 	};
 }

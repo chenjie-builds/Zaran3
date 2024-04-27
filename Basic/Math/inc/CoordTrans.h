@@ -38,7 +38,7 @@ namespace zaran
 		const DArray& GetEta()const { return eta_; }
 		const DArray& GetZeta()const { return zeta_; }
 		const DArray& GetTau() const { return tau_; }
-		const double& J()const { return jacob_; }
+		const double& Jacobian()const { return jacob_; }
 		const double& dim()const { return dimension_; }
 	private:
 		void CoordTransTime2D(double dt, Coordinate tRight, Coordinate tLeft, Coordinate xRight, Coordinate xLeft, Coordinate yRight, Coordinate yLeft);

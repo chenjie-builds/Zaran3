@@ -14,11 +14,11 @@
 namespace zaran
 {
 	// 单元拓扑类，记录单元包含的节点和面元
-	class CellTopoInfo
+	class CellTopo
 	{
 	public:
-		CellTopoInfo();
-		~CellTopoInfo();
+		CellTopo();
+		~CellTopo();
 		void SetNodeIndex(Array<IArray>& node_index);
 		void SetFaceIndex(Array<IArray>& face_index);
 		void SetCenterCoord(Array<DVector3D>& center);

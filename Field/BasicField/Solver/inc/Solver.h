@@ -29,9 +29,9 @@ namespace zaran
 		void SetPara(SolverPara* para) { para_ = para; }
 		void SetGrid(Grid* grid) { m_grid = grid; }
 		const string& GetName()const { return name_; }
-		Grid* GetGrid() { return m_grid; }
+		virtual Grid* GetGrid() { return m_grid; }
 		const int& GetIndex()const { return index_; }
-		SolverPara* GetPara();
+		virtual SolverPara* GetPara();
 	public:
 		virtual void Init() = 0;
 		virtual void Solve() = 0;

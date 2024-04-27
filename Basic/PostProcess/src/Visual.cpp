@@ -19,9 +19,10 @@ void Visual::WriteTecplot(FieldSolver* solver)
 	int nInnerNum = grid->GetInnerNodeNum();
 	int nBoundNum = grid->GetBoundNodeNum();
 	int nTotalNum = grid->GetTotalNodeNum();
-	auto& nodeTopo = grid->GetNodeTopo();
+	NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 	auto& nodeCoord = nodeTopo->GetCoordinate();
-	auto& cellTopo = grid->GetCellTopo();
+	CellTopo* cellTopo = grid->GetCellTopo();
 	auto& cell2node = cellTopo->GetNodeIndex();
 	FieldData* data = solver->GetFieldData();
 	double* density, * velocity_x, * velocity_y, * velocity_z, * pressure, * jacobi;
@@ -62,9 +63,9 @@ void zaran::Visual::WriteTecplotBinary(FieldSolver* solver)
 	data->GetData("velocity_w", velocity_z);
 	data->GetData("pressure", pressure);
 	Grid* grid = solver->GetGrid();
-	auto& cellTopo = grid->GetCellTopo();
+	CellTopo* cellTopo = grid->GetCellTopo();
 	auto& cell2node = cellTopo->GetNodeIndex();
-	auto& node_topo = grid->GetNodeTopo();
+	NodeTopo* node_topo = grid->GetNodeTopo();
 	auto& node_coord = node_topo->GetCoordinate();
 
 	INTEGER4 node_num = grid->GetTotalNodeNum();
@@ -151,7 +152,7 @@ void zaran::Visual::WriteTecplotBinary(FieldSolver* solver)
 	i = TECNODE142(&connectivityCount, cell_nodes.data());
 
 	/// bound face
-	auto& face_topo = grid->GetFaceTopo();
+	FaceTopo* face_topo = grid->GetFaceTopo();
 	cell_num = face_topo->GetFaceNum();
 	zone_name = "grid_" + grid->GetName() + "_bound";
 	zone_type = 3;//Brick
@@ -231,9 +232,10 @@ void zaran::Visual::WriteTecplot2D(FieldSolver* solver)
 	int nInnerNum = grid->GetInnerNodeNum();
 	int nBoundNum = grid->GetBoundNodeNum();
 	int nTotalNum = grid->GetTotalNodeNum();
-	auto& nodeTopo = grid->GetNodeTopo();
+	NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 	auto& nodeCoord = nodeTopo->GetCoordinate();
-	auto& cellTopo = grid->GetCellTopo();
+	CellTopo* cellTopo = grid->GetCellTopo();
 	auto& cell2node = cellTopo->GetNodeIndex();
 	auto& data = *solver->GetFieldData();
 	double* rho, * u, * v, * w, * p, * jacobi, * limiterCoef0, * limiterCoef1, * limiterCoef2, * limiterCoef3, * limiterCoef4;
@@ -291,7 +293,8 @@ void zaran::Visual::WriteTecplotPoint(FieldSolver* solver)
 	std::ofstream fout(filename);
 	fout << "variables=x,y,z,rho,u,v,w,p\n";
 	Grid* grid = solver->GetGrid();
-	auto& nodeTopo = grid->GetNodeTopo();
+	NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 	auto& nodeCoord = nodeTopo->GetCoordinate();
 	auto& data = *solver->GetFieldData();
 	double* rho, * u, * v, * w, * p;
@@ -310,7 +313,7 @@ void zaran::Visual::WriteTecplotPoint(FieldSolver* solver)
 	}
 	fout.close();
 
-	auto& boundMap = grid->GetBoundaryMap();
+	BoundaryMap* boundMap = grid->GetBoundaryMap();
 	//fout.open("result/inlet.dat");
 	//fout << "variables=x,y,z\n";
 	//auto& boundNode = boundMap->GetBoundary("inlet");
@@ -439,10 +442,10 @@ void zaran::Visual::WriteTecplotZaran3D(FieldSolver* solver)
 	data.GetData("pressure", p);
 	data.GetData("coordTransJ", jacobi);
 	Grid_Zaran_3D* grid = static_cast<Grid_Zaran_3D*>(solver->GetGrid());
-	auto& cellTopo = grid->GetCellTopo();
-	auto& cell_type = cellTopo->GetType();
+	CellTopoZaran* cellTopo = grid->GetCellTopo();
+	Array<CellType>& cell_type = cellTopo->GetType();
 	auto& cell_center = cellTopo->GetCenterCoord();
-	auto& node_topo = grid->GetNodeTopo();
+	NodeTopo* node_topo = grid->GetNodeTopo();
 	auto& node_coord = node_topo->GetCoordinate();
 	int is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
@@ -593,10 +596,10 @@ void zaran::Visual::WriteTecplotZaran3DBinary(FieldSolver* solver)
 	data.GetData("coordTransJ", jacobi);
 
 	Grid_Zaran_3D* grid = static_cast<Grid_Zaran_3D*>(solver->GetGrid());
-	auto& cellTopo = grid->GetCellTopo();
-	auto& cell_type = cellTopo->GetType();
+	CellTopoZaran* cellTopo = grid->GetCellTopo();
+	Array<CellType>& cell_type = cellTopo->GetType();
 	auto& cell_center = cellTopo->GetCenterCoord();
-	auto& node_topo = grid->GetNodeTopo();
+	NodeTopo* node_topo = grid->GetNodeTopo();
 	auto& node_coord = node_topo->GetCoordinate();
 
 	int is, ie, js, je, ks, ke;

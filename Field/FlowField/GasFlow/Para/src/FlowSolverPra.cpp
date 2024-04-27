@@ -39,7 +39,7 @@ void FlowSolverPara::Init()
 	}
 	else if(inflow_type == "FarFieldNoVelocity")
 	{
-		m_init_field_type = InitFieldType::FarFieldNoVelocity;
+		m_init_field_type = InitFieldType::FarFlowNoVelocity;
 	}
 	else if (inflow_type == "Backup")
 	{

@@ -29,13 +29,13 @@ namespace zaran
 	void GridFactoryFNFDM3D::ReadFile(Grid* grid)
 	{
 		grid->SetDimension(Dimension::three);
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* node_topo = grid->GetNodeTopo();
 		std::ifstream fin(m_node_file_name);
 		//读取所有节点坐标
 		fin >> m_NodeNum;
 		Log::info("Total node num:{}", m_NodeNum);
 		grid->SetTotalNodeNum(m_NodeNum);
-		auto& nodeCoord = nodeTopo->GetCoordinate();
+		auto& nodeCoord = node_topo->GetCoordinate();
 		nodeCoord.resize(m_NodeNum);
 		for (size_t i = 0; i < m_NodeNum; i++)
 		{
@@ -48,20 +48,20 @@ namespace zaran
 		Log::info("Inner node num:{}", innerNodeNum);
 		int innerNodeIndex;
 		IArray neibor_index(6);
-		auto& nodeType = nodeTopo->GetType();
+		auto& nodeType = node_topo->GetType();
 		nodeType.resize(m_NodeNum);
 		//初始化为未定义
 		for (size_t i = 0; i < m_NodeNum; i++)
 		{
 			nodeType[i] = NodeType::undefined;
 		}
-		auto& temp_i = nodeTopo->GetTemplateI();
-		auto& temp_j = nodeTopo->GetTemplateJ();
-		auto& temp_k = nodeTopo->GetTemplateK();
+		auto& temp_i = node_topo->GetTemplateI();
+		auto& temp_j = node_topo->GetTemplateJ();
+		auto& temp_k = node_topo->GetTemplateK();
 		temp_i.resize(m_NodeNum);
 		temp_j.resize(m_NodeNum);
 		temp_k.resize(m_NodeNum);
-		auto& nodeNeibor = nodeTopo->GetNeighborCloud();
+		auto& nodeNeibor = node_topo->GetNeighborCloud();
 		nodeNeibor.resize(m_NodeNum);
 		double delta = 1e-5;
 		double min_angle = LARGE_NUMBER;
@@ -162,7 +162,7 @@ namespace zaran
 		Log::info("-------- Neighbor: {}, {}, {}, {}, {}, {}", nodeNeibor[min_angle_index][0], nodeNeibor[min_angle_index][1], nodeNeibor[min_angle_index][2], nodeNeibor[min_angle_index][3], nodeNeibor[min_angle_index][4], nodeNeibor[min_angle_index][5]);
 		Log::info("-------- Axis Node 1: {}, Node 2: {}", min_angle_neibor_index1, min_angle_neibor_index2);
 		//读取所有边界节点邻居节点
-		auto& boundMap = grid->GetBoundaryMap();
+		BoundaryMap* boundMap = grid->GetBoundaryMap();
 		m_BoundNodeNum = 0;
 		int nBound;
 		fin >> nBound;
@@ -312,7 +312,8 @@ namespace zaran
 
 	void GridFactoryFNFDM3D::SortNeiborNode(Grid* grid)
 	{
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeibor = nodeTopo->GetNeighborCloud();
 		auto& nodeType = nodeTopo->GetType();
@@ -525,10 +526,10 @@ namespace zaran
 	void GridFactoryFNFDM3D::ExtendNeighborNode(Grid* grid)
 	{
 		// 构建节点KD树
-		auto& nodeTopo = grid->GetNodeTopo();
-		auto& nodeCoord = nodeTopo->GetCoordinate();
-		auto& nodeNeibor = nodeTopo->GetNeighborCloud();
-		auto& nodeType = nodeTopo->GetType();
+		NodeTopo* node_topo = grid->GetNodeTopo();
+		auto& nodeCoord = node_topo->GetCoordinate();
+		auto& nodeNeibor = node_topo->GetNeighborCloud();
+		auto& nodeType = node_topo->GetType();
 		//初始化vtk点
 		vtkNew<vtkPoints> points;
 		for (int i = 0; i < nodeCoord.size(); ++i)
@@ -640,7 +641,7 @@ namespace zaran
 
 
 
-		auto& cellTopo = grid->GetCellTopo();
+		CellTopo* cellTopo = grid->GetCellTopo();
 		Log::info("Total cell num:{}", cellNum);
 		auto& cell_node = cellTopo->GetNodeIndex();
 		cell_node.resize(cellNum);
@@ -718,8 +719,8 @@ namespace zaran
 		{
 			bound_face_node_num[iBound] = bound_node[iBound].size();
 		}
-		auto& bound_topo = grid->GetFaceTopo();
-		auto& node_topo = grid->GetNodeTopo();
+		FaceTopo* bound_topo = grid->GetFaceTopo();
+		NodeTopo* node_topo = grid->GetNodeTopo();
 		auto& node_coord = node_topo->GetCoordinate();
 		bound_topo->Allocate(boundNum, bound_face_node_num.data());
 		double area;

@@ -1,12 +1,6 @@
 #include "Grid_Zaran_3D.h"
 namespace zaran
-{
-    void Grid_Zaran_3D::SetBoundPatch(const ZaranBoundPatch& bound_patch)
-    {
-        m_bound_patch = std::make_shared<ZaranBoundPatch>(bound_patch);
-    }
-
-    void Grid_Zaran_3D::SetBox(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax)
+{    void Grid_Zaran_3D::SetBox(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax)
     {
         m_xmin = xmin;
         m_xmax = xmax;
@@ -26,14 +20,14 @@ namespace zaran
         zmax = m_zmax;
     }
 
-    Ptr<CellTopoInfoZaran> Grid_Zaran_3D::GetCellTopo()
+    CellTopoZaran* Grid_Zaran_3D::GetCellTopo()
     {
-        return std::static_pointer_cast<CellTopoInfoZaran>(m_cell_topo);
+        return static_cast<CellTopoZaran*>(Grid::GetCellTopo());
     }
 
-    ZaranBoundPatch& Grid_Zaran_3D::GetBoundPatch()
+    ZaranBoundPatch* Grid_Zaran_3D::GetBoundPatch()
     {
-        return *m_bound_patch;
+        return m_bound_patch;
     }
 
     void Grid_Zaran_3D::GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd)

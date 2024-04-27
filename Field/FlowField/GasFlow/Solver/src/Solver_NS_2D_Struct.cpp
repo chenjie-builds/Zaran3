@@ -6,8 +6,8 @@ namespace zaran
 	void Solver_NS_2D_Struct::InitField()
 	{
 		Grid* grid = GetGrid();
-		auto& NodeTopo = grid->GetNodeTopo();
-		auto& nodeCoord = NodeTopo->GetCoordinate();
+		NodeTopo* node_topo = grid->GetNodeTopo();
+		auto& nodeCoord = node_topo->GetCoordinate();
 		FlowSolverPara* para = GetPara();
 		const InitFieldType& initType = para->GetInitFieldType();
 		double prim_init[5];
@@ -57,7 +57,8 @@ namespace zaran
 		int iNode;
 		// grid->GetNodeIndex(i, j, k)的lamda表达式
 		auto NodeIndex = [&](int i, int j) {return grid->GetNodeIndex(i, j); };
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeType = nodeTopo->GetType();
 		CoordTrans metric;
@@ -74,7 +75,7 @@ namespace zaran
 					GetMetricZeta(iNode)[iDim] = metric.GetZeta()[iDim];
 					GetMetricTau(iNode)[iDim] = metric.GetTau()[iDim];
 				}
-				GetMetricJacob(iNode) = metric.J();
+				GetMetricJacob(iNode) = metric.Jacobian();
 
 			}
 		}
@@ -82,7 +83,8 @@ namespace zaran
 	void Solver_NS_2D_Struct::CalcGradWLS()
 	{
 		Grid_Struct_2D* grid = GetGrid();
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		FlowSolverPara* para = GetPara();
 		double cfl = para->GetCflNumber();
@@ -140,7 +142,8 @@ namespace zaran
 	void Solver_NS_2D_Struct::CalcTimeStepLocal()
 	{
 		Grid_Struct_2D* grid = GetGrid();
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeType = nodeTopo->GetType();
 		FlowSolverPara* para = GetPara();
 		double cfl = para->GetCflNumber();
@@ -173,7 +176,8 @@ namespace zaran
 	void Solver_NS_2D_Struct::ConvectiveResidual()
 	{
 		Grid_Struct_2D* grid = GetGrid();
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		// 起始点和终止点的编号,s: start, e: end
@@ -264,7 +268,8 @@ namespace zaran
 	void Solver_NS_2D_Struct::InviscidFluxMUSCL()
 	{
 		Grid_Struct_2D* grid = GetGrid();
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& prim = m_prim;
@@ -349,7 +354,8 @@ namespace zaran
 	void Solver_NS_2D_Struct::CalcLimiter()
 	{
 		Grid_Struct_2D* grid = GetGrid();
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
 		// 起始点和终止点的编号,s: start, e: end

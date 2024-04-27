@@ -42,8 +42,8 @@ void Controller::SaveWallNode()
     for (size_t iField = 0; iField < m_field_size; iField++)
     {
         Grid* currentGrid = m_field[iField]->GetGrid();
-        auto& nodeTopo = currentGrid->GetNodeTopo();
-        auto& boundNode = currentGrid->GetBoundaryMap();
+        NodeTopo* nodeTopo = currentGrid->GetNodeTopo();
+        BoundaryMap* boundMap = currentGrid->GetBoundaryMap();
     }
     fout.close();
 }
@@ -137,7 +137,8 @@ void zaran::Controller::CalcResidual()
         FieldData* fieldData = m_field[iField]->GetFieldData();
         int n_data;
         fieldData->GetDataSize("density", n_data);
-        auto& nodeTopo = grid->GetNodeTopo();
+        NodeTopo* nodeTopo = grid->GetNodeTopo();
+
         auto& nodeCoord = nodeTopo->GetCoordinate();
         auto& nodeType = nodeTopo->GetType();
         double maxResidual = 0.0;

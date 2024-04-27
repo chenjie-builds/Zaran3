@@ -49,7 +49,8 @@ namespace zaran
 		grid->SetLevel(0);
 		grid->SetName("noname");
 		grid->SetType(GridType::Unkown);
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		int xNodeNum = 31;
 		int yNodeNum = 31;
@@ -338,10 +339,7 @@ namespace zaran
 		grid->SetInnerNodeNum((xNodeNum - 2) * (yNodeNum - 2) * (zNodeNum - 2));
 		grid->SetTotalNodeNum((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
 		grid->SetBoundNodeNum(xNodeNum * yNodeNum * zNodeNum - grid->GetInnerNodeNum());
-		grid->SetInterNodeInfo(std::make_shared<InterNodeInfo>());
-		grid->SetBoundaryMap(std::make_shared<BoundaryMap>());
-
-		auto& cellTopo = grid->GetCellTopo();
+		CellTopo* cellTopo = grid->GetCellTopo();
 		auto& cell2node = cellTopo->GetNodeIndex();
 		cell2node.resize((xNodeNum - 1) * (yNodeNum - 1) * (zNodeNum - 1));
 		auto& iterCell = cell2node.begin();
@@ -458,7 +456,7 @@ namespace zaran
 		struct_grid->SetLevel(0);
 		struct_grid->SetName("noname");
 		struct_grid->SetType(GridType::Structured);
-		auto& nodeTopo = struct_grid->GetNodeTopo();
+		NodeTopo* nodeTopo = struct_grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		int xNodeNum = 31;
 		int yNodeNum = 31;
@@ -693,10 +691,7 @@ namespace zaran
 		struct_grid->SetInnerNodeNum((xNodeNum - 2) * (yNodeNum - 2) * (zNodeNum - 2));
 		struct_grid->SetTotalNodeNum((xNodeNum + 2) * (yNodeNum + 2) * (zNodeNum + 2));
 		struct_grid->SetBoundNodeNum(xNodeNum * yNodeNum * zNodeNum - struct_grid->GetInnerNodeNum());
-		struct_grid->SetInterNodeInfo(std::make_shared<InterNodeInfo>());
-		struct_grid->SetBoundaryMap(std::make_shared<BoundaryMap>());
-
-		auto& cellTopo = struct_grid->GetCellTopo();
+		CellTopo* cellTopo = struct_grid->GetCellTopo();
 		auto& cell2node = cellTopo->GetNodeIndex();
 		cell2node.resize((xNodeNum + 1) * (yNodeNum + 1) * (zNodeNum + 1));
 		int iCell;
@@ -814,7 +809,7 @@ namespace zaran
 		struct_grid->SetLevel(0);
 		struct_grid->SetName("fnfdm-structred-grid-2d");
 		struct_grid->SetType(GridType::Unkown);
-		auto& nodeTopo = struct_grid->GetNodeTopo();
+		NodeTopo* nodeTopo = struct_grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		int xNodeNum = 101;
 		int yNodeNum = 101;
@@ -917,9 +912,7 @@ namespace zaran
 		}
 		struct_grid->SetInnerNodeNum((xNodeNum - 2) * (yNodeNum - 2));
 		struct_grid->SetBoundNodeNum(xNodeNum * yNodeNum - struct_grid->GetInnerNodeNum());
-		struct_grid->SetInterNodeInfo(std::make_shared<InterNodeInfo>());
-		struct_grid->SetBoundaryMap(std::make_shared<BoundaryMap>());
-		auto& cellTopo = struct_grid->GetCellTopo();
+		CellTopo* cellTopo = struct_grid->GetCellTopo();
 		auto& cell2node = cellTopo->GetNodeIndex();
 		cell2node.resize((xNodeNum + 1) * (yNodeNum + 1));
 		int iCell;
@@ -932,7 +925,7 @@ namespace zaran
 			}
 		}
 
-		auto& boundMap = struct_grid->GetBoundaryMap();
+		BoundaryMap* boundMap = struct_grid->GetBoundaryMap();
 		int nodeIndex, innerNodeIndex, ghostNodeIndex;
 		DVector3D boundNorm;
 		Boundary bound;
@@ -999,7 +992,8 @@ namespace zaran
 		grid->SetLevel(0);
 		grid->SetName("fnfdm-structred-grid");
 		grid->SetType(GridType::Flexible);
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		int xNodeNum = 31;
 		int yNodeNum = 31;
@@ -1102,9 +1096,7 @@ namespace zaran
 		}
 		grid->SetInnerNodeNum((xNodeNum - 2) * (yNodeNum - 2));
 		grid->SetBoundNodeNum(xNodeNum * yNodeNum - grid->GetInnerNodeNum());
-		grid->SetInterNodeInfo(std::make_shared<InterNodeInfo>());
-		grid->SetBoundaryMap(std::make_shared<BoundaryMap>());
-		auto& cellTopo = grid->GetCellTopo();
+		CellTopo* cellTopo = grid->GetCellTopo();
 		auto& cell2node = cellTopo->GetNodeIndex();
 		cell2node.resize((xNodeNum + 1) * (yNodeNum + 1));
 		int iCell;
@@ -1117,7 +1109,7 @@ namespace zaran
 			}
 		}
 
-		auto& boundMap = grid->GetBoundaryMap();
+		BoundaryMap* boundMap = grid->GetBoundaryMap();
 		int nodeIndex, innerNodeIndex, ghostNodeIndex;
 		DVector3D boundNorm;
 		Boundary bound;

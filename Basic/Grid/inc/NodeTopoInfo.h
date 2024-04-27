@@ -30,11 +30,11 @@ namespace zaran
 		userDefined,//用户自定义
 		undefined//未定义
 	};
-	class NodeTopoInfo
+	class NodeTopo
 	{
 	public:
-		NodeTopoInfo();
-		virtual~NodeTopoInfo();
+		NodeTopo();
+		virtual~NodeTopo();
 		// 设置节点坐标
 		void SetCoordinate(Array<DVector3D>& coordinate) { m_coordinate = coordinate; }
 		// 设置节点类型

@@ -5,14 +5,15 @@ namespace zaran
 	{
 		Log::info("Compute NS 3D Coordination Transformation Coefficients");
 		Grid* grid = GetGrid();
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeType = nodeTopo->GetType();
 		auto& tempI = nodeTopo->GetTemplateI();
 		auto& tempJ = nodeTopo->GetTemplateJ();
 		auto& tempK = nodeTopo->GetTemplateK();
 		int nInnerNode = grid->GetInnerNodeNum();
-		CoordTrans coordTrans;
+		CoordTrans metrics;
 		DVector3D xRight, xLeft, yRight, yLeft, zRight, zLeft;
 		double max_jacobi, min_jacobi;
 		max_jacobi = -LARGE_NUMBER;
@@ -29,29 +30,29 @@ namespace zaran
 			yRight = nodeCoord[tempJ[iNode][2]];
 			zLeft = nodeCoord[tempK[iNode][0]];
 			zRight = nodeCoord[tempK[iNode][2]];
-			coordTrans.CalcCoordTrans(int(grid->GetDimension()), xRight, xLeft, yRight, yLeft, zRight, zLeft);
-			if (coordTrans.J() < 0)
+			metrics.CalcCoordTrans(int(grid->GetDimension()), xRight, xLeft, yRight, yLeft, zRight, zLeft);
+			if (metrics.Jacobian() < 0)
 			{
 				tempK[iNode] = IArray{ tempK[iNode][2], tempK[iNode][1], tempK[iNode][0] };
-				coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, yLeft, zLeft, zRight);
+				metrics.CalcCoordTrans(3, xRight, xLeft, yRight, yLeft, zLeft, zRight);
 			}
-			if (abs(coordTrans.J()) < SMALL_NUMBER || isnan(abs(coordTrans.J())) || isinf((coordTrans.J())))
+			if (abs(metrics.Jacobian()) < SMALL_NUMBER || isnan(abs(metrics.Jacobian())) || isinf((metrics.Jacobian())))
 			{
 				IArray currentTempJ = { tempJ[iNode][0], tempJ[iNode][1], tempK[iNode][0] };
 				IArray currentTempK = { tempJ[iNode][2], tempK[iNode][1], tempK[iNode][2] };
 				tempJ[iNode] = currentTempJ;
 				tempK[iNode] = currentTempK;
-				coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, zRight, yLeft, zLeft);
-				if (coordTrans.J() < 0)
+				metrics.CalcCoordTrans(3, xRight, xLeft, yRight, zRight, yLeft, zLeft);
+				if (metrics.Jacobian() < 0)
 				{
 					tempK[iNode] = IArray{ tempK[iNode][2], tempK[iNode][1], tempK[iNode][0] };
-					coordTrans.CalcCoordTrans(3, xRight, xLeft, yRight, yLeft, zLeft, zRight);
+					metrics.CalcCoordTrans(3, xRight, xLeft, yRight, yLeft, zLeft, zRight);
 				}
 			}
 			// check coordinate
-			if (coordTrans.J() > 1e15 || coordTrans.J() < 0 || isnan(coordTrans.J()) || isinf(coordTrans.J()))
+			if (metrics.Jacobian() > 1e15 || metrics.Jacobian() < 0 || isnan(metrics.Jacobian()) || isinf(metrics.Jacobian()))
 			{
-				Log::warn("jacobi is too large or negative: {}", coordTrans.J());
+				Log::warn("jacobi is too large or negative: {}", metrics.Jacobian());
 				Log::warn("Node {}: {},{},{}", iNode, nodeCoord[iNode].x(), nodeCoord[iNode].y(), nodeCoord[iNode].z());
 				Log::info("xLeft index={}: {},{},{}", tempI[iNode][0], xLeft.x(), xLeft.y(), xLeft.z());
 				Log::info("xRight index={}: {},{},{}", tempI[iNode][2], xRight.x(), xRight.y(), xRight.z());
@@ -62,20 +63,20 @@ namespace zaran
 			}
 			for (int iDim = 0;iDim < 4;++iDim)
 			{
-				GetMetricXi(iNode)[iDim] = coordTrans.GetXi()[iDim];
-				GetMetricEta(iNode)[iDim] = coordTrans.GetEta()[iDim];
-				GetMetricZeta(iNode)[iDim] = coordTrans.GetZeta()[iDim];
-				GetMetricTau(iNode)[iDim] = coordTrans.GetTau()[iDim];
+				GetMetricXi(iNode)[iDim] = metrics.GetXi()[iDim];
+				GetMetricEta(iNode)[iDim] = metrics.GetEta()[iDim];
+				GetMetricZeta(iNode)[iDim] = metrics.GetZeta()[iDim];
+				GetMetricTau(iNode)[iDim] = metrics.GetTau()[iDim];
 			}
-			GetMetricJacob(iNode) = coordTrans.J();
-			if (coordTrans.J() > max_jacobi)
+			GetMetricJacob(iNode) = metrics.Jacobian();
+			if (metrics.Jacobian() > max_jacobi)
 			{
-				max_jacobi = coordTrans.J();
+				max_jacobi = metrics.Jacobian();
 				max_jacobi_index = iNode;
 			}
-			if (coordTrans.J() < min_jacobi)
+			if (metrics.Jacobian() < min_jacobi)
 			{
-				min_jacobi = coordTrans.J();
+				min_jacobi = metrics.Jacobian();
 				min_jacobi_index = iNode;
 			}
 		}
@@ -87,7 +88,8 @@ namespace zaran
 	void Solver_NS_3D::CalcGradWLS()
 	{
 		Grid* grid = GetGrid();
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
 		int nInnerNode = grid->GetInnerNodeNum();
@@ -152,7 +154,8 @@ namespace zaran
 	void Solver_NS_3D::CalcTimeStepLocal()
 	{
 		Grid* grid = GetGrid();
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeType = nodeTopo->GetType();
 		FlowSolverPara* para = GetPara();
 		double cfl = para->GetCflNumber();
@@ -185,7 +188,8 @@ namespace zaran
 	void Solver_NS_3D::ConvectiveResidual()
 	{
 		Grid* grid = GetGrid();
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeType = nodeTopo->GetType();
 		auto& templateI = nodeTopo->GetTemplateI();
 		auto& templateJ = nodeTopo->GetTemplateJ();
@@ -276,8 +280,9 @@ namespace zaran
 
 	void Solver_NS_3D::CalcForce()
 	{
+		return;
 		Grid* grid = GetGrid();
-		auto& faceTopo = grid->GetFaceTopo();
+		FaceTopo* faceTopo = grid->GetFaceTopo();
 		FlowSolverPara* para = GetPara();
 		const Dimensionless& dimensionless = para->GetDimensionless();
 		int nFace = faceTopo->GetFaceNum();

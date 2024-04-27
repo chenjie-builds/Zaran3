@@ -23,12 +23,11 @@ namespace zaran
         {
             GridBase();
             SetDimension(Dimension::three);
-            m_node_topo = std::make_shared<NodeTopoInfo>();
-            m_face_topo = std::make_shared<FaceTopoInfo>();
-            m_cell_topo = std::make_shared<CellTopoInfoZaran>();
-            m_bound_map = std::make_shared<BoundaryMap>();
-            m_inter_node_info = std::make_shared<InterNodeInfo>();
-            m_bound_patch = std::make_shared<ZaranBoundPatch>();
+            m_node_topo = new NodeTopo();
+            m_face_topo = new FaceTopo();
+            m_cell_topo = new CellTopoZaran();
+            m_bound_map = new BoundaryMap();
+            m_bound_patch = new ZaranBoundPatch();
         }
     public:
         void SetNi(int ni);
@@ -43,16 +42,14 @@ namespace zaran
         void GetNodeIndex(int index, int& i, int& j, int& k);
         int GetCellIndex(int i, int j, int k);
         void GetCellIndex(int index, int& i, int& j, int& k);
-        void SetBoundPatch(const ZaranBoundPatch& bound_patch);
         void SetBox(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax);
         void GetBox(double& xmin, double& xmax, double& ymin, double& ymax, double& zmin, double& zmax);
-        Ptr<CellTopoInfoZaran> GetCellTopo();
-    public:
-        ZaranBoundPatch& GetBoundPatch();
+        CellTopoZaran* GetCellTopo()override;
+        ZaranBoundPatch* GetBoundPatch();
         void GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd);
     private:
         int m_ni, m_nj, m_nk;//三个方向的节点个数
-        Ptr<ZaranBoundPatch> m_bound_patch;
+        ZaranBoundPatch* m_bound_patch;
         double m_xmin, m_xmax, m_ymin, m_ymax, m_zmin, m_zmax;
         double m_dx, m_dy, m_dz;
     };

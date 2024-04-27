@@ -11,10 +11,10 @@ namespace zaran
 	void Solver_NS_2D::InitFieldFarFlow()
 	{
 		Grid* grid = GetGrid();
-		auto& node_topo = grid->GetNodeTopo();
+		NodeTopo* node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		FlowSolverPara* para = GetPara();
-		const InitFieldType&  init_type = para->GetInitFieldType();
+		const InitFieldType& init_type = para->GetInitFieldType();
 		double prim_init[5];
 		prim_init[0] = para->GetInflowDensity();
 		prim_init[1] = para->GetInflowVelocityX();
@@ -35,10 +35,10 @@ namespace zaran
 	void Solver_NS_2D::InitFieldNoFlow()
 	{
 		Grid* grid = GetGrid();
-		auto& node_topo = grid->GetNodeTopo();
+		NodeTopo* node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		FlowSolverPara* para = GetPara();
-		const InitFieldType&  init_type = para->GetInitFieldType();
+		const InitFieldType& init_type = para->GetInitFieldType();
 		double prim_init[5];
 		prim_init[0] = para->GetInflowDensity();
 		prim_init[1] = para->GetInflowVelocityX();
@@ -59,10 +59,10 @@ namespace zaran
 	void Solver_NS_2D::InitFieldShockReflection()
 	{
 		Grid* grid = GetGrid();
-		auto& node_topo = grid->GetNodeTopo();
+		NodeTopo* node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		FlowSolverPara* para = GetPara();
-		const InitFieldType&  init_type = para->GetInitFieldType();
+		const InitFieldType& init_type = para->GetInitFieldType();
 		double prim_init[5];
 		prim_init[0] = 6.4;
 		prim_init[1] = 3.125;
@@ -97,7 +97,7 @@ namespace zaran
 	void Solver_NS_2D::InitFieldIsentropicVortex()
 	{
 		Grid* grid = GetGrid();
-		auto& node_topo = grid->GetNodeTopo();
+		NodeTopo* node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		int total_node_num = grid->GetTotalNodeNum();
 		double x, y;
@@ -119,7 +119,7 @@ namespace zaran
 	void Solver_NS_2D::CalcMetric()
 	{
 		Grid* grid = GetGrid();
-		auto& node_topo = grid->GetNodeTopo();
+		NodeTopo* node_topo = grid->GetNodeTopo();
 		auto& coord = node_topo->GetCoordinate();
 		auto& node_type = node_topo->GetType();
 		auto& tempI = node_topo->GetTemplateI();
@@ -136,19 +136,19 @@ namespace zaran
 			y_left = coord[tempJ[iNode][0]];
 			y_right = coord[tempJ[iNode][2]];
 			coord_trans_coef.CalcCoordTrans(int(grid->GetDimension()), x_right, x_left, y_right, y_left);
-			if (coord_trans_coef.J() < 0)
+			if (coord_trans_coef.Jacobian() < 0)
 			{
 				tempJ[iNode] = IArray{ tempJ[iNode][2], tempJ[iNode][1], tempJ[iNode][0] };
 				coord_trans_coef.CalcCoordTrans(int(grid->GetDimension()), x_right, x_left, y_left, y_right);
 			}
-			if (abs(coord_trans_coef.J()) < SMALL_NUMBER || isnan(abs(coord_trans_coef.J())) || isinf((coord_trans_coef.J())))
+			if (abs(coord_trans_coef.Jacobian()) < SMALL_NUMBER || isnan(abs(coord_trans_coef.Jacobian())) || isinf((coord_trans_coef.Jacobian())))
 			{
 				IArray currentTempI = { tempI[iNode][0], tempI[iNode][1], tempJ[iNode][0] };
 				IArray currentTempJ = { tempI[iNode][2], tempJ[iNode][1], tempJ[iNode][0] };
 				tempI[iNode] = currentTempI;
 				tempJ[iNode] = currentTempJ;
 				coord_trans_coef.CalcCoordTrans(int(grid->GetDimension()), x_left, y_left, x_right, y_right);
-				if (coord_trans_coef.J() < 0)
+				if (coord_trans_coef.Jacobian() < 0)
 				{
 					tempJ[iNode] = IArray{ tempJ[iNode][2], tempJ[iNode][1], tempJ[iNode][0] };
 					coord_trans_coef.CalcCoordTrans(int(grid->GetDimension()), x_left, y_left, y_right, x_right);
@@ -156,7 +156,7 @@ namespace zaran
 			}
 
 			// check coordinate
-			if (coord_trans_coef.J() > 1e15 || coord_trans_coef.J() < 0)
+			if (coord_trans_coef.Jacobian() > 1e15 || coord_trans_coef.Jacobian() < 0)
 			{
 				Log::warn("Node {}: {},{},{}", iNode, coord[iNode].x(), coord[iNode].y(), coord[iNode].z());
 				Log::info("x_left index={}: {},{},{}", tempI[iNode][0], x_left.x(), x_left.y(), x_left.z());
@@ -180,13 +180,13 @@ namespace zaran
 			GetMetricTau(iNode)[1] = coord_trans_coef.GetTau()[1];
 			GetMetricTau(iNode)[2] = coord_trans_coef.GetTau()[2];
 			GetMetricTau(iNode)[3] = coord_trans_coef.GetTau()[3];
-			GetMetricJacob(iNode) = coord_trans_coef.J();
+			GetMetricJacob(iNode) = coord_trans_coef.Jacobian();
 		}
 	}
 	void Solver_NS_2D::CalcGradWLS()
 	{
 		Grid* grid = GetGrid();
-		auto& node_topo = grid->GetNodeTopo();
+		NodeTopo* node_topo = grid->GetNodeTopo();
 		auto& node_type = node_topo->GetType();
 		auto& coord = node_topo->GetCoordinate();
 		auto& neighbor = node_topo->GetNeighborCloud();
@@ -233,7 +233,7 @@ namespace zaran
 	void Solver_NS_2D::CalcTimeStepLocal()
 	{
 		Grid* grid = GetGrid();
-		auto& node_topo = grid->GetNodeTopo();
+		NodeTopo* node_topo = grid->GetNodeTopo();
 		auto& node_type = node_topo->GetType();
 		FlowSolverPara* para = GetPara();
 		double cfl = para->GetCflNumber();
@@ -260,7 +260,7 @@ namespace zaran
 	void Solver_NS_2D::ConvectiveResidual()
 	{
 		Grid* grid = GetGrid();
-		auto& node_topo = grid->GetNodeTopo();
+		NodeTopo* node_topo = grid->GetNodeTopo();
 		auto& node_type = node_topo->GetType();
 		auto& node_coord = node_topo->GetCoordinate();
 		auto& template_i = node_topo->GetTemplateI();
@@ -280,11 +280,11 @@ namespace zaran
 			MidPointReconstruct(template_i[iNode][1], template_i[iNode][2], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-				GetResidual(iNode,iVal) += riemann_para.flux[iVal] / jacobi;
+				GetResidual(iNode, iVal) += riemann_para.flux[iVal] / jacobi;
 			MidPointReconstruct(template_i[iNode][0], template_i[iNode][1], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-				GetResidual(iNode,iVal) -= riemann_para.flux[iVal] / jacobi;
+				GetResidual(iNode, iVal) -= riemann_para.flux[iVal] / jacobi;
 			// j direction
 			riemann_para.norm(0) = GetMetricEta(iNode)[0];
 			riemann_para.norm(1) = GetMetricEta(iNode)[1];
@@ -293,11 +293,11 @@ namespace zaran
 			MidPointReconstruct(template_j[iNode][1], template_j[iNode][2], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-				GetResidual(iNode,iVal) += riemann_para.flux[iVal] / jacobi;
+				GetResidual(iNode, iVal) += riemann_para.flux[iVal] / jacobi;
 			MidPointReconstruct(template_j[iNode][0], template_j[iNode][1], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-				GetResidual(iNode,iVal) -= riemann_para.flux[iVal] / jacobi;
+				GetResidual(iNode, iVal) -= riemann_para.flux[iVal] / jacobi;
 		}
 	}
 
@@ -314,7 +314,7 @@ namespace zaran
 	void Solver_NS_2D::SolveHoleNodeFNFDM()
 	{
 		Grid* grid = GetGrid();
-		auto& node_topo = grid->GetNodeTopo();
+		NodeTopo* node_topo = grid->GetNodeTopo();
 		auto& node_type = node_topo->GetType();
 		auto& template_i = node_topo->GetTemplateI();
 		auto& template_j = node_topo->GetTemplateJ();
@@ -345,7 +345,7 @@ namespace zaran
 			}
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-				GetResidual(iNode,iVal) += riemann_para.flux[iVal] / jacobi;
+				GetResidual(iNode, iVal) += riemann_para.flux[iVal] / jacobi;
 			r[0] = coord[tempI[0]][0] - coord[iNode][0];
 			r[1] = coord[tempI[0]][1] - coord[iNode][1];
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -355,7 +355,7 @@ namespace zaran
 			}
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-				GetResidual(iNode,iVal) -= riemann_para.flux[iVal] / jacobi;
+				GetResidual(iNode, iVal) -= riemann_para.flux[iVal] / jacobi;
 
 			// j direction
 			riemann_para.norm(0) = GetMetricEta(iNode)[0];
@@ -372,7 +372,7 @@ namespace zaran
 			}
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
-				GetResidual(iNode,iVal) += riemann_para.flux[iVal] / jacobi;
+				GetResidual(iNode, iVal) += riemann_para.flux[iVal] / jacobi;
 			r[0] = coord[tempJ[0]][0] - coord[iNode][0];
 			r[1] = coord[tempJ[0]][1] - coord[iNode][1];
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
@@ -383,18 +383,18 @@ namespace zaran
 			riemannSolver_->Solver(riemann_para);
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
-				GetResidual(iNode,iVal) -= riemann_para.flux[iVal] / jacobi;
-				if (isnan(GetResidual(iNode,iVal)) || isinf(GetResidual(iNode,iVal)))
+				GetResidual(iNode, iVal) -= riemann_para.flux[iVal] / jacobi;
+				if (isnan(GetResidual(iNode, iVal)) || isinf(GetResidual(iNode, iVal)))
 					Log::error("inode={},NAN in Residual!", iNode);
-				GetCons(iNode, iVal) -= GetResidual(iNode,iVal) * m_dt[iNode] * GetMetricJacob(iNode);
-				GetResidual(iNode,iVal) = 0;
+				GetCons(iNode, iVal) -= GetResidual(iNode, iVal) * m_dt[iNode] * GetMetricJacob(iNode);
+				GetResidual(iNode, iVal) = 0;
 			}
 		}
 	}
 	void Solver_NS_2D::SolveHoleNodeIDW()
 	{
 		Grid* grid = GetGrid();
-		auto& node_topo = grid->GetNodeTopo();
+		NodeTopo* node_topo = grid->GetNodeTopo();
 		auto& node_type = node_topo->GetType();
 		auto& neibor = node_topo->GetNeighborCloud();
 		auto& coord = node_topo->GetCoordinate();
@@ -422,7 +422,7 @@ namespace zaran
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
 				m_prim[iVal][iNode] = 0;
-				GetResidual(iNode,iVal) = 0;
+				GetResidual(iNode, iVal) = 0;
 				for (int iNeib = 0; iNeib < neiborNode.size(); ++iNeib)
 				{
 					m_prim[iVal][iNode] += m_prim[iVal][neiborNode[iNeib]] * weight[iNeib];
@@ -440,7 +440,7 @@ namespace zaran
 	void Solver_NS_2D::SolveUserDefinedBoundary()
 	{
 		Grid* grid = GetGrid();
-		auto& node_topo = grid->GetNodeTopo();
+		NodeTopo* node_topo = grid->GetNodeTopo();
 		auto& node_type = node_topo->GetType();
 		auto& neibor = node_topo->GetNeighborCloud();
 		auto& coord = node_topo->GetCoordinate();
@@ -458,7 +458,7 @@ namespace zaran
 			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
 			{
 				m_prim[iVal][iNode] = prim_ideal(iVal);
-				GetResidual(iNode,iVal) = 0;
+				GetResidual(iNode, iVal) = 0;
 			}
 			Prim2Cons(m_prim[0][iNode], m_prim[1][iNode], m_prim[2][iNode], m_prim[3][iNode], m_prim[4][iNode], GetCons(iNode, 0), GetCons(iNode, 1), GetCons(iNode, 2), GetCons(iNode, 3), GetCons(iNode, 4));
 		}

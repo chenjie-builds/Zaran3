@@ -22,11 +22,11 @@ namespace zaran
         Unknown=5,//未知单元
 
     };
-    class CellTopoInfoZaran : public CellTopoInfo
+    class CellTopoZaran : public CellTopo
     {
     public:
-        CellTopoInfoZaran();
-        ~CellTopoInfoZaran();
+        CellTopoZaran();
+        ~CellTopoZaran();
         void SetType(Array<CellType>& cellType);
         Array<CellType>& GetType();
     private:

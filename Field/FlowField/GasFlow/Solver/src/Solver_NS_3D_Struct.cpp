@@ -14,7 +14,8 @@ namespace zaran
 		int iNode;
 		// grid->GetNodeIndex(i, j, k)的lamda表达式
 		auto NodeIndex = [&](int i, int j, int k) {return grid->GetNodeIndex(i, j, k); };
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeType = nodeTopo->GetType();
 		CoordTrans coordTrans;
@@ -42,7 +43,7 @@ namespace zaran
 					GetMetricTau(iNode)[1] = coordTrans.GetTau()[1];
 					GetMetricTau(iNode)[2] = coordTrans.GetTau()[2];
 					GetMetricTau(iNode)[3] = coordTrans.GetTau()[3];
-					GetMetricJacob(iNode) = coordTrans.J();
+					GetMetricJacob(iNode) = coordTrans.Jacobian();
 				}
 			}
 		}
@@ -51,7 +52,8 @@ namespace zaran
 	void Solver_NS_3D_Struct::CalcGradWLS()
 	{
 		Grid_Struct_3D* grid = GetGrid();
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		FlowSolverPara* para = GetPara();
 		auto& prim = m_prim;
@@ -126,7 +128,8 @@ namespace zaran
 	void Solver_NS_3D_Struct::ConvectiveResidual()
 	{
 		Grid_Struct_3D* grid = GetGrid();
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeType = nodeTopo->GetType();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& prim = m_prim;
@@ -262,7 +265,8 @@ namespace zaran
 	void Solver_NS_3D_Struct::CalcTimeStepLocal()
 	{
 		Grid_Struct_3D* grid = GetGrid();
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeType = nodeTopo->GetType();
 		FlowSolverPara* para = GetPara();
 		double cfl = para->GetCflNumber();
@@ -299,7 +303,8 @@ namespace zaran
 	void Solver_NS_3D_Struct::CalcLimiter()
 	{
 		Grid_Struct_3D* grid = GetGrid();
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
 		auto& prim = m_prim;

@@ -5,16 +5,10 @@
 //*	License																		||
 //*	This file is part of ZaRan.													||
 //*																				||
-//*	@file	NodeTopoInfoStruct.h												||
-//*	@brief	结构网格节点拓扑信息, 还未完成, 后期可能删除							||
+//*	@file	Gradient.h															||
+//*	@brief	根据流场信息，求出对应的梯度    										||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include "NodeTopoInfo.h"
-namespace zaran
-{
-	class NodeTopoInfoStruct:public NodeTopo
-	{
-	protected:
-	};
-}
+
+//todo

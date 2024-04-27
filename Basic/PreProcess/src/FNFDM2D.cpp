@@ -11,7 +11,7 @@ namespace zaran
 		{
 			delete[] grid;
 		}
-		grid= new Grid();
+		grid = new Grid();
 		grid->SetDimension(Dimension::two);
 		grid->SetName("FNFDM2D");
 		grid->SetType(GridType::Flexible);
@@ -20,13 +20,14 @@ namespace zaran
 		fin.open(fileName, std::ios_base::in);
 		if (!fin.is_open())
 		{
-			Log::error("Grid File:{} is NOT exist! Please Check!", fileName);
+			Log::error("Grid File:{} is NOT exist! Please Check!, file: {}, line: {}.", fileName, __FILE__, __LINE__);
 			system("pause");
 		}
 		int nNode;
 		fin >> nNode;
 		grid->SetTotalNodeNum(nNode);
-		auto& nodeTopo = grid->GetNodeTopo();
+		NodeTopo* nodeTopo = grid->GetNodeTopo();
+
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeType = nodeTopo->GetType();
 		nodeType.resize(nNode);
@@ -61,7 +62,7 @@ namespace zaran
 			temp_j[nodeIndex] = IArray{ neiborNodeIndex[2],nodeIndex,neiborNodeIndex[3] };
 			nodeNeibor[nodeIndex] = neiborNodeIndex;
 		}
-		auto& boundMap = grid->GetBoundaryMap();
+		BoundaryMap* boundMap = grid->GetBoundaryMap();
 		int nBoundNode;
 		fin >> nBoundNode;
 		int boundNodeIndex, boundType, innerNodeIndex;
@@ -101,7 +102,7 @@ namespace zaran
 		}
 		int nCell;
 		fin >> nCell;
-		auto& cellTopo = grid->GetCellTopo();
+		CellTopo* cellTopo = grid->GetCellTopo();
 		auto& cell_node = cellTopo->GetNodeIndex();
 		cell_node.resize(nCell);
 		IArray cellNeiborNodeIndex(4);

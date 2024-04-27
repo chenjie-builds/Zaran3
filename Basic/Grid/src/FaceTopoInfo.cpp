@@ -2,12 +2,12 @@
 #include"Log.h"
 namespace zaran
 {
-	FaceTopoInfo::FaceTopoInfo()
+	FaceTopo::FaceTopo()
 	{
 
 	}
 
-	FaceTopoInfo::~FaceTopoInfo()
+	FaceTopo::~FaceTopo()
 	{
 		if (m_face2node)
 			delete[] m_face2node;
@@ -23,7 +23,7 @@ namespace zaran
 			delete[] m_normal;
 	}
 
-	void FaceTopoInfo::Allocate(int nFace, int* face_node_num)
+	void FaceTopo::Allocate(int nFace, int* face_node_num)
 	{
 		m_face_num = nFace;
 		m_face_node_num = new int[nFace];
@@ -41,7 +41,7 @@ namespace zaran
 		m_normal = new double[3 * nFace];
 	}
 
-	void FaceTopoInfo::SetFace2Node(int iFace, int* node, int nNode)
+	void FaceTopo::SetFace2Node(int iFace, int* node, int nNode)
 	{
 		if (nNode != m_face_node_num[iFace])
 		{
