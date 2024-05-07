@@ -17,11 +17,11 @@ namespace zaran
         data->AddData("velocity_y", type, cell_num);
         data->AddData("velocity_w", type, cell_num);
         data->AddData("pressure", type, cell_num);
-        data->AddData("conservative", type, cell_num * GetNumberOfEquations());
-        data->AddData("residual", type, cell_num * GetNumberOfEquations());
+        data->AddData("conservative", type, cell_num * GetEquNum());
+        data->AddData("residual", type, cell_num * GetEquNum());
         data->AddData("dt", type, cell_num);
-        data->AddData("limiter", type, cell_num * GetNumberOfEquations());
-        data->AddData("prim_grad", type, cell_num * GetNumberOfEquations() * 3);
+        data->AddData("limiter", type, cell_num * GetEquNum());
+        data->AddData("prim_grad", type, cell_num * GetEquNum() * 3);
         data->AddData("consRK0", type, cell_num);
         data->AddData("consRK1", type, cell_num);
         data->AddData("consRK2", type, cell_num);
@@ -36,8 +36,8 @@ namespace zaran
         data->AddData("velocity_y_patch", type, bound_node_num);
         data->AddData("velocity_z_patch", type, bound_node_num);
         data->AddData("pressure_patch", type, bound_node_num);
-        data->AddData("prim_grad_patch", type, bound_node_num * GetNumberOfEquations() * 3);
-        data->AddData("limiter_patch", type, bound_node_num * GetNumberOfEquations());
+        data->AddData("prim_grad_patch", type, bound_node_num * GetEquNum() * 3);
+        data->AddData("limiter_patch", type, bound_node_num * GetEquNum());
 
     }
 
@@ -352,7 +352,7 @@ namespace zaran
                     r[0] = cell_center_coord[right_index].x() - cell_center_coord[left_index].x();
                     r[1] = cell_center_coord[right_index].y() - cell_center_coord[left_index].y();
                     r[2] = cell_center_coord[right_index].z() - cell_center_coord[left_index].z();
-                    for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                    for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                     {
                         grad(0) = GetPrimGrad(left_index, iVal, 0);
                         grad(1) = GetPrimGrad(left_index, iVal, 1);
@@ -365,7 +365,7 @@ namespace zaran
                     }
                     riemannSolver_->Solver(riemann_para);
 
-                    for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                    for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                     {
                         GetResidual(iCell, iVal) += riemann_para.flux(iVal) / jacobi;
                     }
@@ -376,7 +376,7 @@ namespace zaran
                     r[0] = cell_center_coord[right_index].x() - cell_center_coord[left_index].x();
                     r[1] = cell_center_coord[right_index].y() - cell_center_coord[left_index].y();
                     r[2] = cell_center_coord[right_index].z() - cell_center_coord[left_index].z();
-                    for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                    for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                     {
 
                         grad(0) = GetPrimGrad(left_index, iVal, 0);
@@ -389,7 +389,7 @@ namespace zaran
                         riemann_para.prim_right(iVal) = m_prim[iVal][right_index] - 0.5 * GetLimiter(right_index, iVal) * grad.dot(r);
                     }
                     riemannSolver_->Solver(riemann_para);
-                    for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                    for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                     {
                         GetResidual(iCell, iVal) -= riemann_para.flux(iVal) / jacobi;
                     }
@@ -403,7 +403,7 @@ namespace zaran
                     r[0] = cell_center_coord[right_index].x() - cell_center_coord[left_index].x();
                     r[1] = cell_center_coord[right_index].y() - cell_center_coord[left_index].y();
                     r[2] = cell_center_coord[right_index].z() - cell_center_coord[left_index].z();
-                    for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                    for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                     {
                         grad(0) = GetPrimGrad(left_index, iVal, 0);
                         grad(1) = GetPrimGrad(left_index, iVal, 1);
@@ -415,7 +415,7 @@ namespace zaran
                         riemann_para.prim_right(iVal) = m_prim[iVal][right_index] - 0.5 * GetLimiter(right_index, iVal) * grad.dot(r);
                     }
                     riemannSolver_->Solver(riemann_para);
-                    for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                    for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                     {
                         GetResidual(iCell, iVal) += riemann_para.flux(iVal) / jacobi;
                     }
@@ -425,7 +425,7 @@ namespace zaran
                     r[0] = cell_center_coord[right_index].x() - cell_center_coord[left_index].x();
                     r[1] = cell_center_coord[right_index].y() - cell_center_coord[left_index].y();
                     r[2] = cell_center_coord[right_index].z() - cell_center_coord[left_index].z();
-                    for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                    for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                     {
                         grad(0) = GetPrimGrad(left_index, iVal, 0);
                         grad(1) = GetPrimGrad(left_index, iVal, 1);
@@ -437,7 +437,7 @@ namespace zaran
                         riemann_para.prim_right(iVal) = m_prim[iVal][right_index] - 0.5 * GetLimiter(right_index, iVal) * grad.dot(r);
                     }
                     riemannSolver_->Solver(riemann_para);
-                    for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                    for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                     {
                         GetResidual(iCell, iVal) -= riemann_para.flux(iVal) / jacobi;
                     }
@@ -451,7 +451,7 @@ namespace zaran
                     r[0] = cell_center_coord[right_index].x() - cell_center_coord[left_index].x();
                     r[1] = cell_center_coord[right_index].y() - cell_center_coord[left_index].y();
                     r[2] = cell_center_coord[right_index].z() - cell_center_coord[left_index].z();
-                    for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                    for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                     {
                         grad(0) = GetPrimGrad(left_index, iVal, 0);
                         grad(1) = GetPrimGrad(left_index, iVal, 1);
@@ -463,7 +463,7 @@ namespace zaran
                         riemann_para.prim_right(iVal) = m_prim[iVal][right_index] - 0.5 * GetLimiter(right_index, iVal) * grad.dot(r);
                     }
                     riemannSolver_->Solver(riemann_para);
-                    for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                    for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                     {
                         GetResidual(iCell, iVal) += riemann_para.flux(iVal) / jacobi;
                     }
@@ -473,7 +473,7 @@ namespace zaran
                     r[0] = cell_center_coord[right_index].x() - cell_center_coord[left_index].x();
                     r[1] = cell_center_coord[right_index].y() - cell_center_coord[left_index].y();
                     r[2] = cell_center_coord[right_index].z() - cell_center_coord[left_index].z();
-                    for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                    for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                     {
                         grad(0) = GetPrimGrad(left_index, iVal, 0);
                         grad(1) = GetPrimGrad(left_index, iVal, 1);
@@ -485,7 +485,7 @@ namespace zaran
                         riemann_para.prim_right(iVal) = m_prim[iVal][right_index] - 0.5 * GetLimiter(right_index, iVal) * grad.dot(r);
                     }
                     riemannSolver_->Solver(riemann_para);
-                    for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                    for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                     {
                         GetResidual(iCell, iVal) -= riemann_para.flux(iVal) / jacobi;
                     }
@@ -548,7 +548,7 @@ namespace zaran
             left_index = CellIndex(i, j, k);
             right_index = CellIndex(i + 1, j, k);
             coord_left = cell_center_coord[left_index];
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 prim_left[iVal] = m_prim[iVal][left_index];
                 prim_left_gradX[iVal] = GetPrimGrad(left_index, iVal, 0);
@@ -559,7 +559,7 @@ namespace zaran
             if (cell_type[right_index] == CellType::Solid)
             {
                 coord_right = bound_node_coord[iPatch];
-                for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                 {
                     prim_right[iVal] = m_prim_bound[iVal][iPatch];
                     prim_right_gradX[iVal] = GetPrimGradBound(iPatch, iVal, 0);
@@ -571,7 +571,7 @@ namespace zaran
             else
             {
                 coord_right = cell_center_coord[right_index];
-                for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                 {
                     prim_right[iVal] = m_prim[iVal][right_index];
                     prim_right_gradX[iVal] = GetPrimGrad(right_index, iVal, 0);
@@ -583,7 +583,7 @@ namespace zaran
             r[0] = coord_right.x() - coord_left.x();
             r[1] = coord_right.y() - coord_left.y();
             r[2] = coord_right.z() - coord_left.z();
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 grad(0) = prim_left_gradX[iVal];
                 grad(1) = prim_left_gradY[iVal];
@@ -595,7 +595,7 @@ namespace zaran
                 riemann_para.prim_right(iVal) = prim_right[iVal] - 0.5 * limiterCoef_right[iVal] * grad.dot(r);
             }
             riemannSolver_->Solver(riemann_para);
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 GetResidual(iCell, iVal) += riemann_para.flux(iVal) / jacobi;
             }
@@ -603,7 +603,7 @@ namespace zaran
             left_index = CellIndex(i - 1, j, k);
             right_index = CellIndex(i, j, k);
             coord_right = cell_center_coord[right_index];
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 prim_right[iVal] = m_prim[iVal][right_index];
                 prim_right_gradX[iVal] = GetPrimGrad(right_index, iVal, 0);
@@ -615,7 +615,7 @@ namespace zaran
             if (cell_type[left_index] == CellType::Solid)
             {
                 coord_left = bound_node_coord[iPatch];
-                for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                 {
                     prim_left[iVal] = m_prim_bound[iVal][iPatch];
                     prim_left_gradX[iVal] = GetPrimGradBound(iPatch, iVal, 0);
@@ -627,7 +627,7 @@ namespace zaran
             else
             {
                 coord_left = cell_center_coord[left_index];
-                for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                 {
                     prim_left[iVal] = m_prim[iVal][left_index];
                     prim_left_gradX[iVal] = GetPrimGrad(left_index, iVal, 0);
@@ -639,7 +639,7 @@ namespace zaran
             r[0] = coord_right.x() - coord_left.x();
             r[1] = coord_right.y() - coord_left.y();
             r[2] = coord_right.z() - coord_left.z();
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 grad(0) = prim_left_gradX[iVal];
                 grad(1) = prim_left_gradY[iVal];
@@ -651,7 +651,7 @@ namespace zaran
                 riemann_para.prim_right(iVal) = prim_right[iVal] - 0.5 * limiterCoef_right[iVal] * grad.dot(r);
             }
             riemannSolver_->Solver(riemann_para);
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 GetResidual(iCell, iVal) -= riemann_para.flux(iVal) / jacobi;
             }
@@ -663,7 +663,7 @@ namespace zaran
             left_index = CellIndex(i, j, k);
             right_index = CellIndex(i, j + 1, k);
             coord_left = cell_center_coord[left_index];
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 prim_left[iVal] = m_prim[iVal][left_index];
                 prim_left_gradX[iVal] = GetPrimGrad(left_index, iVal, 0);
@@ -675,7 +675,7 @@ namespace zaran
             if (cell_type[right_index] == CellType::Solid)
             {
                 coord_right = bound_node_coord[iPatch];
-                for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                 {
                     prim_right[iVal] = m_prim_bound[iVal][iPatch];
                     prim_right_gradX[iVal] = GetPrimGradBound(iPatch, iVal, 0);
@@ -687,7 +687,7 @@ namespace zaran
             else
             {
                 coord_right = cell_center_coord[right_index];
-                for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                 {
                     prim_right[iVal] = m_prim[iVal][right_index];
                     prim_right_gradX[iVal] = GetPrimGrad(right_index, iVal, 0);
@@ -699,7 +699,7 @@ namespace zaran
             r[0] = coord_right.x() - coord_left.x();
             r[1] = coord_right.y() - coord_left.y();
             r[2] = coord_right.z() - coord_left.z();
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 grad(0) = prim_left_gradX[iVal];
                 grad(1) = prim_left_gradY[iVal];
@@ -711,7 +711,7 @@ namespace zaran
                 riemann_para.prim_right(iVal) = prim_right[iVal] - 0.5 * limiterCoef_right[iVal] * grad.dot(r);
             }
             riemannSolver_->Solver(riemann_para);
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 GetResidual(iCell, iVal) += riemann_para.flux(iVal) / jacobi;
             }
@@ -719,7 +719,7 @@ namespace zaran
             left_index = CellIndex(i, j - 1, k);
             right_index = CellIndex(i, j, k);
             coord_right = cell_center_coord[right_index];
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 prim_right[iVal] = m_prim[iVal][right_index];
                 prim_right_gradX[iVal] = GetPrimGrad(right_index, iVal, 0);
@@ -731,7 +731,7 @@ namespace zaran
             if (cell_type[left_index] == CellType::Solid)
             {
                 coord_left = bound_node_coord[iPatch];
-                for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                 {
                     prim_left[iVal] = m_prim_bound[iVal][iPatch];
                     prim_left_gradX[iVal] = GetPrimGradBound(iPatch, iVal, 0);
@@ -743,7 +743,7 @@ namespace zaran
             else
             {
                 coord_left = cell_center_coord[left_index];
-                for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                 {
                     prim_left[iVal] = m_prim[iVal][left_index];
                     prim_left_gradX[iVal] = GetPrimGrad(left_index, iVal, 0);
@@ -755,7 +755,7 @@ namespace zaran
             r[0] = coord_right.x() - coord_left.x();
             r[1] = coord_right.y() - coord_left.y();
             r[2] = coord_right.z() - coord_left.z();
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 grad(0) = prim_left_gradX[iVal];
                 grad(1) = prim_left_gradY[iVal];
@@ -767,7 +767,7 @@ namespace zaran
                 riemann_para.prim_right(iVal) = prim_right[iVal] - 0.5 * limiterCoef_right[iVal] * grad.dot(r);
             }
             riemannSolver_->Solver(riemann_para);
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 GetResidual(iCell, iVal) -= riemann_para.flux(iVal) / jacobi;
             }
@@ -779,7 +779,7 @@ namespace zaran
             left_index = CellIndex(i, j, k);
             right_index = CellIndex(i, j, k + 1);
             coord_left = cell_center_coord[left_index];
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 prim_left[iVal] = m_prim[iVal][left_index];
                 prim_left_gradX[iVal] = GetPrimGrad(left_index, iVal, 0);
@@ -791,7 +791,7 @@ namespace zaran
             if (cell_type[right_index] == CellType::Solid)
             {
                 coord_right = bound_node_coord[iPatch];
-                for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                 {
                     prim_right[iVal] = m_prim_bound[iVal][iPatch];
                     prim_right_gradX[iVal] = GetPrimGradBound(iPatch, iVal, 0);
@@ -803,7 +803,7 @@ namespace zaran
             else
             {
                 coord_right = cell_center_coord[right_index];
-                for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                 {
                     prim_right[iVal] = m_prim[iVal][right_index];
                     prim_right_gradX[iVal] = GetPrimGrad(right_index, iVal, 0);
@@ -815,7 +815,7 @@ namespace zaran
             r[0] = coord_right.x() - coord_left.x();
             r[1] = coord_right.y() - coord_left.y();
             r[2] = coord_right.z() - coord_left.z();
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 grad(0) = prim_left_gradX[iVal];
                 grad(1) = prim_left_gradY[iVal];
@@ -827,7 +827,7 @@ namespace zaran
                 riemann_para.prim_right(iVal) = prim_right[iVal] - 0.5 * limiterCoef_right[iVal] * grad.dot(r);
             }
             riemannSolver_->Solver(riemann_para);
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 GetResidual(iCell, iVal) += riemann_para.flux(iVal) / jacobi;
             }
@@ -835,7 +835,7 @@ namespace zaran
             left_index = CellIndex(i, j, k - 1);
             right_index = CellIndex(i, j, k);
             coord_right = cell_center_coord[right_index];
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 prim_right[iVal] = m_prim[iVal][right_index];
                 prim_right_gradX[iVal] = GetPrimGrad(right_index, iVal, 0);
@@ -847,7 +847,7 @@ namespace zaran
             if (cell_type[left_index] == CellType::Solid)
             {
                 coord_left = bound_node_coord[iPatch];
-                for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                 {
                     prim_left[iVal] = m_prim_bound[iVal][iPatch];
                     prim_left_gradX[iVal] = GetPrimGradBound(iPatch, iVal, 0);
@@ -859,7 +859,7 @@ namespace zaran
             else
             {
                 coord_left = cell_center_coord[left_index];
-                for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+                for (int iVal = 0; iVal < GetEquNum(); ++iVal)
                 {
                     prim_left[iVal] = m_prim[iVal][left_index];
                     prim_left_gradX[iVal] = GetPrimGrad(left_index, iVal, 0);
@@ -871,7 +871,7 @@ namespace zaran
             r[0] = coord_right.x() - coord_left.x();
             r[1] = coord_right.y() - coord_left.y();
             r[2] = coord_right.z() - coord_left.z();
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 grad(0) = prim_left_gradX[iVal];
                 grad(1) = prim_left_gradY[iVal];
@@ -883,7 +883,7 @@ namespace zaran
                 riemann_para.prim_right(iVal) = prim_right[iVal] - 0.5 * limiterCoef_right[iVal] * grad.dot(r);
             }
             riemannSolver_->Solver(riemann_para);
-            for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+            for (int iVal = 0; iVal < GetEquNum(); ++iVal)
             {
                 GetResidual(iCell, iVal) -= riemann_para.flux(iVal) / jacobi;
             }

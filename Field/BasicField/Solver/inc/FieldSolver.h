@@ -45,15 +45,16 @@ namespace zaran
 		virtual void BackupField(std::string&back_folder) = 0;
 
 		// 获取求解器求解方程的个数
-		int GetNumberOfEquations() { return m_NumberOfEquations; }
+		int GetEquNum() { return m_equ_num; }
 		void SetFieldData(FieldData* fieldData) ;
 		// 获取Field Data
 		FieldData* GetFieldData() { return m_field_data; }
 	protected:
-		void SetNumberOfEquations(int n) { m_NumberOfEquations = n; }
+		void SetEquNum(int n) { m_equ_num = n; }
 	private:
 		// 求解器求解方程的个数
-		int m_NumberOfEquations;
+		int m_equ_num;
+		// 场数据
 		FieldData* m_field_data;
 	};
 }

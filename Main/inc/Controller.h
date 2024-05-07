@@ -69,8 +69,9 @@ namespace zaran
         int m_field_size;
         Field** m_field;
         Ptr<Visual> m_visual;
-        double maxResidual_;
-        double aveResidual_;
+        double m_max_res;
+        double m_ave_res;
+        bool m_res_flag;
     };
 
 }

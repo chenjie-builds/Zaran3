@@ -87,7 +87,7 @@ namespace zaran
 					neighborNodeIndex[5] = NodeIndex(i, j, k - 1);
 					for (int iNeib = 0; iNeib < neighborNodeIndex.size(); iNeib++)
 						deltaCoord.col(iNeib) = nodeCoord[neighborNodeIndex[iNeib]] - currentCoord;
-					for (size_t iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					for (size_t iVal = 0; iVal < GetEquNum(); ++iVal)
 					{
 						A.setZero();
 						b.setZero();
@@ -156,7 +156,7 @@ namespace zaran
 					riemann_para.norm(2) = GetMetricXi(iNode)[2];
 					riemann_para.nt = GetMetricXi(iNode)[3];
 					r = nodeCoord[NodeIndex(i + 1, j, k)] - nodeCoord[NodeIndex(i, j, k)];
-					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 					{
 						grad(0) = GetPrimGrad(iNode, iVal, 0);
 						grad(1) = GetPrimGrad(iNode, iVal, 1);
@@ -168,10 +168,10 @@ namespace zaran
 						riemann_para.prim_right(iVal) = m_prim[iVal][NodeIndex(i + 1, j, k)] /*- 0.5 * m_limiter[iVal][NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 					}
 					riemannSolver_->Solver(riemann_para);
-					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 						GetResidual(iNode, iVal) += riemann_para.flux[iVal] / jacobi;
 					r = nodeCoord[NodeIndex(i - 1, j, k)] - nodeCoord[NodeIndex(i, j, k)];
-					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 					{
 						grad(0) = GetPrimGrad(iNode, iVal, 0);
 						grad(1) = GetPrimGrad(iNode, iVal, 1);
@@ -183,7 +183,7 @@ namespace zaran
 						riemann_para.prim_left(iVal) = m_prim[iVal][NodeIndex(i - 1, j, k)] /*- 0.5 * m_limiter[iVal][NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 					}
 					riemannSolver_->Solver(riemann_para);
-					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 						GetResidual(iNode, iVal) -= riemann_para.flux[iVal] / jacobi;
 
 					// j direction
@@ -192,7 +192,7 @@ namespace zaran
 					riemann_para.norm(2) = GetMetricEta(iNode)[2];
 					riemann_para.nt = GetMetricEta(iNode)[3];
 					r = nodeCoord[NodeIndex(i, j + 1, k)] - nodeCoord[NodeIndex(i, j, k)];
-					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 					{
 						grad(0) = GetPrimGrad(iNode, iVal, 0);
 						grad(1) = GetPrimGrad(iNode, iVal, 1);
@@ -204,10 +204,10 @@ namespace zaran
 						riemann_para.prim_right(iVal) = m_prim[iVal][NodeIndex(i + 1, j, k)] /*- 0.5 * m_limiter[iVal][NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 					}
 					riemannSolver_->Solver(riemann_para);
-					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 						GetResidual(iNode, iVal) += riemann_para.flux[iVal] / jacobi;
 					r = nodeCoord[NodeIndex(i, j - 1, k)] - nodeCoord[NodeIndex(i, j, k)];
-					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 					{
 						grad(0) = GetPrimGrad(iNode, iVal, 0);
 						grad(1) = GetPrimGrad(iNode, iVal, 1);
@@ -219,7 +219,7 @@ namespace zaran
 						riemann_para.prim_left(iVal) = m_prim[iVal][NodeIndex(i - 1, j, k)] /*- 0.5 * m_limiter[iVal][NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 					}
 					riemannSolver_->Solver(riemann_para);
-					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 						GetResidual(iNode, iVal) -= riemann_para.flux[iVal] / jacobi;
 
 					// k direction
@@ -228,7 +228,7 @@ namespace zaran
 					riemann_para.norm(2) = GetMetricZeta(iNode)[2];
 					riemann_para.nt = GetMetricZeta(iNode)[3];
 					r = nodeCoord[NodeIndex(i, j, k + 1)] - nodeCoord[NodeIndex(i, j, k)];
-					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 					{
 						grad(0) = GetPrimGrad(iNode, iVal, 0);
 						grad(1) = GetPrimGrad(iNode, iVal, 1);
@@ -240,10 +240,10 @@ namespace zaran
 						riemann_para.prim_right(iVal) = m_prim[iVal][NodeIndex(i + 1, j, k)] /*- 0.5 * m_limiter[iVal][NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 					}
 					riemannSolver_->Solver(riemann_para);
-					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 						GetResidual(iNode, iVal) += riemann_para.flux[iVal] / jacobi;
 					r = nodeCoord[NodeIndex(i, j, k - 1)] - nodeCoord[NodeIndex(i, j, k)];
-					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 					{
 						grad(0) = GetPrimGrad(iNode, iVal, 0);
 						grad(1) = GetPrimGrad(iNode, iVal, 1);
@@ -255,7 +255,7 @@ namespace zaran
 						riemann_para.prim_left(iVal) = m_prim[iVal][NodeIndex(i - 1, j, k)] /*- 0.5 * m_limiter[iVal][NodeIndex(i + 1, j, k)] * grad.dot(r)*/;
 					}
 					riemannSolver_->Solver(riemann_para);
-					for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 						GetResidual(iNode, iVal) -= riemann_para.flux[iVal] / jacobi;
 				}
 			}
@@ -329,7 +329,7 @@ namespace zaran
 					neighborNodeIndex[3] = NodeIndex(i, j - 1, k);
 					neighborNodeIndex[4] = NodeIndex(i, j, k + 1);
 					neighborNodeIndex[5] = NodeIndex(i, j, k - 1);
-					for (size_t iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+					for (size_t iVal = 0; iVal < GetEquNum(); ++iVal)
 					{
 						maxVal = minVal = m_prim[iVal][iNode];
 						for (size_t iNeib = 0; iNeib < neighborNodeIndex.size(); ++iNeib)

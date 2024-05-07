@@ -47,12 +47,12 @@ namespace zaran
 
 		//∑√Œ  ˝æ›
 	public:
-		double* GetLimiter(int iNode) { return m_limiter + iNode * GetNumberOfEquations(); }
-		double& GetLimiter(int iNode, int iEqu) { return m_limiter[iNode * GetNumberOfEquations() + iEqu]; }
-		double* GetCons(int iNode) { return m_cons + iNode * GetNumberOfEquations(); }
-		double& GetCons(int iNode, int iEqu) { return m_cons[iNode * GetNumberOfEquations() + iEqu]; }
-		double* GetResidual(int iNode) { return m_residual + iNode * GetNumberOfEquations(); }
-		double& GetResidual(int iNode, int iEqu) { return m_residual[iNode * GetNumberOfEquations() + iEqu]; }
+		double* GetLimiter(int iNode) { return m_limiter + iNode * GetEquNum(); }
+		double& GetLimiter(int iNode, int iEqu) { return m_limiter[iNode * GetEquNum() + iEqu]; }
+		double* GetCons(int iNode) { return m_cons + iNode * GetEquNum(); }
+		double& GetCons(int iNode, int iEqu) { return m_cons[iNode * GetEquNum() + iEqu]; }
+		double* GetResidual(int iNode) { return m_residual + iNode * GetEquNum(); }
+		double& GetResidual(int iNode, int iEqu) { return m_residual[iNode * GetEquNum() + iEqu]; }
 		double& GetTemperture(int iNode, int iEqu) { return m_temperture[iNode]; }
 		double* GetMetric(int iNode) { return m_metric + iNode * 17; }
 		double* GetMetricXi(int iNode) { return m_metric + iNode * 17; }
@@ -60,8 +60,8 @@ namespace zaran
 		double* GetMetricZeta(int iNode) { return m_metric + iNode * 17 + 8; }
 		double* GetMetricTau(int iNode) { return m_metric + iNode * 17 + 12; }
 		double& GetMetricJacob(int iNode) { return m_metric[iNode * 17 + 16]; }
-		double* GetViscousFlux(int iNode) { return m_viscous_flux + iNode * GetNumberOfEquations(); }
-		double& GetViscousFlux(int iNode, int iEqu) { return m_viscous_flux[iNode * GetNumberOfEquations() + iEqu]; }
+		double* GetViscousFlux(int iNode) { return m_viscous_flux + iNode * GetEquNum(); }
+		double& GetViscousFlux(int iNode, int iEqu) { return m_viscous_flux[iNode * GetEquNum() + iEqu]; }
 
 	protected:
 		double** m_prim;

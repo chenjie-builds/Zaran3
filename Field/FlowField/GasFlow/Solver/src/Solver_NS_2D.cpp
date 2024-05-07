@@ -204,7 +204,7 @@ namespace zaran
 				continue;
 			auto& current_coord = coord[iNode];
 			auto& current_neighbor = neighbor[iNode];
-			for (size_t iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (size_t iVal = 0; iVal < GetEquNum(); ++iVal)
 			{
 				A.setZero();
 				b.setZero();
@@ -279,11 +279,11 @@ namespace zaran
 			riemann_para.nt = GetMetricXi(iNode)[3];
 			MidPointReconstruct(template_i[iNode][1], template_i[iNode][2], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
 			riemannSolver_->Solver(riemann_para);
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 				GetResidual(iNode, iVal) += riemann_para.flux[iVal] / jacobi;
 			MidPointReconstruct(template_i[iNode][0], template_i[iNode][1], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
 			riemannSolver_->Solver(riemann_para);
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 				GetResidual(iNode, iVal) -= riemann_para.flux[iVal] / jacobi;
 			// j direction
 			riemann_para.norm(0) = GetMetricEta(iNode)[0];
@@ -292,11 +292,11 @@ namespace zaran
 			riemann_para.nt = GetMetricEta(iNode)[3];
 			MidPointReconstruct(template_j[iNode][1], template_j[iNode][2], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
 			riemannSolver_->Solver(riemann_para);
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 				GetResidual(iNode, iVal) += riemann_para.flux[iVal] / jacobi;
 			MidPointReconstruct(template_j[iNode][0], template_j[iNode][1], &riemann_para.prim_left(0), &riemann_para.prim_right(0));
 			riemannSolver_->Solver(riemann_para);
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 				GetResidual(iNode, iVal) -= riemann_para.flux[iVal] / jacobi;
 		}
 	}
@@ -338,23 +338,23 @@ namespace zaran
 			IArray tempI = template_i[iNode];
 			r[0] = coord[tempI[2]][0] - coord[iNode][0];
 			r[1] = coord[tempI[2]][1] - coord[iNode][1];
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 			{
 				riemann_para.prim_left(iVal) = m_prim[iVal][iNode] + 0.5 * GetLimiter(iNode, iVal) * (r[0] * GetPrimGrad(iNode, iVal, 0) + r[1] * GetPrimGrad(iNode, iVal, 1));
 				riemann_para.prim_right(iVal) = m_prim[iVal][tempI[2]] - 0.5 * GetLimiter(tempI[2], iVal) * (r[0] * GetPrimGrad(tempI[2], iVal, 0) + r[1] * GetPrimGrad(tempI[2], iVal, 1));
 			}
 			riemannSolver_->Solver(riemann_para);
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 				GetResidual(iNode, iVal) += riemann_para.flux[iVal] / jacobi;
 			r[0] = coord[tempI[0]][0] - coord[iNode][0];
 			r[1] = coord[tempI[0]][1] - coord[iNode][1];
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 			{
 				riemann_para.prim_left(iVal) = m_prim[iVal][tempI[0]] - 0.5 * GetLimiter(tempI[0], iVal) * (r[0] * GetPrimGrad(tempI[0], iVal, 0) + r[1] * GetPrimGrad(tempI[0], iVal, 1));
 				riemann_para.prim_right(iVal) = m_prim[iVal][iNode] + 0.5 * GetLimiter(iNode, iVal) * (r[0] * GetPrimGrad(iNode, iVal, 0) + r[1] * GetPrimGrad(iNode, iVal, 1));
 			}
 			riemannSolver_->Solver(riemann_para);
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 				GetResidual(iNode, iVal) -= riemann_para.flux[iVal] / jacobi;
 
 			// j direction
@@ -365,23 +365,23 @@ namespace zaran
 			IArray tempJ = template_j[iNode];
 			r[0] = coord[tempJ[2]][0] - coord[iNode][0];
 			r[1] = coord[tempJ[2]][1] - coord[iNode][1];
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 			{
 				riemann_para.prim_left(iVal) = m_prim[iVal][iNode] + 0.5 * GetLimiter(iNode, iVal) * (r[0] * GetPrimGrad(iNode, iVal, 0) + r[1] * GetPrimGrad(iNode, iVal, 1));
 				riemann_para.prim_right(iVal) = m_prim[iVal][tempJ[2]] - 0.5 * GetLimiter(tempJ[2], iVal) * (r[0] * GetPrimGrad(tempJ[2], iVal, 0) + r[1] * GetPrimGrad(tempJ[2], iVal, 1));
 			}
 			riemannSolver_->Solver(riemann_para);
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 				GetResidual(iNode, iVal) += riemann_para.flux[iVal] / jacobi;
 			r[0] = coord[tempJ[0]][0] - coord[iNode][0];
 			r[1] = coord[tempJ[0]][1] - coord[iNode][1];
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 			{
 				riemann_para.prim_left(iVal) = m_prim[iVal][tempJ[0]] - 0.5 * GetLimiter(tempJ[0], iVal) * (r[0] * GetPrimGrad(tempJ[0], iVal, 0) + r[1] * GetPrimGrad(tempJ[0], iVal, 1));
 				riemann_para.prim_right(iVal) = m_prim[iVal][iNode] + 0.5 * GetLimiter(iNode, iVal) * (r[0] * GetPrimGrad(iNode, iVal, 0) + r[1] * GetPrimGrad(iNode, iVal, 1));
 			}
 			riemannSolver_->Solver(riemann_para);
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 			{
 				GetResidual(iNode, iVal) -= riemann_para.flux[iVal] / jacobi;
 				if (isnan(GetResidual(iNode, iVal)) || isinf(GetResidual(iNode, iVal)))
@@ -419,7 +419,7 @@ namespace zaran
 			}
 			for (int iNeib = 0; iNeib < neiborNode.size(); ++iNeib)
 				weight[iNeib] = 1.0 / distance[iNeib] / sum;
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 			{
 				m_prim[iVal][iNode] = 0;
 				GetResidual(iNode, iVal) = 0;
@@ -455,7 +455,7 @@ namespace zaran
 			x = coord[iNode].x();
 			y = coord[iNode].y();
 			CalcIsentropicVortex(x, y, 5.0, prim_ideal);
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 			{
 				m_prim[iVal][iNode] = prim_ideal(iVal);
 				GetResidual(iNode, iVal) = 0;

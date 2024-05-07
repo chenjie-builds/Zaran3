@@ -39,7 +39,7 @@ double FlowSolver::ComputeCFL()
 void FlowSolver::ZeroResidual()
 {
 	Grid* grid = GetGrid();
-	int n_equ = GetNumberOfEquations();
+	int n_equ = GetEquNum();
 	int n_node = grid->GetTotalNodeNum();
 
 	for (int iEqu = 0;iEqu < n_equ;iEqu++)

@@ -170,13 +170,16 @@ namespace zaran
 		int tempIndex1, tempIndex2;
 		int boundNodeIndex, connectNodeIndex;
 		Boundary tempBound;
+		DVector3D tempNorm;
 		Log::info("x- boundary node num:{}", nBound);
 		for (size_t i = 0; i < nBound; i++)
 		{
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
 			boundNodeIndex -= 1;
 			connectNodeIndex -= 1;
-			boundMap->AddBoundary("inlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+			tempNorm = nodeCoord[boundNodeIndex] - nodeCoord[connectNodeIndex];
+			tempNorm.normalize();
+			boundMap->AddBoundary("inlet", Boundary{ boundNodeIndex,connectNodeIndex,0,tempNorm });
 			nodeType[boundNodeIndex] = NodeType::inlet;
 		}
 		fin >> nBound;
@@ -187,7 +190,9 @@ namespace zaran
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
 			boundNodeIndex -= 1;
 			connectNodeIndex -= 1;
-			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+			tempNorm = nodeCoord[boundNodeIndex] - nodeCoord[connectNodeIndex];
+			tempNorm.normalize();
+			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,tempNorm });
 			nodeType[boundNodeIndex] = NodeType::outlet;
 		}
 		fin >> nBound;
@@ -198,7 +203,9 @@ namespace zaran
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
 			boundNodeIndex -= 1;
 			connectNodeIndex -= 1;
-			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+			tempNorm = nodeCoord[boundNodeIndex] - nodeCoord[connectNodeIndex];
+			tempNorm.normalize();
+			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,tempNorm });
 			nodeType[boundNodeIndex] = NodeType::outlet;
 		}
 		fin >> nBound;
@@ -209,7 +216,9 @@ namespace zaran
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
 			boundNodeIndex -= 1;
 			connectNodeIndex -= 1;
-			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+			tempNorm = nodeCoord[boundNodeIndex] - nodeCoord[connectNodeIndex];
+			tempNorm.normalize();
+			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,tempNorm });
 			nodeType[boundNodeIndex] = NodeType::outlet;
 		}
 		fin >> nBound;
@@ -220,7 +229,9 @@ namespace zaran
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
 			boundNodeIndex -= 1;
 			connectNodeIndex -= 1;
-			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+			tempNorm = nodeCoord[boundNodeIndex] - nodeCoord[connectNodeIndex];
+			tempNorm.normalize();
+			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,tempNorm });
 			nodeType[boundNodeIndex] = NodeType::outlet;
 		}
 		fin >> nBound;
@@ -231,7 +242,9 @@ namespace zaran
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
 			boundNodeIndex -= 1;
 			connectNodeIndex -= 1;
-			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,DVector3D{} });
+			tempNorm = nodeCoord[boundNodeIndex] - nodeCoord[connectNodeIndex];
+			tempNorm.normalize();
+			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0, tempNorm });
 			nodeType[boundNodeIndex] = NodeType::outlet;
 		}
 		fin >> nBound;
@@ -242,8 +255,9 @@ namespace zaran
 			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
 			boundNodeIndex -= 1;
 			connectNodeIndex -= 1;
-			DVector3D wallNorm = nodeCoord[connectNodeIndex] - nodeCoord[boundNodeIndex];
-			boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,connectNodeIndex,0,wallNorm });
+			tempNorm = nodeCoord[boundNodeIndex] - nodeCoord[connectNodeIndex];
+			tempNorm.normalize();
+			boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,connectNodeIndex,0,tempNorm });
 			nodeType[boundNodeIndex] = NodeType::slipWall;
 		}
 		fin.close();

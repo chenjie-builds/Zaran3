@@ -125,7 +125,7 @@ namespace zaran
 				A(2, 2) += omega * deltaZ * deltaZ;
 			}
 			A_inv = A.inverse();
-			for (size_t iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (size_t iVal = 0; iVal < GetEquNum(); ++iVal)
 			{
 				b.setZero();
 				for (size_t iNeib = 0; iNeib < neighborNodeVec.size(); ++iNeib)
@@ -263,7 +263,7 @@ namespace zaran
 			{
 				riemannSolver_->Solver(riemann_para[i]);
 			}
-			for (int iVar = 0;iVar < GetNumberOfEquations();++iVar)
+			for (int iVar = 0;iVar < GetEquNum();++iVar)
 			{
 				GetResidual(iNode, iVar) = (riemann_para[0].flux[iVar] - riemann_para[1].flux[iVar] + riemann_para[2].flux[iVar] - riemann_para[3].flux[iVar] + riemann_para[4].flux[iVar] - riemann_para[5].flux[iVar]) / jacobi;
 			}

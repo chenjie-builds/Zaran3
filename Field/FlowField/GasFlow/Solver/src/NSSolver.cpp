@@ -46,7 +46,7 @@ namespace zaran {
 		inflow_prim[3] = para->GetInflowVelocityZ();
 		inflow_prim[4] = para->GetInflowPressure();
 		int n_node = grid->GetTotalNodeNum();
-		for (int iVal = 0;iVal < GetNumberOfEquations();++iVal)
+		for (int iVal = 0;iVal < GetEquNum();++iVal)
 		{
 			for (int iNode = 0; iNode < n_node; ++iNode)
 				m_prim[iVal][iNode] = inflow_prim[iVal];
@@ -57,18 +57,33 @@ namespace zaran {
 	{
 		Grid* grid = GetGrid();
 		FlowSolverPara* para = GetPara();
-		double* inflow_prim = new double[5];
+		double inflow_prim[5];
 		inflow_prim[0] = para->GetInflowDensity();
 		inflow_prim[1] = 0.0;
 		inflow_prim[2] = 0.0;
 		inflow_prim[3] = 0.0;
 		inflow_prim[4] = para->GetInflowPressure();
 		int n_node = grid->GetTotalNodeNum();
-		for (int iVal = 0;iVal < GetNumberOfEquations();++iVal)
+		NodeTopo* node_topo = grid->GetNodeTopo();
+		auto& node_coord = node_topo->GetCoordinate();
+		for (int iNode = 0; iNode < n_node; ++iNode)
 		{
-			for (int iNode = 0; iNode < n_node; ++iNode)
+			double x = node_coord[iNode].x();
+			double y = node_coord[iNode].y();
+			double z = node_coord[iNode].z();
+			m_prim[0][iNode] = para->GetInflowDensity();
+			m_prim[4][iNode] = para->GetInflowPressure();
+			if (x > -5.0 && x < 500.0 && y > -90.0 && y < 90.0 && z > -90.0 && z < 90.0)
 			{
-				m_prim[iVal][iNode] = inflow_prim[iVal];
+				m_prim[1][iNode] = 0.0;
+				m_prim[2][iNode] = 0.0;
+				m_prim[3][iNode] = 0.0;
+			}
+			else
+			{
+				m_prim[1][iNode] = para->GetInflowVelocityX();
+				m_prim[2][iNode] = para->GetInflowVelocityY();
+				m_prim[3][iNode] = para->GetInflowVelocityZ();
 			}
 		}
 	}
@@ -87,7 +102,7 @@ namespace zaran {
 		int n_node = grid->GetTotalNodeNum();
 		for (int iNode = 0; iNode < n_node; ++iNode)
 		{
-			for (int iVal = 0;iVal < GetNumberOfEquations();++iVal)
+			for (int iVal = 0;iVal < GetEquNum();++iVal)
 				fin >> m_prim[iVal][iNode];
 		}
 		fin.close();
@@ -96,7 +111,7 @@ namespace zaran {
 	void NSSolver::InitSolver()
 	{
 		Log::info("Initialize NS Solver!");
-		SetNumberOfEquations(5);
+		SetEquNum(5);
 		FlowSolver::InitSolver();
 		std::string riemannSolverType = GlobalData::GetString("riemannSolver");
 		RiemannSolverFactory riemannSolverFactory;
@@ -116,15 +131,15 @@ namespace zaran {
 		data->AddData("velocity_w", type, nTotalNodeNum);
 		data->AddData("pressure", type, nTotalNodeNum);
 		data->AddData("temperture", type, nTotalNodeNum);
-		data->AddData("conservative", type, nTotalNodeNum * GetNumberOfEquations());
+		data->AddData("conservative", type, nTotalNodeNum * GetEquNum());
 		data->AddData("dt", type, nTotalNodeNum);
 		data->AddData("metrics", type, nTotalNodeNum * 17);
 		data->AddData("nonPhysical", FieldDataType::integer, nTotalNodeNum);
-		data->AddData("residual", type, nTotalNodeNum * GetNumberOfEquations());
-		data->AddData("limiter_coef", type, nTotalNodeNum * GetNumberOfEquations());
-		data->AddData("prim_grad", type, nTotalNodeNum * GetNumberOfEquations() * 3);
-		data->AddData("viscous_flux", type, nTotalNodeNum * GetNumberOfEquations());
-		data->AddData("viscous_flux_grad", type, nTotalNodeNum * GetNumberOfEquations() * 3);
+		data->AddData("residual", type, nTotalNodeNum * GetEquNum());
+		data->AddData("limiter_coef", type, nTotalNodeNum * GetEquNum());
+		data->AddData("prim_grad", type, nTotalNodeNum * GetEquNum() * 3);
+		data->AddData("viscous_flux", type, nTotalNodeNum * GetEquNum());
+		data->AddData("viscous_flux_grad", type, nTotalNodeNum * GetEquNum() * 3);
 
 
 	}
@@ -197,7 +212,7 @@ namespace zaran {
 		int n_node = grid->GetTotalNodeNum();
 		for (int iNode = 0; iNode < n_node; ++iNode)
 		{
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 			{
 				fout << m_prim[iVal][iNode] << " ";
 			}
@@ -250,7 +265,7 @@ namespace zaran {
 		NodeTopo* nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		DVector3D r = nodeCoord[index_right] - nodeCoord[index_left];
-		for (int iVal = 0;iVal < GetNumberOfEquations();++iVal)
+		for (int iVal = 0;iVal < GetEquNum();++iVal)
 		{
 			value_rec_left[iVal] = m_prim[iVal][index_left] +
 				0.5 * GetLimiter(index_left, iVal) *
@@ -308,7 +323,7 @@ namespace zaran {
 		NodeTopo* nodeTopo = grid->GetNodeTopo();
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		DVector3D r = nodeCoord[index_right] - nodeCoord[index_left];
-		for (int iVal = 0;iVal < GetNumberOfEquations();++iVal)
+		for (int iVal = 0;iVal < GetEquNum();++iVal)
 		{
 			value_rec_left[iVal] = m_prim[iVal][index_left];
 			value_rec_right[iVal] = m_prim[iVal][index_right];
@@ -326,11 +341,11 @@ namespace zaran {
 		auto& outletBound = boundaryMap->GetBoundary("outlet");
 #pragma omp parallel for
 		for (int iBound = 0; iBound < outletBound.size(); ++iBound)
-			OutletBC(outletBound[iBound]);
+			RiemannBC(outletBound[iBound]);
 		auto& inletBound = boundaryMap->GetBoundary("inlet");
 #pragma omp parallel for
 		for (int iBound = 0; iBound < inletBound.size(); ++iBound)
-			InletBC(inletBound[iBound]);
+			RiemannBC(inletBound[iBound]);
 	}
 
 
@@ -368,7 +383,7 @@ namespace zaran {
 			if (boundName == "hole")
 				continue;
 #pragma omp parallel for
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 			{
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
@@ -515,6 +530,68 @@ namespace zaran {
 			GetCons(boundIndex, 0), GetCons(boundIndex, 1), GetCons(boundIndex, 2), GetCons(boundIndex, 3), GetCons(boundIndex, 4));
 	}
 
+	void NSSolver::RiemannBC(Boundary& bound)
+	{
+		int id_in = bound.GetInnerIndex();
+		int id_bound = bound.GetIndex();
+		auto& norm_bound = bound.GetNorm();
+		double prim_in[5] = { m_prim[0][id_in], m_prim[1][id_in], m_prim[2][id_in], m_prim[3][id_in], m_prim[4][id_in] };
+		double prim_bound[5] = { m_prim[0][id_bound], m_prim[1][id_bound], m_prim[2][id_bound], m_prim[3][id_bound], m_prim[4][id_bound] };
+		FlowSolverPara* para = GetPara();
+		double prim_far[5] = { para->GetInflowDensity(), para->GetInflowVelocityX(), para->GetInflowVelocityY(), para->GetInflowVelocityZ(), para->GetInflowPressure() };
+		double vel_in[3] = { m_prim[1][id_in], m_prim[2][id_in], m_prim[3][id_in] };
+		double vel2_in = vel_in[0] * vel_in[0] + vel_in[1] * vel_in[1] + vel_in[2] * vel_in[2];
+		// 速度在边界法向上的投影
+		double vel_project_in = vel_in[0] * norm_bound[0] + vel_in[1] * norm_bound[1] + vel_in[2] * norm_bound[2];
+		// 切向速度
+		double vel_tan_in[3] = { vel_in[0] - vel_project_in * norm_bound[0], vel_in[1] - vel_project_in * norm_bound[1], vel_in[2] - vel_project_in * norm_bound[2] };
+		// 法向速度
+		double vel_norm_in[3] = { vel_project_in * norm_bound[0], vel_project_in * norm_bound[1], vel_project_in * norm_bound[2] };
+		double vel2_norm_in = vel_norm_in[0] * vel_norm_in[0] + vel_norm_in[1] * vel_norm_in[1] + vel_norm_in[2] * vel_norm_in[2];
+		double sonic_speed_in = sqrt(1.4 * m_prim[4][id_in] / m_prim[0][id_in]);
+		double sonice_speed_far = sqrt(1.4 * para->GetInflowPressure() / para->GetInflowDensity());
+		// 法向马赫数
+		double mach_norm_in = sqrt(vel2_norm_in) / sonic_speed_in;
+		//超声速出口
+		if (mach_norm_in >= 1.0)
+		{
+			m_prim[0][id_bound] = m_prim[0][id_in];
+			m_prim[1][id_bound] = m_prim[1][id_in];
+			m_prim[2][id_bound] = m_prim[2][id_in];
+			m_prim[3][id_bound] = m_prim[3][id_in];
+			m_prim[4][id_bound] = m_prim[4][id_in];
+		}
+		else if (mach_norm_in <= -1.0)//超声速入口
+		{
+			m_prim[0][id_bound] = para->GetInflowDensity();
+			m_prim[1][id_bound] = para->GetInflowVelocityX();
+			m_prim[2][id_bound] = para->GetInflowVelocityY();
+			m_prim[3][id_bound] = para->GetInflowVelocityZ();
+			m_prim[4][id_bound] = para->GetInflowPressure();
+		}
+		else if (-1 < mach_norm_in && mach_norm_in <= 0)//亚声速入口
+		{
+			m_prim[4][id_bound] = 0.5 * (m_prim[4][id_in] + prim_far[4] -  prim_in[0] * sonic_speed_in * (norm_bound[0] * (prim_far[1] - prim_in[1]) + norm_bound[1] * (prim_far[2] - prim_in[2]) + norm_bound[2] * (prim_far[3] - prim_in[3])));
+			m_prim[0][id_bound] = prim_far[0] + (m_prim[4][id_bound] - prim_far[4]) / (sonic_speed_in*sonic_speed_in);
+			m_prim[1][id_bound] = prim_far[1] + norm_bound[0] * (m_prim[4][id_bound] - prim_far[4]) / (prim_in[0] * sonic_speed_in);
+			m_prim[2][id_bound] = prim_far[2] + norm_bound[1] * (m_prim[4][id_bound] - prim_far[4]) / (prim_in[0] * sonic_speed_in);
+			m_prim[3][id_bound] = prim_far[3] + norm_bound[2] * (m_prim[4][id_bound] - prim_far[4]) / (prim_in[0] * sonic_speed_in);
+		}
+		else if (0 < mach_norm_in && mach_norm_in < 1)//亚声速出口
+		{
+			m_prim[4][id_bound] = prim_far[4];
+			m_prim[0][id_bound] = prim_in[0] + (m_prim[4][id_bound] - m_prim[4][id_in]) / (sonic_speed_in * sonic_speed_in);
+			m_prim[1][id_bound] = prim_in[1] - norm_bound[0] * (m_prim[4][id_bound] - prim_in[4]) / (prim_in[0] * sonic_speed_in);
+			m_prim[2][id_bound] = prim_in[2] - norm_bound[1] * (m_prim[4][id_bound] - prim_in[4]) / (prim_in[0] * sonic_speed_in);
+			m_prim[3][id_bound] = prim_in[3] - norm_bound[2] * (m_prim[4][id_bound] - prim_in[4]) / (prim_in[0] * sonic_speed_in);
+		}
+		else
+		{
+			Log::warn("RiemannBC Error!");
+		}
+
+	}
+
 	void NSSolver::CalcLimiter()
 	{
 		string limiterType = GlobalData::GetString("limiterType");
@@ -552,7 +629,7 @@ namespace zaran {
 		double eps = 1e-6;
 		double venkatCoeff = 1.0e-5;
 #pragma omp parallel for private(maxVal, minVal, eps)
-		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+		for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 		{
 			for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 			{
@@ -605,7 +682,7 @@ namespace zaran {
 		int nTotalNodeNum = grid->GetTotalNodeNum();
 		double maxVal, minVal;
 #pragma omp parallel for private(maxVal, minVal)
-		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+		for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 		{
 			for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 			{
@@ -652,7 +729,7 @@ namespace zaran {
 		auto& nodeType = nodeTopo->GetType();
 		auto& limiterCoef = m_limiter;
 		int nTotalNodeNum = grid->GetTotalNodeNum();
-		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+		for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 		{
 			for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 			{
@@ -672,7 +749,7 @@ namespace zaran {
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
 		int nTotalNodeNum = grid->GetTotalNodeNum();
 		double maxVal, minVal;
-		for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+		for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 		{
 			for (int iNode = 0; iNode < nTotalNodeNum; ++iNode)
 			{
@@ -693,7 +770,7 @@ namespace zaran {
 			auto& bound = boundary.second;
 			if (boundName == "hole")
 				continue;
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 			{
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
@@ -713,7 +790,7 @@ namespace zaran {
 		auto& nodeCoord = nodeTopo->GetCoordinate();
 		auto& nodeNeighbor = nodeTopo->GetNeighborCloud();
 		int nTotalNodeNum = grid->GetTotalNodeNum();
-		int equation_num = GetNumberOfEquations();
+		int equation_num = GetEquNum();
 		DArray ave_prim(equation_num, 0.0);
 		int nonphysical_node_num = 0;
 #pragma omp parallel for private(ave_prim) reduction(+:nonphysical_node_num)
@@ -785,7 +862,7 @@ namespace zaran {
 		auto& node_coord = node_topo->GetCoordinate();
 		auto& node_neighbor = node_topo->GetNeighborCloud();
 		int total_node_num = grid->GetTotalNodeNum();
-		int equation_num = GetNumberOfEquations();
+		int equation_num = GetEquNum();
 		DArray weight, distance;
 		IArray physical_neighbor;
 		double sum = 0;
@@ -820,7 +897,7 @@ namespace zaran {
 					continue;
 				weight[iNeighbor] = 1.0 / (distance[iNeighbor] * sum);
 			}
-			for (int iVal = 0; iVal < GetNumberOfEquations(); ++iVal)
+			for (int iVal = 0; iVal < GetEquNum(); ++iVal)
 			{
 				if (isnan(m_prim[iVal][iNode]) || isinf(m_prim[iVal][iNode]))
 				{

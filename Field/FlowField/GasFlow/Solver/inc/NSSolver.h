@@ -104,8 +104,8 @@ namespace zaran
 		void MidPointReconstruct(int index_left, int index_right, double* value_rec_left, double* value_rec_right);
 		void MidPointReconstructFirstOrder(int index_left, int index_right, double* value_rec_left, double* value_rec_right);
 		virtual	void CalcForce() {};
-		double* GetPrimGrad(int iNode, int iVar) { return m_prim_grad + iNode * GetNumberOfEquations() * 3 + iVar * 3; }
-		double& GetPrimGrad(int iNode, int iVar, int iDim) { return m_prim_grad[iNode * GetNumberOfEquations() * 3 + iVar * 3 + iDim]; }
+		double* GetPrimGrad(int iNode, int iVar) { return m_prim_grad + iNode * GetEquNum() * 3 + iVar * 3; }
+		double& GetPrimGrad(int iNode, int iVar, int iDim) { return m_prim_grad[iNode * GetEquNum() * 3 + iVar * 3 + iDim]; }
 
 	protected:
 
@@ -116,6 +116,8 @@ namespace zaran
 		virtual void OutletBC(Boundary& bound);
 		// 壁面边界条件
 		virtual void  WallBC(Boundary& bound);
+		// 黎曼边界条件
+		virtual void RiemannBC(Boundary& bound);
 		// 原始变量梯度
 		double* m_prim_grad;
 		//通量求解器

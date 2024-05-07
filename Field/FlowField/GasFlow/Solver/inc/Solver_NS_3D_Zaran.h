@@ -61,11 +61,11 @@ namespace zaran
         void BoundPatchBC();
 
     protected:
-        double* GetPrimGradBound(int iBound, int iEqu) { return m_prim_grad_bound + iBound * GetNumberOfEquations() + iEqu; }
-        double& GetPrimGradBound(int iBound, int iEqu, int iDim) { return m_prim_grad_bound[iBound * GetNumberOfEquations() * 3 + iEqu * 3 + iDim]; }
+        double* GetPrimGradBound(int iBound, int iEqu) { return m_prim_grad_bound + iBound * GetEquNum() + iEqu; }
+        double& GetPrimGradBound(int iBound, int iEqu, int iDim) { return m_prim_grad_bound[iBound * GetEquNum() * 3 + iEqu * 3 + iDim]; }
 
         double* GetLimiterBound(int iBound) { return m_limiter_bound + iBound; }
-        double& GetLimiterBound(int iBound, int iEqu) { return m_limiter_bound[iBound * GetNumberOfEquations() + iEqu]; }
+        double& GetLimiterBound(int iBound, int iEqu) { return m_limiter_bound[iBound * GetEquNum() + iEqu]; }
 
 
     private:
