@@ -2,13 +2,13 @@
 # 并包含子项目。
 #
 cmake_minimum_required(VERSION 3.11)
-
+set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # set(CMAKE_TOOLCHAIN_FILE C:/vcpkg/scripts/buildsystems/vcpkg.cmake)
 # 项目名称
 project(Zaran LANGUAGES CXX)
 set(PROJECT_VERSION_MAJOR 3)
 set(PROJECT_VERSION_MINOR 1)
-set(PROJECT_VERSION_PATCH 10)
+set(PROJECT_VERSION_PATCH 11)
 set(PROJECT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 set(EXECUTABLE_NAME ${PROJECT_NAME}${PROJECT_VERSION})
 set(CMAKE_CXX_STANDARD 17)
@@ -68,4 +68,7 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE Eigen3::Eigen ${VTK_LIBRARIES} spdlog::spdlog spdlog::spdlog_header_only)
 
 set(CMAKE_NINJA_FORCE_RESPONSE_FILE "ON" CACHE BOOL "Force Ninja to use response files.")
-target_compile_options(${EXECUTABLE_NAME} PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj /MP /W0 /openmp:llvm> $<$<CXX_COMPILER_ID:GNU>:-Wa,-mbig-obj>)
+message(STATUS "CXX_COMPILER_ID:" ${CMAKE_CXX_COMPILER_ID})
+target_compile_options(${EXECUTABLE_NAME} PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj > $<$<CXX_COMPILER_ID:GNU>:-mbig-obj>)
+set(CMAKE_CXX_FLAGS "/DWIN32 /D_WINDOWS /EHsc /MP /W0 /bigobj -openmp:llvm")
+message(STATUS "CMAKE_CXX_FLAGS:" ${CMAKE_CXX_FLAGS})

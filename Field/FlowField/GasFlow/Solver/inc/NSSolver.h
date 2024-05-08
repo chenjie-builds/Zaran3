@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	NSSolver.h															||
-//*	@brief	NS ·½³ÌÇó½âÆ÷														||
+//*	@brief	NS æ–¹ç¨‹æ±‚è§£å™¨														||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
@@ -43,58 +43,58 @@ namespace zaran
 		double ComputeMaxResidual()override;
 		void BackupField(std::string&back_folder)override;
 		/*
-		* Ìİ¶È¼ÆËãº¯Êı
-		* Ä¿Ç°°üÀ¨×îĞ¡¶ş³Ë·¨¡¢·Ç½á¹¹ÓĞÏŞ²î·Ö·¨
+		* æ¢¯åº¦è®¡ç®—å‡½æ•°
+		* ç›®å‰åŒ…æ‹¬æœ€å°äºŒä¹˜æ³•ã€éç»“æ„æœ‰é™å·®åˆ†æ³•
 		*/
 	protected:
 		void CalcPrimGrad()override;
 		void CalcPrimGradBound();
-		// Ê¹ÓÃ×îĞ¡¶ş³ËÇóÌİ¶È
+		// ä½¿ç”¨æœ€å°äºŒä¹˜æ±‚æ¢¯åº¦
 		virtual void CalcGradWLS() = 0;
-		// Ê¹ÓÃ·Ç½á¹¹ÓĞÏŞ²î·Ö·¨ÇóÌİ¶È
+		// ä½¿ç”¨éç»“æ„æœ‰é™å·®åˆ†æ³•æ±‚æ¢¯åº¦
 		virtual void CalcGradUFDM();
 		void NoGradient();
 		/**
-		 * Ê±¼ä²½¼ÆËãÓëÊ±¼äÍÆ½øÏà¹Øº¯Êı
+		 * æ—¶é—´æ­¥è®¡ç®—ä¸æ—¶é—´æ¨è¿›ç›¸å…³å‡½æ•°
 		 */
 	protected:
 		void CalcTimeStep()override;
 		void SnycTimeStepWithGlobal(double& dt)override;
 		void TimeAdvance()override;
-		// ¼ÆËãµ±µØÊ±¼ä²½
+		// è®¡ç®—å½“åœ°æ—¶é—´æ­¥
 		virtual void CalcTimeStepLocal() = 0;
-		//Áú¸ñ¿âËş·¨
+		//é¾™æ ¼åº“å¡”æ³•
 		virtual void RungeKutta();
 		/**
-		* ¿Õ¼äÁ÷¶¯²ÎÊı¼ÆËã
+		* ç©ºé—´æµåŠ¨å‚æ•°è®¡ç®—
 		*/
 	protected:
-		// Ô­Ê¼±äÁ¿µ½ÊØºã±äÁ¿
+		// åŸå§‹å˜é‡åˆ°å®ˆæ’å˜é‡
 		void Prim2Cons();
 		void Prim2Cons(double& rho, double& u, double& v, double& w, double& p, double& cons0, double& cons1, double& cons2, double& cons3, double& cons4);
-		// ÊØºã±äÁ¿µ½Ô­Ê¼±äÁ¿
+		// å®ˆæ’å˜é‡åˆ°åŸå§‹å˜é‡
 		void Cons2Prim();
 		void Cons2Prim(double& cons0, double& cons1, double& cons2, double& cons3, double& cons4, double& rho, double& u, double& v, double& w, double& p);
-		// ¼ÆËãÁ÷¶¯Í¨Á¿
+		// è®¡ç®—æµåŠ¨é€šé‡
 		virtual void ConvectiveResidual() = 0;
-		//¼ÆËãÕ³ĞÔÍ¨Á¿
+		//è®¡ç®—ç²˜æ€§é€šé‡
 		virtual void ViscousResidual() = 0;
-		//¼ÆËãÔ´Ïî
+		//è®¡ç®—æºé¡¹
 		virtual void SourceTermResidual() = 0;
-		// ¼ÆËãÁ÷³¡²Ğ²î£¬¼´ÓÒ¶ËÏî
+		// è®¡ç®—æµåœºæ®‹å·®ï¼Œå³å³ç«¯é¡¹
 		virtual void CalcResidual();
-		// ¼ÆËãÏŞÖÆÆ÷ÏµÊı
+		// è®¡ç®—é™åˆ¶å™¨ç³»æ•°
 		virtual void CalcLimiter();
 		virtual void CalcLimiterVK();
 		virtual void CalcLimiterBJ();
 		virtual void CalcLimiterNone();
 		virtual void CalcLimiterFirstOrder();
 		virtual void CalcLimiterBound();
-		/// @brief ¼ì²éÔ­Ê¼±äÁ¿
+		/// @brief æ£€æŸ¥åŸå§‹å˜é‡
 		virtual void CheckPrimtive();
-		/// @brief ¼ì²é²Ğ²î
+		/// @brief æ£€æŸ¥æ®‹å·®
 		virtual void CheckResidual();
-		/// Èç¹ûÔ­Ê¼±äÁ¿³öÏÖÒì³£Öµ£¬½«ÆäĞŞÕıÎªºÏÀíÖµ
+		/// å¦‚æœåŸå§‹å˜é‡å‡ºç°å¼‚å¸¸å€¼ï¼Œå°†å…¶ä¿®æ­£ä¸ºåˆç†å€¼
 		virtual void FixPrimtive();
 		/// @brief mid point value reconstruct
 		/// @param index_left left node index
@@ -110,19 +110,19 @@ namespace zaran
 	protected:
 
 		void BoundaryCondition()override;
-		// ³¬ÉùËÙÈë¿Ú±ß½çÌõ¼ş
+		// è¶…å£°é€Ÿå…¥å£è¾¹ç•Œæ¡ä»¶
 		virtual void InletBC(Boundary& bound);
-		// ³¬ÉùËÙ³ö¿Ú±ß½çÌõ¼ş
+		// è¶…å£°é€Ÿå‡ºå£è¾¹ç•Œæ¡ä»¶
 		virtual void OutletBC(Boundary& bound);
-		// ±ÚÃæ±ß½çÌõ¼ş
+		// å£é¢è¾¹ç•Œæ¡ä»¶
 		virtual void  WallBC(Boundary& bound);
-		// ÀèÂü±ß½çÌõ¼ş
+		// é»æ›¼è¾¹ç•Œæ¡ä»¶
 		virtual void RiemannBC(Boundary& bound);
-		// Ô­Ê¼±äÁ¿Ìİ¶È
+		// åŸå§‹å˜é‡æ¢¯åº¦
 		double* m_prim_grad;
-		//Í¨Á¿Çó½âÆ÷
+		//é€šé‡æ±‚è§£å™¨
 		Ptr<RiemannSolver> riemannSolver_;
-		//½µ½×±êÊ¶£¬¶ÔÓÚ¶ş½×¾«¶ÈµÄ¸ñÊ½£¬½µ½×µ½Ò»½×
+		//é™é˜¶æ ‡è¯†ï¼Œå¯¹äºäºŒé˜¶ç²¾åº¦çš„æ ¼å¼ï¼Œé™é˜¶åˆ°ä¸€é˜¶
 		IArray m_reduce_order;
 
 	};

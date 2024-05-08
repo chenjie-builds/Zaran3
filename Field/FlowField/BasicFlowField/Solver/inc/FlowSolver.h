@@ -6,74 +6,123 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	FlowSolver.h														||
-//*	@brief	Á÷³¡Çó½âÆ÷															||
+//*	@brief	æµåœºæ±‚è§£å™¨															||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include"FieldSolver.h"
+#include "FieldSolver.h"
 #include "flowsolverpara.h"
 namespace zaran
 {
-	/// @brief Á÷³¡Çó½âÆ÷»ùÀà
-	class FlowSolver :public FieldSolver
-	{
-	public:
-		FlowSolver();
-		virtual ~FlowSolver();
-	public:
-		void InitField() override;
-		void InitSolver() override;
-		// ¼ÆËãÊ±¼ä²½³¤
-		virtual void CalcTimeStep() = 0;
-		void Solve() override;
-		void Postprocess()override;
-		// Í¬²½Ê±¼ä²½³¤ÎªÈ«¾ÖÊ±¼ä²½
-		virtual void SnycTimeStepWithGlobal(double& dt) = 0;
-		virtual	double ComputeMaxResidual() = 0;
-	public:
-		//¼ÆËãµ±Ç°Ê±¿ÌµÄCFLÊı
-		double ComputeCFL();
-	protected:
-		//½«²Ğ²î¹éÁã
-		void ZeroResidual();
-		//·µ»Øµ±Ç°Çó½âÆ÷µÄ²ÎÊı
-		FlowSolverPara* GetPara()override;
-		//´ÓÍø¸ñÖĞÈ¡Êı¾İ£¬ÎªÁË·ÀÖ¹Ã¿´ÎÖ±½ÓÊ¹ÓÃÊı¾İÃû³Æ
-	public:
-		// Ê±¼äÍÆ½ø
-		virtual void TimeAdvance() = 0;
-		// ¼ÆËã±äÁ¿Ìİ¶È
-		virtual void CalcPrimGrad() = 0;
+/// @brief æµåœºæ±‚è§£å™¨åŸºç±»
+class FlowSolver : public FieldSolver
+{
+  public:
+    FlowSolver();
+    virtual ~FlowSolver();
 
-		//·ÃÎÊÊı¾İ
-	public:
-		double* GetLimiter(int iNode) { return m_limiter + iNode * GetEquNum(); }
-		double& GetLimiter(int iNode, int iEqu) { return m_limiter[iNode * GetEquNum() + iEqu]; }
-		double* GetCons(int iNode) { return m_cons + iNode * GetEquNum(); }
-		double& GetCons(int iNode, int iEqu) { return m_cons[iNode * GetEquNum() + iEqu]; }
-		double* GetResidual(int iNode) { return m_residual + iNode * GetEquNum(); }
-		double& GetResidual(int iNode, int iEqu) { return m_residual[iNode * GetEquNum() + iEqu]; }
-		double& GetTemperture(int iNode, int iEqu) { return m_temperture[iNode]; }
-		double* GetMetric(int iNode) { return m_metric + iNode * 17; }
-		double* GetMetricXi(int iNode) { return m_metric + iNode * 17; }
-		double* GetMetricEta(int iNode) { return m_metric + iNode * 17 + 4; }
-		double* GetMetricZeta(int iNode) { return m_metric + iNode * 17 + 8; }
-		double* GetMetricTau(int iNode) { return m_metric + iNode * 17 + 12; }
-		double& GetMetricJacob(int iNode) { return m_metric[iNode * 17 + 16]; }
-		double* GetViscousFlux(int iNode) { return m_viscous_flux + iNode * GetEquNum(); }
-		double& GetViscousFlux(int iNode, int iEqu) { return m_viscous_flux[iNode * GetEquNum() + iEqu]; }
+  public:
+    void InitField() override;
+    void InitSolver() override;
+    // è®¡ç®—æ—¶é—´æ­¥é•¿
+    virtual void CalcTimeStep() = 0;
+    void Solve() override;
+    void Postprocess() override;
+    // åŒæ­¥æ—¶é—´æ­¥é•¿ä¸ºå…¨å±€æ—¶é—´æ­¥
+    virtual void SnycTimeStepWithGlobal(double &dt) = 0;
+    virtual double ComputeMaxResidual() = 0;
 
-	protected:
-		double** m_prim;
-		//ÊØºã±äÁ¿
-		double* m_cons;
-		double* m_metric;
-		double* m_dt;
-		double* m_residual;
-		double* m_limiter;
-		double* m_temperture;
-		double* m_viscous_flux;
-		double* m_viscous_flux_grad;
-		int* m_non_physical;
-	};
-}
+  public:
+    // è®¡ç®—å½“å‰æ—¶åˆ»çš„CFLæ•°
+    double ComputeCFL();
+
+  protected:
+    // å°†æ®‹å·®å½’é›¶
+    void ZeroResidual();
+    // è¿”å›å½“å‰æ±‚è§£å™¨çš„å‚æ•°
+    FlowSolverPara *GetPara() override;
+    // ä»ç½‘æ ¼ä¸­å–æ•°æ®ï¼Œä¸ºäº†é˜²æ­¢æ¯æ¬¡ç›´æ¥ä½¿ç”¨æ•°æ®åç§°
+  public:
+    // æ—¶é—´æ¨è¿›
+    virtual void TimeAdvance() = 0;
+    // è®¡ç®—å˜é‡æ¢¯åº¦
+    virtual void CalcPrimGrad() = 0;
+
+    // è®¿é—®æ•°æ®
+  public:
+    double *GetLimiter(int iNode)
+    {
+        return m_limiter + iNode * GetEquNum();
+    }
+    double &GetLimiter(int iNode, int iEqu)
+    {
+        return m_limiter[iNode * GetEquNum() + iEqu];
+    }
+    double *GetCons(int iNode)
+    {
+        return m_cons + iNode * GetEquNum();
+    }
+    double &GetCons(int iNode, int iEqu)
+    {
+        return m_cons[iNode * GetEquNum() + iEqu];
+    }
+    double *GetResidual(int iNode)
+    {
+        return m_residual + iNode * GetEquNum();
+    }
+    double &GetResidual(int iNode, int iEqu)
+    {
+        return m_residual[iNode * GetEquNum() + iEqu];
+    }
+    double &GetTemperture(int iNode, int iEqu)
+    {
+        return m_temperture[iNode];
+    }
+    double *GetMetric(int iNode)
+    {
+        return m_metric + iNode * 17;
+    }
+    double *GetMetricXi(int iNode)
+    {
+        return m_metric + iNode * 17;
+    }
+    double *GetMetricEta(int iNode)
+    {
+        return m_metric + iNode * 17 + 4;
+    }
+    double *GetMetricZeta(int iNode)
+    {
+        return m_metric + iNode * 17 + 8;
+    }
+    double *GetMetricTau(int iNode)
+    {
+        return m_metric + iNode * 17 + 12;
+    }
+    double &GetMetricJacob(int iNode)
+    {
+        return m_metric[iNode * 17 + 16];
+    }
+    double *GetViscousFlux(int iNode)
+    {
+        return m_viscous_flux + iNode * GetEquNum();
+    }
+    double &GetViscousFlux(int iNode, int iEqu)
+    {
+        return m_viscous_flux[iNode * GetEquNum() + iEqu];
+    }
+
+  protected:
+    // åŸå§‹å˜é‡
+    double **m_prim;
+    // å®ˆæ’å˜é‡
+    double *m_cons;
+    double *m_metric;
+    double *m_dt;
+    double *m_residual;
+    double *m_limiter;
+    double *m_temperture;
+    double *m_viscous_flux;
+    double *m_viscous_flux_grad;
+    int *m_non_physical;
+};
+} // namespace zaran
