@@ -10,18 +10,13 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma	once
-#include"FieldSolver.h"
+#include "Field.h"
 namespace zaran
 {
 	class Visual
 	{
 	public:
-		void WriteTecplot(FieldSolver* solver);
-		void WriteTecplotBinary(FieldSolver* solver);
-		void WriteTecplot2D(FieldSolver* solver);
-		void WriteTecplotPoint(FieldSolver* solver);
-		void WriteVTK(FieldSolver* solver);
-		void WriteTecplotZaran3D(FieldSolver* solver);
-		void WriteTecplotZaran3DBinary(FieldSolver* solver);
+		void WriteTecplotBinary(Field* field);
+		void WriteVTK(Field* field);
 	};
 }

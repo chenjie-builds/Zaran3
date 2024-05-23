@@ -11,31 +11,37 @@
 //==============================================================================||
 #pragma once
 #include"Gas.h"
-//空气
-const double Prl = 0.72;
-const double Prt = 0.9;
-
 //理想气体类
 class PerfectGas : public Gas
 {
 public:
 	PerfectGas(const double& Mw = 0.028964, const double& gamma = 1.4, const Dimensionless& refValue = Dimensionless());
-	double GetGamma() const { return gamma_; }
-	double GetSonicSpeed(const double& T);  //根据温度计算声速
-	double GetTemp(const double& density, const double& p);  //根据状态方程计算温度
-	double GetMul(const double& T);   //根据温度，利用southerland公式计算层流粘性系数μl
-	double GetMut(const double& T);   //根据温度，计算湍流粘性系数μt
-	double GetMu(const double& T);    //根据温度求解粘性系数μ
-	double GetKl(const double& T);    //根据温度，求出层流传热系数
-	double GetKt(const double& T);    //根据温度，求出湍流传热系数
-	double GetK(const double& T);     //根据温度，求出传热系数
-	double GetCp(const double& T) { return Cp_; };	//根据温度，求出定压比热Cp
-	double GetCv(const double& T) { return Cv_; };	//根据温度，求出定容比热Cv
-	virtual double GetEnergy(const double& T, const double& velocity);//根据温度和速度求出总内能
-	virtual double GetEnergy(const double& density, const double& pressure, const double& velocity);//根据密度压力和速度求出总内能
-	double GetPressureFromDensityAndTemperature(const double& density, const double& T);
+	double GetGamma() const override { return m_gamma; }
+	double GetMw() const override { return m_Mw; }
+	double GetRm() const override { return m_Rm; }
+	double GetCp() const override { return m_cp; }
+	double GetCv() const override { return m_cp / m_gamma; }
+	double CalcSoundSpeed(const double& T)override;  //根据温度计算声速
+	double CalcSoundSpeed(const double& density, const double& pressure) override;
+	double CalcTemperature(const double& density, const double& p)override;  //根据状态方程计算温度
+	double CalcMul(const double& T);   //根据温度，利用southerland公式计算层流粘性系数μl
+	double CalcMut(const double& T);   //根据温度，计算湍流粘性系数μt
+	double CalcMu(const double& T);    //根据温度求解粘性系数μ
+	double CalcKl(const double& T);    //根据温度，求出层流传热系数
+	double CalcKt(const double& T);    //根据温度，求出湍流传热系数
+	double CalcK(const double& T);     //根据温度，求出传热系数
+	double CalcEnergy(const double& T, const double& velocity);//根据温度和速度求出总内能
+	double CalcEnergy(const double& density, const double& pressure, const double& velocity);//根据密度压力和速度求出总内能
+	//根据密度和温度求出压力
+	double CalcPressure(const double& density, const double& T)const;
 private:
-	double gamma_;	//比热比 
-	double Cp_;		//定压比热	J(mol*k)
-	double Cv_;		//定容比热	J(mol*k)
+	double m_gamma;	//比热比 
+	double m_Mw;     //摩尔质量 kg/mol
+	double m_Rm;	//无量纲气体常数
+	double m_T0;	//无量纲Southerland公式中的温度T0
+	double m_Ts;	//无量纲Southerland公式中的常数Ts
+	double m_mu0;	//无量纲Southerland公式中的粘性系数Mu0
+	double m_Prl;	//层流Prandtl数
+	double m_Prt;	//湍流Prandtl数
+	double m_cp;	//定压比热
 };

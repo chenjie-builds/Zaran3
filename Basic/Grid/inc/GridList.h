@@ -10,7 +10,7 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include "grid.h"
+#include "GridBase.h"
 namespace zaran
 {
 	//网格的集合，所有的网格均存在此处
@@ -18,21 +18,21 @@ namespace zaran
 	{
 	public:
 		GridList() {}
-		GridList(Array<Ptr<Grid>>& gridList);
+		GridList(Array<Ptr<GridBase>>& gridList);
 		~GridList();
 		//向网格集合中添加一个网格
-		void AddGrid(Ptr<Grid> grid);
+		void AddGrid(Ptr<GridBase> grid);
 		//检查网格的index是否和网格集合中匹配
 		void CheckGrid();
 		//返回一个网格
-		Ptr<Grid>& GetGrid(const int index);
+		Ptr<GridBase>& GetGrid(const int index);
 		//返回网格的个数
 		int GetGridNumber() { return gridList_.size(); }
 		// 返回网格数组
-		Array<Ptr<Grid>>& GetGrid();
+		Array<Ptr<GridBase>>& GetGrid();
 		// 重设网格个数
 		void Resize(int gridNum);
 	private:
-		Array<Ptr<Grid>> gridList_;
+		Array<Ptr<GridBase>> gridList_;
 	};
 }

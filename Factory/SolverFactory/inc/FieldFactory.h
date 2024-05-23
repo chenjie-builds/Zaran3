@@ -15,10 +15,6 @@
 #include "solver.h"
 #include "flowsolver.h"
 #include "NSSolver.h"
-#include "Solver_NS_3D.h"
-#include"Solver_NS_2D.h"
-#include "Solver_NS_3D_Struct.h"
-#include "Solver_NS_2D_Struct.h"
 #include "Field.h"
 namespace zaran
 {

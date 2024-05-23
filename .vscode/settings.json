@@ -91,10 +91,12 @@
         "xmemory": "cpp",
         "xtr1common": "cpp",
         "xtree": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "*.txx": "cpp"
     },
-
-
-
-
+    // "C_Cpp.intelliSenseEngineFallback": "disabled",
+    // "cmake.generator": "Ninja",
+    // "cmake.configureSettings": {
+    //     "CMAKE_MAKE_PROGRAM": "ninja.exe",
+    // },
 }

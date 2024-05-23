@@ -5,15 +5,18 @@ Boundary::Boundary()
 	m_bound_index = -1;
 	m_ghost_index = -1;
 	m_inner_index = -1;
-	m_norm = { 0,0,0 };
+	m_norm[0]=m_norm[1]=m_norm[2]=0.0;
 }
 
-Boundary::Boundary(int boundIndex, int innerIndex, int ghostIndex, DVector3D& norm)
+Boundary::Boundary(int boundIndex, int innerIndex, int ghostIndex,const double* norm)
 {
 	m_bound_index = boundIndex;
 	m_inner_index = innerIndex;
 	m_ghost_index = ghostIndex;
-	m_norm = norm;
+	for(int i=0;i<3;i++)
+	{
+		m_norm[i] = norm[i];
+	}
 }
 
 void Boundary::SetGhostIndex(const int& ghostIndex)
@@ -26,13 +29,16 @@ void Boundary::SetInnerIndex(const int& innerIndex)
 	m_inner_index = innerIndex;
 }
 
-void Boundary::SetNodeIndex(const int& boundIndex)
+void Boundary::SetNode(const int& boundIndex)
 {
 	m_bound_index = boundIndex;
 }
 void Boundary::SetNorm(const DVector3D& boundNorm)
 {
-	m_norm = boundNorm;
+	for(int i=0;i<3;i++)
+	{
+		m_norm[i] = boundNorm[i];
+	}
 }
 
 bool Boundary::operator==(const Boundary& bound)

@@ -142,23 +142,18 @@ void zaran::Simulation::SolveField()
 		if (grid_type_name == "Structured")
 		{
 			grid_type = GridType::Structured;
-			if (dim == Dimension::two)
-				solver_type = FieldSolverType::NS_2D_Struct;
-			else if (dim == Dimension::three)
-				solver_type = FieldSolverType::NS_3D_Struct;
+			solver_type = FieldSolverType::NS_Struct;
 		}
 		else if (grid_type_name == "Flexible")
 		{
 			grid_type = GridType::Flexible;
-			if (dim == Dimension::two)
-				solver_type = FieldSolverType::NS_2D;
-			else if (dim == Dimension::three)
-				solver_type = FieldSolverType::NS_3D;
+
+				solver_type = FieldSolverType::NS_FNFDM;
 		}
 		else if (grid_type_name == "Zaran")
 		{
-			grid_type = GridType::Zaran;
-			solver_type = FieldSolverType::NS_ZaRan_3D;
+			// grid_type = GridType::Zaran;
+			// solver_type = FieldSolverType::NS_ZaRan_3D;
 		}
 		else
 		{

@@ -10,22 +10,18 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include "GridList.h"
 #include "GlobalData.h"
+#include "GridList.h"
+
 namespace zaran
 {
-	class GridListFactory
-	{
-	public:
-		virtual void Create(Grid*& grid);
-	private:
-		void ReadPlot3D(Grid*& grid);
-		void CreateByTest(Grid*& grid);
-		// 生成测试的三维结构网格
-		void CreateStructGrid3D(Grid*& grid);
-		// 生成测试的二维结构网格
-		void CreateStructGrid2D(Grid*& grid);
-		// 生成测试的二维自由节点有限差分网格
-		void CreateGridFNFDM2D(Grid*& grid);
-	};
-}
+  /// @brief 网格生成器基类
+  /// @details 根据控制参数生成网格
+  /// @return 返回生成的
+  /// @note 只负责生成网格，不负责销毁网格，销毁网格由Field 负责
+class GridCreater
+{
+  public:
+    virtual GridBase* CreateGrid() = 0;
+};
+} // namespace zaran

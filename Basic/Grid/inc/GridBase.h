@@ -24,21 +24,22 @@ namespace zaran
 	class GridBase
 	{
 	public:
-		GridBase() :name_(), index_(0), dim_(), type_(GridType::Unkown) {}
+		GridBase(const string& name,int index,int dim,GridType type)
+			:m_name(name),m_index(index),m_dim(dim),m_type(type){}
 		virtual ~GridBase() {}
-		void SetName(const std::string& name) { name_ = name; }
-		void SetIndex(const size_t& index) { index_ = index; }
-		void SetDimension(const Dimension& dim) { dim_ = dim; }
-		void SetType(GridType type = GridType::Unkown) { type_ = type; };
+		void SetName(const std::string& name) { m_name = name; }
+		void SetIndex(const size_t& index) { m_index = index; }
+		void SetDimension(const int& dim) { m_dim = dim; }
+		void SetType(GridType type = GridType::Unkown) { m_type = type; };
 	public:
-		const string& GetName()const { return name_; }
-		const size_t& GetIndex()const { return index_; }
-		const Dimension& GetDimension()const { return dim_; }
-		const GridType& GetType()const { return type_; }
+		const string& GetName()const { return m_name; }
+		const size_t& GetIndex()const { return m_index; }
+		const int& GetDimension()const { return m_dim; }
+		const GridType& GetType()const { return m_type; }
 	private:
-		string name_;//网格名称
-		size_t index_;//网格索引
-		Dimension dim_;//网格维度
-		GridType type_;//网格类型
+		string m_name;//网格名称
+		int m_index;//网格索引
+		int m_dim;//网格维度
+		GridType m_type;//网格类型
 	};
 }

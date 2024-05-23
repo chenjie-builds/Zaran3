@@ -10,11 +10,36 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include"Grid.h"
+#include "GridBase.h"
+#include "NodeFNFDM.h"
+#include "FaceFNFDM.h"
+#include "CellFNFDM.h"
+#include"BoundaryMap.h"
 namespace zaran
 {
-	class GridFNFDM :public Grid
-	{
+  class GridFN : public GridBase
+  {
+  public:
+    GridFN(const string& name, int index, int dim);
+    virtual ~GridFN();
 
-	};
-}
+  public:
+    void SetNode(NodeFN* node);
+    void SetFace(FaceFN* face);
+    void SetCell(CellFN* cell);
+    void SetBoundaryMap(BoundaryMap* boundaryMap);
+  public:
+    int GetTotalNodeNum() const;
+    int GetInnerNodeNum() const;
+    int GetBoundNodeNum() const;
+    NodeFN* GetNodeTopo();
+    FaceFN* GetFaceTopo();
+    CellFN* GetCellTopo();
+    BoundaryMap* GetBoundaryMap();
+  private:
+    NodeFN* m_node;
+    FaceFN* m_face;
+    CellFN* m_cell;
+    BoundaryMap* m_boundary_map;
+  };
+} // namespace zaran

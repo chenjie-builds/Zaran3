@@ -3,13 +3,13 @@
 #include <fstream>
 #include"FlowSolver.h"
 #include"MathBasic.h"
-#include "SpecialField.h"
 #include"File.h"
+#include"FieldNS.h"
 using namespace zaran;
 
 
 
-zaran::Controller::Controller(Field** field, int field_size)
+Controller::Controller(Field** field, int field_size)
 {
     m_field = field;
     m_field_size = field_size;
@@ -35,27 +35,12 @@ void Controller::Initialize()
         m_field[iField]->GetSolver()->Init();
     }
 }
-void Controller::SaveWallNode()
-{
-    std::ofstream fout("boundNode.dat");
-    fout << "variables=x,y,p" << std::endl;
-    for (size_t iField = 0; iField < m_field_size; iField++)
-    {
-        Grid* currentGrid = m_field[iField]->GetGrid();
-        NodeTopo* nodeTopo = currentGrid->GetNodeTopo();
-        BoundaryMap* boundMap = currentGrid->GetBoundaryMap();
-    }
-    fout.close();
-}
+
 void Controller::SaveDataTecplot()
 {
     for (size_t iField = 0; iField < m_field_size; iField++)
     {
-        FieldSolver* solver = m_field[iField]->GetSolver();
-        m_visual->WriteTecplot(solver);
-        // m_visual->WriteTecplot2D(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
-        //  m_visual->WriteTecplotZaran3D(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
-        // m_visual->WriteTecplotZaran3DBinary(std::dynamic_pointer_cast<FieldSolver> (currentSolver));
+        m_visual->WriteTecplotBinary(m_field[iField]);
     }
 }
 void Controller::SaveDataVTK(std::ostream& os)
@@ -119,42 +104,18 @@ void Controller::SolveField()
     PostSolve();
 }
 
-double Controller::CalcMaxAveResidual()
-{
-    double maxResidual = 0.0;
-    for (size_t iField = 0; iField < m_field_size; iField++)
-    {
-        FlowSolver* solver = dynamic_cast<FlowSolver*>(m_field[iField]->GetSolver());
-        maxResidual = Max(maxResidual, solver->ComputeMaxResidual());
-    }
-    return maxResidual;
-}
-
-void zaran::Controller::CalcResidual()
+void Controller::CalcResidual()
 {
     for (size_t iField = 0; iField < m_field_size; iField++)
     {
-        FlowSolver* solver = dynamic_cast<FlowSolver*>(m_field[iField]->GetSolver());
-        Grid* grid = m_field[iField]->GetGrid();
-        FieldData* fieldData = m_field[iField]->GetFieldData();
-        int n_data;
-        fieldData->GetDataSize("density", n_data);
-        NodeTopo* nodeTopo = grid->GetNodeTopo();
-
-        auto& nodeCoord = nodeTopo->GetCoordinate();
-        auto& nodeType = nodeTopo->GetType();
-        double mar_res = 0.0;
-        double ave_res = 0.0;
-#pragma omp parallel for reduction(max:mar_res) reduction(+:ave_res)
-        for (int iNode = 0;iNode < n_data;++iNode)
-        {
-            mar_res = Max(mar_res, abs(solver->GetResidual(iNode, 0)));
-            ave_res += pow(solver->GetResidual(iNode, 0), 2);
-        }
-        ave_res /= n_data;
-        ave_res = sqrt(ave_res);
-        m_max_res = mar_res;
-        m_ave_res = ave_res;
+        auto field = dynamic_cast<FieldNS_FNFDM*>(m_field[iField]);
+        auto solver = field->GetSolver();
+        auto grid = field->GetGrid();
+        auto dataManager = field->GetDataManager();
+        auto residual = field->GetResAnalyzer();
+        residual->Analyze();
+        m_max_res = residual->GetMaxResidual(0);
+        m_ave_res = residual->GetAveResidual(0);
     }
     m_res_flag = true;
 }
@@ -213,7 +174,7 @@ void Controller::BackupLog(std::string& back_folder)
     CopyFile(log_file, log_file_back);
 }
 
-void zaran::Controller::BackupGlobalData(std::string& back_folder)
+void Controller::BackupGlobalData(std::string& back_folder)
 {
     std::string global_file = "zaran.ini";
     std::string global_file_back = back_folder + "/" + global_file;

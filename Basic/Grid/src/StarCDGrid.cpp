@@ -181,7 +181,7 @@ StarCDGrid::Element::Element()
 }
 StarCDGrid::Element::Element(const IArray& node_index, const int& block_index)
 {
-	SetNodeIndex(node_index);
+	SetNode(node_index);
 	SetBlockIndex(block_index);
 }
 StarCDGrid::BoundFace::BoundFace()
@@ -191,6 +191,6 @@ StarCDGrid::BoundFace::BoundFace()
 }
 StarCDGrid::BoundFace::BoundFace(const IArray& node_index, const int& bound_type)
 {
-	SetNodeIndex(node_index);
+	SetNode(node_index);
 	SetType(bound_type);
 }

@@ -1,13 +1,12 @@
 #include"flowsolver.h"
 #include "GlobalData.h"
 using namespace zaran;
-zaran::FlowSolver::FlowSolver()
+
+FlowSolver::FlowSolver(int index, string name, FlowSolverPara* para, GridBase* grid, FieldData* fieldData) :FieldSolver(index, name, para, grid, fieldData)
 {
-	para_ = new FlowSolverPara;
 }
-zaran::FlowSolver::~FlowSolver()
+FlowSolver::~FlowSolver()
 {
-	delete[] para_;
 }
 void FlowSolver::InitField()
 {
@@ -16,9 +15,7 @@ void FlowSolver::InitField()
 
 void FlowSolver::InitSolver()
 {
-	para_->Init();
-	CreateFieldData();
-	RegisterFieldData();
+
 }
 
 void FlowSolver::Solve()
@@ -34,23 +31,6 @@ void FlowSolver::Postprocess()
 double FlowSolver::ComputeCFL()
 {
 	return GlobalData::GetDouble("cfl");
-}
-
-void FlowSolver::ZeroResidual()
-{
-	Grid* grid = GetGrid();
-	int n_equ = GetEquNum();
-	int n_node = grid->GetTotalNodeNum();
-
-	for (int iEqu = 0;iEqu < n_equ;iEqu++)
-	{
-#pragma omp parallel for
-		for (int iNode = 0;iNode < n_node;iNode++)
-		{
-			GetResidual(iNode, iEqu) = 0.0;
-		}
-	}
-
 }
 
 FlowSolverPara* FlowSolver::GetPara()

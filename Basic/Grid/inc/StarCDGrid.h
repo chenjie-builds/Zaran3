@@ -73,7 +73,7 @@ namespace zaran
 			Element();
 			Element(const IArray& node_index, const int& blockIndex);
 		public:
-			void SetNodeIndex(const IArray& node_index) { nodeIndexVec_ = node_index; }
+			void SetNode(const IArray& node_index) { nodeIndexVec_ = node_index; }
 			void SetBlockIndex(const int& block_index) { blockIndex_ = block_index; }
 		public:
 			IArray GetNodeIndexVec() const { return nodeIndexVec_; }
@@ -90,7 +90,7 @@ namespace zaran
 			BoundFace();
 			BoundFace(const IArray& node_index, const int& bound_type);
 		public:
-			void SetNodeIndex(const IArray& node_index) { nodeIndexVec_ = node_index; }
+			void SetNode(const IArray& node_index) { nodeIndexVec_ = node_index; }
 			void SetType(const int& bound_type) { boundType_ = bound_type; }
 		public:
 			IArray GetNodeIndexVec() const { return nodeIndexVec_; }

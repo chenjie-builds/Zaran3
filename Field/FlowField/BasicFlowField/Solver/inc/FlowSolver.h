@@ -18,9 +18,8 @@ namespace zaran
 class FlowSolver : public FieldSolver
 {
   public:
-    FlowSolver();
+    FlowSolver(int index, string name, FlowSolverPara *para, GridBase *grid, FieldData *fieldData);
     virtual ~FlowSolver();
-
   public:
     void InitField() override;
     void InitSolver() override;
@@ -30,15 +29,12 @@ class FlowSolver : public FieldSolver
     void Postprocess() override;
     // 同步时间步长为全局时间步
     virtual void SnycTimeStepWithGlobal(double &dt) = 0;
-    virtual double ComputeMaxResidual() = 0;
 
   public:
     // 计算当前时刻的CFL数
     double ComputeCFL();
 
   protected:
-    // 将残差归零
-    void ZeroResidual();
     // 返回当前求解器的参数
     FlowSolverPara *GetPara() override;
     // 从网格中取数据，为了防止每次直接使用数据名称
@@ -48,81 +44,7 @@ class FlowSolver : public FieldSolver
     // 计算变量梯度
     virtual void CalcPrimGrad() = 0;
 
-    // 访问数据
-  public:
-    double *GetLimiter(int iNode)
-    {
-        return m_limiter + iNode * GetEquNum();
-    }
-    double &GetLimiter(int iNode, int iEqu)
-    {
-        return m_limiter[iNode * GetEquNum() + iEqu];
-    }
-    double *GetCons(int iNode)
-    {
-        return m_cons + iNode * GetEquNum();
-    }
-    double &GetCons(int iNode, int iEqu)
-    {
-        return m_cons[iNode * GetEquNum() + iEqu];
-    }
-    double *GetResidual(int iNode)
-    {
-        return m_residual + iNode * GetEquNum();
-    }
-    double &GetResidual(int iNode, int iEqu)
-    {
-        return m_residual[iNode * GetEquNum() + iEqu];
-    }
-    double &GetTemperture(int iNode, int iEqu)
-    {
-        return m_temperture[iNode];
-    }
-    double *GetMetric(int iNode)
-    {
-        return m_metric + iNode * 17;
-    }
-    double *GetMetricXi(int iNode)
-    {
-        return m_metric + iNode * 17;
-    }
-    double *GetMetricEta(int iNode)
-    {
-        return m_metric + iNode * 17 + 4;
-    }
-    double *GetMetricZeta(int iNode)
-    {
-        return m_metric + iNode * 17 + 8;
-    }
-    double *GetMetricTau(int iNode)
-    {
-        return m_metric + iNode * 17 + 12;
-    }
-    double &GetMetricJacob(int iNode)
-    {
-        return m_metric[iNode * 17 + 16];
-    }
-    double *GetViscousFlux(int iNode)
-    {
-        return m_viscous_flux + iNode * GetEquNum();
-    }
-    double &GetViscousFlux(int iNode, int iEqu)
-    {
-        return m_viscous_flux[iNode * GetEquNum() + iEqu];
-    }
 
   protected:
-    // 原始变量
-    double **m_prim;
-    // 守恒变量
-    double *m_cons;
-    double *m_metric;
-    double *m_dt;
-    double *m_residual;
-    double *m_limiter;
-    double *m_temperture;
-    double *m_viscous_flux;
-    double *m_viscous_flux_grad;
-    int *m_non_physical;
 };
 } // namespace zaran

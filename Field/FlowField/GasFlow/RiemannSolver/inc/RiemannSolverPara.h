@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	RiemannSolverPara.h													||
-//*	@brief	ÀèÂüÇó½âÆ÷²ÎÊı, RiemannSolver¼ÆËãËùĞè²ÎÊı, ÓÃÓÚ·ÀÖ¹Ã¿´ÎĞÂ½¨ÁÙÊ±±äÁ¿		||
+//*	@brief	é»æ›¼æ±‚è§£å™¨å‚æ•°, RiemannSolverè®¡ç®—æ‰€éœ€å‚æ•°, ç”¨äºé˜²æ­¢æ¯æ¬¡æ–°å»ºä¸´æ—¶å˜é‡			||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
@@ -14,30 +14,30 @@
 namespace zaran
 {
 	using namespace Eigen;
-	// Í¨Á¿Çó½âÆ÷²ÎÊı, °üÀ¨×óÓÒ±äÁ¿Öµ
+	// é€šé‡æ±‚è§£å™¨å‚æ•°, åŒ…æ‹¬å·¦å³å˜é‡å€¼
 	struct RiemannSolverPara
 	{
-		//×óÓÒÔ­Ê¼±äÁ¿
+		//å·¦å³åŸå§‹å˜é‡
 		Vector<double ,5> prim_left, prim_right;
-		//×óÓÒ±ÈÈÈ±È
+		//å·¦å³æ¯”çƒ­æ¯”
 		double gamma_left, gamma_right;
-		//×óÓÒÄÜÁ¿
+		//å·¦å³èƒ½é‡
 		double energy_left, energy_right;
-		//×óÓÒìÊ
+		//å·¦å³ç„“
 		double enthalpy_left, enthalpy_right;
-		//×óÓÒÉùËÙ
+		//å·¦å³å£°é€Ÿ
 		double c_left, c_right;
-		//×óÓÒËÙ¶È´óĞ¡
+		//å·¦å³é€Ÿåº¦å¤§å°
 		double v2_left, v2_right;
-		//·¨ÏòÏòÁ¿
+		//æ³•å‘å‘é‡
 		Vector3d norm;
 
 		double nt;
-		//·¨ÏòËÙ¶È
+		//æ³•å‘é€Ÿåº¦
 		double vn_left, vn_right;
-		//×óÓÒÂíºÕÊı
+		//å·¦å³é©¬èµ«æ•°
 		double mach_left, mach_right;
-		//ÖØ¹¹ºóµÄÍ¨Á¿
+		//é‡æ„åçš„é€šé‡
 		Vector<double, 5> flux;
 	};
 }

@@ -51,9 +51,6 @@ public:
 	double GetRefArea() const { return m_length * m_length; }
 	double GetRefVolume() const { return m_length * m_length * m_length; }
 	double GetRefForce() const { return m_density * m_length * m_length * m_velocity * m_velocity; }
-
-
-
 private:
 	double m_gamma;		//参考气体的比热比
 	double m_Mw;			//参考气体的分子量(kg/mol)

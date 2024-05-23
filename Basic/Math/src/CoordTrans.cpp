@@ -2,17 +2,17 @@
 #include "CoordTrans.h"
 #include "log.h"
 using namespace zaran;
-void CoordTrans::CoordTransNoTime2D(Coordinate xRight, Coordinate xLeft, Coordinate yRight, Coordinate yLeft)
+void CoordTrans::CoordTransNoTime2D(const double* xRight, const double* xLeft, const double* yRight, const double* yLeft)
 {
 	//x¦Î y¦Î z¦Î t¦Î
-	x_[0] = 0.5 * (xRight.x() - xLeft.x());
-	y_[0] = 0.5 * (xRight.y() - xLeft.y());
+	x_[0] = 0.5 * (xRight[0] - xLeft[0]);
+	y_[0] = 0.5 * (xRight[1] - xLeft[1]);
 	z_[0] = 0;
 	t_[0] = 0;
 
 	//x¦Ç y¦Ç z¦Ç t¦Ç,
-	x_[1] = 0.5 * (yRight.x() - yLeft.x());
-	y_[1] = 0.5 * (yRight.y() - yLeft.y());
+	x_[1] = 0.5 * (yRight[0] - yLeft[0]);
+	y_[1] = 0.5 * (yRight[1] - yLeft[1]);
 	z_[1] = 0;
 	t_[1] = 0;
 	//    |x_xi   x_eta|
@@ -51,24 +51,24 @@ void CoordTrans::CoordTransNoTime2D(Coordinate xRight, Coordinate xLeft, Coordin
 	tau_[3] = 1;
 
 }
-void CoordTrans::CoordTransNoTime3D(Coordinate xRight, Coordinate xLeft, Coordinate yRight, Coordinate yLeft, Coordinate zRight, Coordinate zLeft)
+void CoordTrans::CoordTransNoTime3D(const double* xRight, const double* xLeft, const double* yRight, const double* yLeft, const double* zRight, const double* zLeft)
 {
 	//x¦Î y¦Î z¦Î t¦Î
-	x_[0] = 0.5 * (xRight.x() - xLeft.x());
-	y_[0] = 0.5 * (xRight.y() - xLeft.y());
-	z_[0] = 0.5 * (xRight.z() - xLeft.z());
+	x_[0] = 0.5 * (xRight[0] - xLeft[0]);
+	y_[0] = 0.5 * (xRight[1] - xLeft[1]);
+	z_[0] = 0.5 * (xRight[2] - xLeft[2]);
 	t_[0] = 0;
 
 	//x¦Ç y¦Ç z¦Ç t¦Ç,
-	x_[1] = 0.5 * (yRight.x() - yLeft.x());
-	y_[1] = 0.5 * (yRight.y() - yLeft.y());
-	z_[1] = 0.5 * (yRight.z() - yLeft.z());
+	x_[1] = 0.5 * (yRight[0] - yLeft[0]);
+	y_[1] = 0.5 * (yRight[1] - yLeft[1]);
+	z_[1] = 0.5 * (yRight[2] - yLeft[2]);
 	t_[1] = 0;
 
 	//x¦Æ y¦Æ z¦Æ t¦Æ,
-	x_[2] = 0.5 * (zRight.x() - zLeft.x());
-	y_[2] = 0.5 * (zRight.y() - zLeft.y());
-	z_[2] = 0.5 * (zRight.z() - zLeft.z());
+	x_[2] = 0.5 * (zRight[0] - zLeft[0]);
+	y_[2] = 0.5 * (zRight[1] - zLeft[1]);
+	z_[2] = 0.5 * (zRight[2] - zLeft[2]);
 	t_[2] = 0;
 
 	//J
@@ -79,19 +79,20 @@ void CoordTrans::CoordTransNoTime3D(Coordinate xRight, Coordinate xLeft, Coordin
 
 	//¦Îx ¦Çx ¦Æx ¦Óx,
 	xi_[0] = jacob_ * (y_[1] * z_[2] - y_[2] * z_[1]);
+	xi_[1] = jacob_ * (x_[2] * z_[1] - x_[1] * z_[2]);
+	xi_[2] = jacob_ * (x_[1] * y_[2] - x_[2] * y_[1]);
+
 	eta_[0] = jacob_ * (y_[2] * z_[0] - y_[0] * z_[2]);
-	zeta_[0] = jacob_ * (y_[0] * z_[1] - y_[1] * z_[0]);
+	eta_[1] = jacob_ * (x_[0] * z_[2] - x_[2] * z_[0]);
+	eta_[2] = jacob_ * (x_[2] * y_[0] - x_[0] * y_[2]);
 	tau_[0] = 0;
 
 	//¦Îy ¦Çy ¦Æy ¦Óy,
-	xi_[1] = jacob_ * (x_[2] * z_[1] - x_[1] * z_[2]);
-	eta_[1] = jacob_ * (x_[0] * z_[2] - x_[2] * z_[0]);
-	zeta_[1] = jacob_ * (x_[1] * z_[0] - x_[0] * z_[1]);
 	tau_[1] = 0;
 
 	//¦Îz ¦Çz ¦Æz ¦Óz,
-	xi_[2] = jacob_ * (x_[1] * y_[2] - x_[2] * y_[1]);
-	eta_[2] = jacob_ * (x_[2] * y_[0] - x_[0] * y_[2]);
+	zeta_[0] = jacob_ * (y_[0] * z_[1] - y_[1] * z_[0]);
+	zeta_[1] = jacob_ * (x_[1] * z_[0] - x_[0] * z_[1]);
 	zeta_[2] = jacob_ * (x_[0] * y_[1] - x_[1] * y_[0]);
 	tau_[2] = 0;
 
@@ -107,12 +108,12 @@ void CoordTrans::CoordTransNoTime3D(Coordinate xRight, Coordinate xLeft, Coordin
 	tau_[3] = 1;
 
 }
-void CoordTrans::CoordTransTime2D(double dt, Coordinate tRight, Coordinate tLeft, Coordinate xRight, Coordinate xLeft, Coordinate yRight, Coordinate yLeft)
+void CoordTrans::CoordTransTime2D(double dt, const double* tRight, const double* tLeft, const double* xRight, const double* xLeft, const double* yRight, const double* yLeft)
 {
 	CoordTransNoTime2D(xRight, xLeft, yRight, yLeft);
 	//x¦Ó y¦Ó z¦Ó t¦Ó,
-	x_[3] = (tRight.x() - tLeft.x()) / dt;
-	y_[3] = (tRight.y() - tLeft.y()) / dt;
+	x_[3] = (tRight[0] - tLeft[0]) / dt;
+	y_[3] = (tRight[1] - tLeft[1]) / dt;
 	z_[3] = 0;
 	t_[3] = 1;
 	//¦Ît ¦Çt ¦Æt ¦Ót,
@@ -122,13 +123,13 @@ void CoordTrans::CoordTransTime2D(double dt, Coordinate tRight, Coordinate tLeft
 	tau_[3] = 1;
 
 }
-void CoordTrans::CoordTransTime3D(double dt, Coordinate tRight, Coordinate tLeft, Coordinate xRight, Coordinate xLeft, Coordinate yRight, Coordinate yLeft, Coordinate zRight, Coordinate zLeft)
+void CoordTrans::CoordTransTime3D(double dt, const double* tRight, const double* tLeft, const double* xRight, const double* xLeft, const double* yRight, const double* yLeft, const double* zRight, const double* zLeft)
 {
 	CoordTransNoTime3D(xRight, xLeft, yRight, yLeft, zRight, zLeft);
 	//x¦Ó y¦Ó z¦Ó t¦Ó,
-	x_[3] = (tRight.x() - tLeft.x()) / dt;
-	y_[3] = (tRight.y() - tLeft.y()) / dt;
-	z_[3] = (tRight.z() - tLeft.z()) / dt;
+	x_[3] = (tRight[0] - tLeft[0]) / dt;
+	y_[3] = (tRight[1] - tLeft[1]) / dt;
+	z_[3] = (tRight[2] - tLeft[2]) / dt;
 	t_[3] = 1;
 	//¦Ît ¦Çt ¦Æt ¦Ót,
 	xi_[3] = -(x_[3] * xi_[0] + y_[3] * xi_[1] + z_[3] * xi_[2]);
@@ -139,7 +140,7 @@ void CoordTrans::CoordTransTime3D(double dt, Coordinate tRight, Coordinate tLeft
 }
 
 
-void CoordTrans::CalcCoordTrans(int dim, double dt, Coordinate tRight, Coordinate tLeft, Coordinate xRight, Coordinate xLeft, Coordinate yRight, Coordinate yLeft)
+void CoordTrans::CalcCoordTrans(int dim, double dt, const double* tRight, const double* tLeft, const double* xRight, const double* xLeft, const double* yRight, const double* yLeft)
 {
 	CoordTrans();
 	dimension_ = dim;
@@ -149,7 +150,7 @@ void CoordTrans::CalcCoordTrans(int dim, double dt, Coordinate tRight, Coordinat
 		exit(0);
 }
 
-void CoordTrans::CalcCoordTrans(int dim, double dt, Coordinate tRight, Coordinate tLeft, Coordinate xRight, Coordinate xLeft, Coordinate yRight, Coordinate yLeft, Coordinate zRight, Coordinate zLeft)
+void CoordTrans::CalcCoordTrans(int dim, double dt, const double* tRight, const double* tLeft, const double* xRight, const double* xLeft, const double* yRight, const double* yLeft, const double* zRight, const double* zLeft)
 {  //Î´¼Ó¶¯Íø¸ñ 2020.07.31
 	CoordTrans();
 	dimension_ = dim;
@@ -159,7 +160,7 @@ void CoordTrans::CalcCoordTrans(int dim, double dt, Coordinate tRight, Coordinat
 		exit(0);
 }
 
-void CoordTrans::CalcCoordTrans(int dim, Coordinate xRight, Coordinate xLeft, Coordinate yRight, Coordinate yLeft)
+void CoordTrans::CalcCoordTrans(int dim, const double* xRight, const double* xLeft, const double* yRight, const double* yLeft)
 {
 	x_.resize(4);
 	y_.resize(4);
@@ -179,7 +180,7 @@ void CoordTrans::CalcCoordTrans(int dim, Coordinate xRight, Coordinate xLeft, Co
 
 }
 
-void CoordTrans::CalcCoordTrans(int dim, Coordinate xRight, Coordinate xLeft, Coordinate yRight, Coordinate yLeft, Coordinate zRight, Coordinate zLeft)
+void CoordTrans::CalcCoordTrans(int dim, const double* xRight, const double* xLeft, const double* yRight, const double* yLeft, const double* zRight, const double* zLeft)
 {
 	x_.resize(4);
 	y_.resize(4);
@@ -199,7 +200,7 @@ void CoordTrans::CalcCoordTrans(int dim, Coordinate xRight, Coordinate xLeft, Co
 
 }
 
-void CoordTrans::CalcCoordTrans(int dim, const std::vector<Coordinate>& coord_neib)
+void CoordTrans::CalcCoordTrans(int dim, const std::vector<const double*>& coord_neib)
 {
 	CoordTrans();
 	dimension_ = dim;

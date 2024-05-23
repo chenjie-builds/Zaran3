@@ -1,16 +1,15 @@
 #include "solver.h"
 #include"Log.h"
 using namespace zaran;
-Solver::Solver()
+
+zaran::Solver::Solver(int index, string name, SolverPara* para, GridBase* grid):
+	index_(index),name_(name),para_(para),m_grid(grid)
 {
-	index_ = -1;
-	name_ = "notSet";
-	m_grid = nullptr;
-	para_ = nullptr;
 }
 
 Solver::~Solver()
 {
+	delete[] para_;
 
 }
 
@@ -18,4 +17,9 @@ SolverPara* Solver::GetPara()
 {
 	Log::info("using Solver::GetPara()");
 	return para_;
+}
+
+void zaran::Solver::Init()
+{
+	para_->Init();
 }

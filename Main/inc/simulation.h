@@ -13,7 +13,6 @@
 #include "GlobalData.h"
 #include "controller.h"
 #include "GridListFactory.h"
-#include "SolverFactory.h"
 #include "GridList.h"
 namespace zaran
 {
@@ -52,9 +51,7 @@ namespace zaran
 		//参数文件名
 		string globalDataFileName_;
 		//网格生成工厂
-		Ptr<GridListFactory> gridListFatory_;
-		//求解器生成工厂
-		Ptr<SolverFactory> solverFactory_;
+		Ptr<GridCreater> gridListFatory_;
 		//程序版本号, 内部生成
 		string programVersion_;
 		//程序上次更改日期, 内部生成

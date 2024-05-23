@@ -3,60 +3,69 @@
 using namespace zaran;
 PerfectGas::PerfectGas(const double& Mw, const double& gamma, const Dimensionless& refValue) :Gas{ Mw, gamma, refValue }
 {
-	gamma_ = 1.4;
-	double Rm = GetRm();
-	Cv_ = Rm / (gamma_ - 1);
-	Cp_ = gamma_ * Rm / (gamma_ - 1);
+	m_Mw = Mw;
+	m_Rm = GAS_CONSTANT / m_Mw / refValue.GetRefRm();
+	m_gamma = gamma;
+	m_T0 = 273.15 / refValue.GetRefTemp();
+	m_Ts = 110.4 / refValue.GetRefTemp();
+	m_mu0 = 1.716e-5 / (refValue.GetRefDensity() * refValue.GetRefVelocity() * refValue.GetRefLength());
+	m_Prl = 0.72;
+	m_Prt = 0.9;
+	m_cp = m_gamma / (m_gamma - 1.0) * m_Mw;
 }
-double PerfectGas::GetSonicSpeed(const double& T)
+double PerfectGas::CalcSoundSpeed(const double& T)
 {
 	return sqrt(T);
 }
-double PerfectGas::GetTemp(const double& density, const double& p)
+double PerfectGas::CalcSoundSpeed(const double& density, const double& pressure)
 {
-	return gamma_ * p / density;
+	return sqrt(GetGamma() * pressure / density);
+}
+double PerfectGas::CalcTemperature(const double& density, const double& p)
+{
+	return GetGamma() * p / density;
 }
 
-double PerfectGas::GetMul(const double& T)
+double PerfectGas::CalcMul(const double& T)
 {
-	return 0.0;//TODO：μl由southerland公式给定，暂时等于0
+	return m_mu0 * Southerland(T, m_T0, m_Ts);
 }
 
-double PerfectGas::GetMut(const double& T)
+double PerfectGas::CalcMut(const double& T)
 {
-	return 0.0;//TODO：μt由湍流模型给定，层流等于0
+	return 0.0;//TODO锛毼紅鐢辨箥娴佹ā鍨嬬粰瀹氾紝灞傛祦绛変簬0
 }
 
-double PerfectGas::GetMu(const double& T)
+double PerfectGas::CalcMu(const double& T)
 {
-	return GetMul(T) + GetMut(T);//μ=μl+μt
+	return CalcMul(T) + CalcMut(T);//渭=渭l+渭t
 }
 
-double PerfectGas::GetKl(const double& T)
+double PerfectGas::CalcKl(const double& T)
 {
-	return GetMul(T) * Cp_ / Prl;
+	return CalcMul(T) * GetCp() / m_Prl;
 }
 
-double PerfectGas::GetKt(const double& T)
+double PerfectGas::CalcKt(const double& T)
 {
 
-	return GetMut(T) * Cp_ / Prt;
+	return CalcMut(T) * GetCp() / m_Prt;
 }
 
-double PerfectGas::GetK(const double& T)
+double PerfectGas::CalcK(const double& T)
 {
-	return GetKl(T) + GetKt(T);
+	return CalcKl(T) + CalcKt(T);
 }
-double PerfectGas::GetEnergy(const double& T, const double& velocity)
+double PerfectGas::CalcEnergy(const double& T, const double& velocity)
 {
-	return GetRm() * T / (gamma_ - 1) + velocity * velocity / 2.0;
+	return GetRm() * T / (m_gamma - 1) + velocity * velocity / 2.0;
 }
-double PerfectGas::GetEnergy(const double& density, const double& pressure, const double& velocity)
+double PerfectGas::CalcEnergy(const double& density, const double& pressure, const double& velocity)
 {
-	return pressure / ((gamma_ - 1) * density) + velocity * velocity / 2.0;
+	return pressure / ((m_gamma - 1) * density) + velocity * velocity / 2.0;
 }
 
-double PerfectGas::GetPressureFromDensityAndTemperature(const double& density, const double& T)
+double PerfectGas::CalcPressure(const double& density, const double& T)const
 {
-	return density * T / gamma_;
+	return density * T / m_gamma;
 }

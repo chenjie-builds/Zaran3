@@ -12,36 +12,40 @@
 #pragma once
 #include"BasicType.h"
 #include "Solver.h"
-#include "Grid.h"
-#include "Visual.h"
+#include "GridBase.h"
 #include "SolverPara.h"
+#include "FieldDataManager.h"
 #include <iostream>
+#include"FieldSolver.h"
 namespace zaran
 {
-	//³¡Àà£¬°üº¬Íø¸ñ£¬Çó½âÆ÷£¬Çó½âÆ÷²ÎÊý£¬³¡Êý¾Ý
+	enum class FieldType
+	{
+		NS_FlexibleNode,
+		NS_Structured,
+		Unset,
+	};
+	//åœºç±»ï¼ŒåŒ…å«ç½‘æ ¼ï¼Œæ±‚è§£å™¨ï¼Œæ±‚è§£å™¨å‚æ•°ï¼Œåœºæ•°æ®
 	class Field
 	{
 	public:
-		Field();
-		~Field();
+		Field(GridBase* grid,FieldType fieldType);
+		virtual~Field();
 	public:
-		void SetSolverPara(SolverPara* para) { m_solverPara = para; }
-		void SetSolver(FieldSolver* solver) 
-		{
-			m_solver = solver;
-			m_solver->SetFieldData(m_fieldData);
-		}
-		void SetGrid(Grid* grid) { m_grid = grid; }
-		void SetFieldData(FieldData* fieldData) { m_fieldData = fieldData; }
-	public:
-		Grid* GetGrid() { return m_grid; }
-		FieldSolver* GetSolver() { return m_solver; }
-		FieldData* GetFieldData() { return m_fieldData; }
-		SolverPara* GetSolverPara() { return m_solverPara; }
-	private:
-		Grid* m_grid;
+		virtual GridBase* GetGrid() { return m_grid; }
+		virtual FieldSolver* GetSolver() { return m_solver; }
+		virtual FieldData* GetFieldData() { return m_fieldData; }
+		virtual SolverPara* GetSolverPara() { return m_solver_para; }
+		virtual DataManager* GetDataManager() { return m_dataManager; }
+		FieldType GetFieldType() { return m_fieldType; }
+		protected:
+		virtual void Allocate();
+	protected:
+		GridBase* m_grid;
 		FieldSolver* m_solver;
 		FieldData* m_fieldData;
-		SolverPara* m_solverPara;
+		SolverPara* m_solver_para;
+		DataManager* m_dataManager;
+		FieldType m_fieldType;
 	};
 }

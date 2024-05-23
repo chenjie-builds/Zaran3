@@ -1,17 +1,24 @@
 #include "Gridgen.h"
 #include <fstream>
 using namespace zaran;
-	void Gridgen::ReadGridgenCoord()
-	{
+Gridgen::Gridgen()
+{
+}
+Gridgen::~Gridgen()
+{
+}
+GridBase* zaran::Gridgen::CreateGrid()
+{
+	return nullptr;
+}
+void Gridgen::ReadGridgenCoord()
+{
 
-	}
+}
 
-	void Gridgen::SetGridFileName(std::string& fileName)
-	{
-		gridFileName_ = fileName;
-	}
+void Gridgen::SetGridFileName(std::string& fileName)
+{
+	gridFileName_ = fileName;
+}
 
-	void Gridgen::Create(Grid*& gridList)
-	{
 
-	}

@@ -10,7 +10,6 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include "grid.h"
 #include "solverpara.h"
 #include "GlobalData.h"
 #include "GridList.h"
@@ -21,34 +20,26 @@ namespace zaran
 	class Solver
 	{
 	public:
-		Solver();
+		Solver(int index, string name, SolverPara* para, GridBase* grid);
 		virtual ~Solver();
 	public:
-		void SetIndex(const int& index) { index_ = index; }
-		void SetName(const string& name) { name_ = name; }
-		void SetPara(SolverPara* para) { para_ = para; }
-		void SetGrid(Grid* grid) { m_grid = grid; }
 		const string& GetName()const { return name_; }
-		virtual Grid* GetGrid() { return m_grid; }
+		virtual GridBase* GetGrid() { return m_grid; }
 		const int& GetIndex()const { return index_; }
 		virtual SolverPara* GetPara();
 	public:
-		virtual void Init() = 0;
+		virtual void Init() ;
 		virtual void Solve() = 0;
 		virtual void Preprocess() = 0;
 		virtual void Postprocess() = 0;
-
-
 		// 初始化自己
 		virtual void InitSolver() = 0;
-
-
 	protected:
 		// solver index
 		int index_;
 		string name_;
 		// 全场网格数组
-		Grid* m_grid;
+		GridBase* m_grid;
 		// solver 的参数
 		SolverPara* para_;
 	};

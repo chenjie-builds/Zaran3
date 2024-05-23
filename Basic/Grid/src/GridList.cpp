@@ -1,7 +1,7 @@
 #include "GridList.h"
 #include "log.h"
 using namespace zaran;
-GridList::GridList(std::vector<Ptr<Grid>>& gridList)
+GridList::GridList(std::vector<Ptr<GridBase>>& gridList)
 {
 	gridList_ = gridList;
 }
@@ -11,7 +11,7 @@ GridList::~GridList()
 
 }
 
-void GridList::AddGrid(Ptr<Grid> grid)
+void GridList::AddGrid(Ptr<GridBase> grid)
 {
 	gridList_.emplace_back(grid);
 }
@@ -28,12 +28,12 @@ void GridList::CheckGrid()
 	}
 }
 
-Ptr<Grid>& GridList::GetGrid(const int index)
+Ptr<GridBase>& GridList::GetGrid(const int index)
 {
 	return gridList_[index];
 }
 
-std::vector<Ptr<zaran::Grid>>& GridList::GetGrid()
+std::vector<Ptr<zaran::GridBase>>& GridList::GetGrid()
 {
 	return gridList_;
 }

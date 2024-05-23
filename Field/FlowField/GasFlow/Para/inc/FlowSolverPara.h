@@ -14,6 +14,7 @@
 #include "Limiter.h"
 #include"BasicType.h"
 #include"Dimensionless.h"
+#include"Gas.h"
 namespace zaran
 {
 	//梯度求解方法
@@ -37,7 +38,7 @@ namespace zaran
 		virtual ~FlowSolverPara();
 		void Init() override;
 	public:
-		void SetInitFieldType( InitFieldType&  initflowType);
+		void SetInitFieldType(InitFieldType& initflowType);
 		void SetIsViscous(const int& isViscous);
 		void SetCflNumber(const double& cfl);
 		void SetRKCoef(const DArray& rkCoef);
@@ -45,6 +46,7 @@ namespace zaran
 		void SetLimiterType(const LimiterType& limiterType);
 		void SetBackupFieldFileName(const std::string& backupFieldFileName);
 	public:
+		const int& GetEquNum()const;
 		const double& GetInflowDensity()const;
 		const double& GetInflowVelocityX()const;
 		const double& GetInflowVelocityY()const;
@@ -59,7 +61,10 @@ namespace zaran
 		const LimiterType& GetLimiterType()const;
 		const std::string& GetBackupFieldFileName()const;
 		const Dimensionless& GetDimensionless()const;
+		Gas* GetGas() { return m_gas; }
 	private:
+		int m_equ_num;
+		Gas* m_gas;
 		// 无量纲参数
 		Dimensionless m_dimensionless;
 		double m_inflow_density;

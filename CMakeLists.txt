@@ -2,13 +2,14 @@
 # 并包含子项目。
 #
 cmake_minimum_required(VERSION 3.11)
-set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # set(CMAKE_TOOLCHAIN_FILE C:/vcpkg/scripts/buildsystems/vcpkg.cmake)
 # 项目名称
 project(Zaran LANGUAGES CXX)
 set(PROJECT_VERSION_MAJOR 3)
-set(PROJECT_VERSION_MINOR 1)
-set(PROJECT_VERSION_PATCH 11)
+set(PROJECT_VERSION_MINOR 2)
+set(PROJECT_VERSION_PATCH 0)
 set(PROJECT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 set(EXECUTABLE_NAME ${PROJECT_NAME}${PROJECT_VERSION})
 set(CMAKE_CXX_STANDARD 17)
@@ -41,7 +42,7 @@ file(GLOB_RECURSE
     Field/*.cpp
     Main/*.cpp
     Test/*.cpp
-    )
+)
 message(STATUS "source files:" ${src_file})
 target_sources(${EXECUTABLE_NAME} PRIVATE ${src_file})
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${inc_dir})
@@ -51,17 +52,18 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 
 # OMP并行
 option(USE_OMP "ON to use OMP, OFF to serial" ON)
-
+message(STATUS "USE_OMP:" ${USE_OMP})
 if(USE_OMP)
-add_definitions(-DUSE_OMP)
-find_package(OpenMP REQUIRED)
-target_link_libraries(${EXECUTABLE_NAME} PRIVATE OpenMP::OpenMP_CXX)
+    add_definitions(-DUSE_OMP)
+    find_package(OpenMP REQUIRED)
+    target_link_libraries(${EXECUTABLE_NAME} PRIVATE OpenMP::OpenMP_CXX)
 endif()
 
 # Eigen库
 find_package(Eigen3 CONFIG REQUIRED)
+
 # VTK库
-find_package(VTK CONFIG REQUIRED)
+find_package(VTK  REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/tecio/lib/tecio.lib)

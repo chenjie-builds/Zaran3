@@ -12,8 +12,7 @@
 #pragma once
 namespace zaran
 {
-	const double gama = 1.4;
-	//空间维数
+	//绌洪棿缁存暟
 	enum class Dimension
 	{
 		one = 1,
@@ -26,5 +25,5 @@ namespace zaran
 	const double TINY_NUMBER = 1.0e-40;
 	const double EPSILON_NUMBER = 1.0e-12;
 
-	const double PI = 3.141592653589793238462643383279502884197169399;//圆周率pi
+	const double PI = 3.141592653589793238462643383279502884197169399;//鍦嗗懆鐜噋i
 }

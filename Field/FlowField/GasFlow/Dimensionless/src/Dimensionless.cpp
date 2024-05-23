@@ -17,10 +17,6 @@ Dimensionless::Dimensionless()
 	m_time = m_length / m_velocity;
 	m_mass = m_density * m_length * m_length * m_length;
 	m_Re = m_density * m_velocity * m_length / Southerland(m_temperature);
-	double mu0 = 1.711e-5 / m_density / m_velocity / m_length;
-	double T0 = 273.0 / m_temperature;
-	double Ts = 110.4 / m_temperature;
-	m_Re = 1.0 / Southerland(1.0, mu0, T0, Ts) * m_length;
 }
 Dimensionless::Dimensionless(const double& refDensity, const double& refGamma, const double& refMw, const double& refLength, const double& refTemp)
 {
@@ -39,10 +35,6 @@ void Dimensionless::SetRefValue(const double& refDensity, const double& refGamma
 	m_Rm = m_velocity * m_velocity / m_temperature;
 	m_pressure = m_density * m_velocity * m_velocity;
 	m_time = m_length / m_velocity;
-	m_mass = m_density * m_length * m_length * m_length;
+	m_mass = m_density * pow(m_length, 3);
 	m_Re = m_density * m_velocity * m_length / Southerland(m_temperature);
-	double mu0 = 1.711e-5 / m_density / m_velocity / m_length;
-	double T0 = 273.0 / m_temperature;
-	double Ts = 110.4 / m_temperature;
-	m_Re = m_density * m_velocity * m_length / Southerland(1.0, mu0, T0, Ts);
 }

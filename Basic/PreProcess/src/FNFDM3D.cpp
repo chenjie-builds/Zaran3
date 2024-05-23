@@ -1,781 +1,887 @@
-#include"FNFDM3D.h"
-#include"Log.h"
-#include"MathBasic.h"
-#include<set>
-#include<fstream>
-#include<vtkKdTreePointLocator.h>
-#include<vtkNew.h>
-#include<vtkPoints.h>
-#include<vtkPolyData.h>
-#include<vtkVertexGlyphFilter.h>
+#include "FNFDM3D.h"
+#include "BasicType.h"
+#include "Log.h"
+#include "MathBasic.h"
+#include <fstream>
+#include <set>
+#include <vtkKdTreePointLocator.h>
+#include <vtkNew.h>
+#include <vtkPoints.h>
+#include <vtkPolyData.h>
+#include <vtkVertexGlyphFilter.h>
+
 namespace zaran
 {
 
-	GridFactoryFNFDM3D::GridFactoryFNFDM3D()
-	{
-		m_node_file_name = "node.dat";
-		m_ele_file_name = "cell.dat";
-		m_bnd_file_name = "bnd.dat";
-	}
-	void GridFactoryFNFDM3D::Create(Grid*& grid)
-	{
-		if (grid != nullptr)
-			delete[] grid;
-		grid = new Grid();
-		ReadFile(grid);
-		//	SortNeiborNode(gridList);
-	}
+    GridCreaterFN::GridCreaterFN(const string& node_file_name, const string& ele_file_name, const string& bnd_file_name) :m_node_file_name(node_file_name), m_ele_file_name(ele_file_name), m_bnd_file_name(bnd_file_name)
+    {
+    }
 
-	void GridFactoryFNFDM3D::ReadFile(Grid* grid)
-	{
-		grid->SetDimension(Dimension::three);
-		NodeTopo* node_topo = grid->GetNodeTopo();
-		std::ifstream fin(m_node_file_name);
-		//∂¡»°À˘”–Ω⁄µ„◊¯±Í
-		fin >> m_NodeNum;
-		Log::info("Total node num:{}", m_NodeNum);
-		grid->SetTotalNodeNum(m_NodeNum);
-		auto& nodeCoord = node_topo->GetCoordinate();
-		nodeCoord.resize(m_NodeNum);
-		for (size_t i = 0; i < m_NodeNum; i++)
-		{
-			auto& currentCoord = nodeCoord[i];
-			fin >> currentCoord[0] >> currentCoord[1] >> currentCoord[2];
-		}
-		//∂¡»°À˘”–ƒ⁄≤øΩ⁄µ„¡⁄æ”Ω⁄µ„
-		int innerNodeNum = 0;
-		fin >> innerNodeNum;
-		Log::info("Inner node num:{}", innerNodeNum);
-		int innerNodeIndex;
-		IArray neibor_index(6);
-		auto& nodeType = node_topo->GetType();
-		nodeType.resize(m_NodeNum);
-		//≥ı ºªØŒ™Œ¥∂®“Â
-		for (size_t i = 0; i < m_NodeNum; i++)
-		{
-			nodeType[i] = NodeType::undefined;
-		}
-		auto& temp_i = node_topo->GetTemplateI();
-		auto& temp_j = node_topo->GetTemplateJ();
-		auto& temp_k = node_topo->GetTemplateK();
-		temp_i.resize(m_NodeNum);
-		temp_j.resize(m_NodeNum);
-		temp_k.resize(m_NodeNum);
-		auto& nodeNeibor = node_topo->GetNeighborCloud();
-		nodeNeibor.resize(m_NodeNum);
-		double delta = 1e-5;
-		double min_angle = LARGE_NUMBER;
-		int min_angle_index;
-		int min_angle_neibor_index1, min_angle_neibor_index2;
-		for (size_t i = 0; i < innerNodeNum; i++)
-		{
-			fin >> innerNodeIndex;
-			fin >> neibor_index[0] >> neibor_index[1] >> neibor_index[2] >> neibor_index[3] >> neibor_index[4] >> neibor_index[5];
-			innerNodeIndex -= 1;
-			neibor_index[0] -= 1;
-			neibor_index[1] -= 1;
-			neibor_index[2] -= 1;
-			neibor_index[3] -= 1;
-			neibor_index[4] -= 1;
-			neibor_index[5] -= 1;
-			nodeType[innerNodeIndex] = NodeType::inner;
-			nodeNeibor[innerNodeIndex] = neibor_index;
-			Array<DVector3D> vec(3);
-			vec[0] = nodeCoord[neibor_index[1]] - nodeCoord[neibor_index[0]];
-			vec[1] = nodeCoord[neibor_index[3]] - nodeCoord[neibor_index[2]];
-			vec[2] = nodeCoord[neibor_index[5]] - nodeCoord[neibor_index[4]];
-			double angle = AngleOfTwoArray3D(vec[0].data(), vec[1].data());
-			//i,j∑ΩœÚ∆Ω––
-			if (abs(angle) < delta)
-			{
-				std::swap(neibor_index[1], neibor_index[3]);
-			}
-			else if (abs(angle - PI) < delta)
-			{
-				std::swap(neibor_index[1], neibor_index[2]);
-			}
+    GridFN* GridCreaterFN::CreateGrid()
+    {
+        ReadNodeFile();
+        ReadCellFile();
+        ReadBoundFile();
+        // SortNeiborNode();
+        // ExtendNeighborNode();
+        CheckNode();
+        CheckUnkownNode();
+        // AddSelfToNeighbor();
+        GridFN* grid = new GridFN("FNFDM", 0, 3);
+        ConvertToGrid(grid);
+        return grid;
+    }
 
-			angle = AngleOfTwoArray3D(vec[0].data(), vec[2].data());
-			//i,k∑ΩœÚ∆Ω––
-			if (abs(angle) < delta)
-			{
-				std::swap(neibor_index[1], neibor_index[5]);
-			}
-			else if (abs(angle - PI) < delta)
-			{
-				std::swap(neibor_index[1], neibor_index[4]);
-			}
-			angle = AngleOfTwoArray3D(vec[1].data(), vec[2].data());
-			//j,k∑ΩœÚ∆Ω––
-			if (abs(angle) < delta)
-			{
-				std::swap(neibor_index[3], neibor_index[5]);
-			}
-			else if (abs(angle - PI) < delta)
-			{
-				std::swap(neibor_index[3], neibor_index[4]);
-			}
-			//ºÏ≤È «∑Ò «”“ ÷◊¯±Íœµ
-			vec[0] = nodeCoord[neibor_index[1]] - nodeCoord[neibor_index[0]];
-			vec[1] = nodeCoord[neibor_index[3]] - nodeCoord[neibor_index[2]];
-			vec[2] = nodeCoord[neibor_index[5]] - nodeCoord[neibor_index[4]];
-			if (vec[0].cross(vec[1]).dot(vec[2]) < 0)
-			{
-				std::swap(neibor_index[4], neibor_index[5]);
-			}
-			//º∆À„◊¯±Í÷·÷Æº‰µƒ◊Ó–°º–Ω«
-			double temp_min = LARGE_NUMBER;
-			int temp_index1, temp_index2;
-			for (int iNode = 0;iNode < 6;++iNode)
-			{
-				vec[0] = nodeCoord[neibor_index[iNode]] - nodeCoord[innerNodeIndex];
-				for (int jNode = iNode + 1;jNode < 6;++jNode)
-				{
-					vec[1] = nodeCoord[neibor_index[jNode]] - nodeCoord[innerNodeIndex];
-					double angle = AngleOfTwoArray3D(vec[0].data(), vec[1].data());
-					if (angle < temp_min)
-					{
-						temp_min = angle;
-						temp_index1 = neibor_index[iNode];
-						temp_index2 = neibor_index[jNode];
-					}
+    void GridCreaterFN::ReadNodeFile()
+    {
+        std::ifstream fin(m_node_file_name);
+        int node_num;
+        // ËØªÂèñÊâÄÊúâËäÇÁÇπÂùêÔøΩ?
+        fin >> node_num;
+        Log::info("Total node num:{}", node_num);
+        m_node_coord.resize(node_num);
+        m_node_type.resize(node_num);
+        m_node_neibor.resize(node_num);
+        for (size_t i = 0; i < node_num; i++)
+        {
+            m_node_coord[i].resize(3);
+            fin >> m_node_coord[i][0] >> m_node_coord[i][1] >> m_node_coord[i][2];
+        }
+        // ËØªÂèñÊâÄÊúâÂÜÖÈÉ®ËäÇÁÇπÈÇªÂ±ÖËäÇÔøΩ?
+        int innerNodeNum = 0;
+        fin >> innerNodeNum;
+        Log::info("Inner node num:{}", innerNodeNum);
+        int innerNodeIndex;
+        for (size_t i = 0; i < node_num; i++)
+        {
+            m_node_type[i] = NodeType::undefined;
+        }
+        double delta = 1e-5;
+        for (size_t i = 0; i < innerNodeNum; i++)
+        {
+            fin >> innerNodeIndex;
+            innerNodeIndex -= 1;
+            int neighbor_num = 6;
+            auto& neighbor_index = m_node_neibor[innerNodeIndex];
+            neighbor_index.resize(neighbor_num);
+            for (int j = 0; j < neighbor_num; j++)
+            {
+                fin >> neighbor_index[j];
+                neighbor_index[j] -= 1;
+            }
+            m_node_type[innerNodeIndex] = NodeType::inner;
+        }
+        // ËØªÂèñËæπÁïåËäÇÁÇπ
+        int total_bound_node_num = 0;
+        int nBound;
+        fin >> nBound;
+        total_bound_node_num += nBound;
+        m_bound_node.resize(total_bound_node_num);
+        int tempIndex1, tempIndex2;
+        int boundNodeIndex, connectNodeIndex;
+        Log::info("x- boundary node num:{}", nBound);
+        for (size_t i = 0; i < nBound; i++)
+        {
+            auto& bound_node = m_bound_node[i];
+            fin >> bound_node.bound_index >> bound_node.ref_index >> tempIndex1;
+            bound_node.bound_index -= 1;
+            bound_node.ref_index -= 1;
+            bound_node.type = "inlet";
+            double mod_norm = 0;
+            for (int j = 0; j < 3; j++)
+            {
+                bound_node.normal[j] = m_node_coord[bound_node.bound_index][j] - m_node_coord[bound_node.ref_index][j];
+                mod_norm += bound_node.normal[j] * bound_node.normal[j];
+            }
+            mod_norm = sqrt(mod_norm);
+            for (int j = 0; j < 3; j++)
+            {
+                bound_node.normal[j] /= mod_norm;
+            }
+            m_node_type[bound_node.bound_index] = NodeType::inlet;
+        }
+        fin >> nBound;
+        total_bound_node_num += nBound;
+        m_bound_node.resize(total_bound_node_num);
+        Log::info("x+ boundary node num:{}", nBound);
+        for (size_t i = 0; i < nBound; i++)
+        {
+            auto& bound_node = m_bound_node[i + total_bound_node_num - nBound];
+            fin >> bound_node.bound_index >> bound_node.ref_index >> tempIndex1;
+            bound_node.bound_index -= 1;
+            bound_node.ref_index -= 1;
+            bound_node.type = "outlet";
+            double mod_norm = 0;
+            for (int j = 0; j < 3; j++)
+            {
+                bound_node.normal[j] = m_node_coord[bound_node.bound_index][j] - m_node_coord[bound_node.ref_index][j];
+                mod_norm += bound_node.normal[j] * bound_node.normal[j];
+            }
+            mod_norm = sqrt(mod_norm);
+            for (int j = 0; j < 3; j++)
+            {
+                bound_node.normal[j] /= mod_norm;
+            }
+            m_node_type[bound_node.bound_index] = NodeType::outlet;
+        }
+        fin >> nBound;
+        total_bound_node_num += nBound;
+        m_bound_node.resize(total_bound_node_num);
+        Log::info("y- boundary node num:{}", nBound);
+        for (size_t i = 0; i < nBound; i++)
+        {
+            auto& bound_node = m_bound_node[i + total_bound_node_num - nBound];
+            fin >> bound_node.bound_index >> bound_node.ref_index >> tempIndex1;
+            bound_node.bound_index -= 1;
+            bound_node.ref_index -= 1;
+            bound_node.type = "outlet";
+            double mod_norm = 0;
+            for (int j = 0; j < 3; j++)
+            {
+                bound_node.normal[j] = m_node_coord[bound_node.bound_index][j] - m_node_coord[bound_node.ref_index][j];
+                mod_norm += bound_node.normal[j] * bound_node.normal[j];
+            }
+            mod_norm = sqrt(mod_norm);
+            for (int j = 0; j < 3; j++)
+            {
+                bound_node.normal[j] /= mod_norm;
+            }
+            m_node_type[bound_node.bound_index] = NodeType::outlet;
+        }
+        fin >> nBound;
+        total_bound_node_num += nBound;
+        m_bound_node.resize(total_bound_node_num);
+        Log::info("y+ boundary node num:{}", nBound);
+        for (size_t i = 0; i < nBound; i++)
+        {
+            auto& bound_node = m_bound_node[i + total_bound_node_num - nBound];
+            fin >> bound_node.bound_index >> bound_node.ref_index >> tempIndex1;
+            bound_node.bound_index -= 1;
+            bound_node.ref_index -= 1;
+            bound_node.type = "outlet";
+            double mod_norm = 0;
+            for (int j = 0; j < 3; j++)
+            {
+                bound_node.normal[j] = m_node_coord[bound_node.bound_index][j] - m_node_coord[bound_node.ref_index][j];
+                mod_norm += bound_node.normal[j] * bound_node.normal[j];
+            }
+            mod_norm = sqrt(mod_norm);
+            for (int j = 0; j < 3; j++)
+            {
+                bound_node.normal[j] /= mod_norm;
+            }
+            m_node_type[bound_node.bound_index] = NodeType::outlet;
+        }
+        fin >> nBound;
+        total_bound_node_num += nBound;
+        m_bound_node.resize(total_bound_node_num);
+        Log::info("z- boundary node num:{}", nBound);
+        for (size_t i = 0; i < nBound; i++)
+        {
+            auto& bound_node = m_bound_node[i + total_bound_node_num - nBound];
+            fin >> bound_node.bound_index >> bound_node.ref_index >> tempIndex1;
+            bound_node.bound_index -= 1;
+            bound_node.ref_index -= 1;
+            bound_node.type = "outlet";
+            double mod_norm = 0;
+            for (int j = 0; j < 3; j++)
+            {
+                bound_node.normal[j] = m_node_coord[bound_node.bound_index][j] - m_node_coord[bound_node.ref_index][j];
+                mod_norm += bound_node.normal[j] * bound_node.normal[j];
+            }
+            mod_norm = sqrt(mod_norm);
+            for (int j = 0; j < 3; j++)
+            {
+                bound_node.normal[j] /= mod_norm;
+            }
+            m_node_type[bound_node.bound_index] = NodeType::outlet;
+        }
+        fin >> nBound;
+        total_bound_node_num += nBound;
+        m_bound_node.resize(total_bound_node_num);
+        Log::info("z+ boundary node num:{}", nBound);
+        for (size_t i = 0; i < nBound; i++)
+        {
+            auto& bound_node = m_bound_node[i + total_bound_node_num - nBound];
+            fin >> bound_node.bound_index >> bound_node.ref_index >> tempIndex1;
+            bound_node.bound_index -= 1;
+            bound_node.ref_index -= 1;
+            bound_node.type = "outlet";
+            double mod_norm = 0;
+            for (int j = 0; j < 3; j++)
+            {
+                bound_node.normal[j] = m_node_coord[bound_node.bound_index][j] - m_node_coord[bound_node.ref_index][j];
+                mod_norm += bound_node.normal[j] * bound_node.normal[j];
+            }
+            mod_norm = sqrt(mod_norm);
+            for (int j = 0; j < 3; j++)
+            {
+                bound_node.normal[j] /= mod_norm;
+            }
+            m_node_type[bound_node.bound_index] = NodeType::outlet;
+        }
+        fin >> nBound;
+        total_bound_node_num += nBound;
+        m_bound_node.resize(total_bound_node_num);
+        Log::info("wall boundary node num:{}", nBound);
+        for (size_t i = 0; i < nBound; i++)
+        {
+            auto& bound_node = m_bound_node[i + total_bound_node_num - nBound];
+            fin >> bound_node.bound_index >> bound_node.ref_index >> tempIndex1;
+            bound_node.bound_index -= 1;
+            bound_node.ref_index -= 1;
+            bound_node.type = "slipWall";
+            double mod_norm = 0;
+            for (int j = 0; j < 3; j++)
+            {
+                bound_node.normal[j] = m_node_coord[bound_node.bound_index][j] - m_node_coord[bound_node.ref_index][j];
+                mod_norm += bound_node.normal[j] * bound_node.normal[j];
+            }
+            mod_norm = sqrt(mod_norm);
+            for (int j = 0; j < 3; j++)
+            {
+                bound_node.normal[j] /= mod_norm;
+            }
+            m_node_type[bound_node.bound_index] = NodeType::slipWall;
+        }
+        fin.close();
+    }
 
-				}
-			}
-			if (temp_min < PI / 18)
-				Log::warn("Min axis Angle: {}, Node index: {} is less than 10 degree", temp_min, innerNodeIndex);
-			if (temp_min < min_angle)
-			{
-				min_angle = temp_min;
-				min_angle_index = innerNodeIndex;
-				min_angle_neibor_index1 = temp_index1;
-				min_angle_neibor_index2 = temp_index2;
-			}
+    void GridCreaterFN::SortNeiborNode()
+    {
+        struct node_pair
+        {
+            int node1, node2;
+        };
+        int node_num = m_node_coord.size();
+        std::map<double, node_pair> node_pair_map;
+        for (int iNode = 0; iNode < node_num; ++iNode)
+        {
+            node_pair_map.clear();
+            if (m_node_type[iNode] != NodeType::inner)
+                continue;
+            auto& node_coord = m_node_coord[iNode];
+            auto& neighbor = m_node_neibor[iNode];
+            // Âà†Èô§ÈÇªÂ±ÖËäÇÁÇπ‰∏≠‰∏éÂΩìÂú∞ËäÇÁÇπË∑ùÁ¶ªÂ∞è‰∫éÂ∞èÈáèÁöÑËäÇÔøΩ?
+            for (int i = 0; i < neighbor.size(); ++i)
+            {
+                if (DistanceOfTwoPoints(node_coord.data(), m_node_coord[neighbor[i]].data()) < EPSILON_NUMBER)
+                {
+                    neighbor.erase(neighbor.begin() + i);
+                    --i;
+                }
+            }
+            // ÁîüÊàêÁÇπÂØπmap
+            // ‰ª•ÁÇπÂØπ‰∏éiNodeËøûÁ∫øÁöÑÂ§πËßí‰∏∫key
+            // ‰ª•ÁÇπÂØπ‰∏∫value
+            // ÁÇπÂØπ‰∏∫ÊâÄÊúâ‰∏éiNodeÁõ∏ÈÇªÁöÑÁÇπÔøΩ?
+            std::vector<double> vec1(3), vec2(3);
+            for (int i = 0; i < neighbor.size(); ++i)
+            {
+                for (int j = i + 1; j < neighbor.size(); ++j)
+                {
+                    node_pair temp;
+                    temp.node1 = neighbor[i];
+                    temp.node2 = neighbor[j];
+                    for (int k = 0; k < 3; ++k)
+                    {
+                        vec1[k] = m_node_coord[temp.node1][k] - node_coord[k];
+                        vec2[k] = m_node_coord[temp.node2][k] - node_coord[k];
+                    }
+                    double angle = AngleOfTwoArray3D(vec1.data(), vec2.data());
+                    node_pair_map[angle] = temp;
+                }
+            }
+            // ÂèñÂá∫map‰∏≠ÊúÄÂêé‰∏Ä‰∏™ÁÇπÂØπÔºåÂç≥Â§πËßíÊúÄÂ§ßÁöÑÁÇπÂØπ
+            node_pair main_pair = node_pair_map.rbegin()->second;
+            // ‰ªéÈÇªÂ±ÖËäÇÁÇπ‰∏≠Âà†Èô§Ëøô‰∏™ÁÇπÂØπ
+            neighbor.erase(std::find(neighbor.begin(), neighbor.end(), main_pair.node1));
+            neighbor.erase(std::find(neighbor.begin(), neighbor.end(), main_pair.node2));
+            // ‰∏ªÊñπÂêëÂêëÔøΩ?
+            DVector3D main_vec;
+            for (int k = 0; k < 3; ++k)
+            {
+                main_vec[k] = m_node_coord[main_pair.node1][k] - m_node_coord[main_pair.node2][k];
+            }
+            main_vec.normalize();
+            // Ê±ÇÂá∫ÊâÄÊúâÈÇªÂ±ÖËäÇÁÇπÂú®‰ª•‰∏ªÊñπÂêëÂêëÈáè‰∏∫Ê≥ïÂêëÈáèÔºåÁªèËøáÂΩìÂú∞ËäÇÁÇπÁöÑÂπ≥Èù¢‰∏äÁöÑÊäïÂΩ±
+            map<int, DVector3D> node_proj_map;
+            DVector3D vec;
+            for (int i = 0; i < neighbor.size(); ++i)
+            {
+                for (int k = 0; k < 3; ++k)
+                {
+                    vec[k] = m_node_coord[neighbor[i]][k] - node_coord[k];
+                }
+                vec -= vec.dot(main_vec) * main_vec;
+                double vec_norm = vec.norm();
+                // Â¶ÇÊûúÊäïÂΩ±ÂêëÈáèÁöÑÊ®°ÈïøÂ∞èÔøΩ?1e-6ÔºåÂà†Èô§ËØ•ÈÇªÂ±ÖËäÇÁÇπ
+                if (vec_norm < EPSILON_NUMBER)
+                {
+                    neighbor.erase(neighbor.begin() + i);
+                    --i;
+                    continue;
+                }
+                node_proj_map[neighbor[i]] = vec;
+            }
+            // ‰ª•Á¨¨‰∏Ä‰∏™ÈÇªÂ±ÖËäÇÁÇπÊäïÂΩ±ÂêëÈáè‰∏∫Âü∫ÂáÜÂêëÈáèÔºåÊ±ÇÂá∫Âü∫ÂáÜÂêëÈáè‰ª•Ê≥ïÂêëÈáè‰∏∫ÊóãËΩ¨ËΩ¥ÊóãËΩ¨Âà∞ÂÖ∂‰ªñÊäïÂΩ±ÂêëÈáèÁöÑËßíÔøΩ?, 0~2pi
+            map<double, int> node_angle_map;
+            for (int i = 0; i < neighbor.size(); ++i)
+            {
+                if (i == 0)
+                {
+                    node_angle_map[0] = neighbor[i];
+                    continue;
+                }
+                DVector3D vec = node_proj_map[neighbor[i]];
+                double angle = AngleOfTwoArray3D(node_proj_map[neighbor[0]].data(), vec.data());
+                if ((node_proj_map[neighbor[0]].cross(vec).dot(main_vec) < 0))
+                    angle = 2 * PI - angle;
+                // Â¶ÇÊûúmap‰∏≠Â∑≤ÁªèÊúâËøô‰∏™ËßíÂ∫¶ÔºåÊØîËæÉ‰∏§‰∏™ËßíÂ∫¶ÂØπÂ∫îÁöÑÈÇªÂ±ÖËäÇÁÇπÁöÑË∑ùÁ¶ªÔºåÂà†Èô§Ë∑ùÁ¶ªÂ§ßÁöÑÈÇªÂ±ÖËäÇÁÇπ
+                if (node_angle_map.find(angle) != node_angle_map.end())
+                {
+                    if (node_proj_map[neighbor[i]].norm() > node_proj_map[node_angle_map[angle]].norm())
+                    {
+                        node_angle_map[angle] = neighbor[i];
+                        neighbor.erase(std::find(neighbor.begin(), neighbor.end(), node_angle_map[angle]));
+                    }
+                    else
+                    {
+                        neighbor.erase(std::find(neighbor.begin(), neighbor.end(), neighbor[i]));
+                    }
+                    --i;
+                    continue;
+                }
+                node_angle_map[angle] = neighbor[i];
+            }
+            // Ê†πÊçÆËßíÂ∫¶ÊéíÂ∫èÂêéÁöÑÈÇªÂ±ÖËäÇÁÇπ
+            neighbor.clear();
+            for (auto& i : node_angle_map)
+            {
+                neighbor.push_back(i.second);
+            }
+            // Ê±ÇÂá∫ÈÇªÂ±ÖËäÇÁÇπ‰∏éÂΩìÂú∞ËäÇÁÇπ‰πãÈó¥ÁöÑË∑ùÁ¶ª
+            map<int, double> node_dis_map;
+            for (int i = 0; i < neighbor.size(); ++i)
+            {
+                node_dis_map[neighbor[i]] = node_proj_map[neighbor[i]].norm();
+            }
+            node_pair_map.clear();
+            // Ëé∑Âèñ‰∏ã‰∏Ä‰∏™ÁÇπÁöÑlamdaË°®ËææÔøΩ?
+            auto get_next_node = [&](int iNode, IArray neiborNode) -> int {
+                if (iNode == neiborNode.size() - 1)
+                    return 0;
+                else
+                    return iNode + 1;
+                };
+            // Ëé∑Âèñ‰∏ä‰∏Ä‰∏™ÁÇπÁöÑlamdaË°®ËææÔøΩ?
+            auto get_last_node = [&](int iNode, IArray neiborNode) -> int {
+                if (iNode == 0)
+                    return neiborNode.size() - 1;
+                else
+                    return iNode - 1;
+                };
 
+            for (int i = 0; i < neighbor.size(); ++i)
+            {
+                node_pair temp;
+                temp.node1 = neighbor[i];
+                temp.node2 = neighbor[get_next_node(i, neighbor)];
+                DVector3D vec1, vec2;
+                vec1 = node_proj_map[temp.node1];
+                vec2 = node_proj_map[temp.node2];
+                double angle = AngleOfTwoArray3D(vec1.data(), vec2.data()) + GetRand(0.0, 1.0) * EPSILON_NUMBER;
+                if (vec1.cross(vec2).dot(main_vec) < 0)
+                    angle = 2 * PI - angle;
+                node_pair_map[angle] = temp;
+            }
 
-			temp_i[innerNodeIndex] = IArray{ neibor_index[0],innerNodeIndex,neibor_index[1] };
-			temp_j[innerNodeIndex] = IArray{ neibor_index[2],innerNodeIndex,neibor_index[3] };
-			temp_k[innerNodeIndex] = IArray{ neibor_index[4],innerNodeIndex,neibor_index[5] };
-		}
-		Log::info("Min axis Angle: {}, Node index: {}", min_angle, min_angle_index);
-		Log::info("-------- Coord: {}, {}, {}", nodeCoord[min_angle_index][0], nodeCoord[min_angle_index][1], nodeCoord[min_angle_index][2]);
-		Log::info("-------- Neighbor: {}, {}, {}, {}, {}, {}", nodeNeibor[min_angle_index][0], nodeNeibor[min_angle_index][1], nodeNeibor[min_angle_index][2], nodeNeibor[min_angle_index][3], nodeNeibor[min_angle_index][4], nodeNeibor[min_angle_index][5]);
-		Log::info("-------- Axis Node 1: {}, Node 2: {}", min_angle_neibor_index1, min_angle_neibor_index2);
-		//∂¡»°À˘”–±ﬂΩÁΩ⁄µ„¡⁄æ”Ω⁄µ„
-		BoundaryMap* boundMap = grid->GetBoundaryMap();
-		m_BoundNodeNum = 0;
-		int nBound;
-		fin >> nBound;
-		m_BoundNodeNum += nBound;
-		int tempIndex1, tempIndex2;
-		int boundNodeIndex, connectNodeIndex;
-		Boundary tempBound;
-		DVector3D tempNorm;
-		Log::info("x- boundary node num:{}", nBound);
-		for (size_t i = 0; i < nBound; i++)
-		{
-			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
-			boundNodeIndex -= 1;
-			connectNodeIndex -= 1;
-			tempNorm = nodeCoord[boundNodeIndex] - nodeCoord[connectNodeIndex];
-			tempNorm.normalize();
-			boundMap->AddBoundary("inlet", Boundary{ boundNodeIndex,connectNodeIndex,0,tempNorm });
-			nodeType[boundNodeIndex] = NodeType::inlet;
-		}
-		fin >> nBound;
-		m_BoundNodeNum += nBound;
-		Log::info("x+ boundary node num:{}", nBound);
-		for (size_t i = 0; i < nBound; i++)
-		{
-			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
-			boundNodeIndex -= 1;
-			connectNodeIndex -= 1;
-			tempNorm = nodeCoord[boundNodeIndex] - nodeCoord[connectNodeIndex];
-			tempNorm.normalize();
-			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,tempNorm });
-			nodeType[boundNodeIndex] = NodeType::outlet;
-		}
-		fin >> nBound;
-		m_BoundNodeNum += nBound;
-		Log::info("y- boundary node num:{}", nBound);
-		for (size_t i = 0; i < nBound; i++)
-		{
-			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
-			boundNodeIndex -= 1;
-			connectNodeIndex -= 1;
-			tempNorm = nodeCoord[boundNodeIndex] - nodeCoord[connectNodeIndex];
-			tempNorm.normalize();
-			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,tempNorm });
-			nodeType[boundNodeIndex] = NodeType::outlet;
-		}
-		fin >> nBound;
-		m_BoundNodeNum += nBound;
-		Log::info("y+ boundary node num:{}", nBound);
-		for (size_t i = 0; i < nBound; i++)
-		{
-			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
-			boundNodeIndex -= 1;
-			connectNodeIndex -= 1;
-			tempNorm = nodeCoord[boundNodeIndex] - nodeCoord[connectNodeIndex];
-			tempNorm.normalize();
-			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,tempNorm });
-			nodeType[boundNodeIndex] = NodeType::outlet;
-		}
-		fin >> nBound;
-		m_BoundNodeNum += nBound;
-		Log::info("z- boundary node num:{}", nBound);
-		for (size_t i = 0; i < nBound; i++)
-		{
-			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
-			boundNodeIndex -= 1;
-			connectNodeIndex -= 1;
-			tempNorm = nodeCoord[boundNodeIndex] - nodeCoord[connectNodeIndex];
-			tempNorm.normalize();
-			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0,tempNorm });
-			nodeType[boundNodeIndex] = NodeType::outlet;
-		}
-		fin >> nBound;
-		m_BoundNodeNum += nBound;
-		Log::info("z+ boundary node num:{}", nBound);
-		for (size_t i = 0; i < nBound; i++)
-		{
-			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
-			boundNodeIndex -= 1;
-			connectNodeIndex -= 1;
-			tempNorm = nodeCoord[boundNodeIndex] - nodeCoord[connectNodeIndex];
-			tempNorm.normalize();
-			boundMap->AddBoundary("outlet", Boundary{ boundNodeIndex,connectNodeIndex,0, tempNorm });
-			nodeType[boundNodeIndex] = NodeType::outlet;
-		}
-		fin >> nBound;
-		m_BoundNodeNum += nBound;
-		Log::info("wall boundary node num:{}", nBound);
-		for (size_t i = 0; i < nBound; i++)
-		{
-			fin >> boundNodeIndex >> connectNodeIndex >> tempIndex1;
-			boundNodeIndex -= 1;
-			connectNodeIndex -= 1;
-			tempNorm = nodeCoord[boundNodeIndex] - nodeCoord[connectNodeIndex];
-			tempNorm.normalize();
-			boundMap->AddBoundary("slipWall", Boundary{ boundNodeIndex,connectNodeIndex,0,tempNorm });
-			nodeType[boundNodeIndex] = NodeType::slipWall;
-		}
-		fin.close();
+            if (node_pair_map.size() != neighbor.size())
+                Log::info("node_pair_map.size()!=currentNeibor.size()");
+            // ÂèñÂá∫map‰∏≠Á¨¨‰∏Ä‰∏™ÁÇπÂØπÔºåÂç≥Â§πËßíÊúÄÂ∞èÁöÑÁÇπÂØπ
+            // Âà†Èô§Ëøô‰∏™ÁÇπÂØπ‰∏≠Ë∑ùÁ¶ªÊúÄÂ§ßÁöÑÔøΩ?
+            while (neighbor.size() > 4)
+            {
 
-		//≤È’“¡⁄æ”Ω⁄µ„£¨ø¥◊‘…Ì «∑Ò «∆‰¡⁄æ”£¨»Á≤ª «£¨‘Úº”Ω¯»•
-		Log::info("Add self to neibor node's neibor node");
-		bool find_current;
-		for (int iNode = 0;iNode < m_NodeNum;iNode++)
-		{
-			if (nodeType[iNode] != NodeType::inner)
-				continue;
-			find_current = false;
-			auto& currentNeibor = nodeNeibor[iNode];
-			for (int iNeibor = 0;iNeibor < currentNeibor.size();iNeibor++)
-			{
-				auto& neighbor_neighbor = nodeNeibor[currentNeibor[iNeibor]];
-				for (int jNeibor = 0;jNeibor < neighbor_neighbor.size();jNeibor++)
-				{
-					if (neighbor_neighbor[jNeibor] == iNode)
-						find_current = true;
-				}
-				if (find_current == false)
-				{
-					neighbor_neighbor.push_back(iNode);
-				}
-			}
-		}
-		//¿©’πƒ⁄≤øΩ⁄µ„¡⁄æ”Ω⁄µ„£¨”√”⁄º∆À„Ã›∂»
-		Log::info("extend inner node neibor node");
-		ExtendNeighborNode(grid);
-		//≤È’“¡⁄æ”Ω⁄µ„£¨ø¥◊‘…Ì «∑Ò «∆‰¡⁄æ”£¨»Á≤ª «£¨‘Úº”Ω¯»•
-		Log::info("Add self to neibor node's neibor node");
-		for (int iNode = 0;iNode < m_NodeNum;iNode++)
-		{
-			if (nodeType[iNode] != NodeType::inner)
-				continue;
-			find_current = false;
-			auto& currentNeibor = nodeNeibor[iNode];
-			for (int iNeibor = 0;iNeibor < currentNeibor.size();iNeibor++)
-			{
-				auto& neighbor_neighbor = nodeNeibor[currentNeibor[iNeibor]];
-				for (int jNeibor = 0;jNeibor < neighbor_neighbor.size();jNeibor++)
-				{
-					if (neighbor_neighbor[jNeibor] == iNode)
-						find_current = true;
-				}
-				if (find_current == false)
-				{
-					neighbor_neighbor.push_back(iNode);
-				}
-			}
-		}
-		ReadCellFile(grid);
-		ReadBoundFaceFile(grid);
-		//ºÏ≤ÈŒ¥∂®“ÂΩ⁄µ„
-		Log::info("Check undefined node");
-		for (size_t i = 0; i < m_NodeNum; i++)
-		{
-			if (nodeType[i] == NodeType::undefined)
-			{
-				Log::info("node:{} type is undefined", i);
-			}
-		}
-		Log::info("Check undefined node done");
-	}
+                auto& temp_pair = node_pair_map.begin()->second;
+                int remove_node, remove_index;
+                node_pair temp;
+                if (node_dis_map[temp_pair.node1] > node_dis_map[temp_pair.node2])
+                {
+                    remove_node = temp_pair.node1;
+                    remove_index = std::find(neighbor.begin(), neighbor.end(), remove_node) - neighbor.begin();
+                    for (auto i : node_pair_map)
+                    {
+                        if (i.second.node1 == neighbor[get_last_node(remove_index, neighbor)] &&
+                            i.second.node2 == neighbor[remove_index])
+                        {
+                            node_pair_map.erase(i.first);
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    remove_node = temp_pair.node2;
+                    remove_index = std::find(neighbor.begin(), neighbor.end(), remove_node) - neighbor.begin();
+                    for (auto i : node_pair_map)
+                    {
+                        if (i.second.node1 == neighbor[remove_index] &&
+                            i.second.node2 == neighbor[get_next_node(remove_index, neighbor)])
+                        {
+                            node_pair_map.erase(i.first);
+                            break;
+                        }
+                    }
+                }
+                node_pair_map.erase(node_pair_map.begin());
+                temp.node1 = neighbor[get_last_node(remove_index, neighbor)];
+                temp.node2 = neighbor[get_next_node(remove_index, neighbor)];
+                neighbor.erase(std::find(neighbor.begin(), neighbor.end(), remove_node));
+                node_dis_map.erase(remove_node);
+                DVector3D vec1, vec2;
+                vec1 = node_proj_map[temp.node1];
+                vec2 = node_proj_map[temp.node2];
+                double angle = AngleOfTwoArray3D(vec1.data(), vec2.data()) + GetRand(0.0, 1.0) * EPSILON_NUMBER;
+                if (vec1.cross(vec2).dot(main_vec) < 0)
+                    angle = 2 * PI - angle;
+                node_pair_map[angle] = temp;
+            }
+            //! ÂâçÂõõ‰∏™ÁÇπÊ≤°ÊúâÊéíÂ∫è
+            neighbor.push_back(main_pair.node1);
+            neighbor.push_back(main_pair.node2);
+        }
+    }
 
-	void GridFactoryFNFDM3D::SortNeiborNode(Grid* grid)
-	{
-		NodeTopo* nodeTopo = grid->GetNodeTopo();
+    void GridCreaterFN::ExtendNeighborNode()
+    {
+        // ÊûÑÂª∫ËäÇÁÇπKDÔøΩ?
+        // ÂàùÂßãÂåñvtkÔøΩ?
+        vtkNew<vtkPoints> points;
+        for (int i = 0; i < m_node_coord.size(); ++i)
+        {
+            points->InsertNextPoint(m_node_coord[i].data());
+        }
+        // ÊäävtkÁÇπËΩ¨Êç¢‰∏∫vtkploydata
+        vtkNew<vtkPolyData> polydata;
+        polydata->SetPoints(points);
+        // Â∞ÜvtkploydataËΩ¨Êç¢‰∏∫vtkÁÇπÂÆö‰ΩçÂô®
+        vtkNew<vtkVertexGlyphFilter> glyphFilter;
+        glyphFilter->SetInputData(polydata);
+        glyphFilter->Update();
+        // ÊûÑÂª∫KDÔøΩ?
+        vtkNew<vtkKdTreePointLocator> kdTree;
+        kdTree->SetDataSet(glyphFilter->GetOutput());
+        kdTree->BuildLocator();
+        int point_num = kdTree->GetDataSet()->GetNumberOfPoints();
+        int neibor_num_before = 0;
+        int neibor_num_after = 0;
+        int min_neibor_num = 1E5;
+        int max_neibor_num = 0;
+        int node_num = m_node_coord.size();
+        // Êâ©Â±ïÂÜÖÈÉ®ËäÇÁÇπÈÇªÂ±ÖËäÇÁÇπÔºåÁî®‰∫éËÆ°ÁÆóÊ¢ØÂ∫¶
+        std::set<int> neibor_set;
+        for (int iNode = 0; iNode < node_num; iNode++)
+        {
+            if (m_node_type[iNode] != NodeType::inner)
+                continue;
+            neibor_set.clear();
+            auto& nodeNeibor = m_node_neibor[iNode];
+            neibor_num_before = nodeNeibor.size();
+            double max_distance = 0;
+            for (auto& iNeibor : nodeNeibor)
+            {
+                max_distance =
+                    Max(max_distance, DistanceOfTwoPoints(m_node_coord[iNode].data(), m_node_coord[iNeibor].data()));
+                neibor_set.insert(iNeibor);
+            }
+            // ‰ª•ÂΩìÂâçËäÇÁÇπ‰∏∫‰∏≠ÂøÉÔºå‰ª•ÊúÄÂ§ßË∑ùÁ¶ª‰∏∫ÂçäÂæÑÔºåÊâæÂà∞ËåÉÂõ¥ÂÜÖÁöÑËäÇÁÇπ
+            double search_radius = max_distance * 1.00001;
+            vtkNew<vtkIdList> result;
+            while (result->GetNumberOfIds() < 6)
+            {
+                kdTree->FindPointsWithinRadius(search_radius, m_node_coord[iNode].data(), result);
+                if (result->GetNumberOfIds() > 50)
+                {
+                    search_radius *= 0.9;
+                    result->Reset();
+                }
+                else
+                    search_radius *= 1.1;
+            }
+            for (int i = 0; i < result->GetNumberOfIds(); ++i)
+            {
+                neibor_set.insert(result->GetId(i));
+            }
+            neibor_set.erase(iNode);
 
-		auto& nodeCoord = nodeTopo->GetCoordinate();
-		auto& nodeNeibor = nodeTopo->GetNeighborCloud();
-		auto& nodeType = nodeTopo->GetType();
-		auto& temp_i = nodeTopo->GetTemplateI();
-		auto& temp_j = nodeTopo->GetTemplateJ();
-		auto& temp_k = nodeTopo->GetTemplateK();
-		struct node_pair
-		{
-			int node1, node2;
-		};
-		std::map<double, node_pair> node_pair_map;
-		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
-		{
-			node_pair_map.clear();
-			if (nodeType[iNode] != NodeType::inner)
-				continue;
-			auto& currentNodeCoord = nodeCoord[iNode];
-			auto& currentNeibor = nodeNeibor[iNode];
-			//ZaranLog::info("node:{}\n", iNode);
-			//…æ≥˝¡⁄æ”Ω⁄µ„÷–”Îµ±µÿΩ⁄µ„æ‡¿Î–°”⁄–°¡øµƒΩ⁄µ„
-			for (int i = 0; i < currentNeibor.size(); ++i)
-			{
-				if ((nodeCoord[currentNeibor[i]] - currentNodeCoord).norm() < 1e-6)
-				{
-					currentNeibor.erase(currentNeibor.begin() + i);
-					--i;
-				}
+            neibor_num_after = neibor_set.size();
+            nodeNeibor.resize(6);//Â∑ÆÂàÜÊ®°Êùø‰∏çÊîπÂèò
+            nodeNeibor.reserve(neibor_set.size());
+            for (auto& i : neibor_set)
+            {
+                //Â¶ÇÊûúnodeNeibor‰∏≠Ê≤°ÊúâËØ•ËäÇÁÇπÔºåÊ∑ªÂä†ËØ•ËäÇÁÇπ
+                if (std::find(nodeNeibor.begin(), nodeNeibor.end(), i) == nodeNeibor.end())
+                    nodeNeibor.emplace_back(i);
+            }
+            min_neibor_num = Min(min_neibor_num, neibor_num_after);
+            max_neibor_num = Max(max_neibor_num, neibor_num_after);
+            if (neibor_num_after < neibor_num_before)
+                Log::info("node:{} neibor num before:{} neibor num after:{}", iNode, neibor_num_before, neibor_num_after);
+        }
+        Log::info("min neibor num:{} max neibor num:{}", min_neibor_num, max_neibor_num);
+    }
 
-			}
-			// …˙≥…µ„∂‘map
-			// “‘µ„∂‘”ÎiNode¡¨œﬂµƒº–Ω«Œ™key
-			// “‘µ„∂‘Œ™value
-			// µ„∂‘Œ™À˘”–”ÎiNodeœ‡¡⁄µƒµ„∂‘
-			for (int i = 0; i < currentNeibor.size(); ++i)
-			{
-				for (int j = i + 1; j < currentNeibor.size(); ++j)
-				{
-					node_pair temp;
-					temp.node1 = currentNeibor[i];
-					temp.node2 = currentNeibor[j];
-					DVector3D vec1 = nodeCoord[temp.node1] - nodeCoord[iNode];
-					DVector3D vec2 = nodeCoord[temp.node2] - nodeCoord[iNode];
-					double angle = AngleOfTwoArray3D(vec1.data(), vec2.data());
-					node_pair_map[angle] = temp;
-				}
-			}
-			//»°≥ˆmap÷–◊Ó∫Û“ª∏ˆµ„∂‘£¨º¥º–Ω«◊Ó¥Ûµƒµ„∂‘
-			node_pair main_pair = node_pair_map.rbegin()->second;
-			//¥”¡⁄æ”Ω⁄µ„÷–…æ≥˝’‚∏ˆµ„∂‘
-			currentNeibor.erase(std::find(currentNeibor.begin(), currentNeibor.end(), main_pair.node1));
-			currentNeibor.erase(std::find(currentNeibor.begin(), currentNeibor.end(), main_pair.node2));
-			//÷˜∑ΩœÚœÚ¡ø
-			DVector3D main_vec = nodeCoord[main_pair.node1] - nodeCoord[main_pair.node2];
+    void GridCreaterFN::ReadCellFile()
+    {
+        std::ifstream fin;
+        fin.open("cell.dat");
+        int nodeNum;
+        int cellNum;
+        std::string separator = " \r\n\t#$;\"";
+        std::string line;
+        while (std::getline(fin, line))
+        {
+            if (line.empty())
+                continue;
+            std::transform(line.begin(), line.end(), line.begin(), std::toupper);
+            line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
+            size_t start_id_node_num = line.find("N=");
+            if (start_id_node_num == std::string::npos)
+                continue;
+            start_id_node_num += 2;
+            size_t end_id_node_num = line.find_first_of(',');
+            std::string node_num_str = line.substr(start_id_node_num, end_id_node_num - start_id_node_num);
+            line.erase(0, end_id_node_num + 1);
+            size_t start_id_cell_num = line.find("E=");
+            if (start_id_cell_num == std::string::npos)
+                continue;
+            start_id_cell_num += 2;
+            size_t end_id_cell_num = line.find_first_of(',');
+            std::string cell_num_str = line.substr(start_id_cell_num, end_id_cell_num - start_id_cell_num);
+            nodeNum = std::stoi(node_num_str);
+            cellNum = std::stoi(cell_num_str);
+            break;
+        }
+        // Ë∑≥ËøáËäÇÁÇπÂùêÊ†á
+        for (int i = 0; i < nodeNum; i++)
+        {
+            fin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
 
-			//«Û≥ˆÀ˘”–¡⁄æ”Ω⁄µ„‘⁄“‘÷˜∑ΩœÚœÚ¡øŒ™∑®œÚ¡ø£¨æ≠π˝µ±µÿΩ⁄µ„µƒ∆Ω√Ê…œµƒÕ∂”∞
-			map<int, DVector3D> node_proj_map;
-			for (int i = 0; i < currentNeibor.size(); ++i)
-			{
-				DVector3D vec = nodeCoord[currentNeibor[i]] - nodeCoord[iNode];
-				vec = vec - vec.dot(main_vec) * main_vec / (main_vec.norm() * main_vec.norm());
-				//»Áπ˚Õ∂”∞œÚ¡øµƒƒ£≥§–°”⁄1e-6£¨…æ≥˝∏√¡⁄æ”Ω⁄µ„
-				if (vec.norm() < 1e-6)
-				{
-					currentNeibor.erase(currentNeibor.begin() + i);
-					--i;
-					continue;
-				}
-				node_proj_map[currentNeibor[i]] = vec;
-			}
-			//“‘µ⁄“ª∏ˆ¡⁄æ”Ω⁄µ„Õ∂”∞œÚ¡øŒ™ª˘◊ºœÚ¡ø£¨«Û≥ˆª˘◊ºœÚ¡ø“‘∑®œÚ¡øŒ™–˝◊™÷·–˝◊™µΩ∆‰À˚Õ∂”∞œÚ¡øµƒΩ«∂», 0~2pi
-			map<double, int> node_angle_map;
-			for (int i = 0; i < currentNeibor.size(); ++i)
-			{
-				if (i == 0)
-				{
-					node_angle_map[0] = currentNeibor[i];
-					continue;
-				}
-				DVector3D vec = node_proj_map[currentNeibor[i]];
-				double angle = AngleOfTwoArray3D(node_proj_map[currentNeibor[0]].data(), vec.data());
-				if ((node_proj_map[currentNeibor[0]].cross(vec).dot(main_vec) < 0))
-					angle = 2 * PI - angle;
-				//»Áπ˚map÷–“—æ≠”–’‚∏ˆΩ«∂»£¨±»Ωœ¡Ω∏ˆΩ«∂»∂‘”¶µƒ¡⁄æ”Ω⁄µ„µƒæ‡¿Î£¨…æ≥˝æ‡¿Î¥Ûµƒ¡⁄æ”Ω⁄µ„
-				if (node_angle_map.find(angle) != node_angle_map.end())
-				{
-					if (node_proj_map[currentNeibor[i]].norm() > node_proj_map[node_angle_map[angle]].norm())
-					{
-						node_angle_map[angle] = currentNeibor[i];
-						currentNeibor.erase(std::find(currentNeibor.begin(), currentNeibor.end(), node_angle_map[angle]));
-					}
-					else
-					{
-						currentNeibor.erase(std::find(currentNeibor.begin(), currentNeibor.end(), currentNeibor[i]));
-					}
-					--i;
-					continue;
-				}
-				node_angle_map[angle] = currentNeibor[i];
-			}
-			//∏˘æ›Ω«∂»≈≈–Ú∫Ûµƒ¡⁄æ”Ω⁄µ„
-			currentNeibor.clear();
-			for (auto& i : node_angle_map)
-			{
-				currentNeibor.push_back(i.second);
-			}
-			//«Û≥ˆ¡⁄æ”Ω⁄µ„”Îµ±µÿΩ⁄µ„÷Æº‰µƒæ‡¿Î
-			map<int, double> node_dis_map;
-			for (int i = 0; i < currentNeibor.size(); ++i)
-			{
-				node_dis_map[currentNeibor[i]] = node_proj_map[currentNeibor[i]].norm();
-			}
-			node_pair_map.clear();
-			// ªÒ»°œ¬“ª∏ˆµ„µƒlamda±Ì¥Ô Ω
-			auto get_next_node = [&](int iNode, IArray neiborNode)-> int
-				{
-					if (iNode == neiborNode.size() - 1)
-						return 0;
-					else
-						return iNode + 1;
-				};
-			// ªÒ»°…œ“ª∏ˆµ„µƒlamda±Ì¥Ô Ω
-			auto get_last_node = [&](int iNode, IArray neiborNode)-> int
-				{
-					if (iNode == 0)
-						return neiborNode.size() - 1;
-					else
-						return iNode - 1;
-				};
+        Log::info("Total cell num:{}", cellNum);
+        m_cell_node.resize(cellNum);
+        for (int iCell = 0; iCell < cellNum; iCell++)
+        {
+            int cell_node_num = 8;
+            m_cell_node[iCell].resize(cell_node_num);
+            for (int i = 0; i < cell_node_num; i++)
+            {
+                fin >> m_cell_node[iCell][i];
+                m_cell_node[iCell][i] -= 1;
+            }
+        }
+        fin.close();
+    }
 
-			for (int i = 0; i < currentNeibor.size(); ++i)
-			{
-				node_pair temp;
-				temp.node1 = currentNeibor[i];
-				temp.node2 = currentNeibor[get_next_node(i, currentNeibor)];
-				DVector3D vec1, vec2;
-				vec1 = node_proj_map[temp.node1];
-				vec2 = node_proj_map[temp.node2];
-				double angle = AngleOfTwoArray3D(vec1.data(), vec2.data()) + GetRand(0.0, 1.0) * EPSILON_NUMBER;
-				if (vec1.cross(vec2).dot(main_vec) < 0)
-					angle = 2 * PI - angle;
-				node_pair_map[angle] = temp;
-			}
+    void GridCreaterFN::CheckNode()
+    {
+        double delta = 1e-5;
+        double min_angle = LARGE_NUMBER;
+        int min_angle_index;
+        int min_angle_neibor_index1, min_angle_neibor_index2;
+        int node_num = m_node_coord.size();
+        for (size_t iNode = 0; iNode < node_num; iNode++)
+        {
+            if (m_node_type[iNode] != NodeType::inner)
+                continue;
+            int neighbor_num = m_node_neibor[iNode].size();
+            auto& neighbor_index = m_node_neibor[iNode];
+            Array<DVector3D> vec(3);
+            for (int i = 0; i < 3; i++)
+            {
+                vec[0][i] = m_node_coord[neighbor_index[1]][i] - m_node_coord[neighbor_index[0]][i];
+                vec[1][i] = m_node_coord[neighbor_index[3]][i] - m_node_coord[neighbor_index[2]][i];
+                vec[2][i] = m_node_coord[neighbor_index[5]][i] - m_node_coord[neighbor_index[4]][i];
+            }
+            // Ê£ÄÊü•ÊòØÂê¶ÊòØÂè≥ÊâãÂùêÊ†áÁ≥ª
+            if (vec[0].cross(vec[1]).dot(vec[2]) < 0)
+            {
+                std::swap(neighbor_index[4], neighbor_index[5]);
+            }
+            double angle = AngleOfTwoArray3D(vec[0].data(), vec[1].data());
+            // i,jÊñπÂêëÂπ≥Ë°å
+            if (abs(angle) < delta)
+            {
+                std::swap(neighbor_index[1], neighbor_index[3]);
+            }
+            else if (abs(angle - PI) < delta)
+            {
+                std::swap(neighbor_index[1], neighbor_index[2]);
+            }
 
+            angle = AngleOfTwoArray3D(vec[0].data(), vec[2].data());
+            // i,kÊñπÂêëÂπ≥Ë°å
+            if (abs(angle) < delta)
+            {
+                std::swap(neighbor_index[1], neighbor_index[5]);
+            }
+            else if (abs(angle - PI) < delta)
+            {
+                std::swap(neighbor_index[1], neighbor_index[4]);
+            }
+            angle = AngleOfTwoArray3D(vec[1].data(), vec[2].data());
+            // j,kÊñπÂêëÂπ≥Ë°å
+            if (abs(angle) < delta)
+            {
+                std::swap(neighbor_index[3], neighbor_index[5]);
+            }
+            else if (abs(angle - PI) < delta)
+            {
+                std::swap(neighbor_index[3], neighbor_index[4]);
+            }
+            // Ê£ÄÊü•ÊòØÂê¶ÊòØÂè≥ÊâãÂùêÊ†áÁ≥ª
+            for (int i = 0; i < 3; i++)
+            {
+                vec[0][i] = m_node_coord[neighbor_index[1]][i] - m_node_coord[neighbor_index[0]][i];
+                vec[1][i] = m_node_coord[neighbor_index[3]][i] - m_node_coord[neighbor_index[2]][i];
+                vec[2][i] = m_node_coord[neighbor_index[5]][i] - m_node_coord[neighbor_index[4]][i];
+            }
+            if (vec[0].cross(vec[1]).dot(vec[2]) < 0)
+            {
+                std::swap(neighbor_index[4], neighbor_index[5]);
+            }
+            // ËÆ°ÁÆóÂùêÊ†áËΩ¥‰πãÈó¥ÁöÑÊúÄÂ∞èÂ§πËßí
+            double temp_min = LARGE_NUMBER;
+            int temp_index1, temp_index2;
+            for (int iNeigh = 0; iNeigh < 6; ++iNeigh)
+            {
+                for (int k = 0; k < 3; ++k)
+                {
+                    vec[0][k] = m_node_coord[neighbor_index[iNeigh]][k] - m_node_coord[iNode][k];
+                }
+                for (int jNode = iNeigh + 1; jNode < 6; ++jNode)
+                {
+                    for (int k = 0; k < 3; ++k)
+                    {
+                        vec[1][k] = m_node_coord[neighbor_index[jNode]][k] - m_node_coord[iNode][k];
+                    }
+                    double angle = AngleOfTwoArray3D(vec[0].data(), vec[1].data());
+                    if (angle < temp_min)
+                    {
+                        temp_min = angle;
+                        temp_index1 = neighbor_index[iNeigh];
+                        temp_index2 = neighbor_index[jNode];
+                    }
+                }
+            }
+            if (temp_min < min_angle)
+            {
+                min_angle = temp_min;
+                min_angle_index = iNode;
+                min_angle_neibor_index1 = temp_index1;
+                min_angle_neibor_index2 = temp_index2;
+            }
+        }
+        Log::info("Min axis Angle: {}, Node index: {}", min_angle, min_angle_index);
+        Log::info("-------- Coord: {}, {}, {}", m_node_coord[min_angle_index][0], m_node_coord[min_angle_index][1],
+            m_node_coord[min_angle_index][2]);
+        Log::info("-------- Neighbor: {}, {}, {}, {}, {}, {}", m_node_neibor[min_angle_index][0],
+            m_node_neibor[min_angle_index][1], m_node_neibor[min_angle_index][2], m_node_neibor[min_angle_index][3],
+            m_node_neibor[min_angle_index][4], m_node_neibor[min_angle_index][5]);
+        Log::info("-------- Axis Node 1: {}, Node 2: {}", min_angle_neibor_index1, min_angle_neibor_index2);
+    }
+    void GridCreaterFN::CheckUnkownNode()
+    {
+        int node_num = m_node_coord.size();
+        for (size_t i = 0; i < node_num; i++)
+        {
+            if (m_node_type[i] == NodeType::undefined)
+            {
+                Log::info("node:{} type is undefined", i);
+            }
+        }
+        Log::info("Check undefined node done");
+    }
+    void GridCreaterFN::AddSelfToNeighbor()
+    {
+        int node_num = m_node_coord.size();
+        for (int iNode = 0; iNode < node_num; iNode++)
+        {
+            bool find_current = false;
+            auto& currentNeibor = m_node_neibor[iNode];
+            for (int iNeibor = 0; iNeibor < currentNeibor.size(); iNeibor++)
+            {
+                auto& neighbor_neighbor = m_node_neibor[currentNeibor[iNeibor]];
+                for (int jNeibor = 0; jNeibor < neighbor_neighbor.size(); jNeibor++)
+                {
+                    if (neighbor_neighbor[jNeibor] == iNode)
+                        find_current = true;
+                }
+                if (find_current == false)
+                {
+                    neighbor_neighbor.push_back(iNode);
+                }
+            }
+        }
+        Log::info("Add self to neibor node's neibor node done");
+    }
+    void GridCreaterFN::ConvertToGrid(GridFN*& grid)
+    {
+        int node_num = m_node_coord.size();
+        std::vector<int> neighbor_node_num(node_num);
+        std::vector<int> neighbor_face_num(node_num);
+        std::vector<int> neighbor_cell_num(node_num);
+        for (int iNode = 0; iNode < node_num; iNode++)
+        {
+            neighbor_node_num[iNode] = m_node_neibor[iNode].size();
+            neighbor_face_num[iNode] = 0;
+            neighbor_cell_num[iNode] = 0;
+        }
+        NodeFN* node = new  NodeFN(node_num, neighbor_node_num.data(), neighbor_face_num.data(), neighbor_cell_num.data());
+        for (int iNode = 0; iNode < m_node_coord.size(); iNode++)
+        {
+            node->SetCoord(iNode, m_node_coord[iNode].data());
+            node->SetType(iNode, m_node_type[iNode]);
+            node->SetNeighborNode(iNode, neighbor_node_num[iNode], m_node_neibor[iNode].data());
+            node->SetNeighborFace(iNode, neighbor_face_num[iNode], nullptr);
+            node->SetNeighborCell(iNode, neighbor_cell_num[iNode], nullptr);
+        }
+        grid->SetNode(node);
+        CellFN* cell = new CellFN(m_cell_node.size());
+        cell->SetNode(m_cell_node);
+        std::vector<std::vector<int>> cell_node_face(m_cell_node.size());
+        cell->SetFace(cell_node_face);
+        double center[3];
+        for (int iCell = 0; iCell < m_cell_node.size(); iCell++)
+        {
+            center[0] = center[1] = center[2] = 0;
+            for (int iNode = 0; iNode < m_cell_node[iCell].size(); iNode++)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    center[i] += m_node_coord[m_cell_node[iCell][iNode]][i];
+                }
+            }
+            for (int i = 0; i < 3; i++)
+            {
+                center[i] /= m_cell_node[iCell].size();
+            }
+            cell->SetCenter(iCell, center);
+        }
+        grid->SetCell(cell);
 
-			if (node_pair_map.size() != currentNeibor.size())
-				Log::info("node_pair_map.size()!=currentNeibor.size()");
-			//»°≥ˆmap÷–µ⁄“ª∏ˆµ„∂‘£¨º¥º–Ω«◊Ó–°µƒµ„∂‘
-			//…æ≥˝’‚∏ˆµ„∂‘÷–æ‡¿Î◊Ó¥Ûµƒµ„
-			while (currentNeibor.size() > 4)
-			{
+        FaceFN* face = new FaceFN();
 
-				auto& temp_pair = node_pair_map.begin()->second;
-				int remove_node, remove_index;
-				node_pair temp;
-				if (node_dis_map[temp_pair.node1] > node_dis_map[temp_pair.node2])
-				{
-					remove_node = temp_pair.node1;
-					remove_index = std::find(currentNeibor.begin(), currentNeibor.end(), remove_node) - currentNeibor.begin();
-					for (auto i : node_pair_map)
-					{
-						if (i.second.node1 == currentNeibor[get_last_node(remove_index, currentNeibor)] && i.second.node2 == currentNeibor[remove_index])
-						{
-							node_pair_map.erase(i.first);
-							break;
-						}
-					}
-				}
-				else
-				{
-					remove_node = temp_pair.node2;
-					remove_index = std::find(currentNeibor.begin(), currentNeibor.end(), remove_node) - currentNeibor.begin();
-					for (auto i : node_pair_map)
-					{
-						if (i.second.node1 == currentNeibor[remove_index] && i.second.node2 == currentNeibor[get_next_node(remove_index, currentNeibor)])
-						{
-							node_pair_map.erase(i.first);
-							break;
-						}
-					}
-				}
-				node_pair_map.erase(node_pair_map.begin());
-				temp.node1 = currentNeibor[get_last_node(remove_index, currentNeibor)];
-				temp.node2 = currentNeibor[get_next_node(remove_index, currentNeibor)];
-				currentNeibor.erase(std::find(currentNeibor.begin(), currentNeibor.end(), remove_node));
-				node_dis_map.erase(remove_node);
-				DVector3D vec1, vec2;
-				vec1 = node_proj_map[temp.node1];
-				vec2 = node_proj_map[temp.node2];
-				double angle = AngleOfTwoArray3D(vec1.data(), vec2.data()) + GetRand(0.0, 1.0) * EPSILON_NUMBER;
-				if (vec1.cross(vec2).dot(main_vec) < 0)
-					angle = 2 * PI - angle;
-				node_pair_map[angle] = temp;
-			}
-			temp_k[iNode][0] = main_pair.node2;
-			temp_k[iNode][1] = iNode;
-			temp_k[iNode][2] = main_pair.node1;
-			temp_i[iNode][0] = currentNeibor[2];
-			temp_i[iNode][1] = iNode;
-			temp_i[iNode][2] = currentNeibor[0];
-			temp_j[iNode][0] = currentNeibor[3];
-			temp_j[iNode][1] = iNode;
-			temp_j[iNode][2] = currentNeibor[1];
-			currentNeibor.push_back(main_pair.node1);
-			currentNeibor.push_back(main_pair.node2);
-		}
+        std::vector<int> face_node_num(m_bound_face.size());
+        for (int iFace = 0; iFace < m_bound_face.size(); iFace++)
+        {
+            face_node_num[iFace] = m_bound_face[iFace].face_node.size();
+        }
+        face->Allocate(m_bound_face.size(), face_node_num.data());
+        for (int iFace = 0; iFace < m_bound_face.size(); iFace++)
+        {
+            face->SetFace2Node(iFace, m_bound_face[iFace].face_node.data(), m_bound_face[iFace].face_node.size());
+            face->SetNormal(iFace, m_bound_face[iFace].normal.data());
+            face->SetArea(iFace, m_bound_face[iFace].area);
+        }
+        grid->SetFace(face);
 
+        BoundaryMap* boundary_map = new BoundaryMap();
+        for (int iFace = 0; iFace < m_bound_node.size(); iFace++)
+        {
+            boundary_map->AddBoundary(m_bound_node[iFace].type, Boundary(m_bound_node[iFace].bound_index, m_bound_node[iFace].ref_index, 0, m_bound_node[iFace].normal));
+        }
+        grid->SetBoundaryMap(boundary_map); 
+    }
+    void GridCreaterFN::ReadBoundFile()
+    {
+        std::ifstream fin;
+        fin.open("bound.dat");
+        int nodeNum;
+        int bound_face_num;
+        std::string separator = " \r\n\t#$;\"";
+        std::string line;
+        while (std::getline(fin, line))
+        {
+            if (line.empty())
+                continue;
+            std::transform(line.begin(), line.end(), line.begin(), std::toupper);
+            line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
+            size_t start_id_node_num = line.find("N=");
+            if (start_id_node_num == std::string::npos)
+                continue;
+            start_id_node_num += 2;
+            size_t end_id_node_num = line.find_first_of(',');
+            std::string node_num_str = line.substr(start_id_node_num, end_id_node_num - start_id_node_num);
+            line.erase(0, end_id_node_num + 1);
+            size_t start_id_cell_num = line.find("E=");
+            if (start_id_cell_num == std::string::npos)
+                continue;
+            start_id_cell_num += 2;
+            size_t end_id_cell_num = line.find_first_of(',');
+            std::string cell_num_str = line.substr(start_id_cell_num, end_id_cell_num - start_id_cell_num);
+            nodeNum = std::stoi(node_num_str);
+            bound_face_num = std::stoi(cell_num_str);
+            break;
+        }
+        // Ë∑≥ËøáËäÇÁÇπÂùêÊ†á
+        for (int i = 0; i < nodeNum; i++)
+        {
+            fin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+        m_bound_face.resize(bound_face_num);
+        for (int iBound = 0; iBound < bound_face_num; iBound++)
+        {
+            auto& bound_face = m_bound_face[iBound];
+            int boundNodeNum = 4;
+            bound_face.face_node.resize(boundNodeNum);
+            for (int i = 0; i < boundNodeNum; i++)
+            {
+                fin >> bound_face.face_node[i];
+                bound_face.face_node[i] -= 1;
+            }
+            if (bound_face.face_node[2] == bound_face.face_node[3])
+            {
+                bound_face.face_node.pop_back();
+            }
+        }
+        fin.close();
+        double v1[3], v2[3];
+        for (int iBound = 0; iBound < bound_face_num; iBound++)
+        {
+            auto& bound_face = m_bound_face[iBound];
+            bound_face.normal.resize(3);
+            if (bound_face.face_node.size() == 3)
+            {
+                bound_face.area =
+                    TriangleArea(m_node_coord[bound_face.face_node[0]].data(), m_node_coord[bound_face.face_node[1]].data(),
+                        m_node_coord[bound_face.face_node[2]].data());
+                for (int i = 0; i < 3; i++)
+                {
+                    v1[i] = m_node_coord[bound_face.face_node[1]][i] - m_node_coord[bound_face.face_node[0]][i];
+                    v2[i] = m_node_coord[bound_face.face_node[2]][i] - m_node_coord[bound_face.face_node[0]][i];
+                }
+            }
+            else
+            {
+                bound_face.area = QuadrangleArea(
+                    m_node_coord[bound_face.face_node[0]].data(), m_node_coord[bound_face.face_node[1]].data(),
+                    m_node_coord[bound_face.face_node[2]].data(), m_node_coord[bound_face.face_node[3]].data());
+                for (int i = 0; i < 3; i++)
+                {
+                    v1[i] = m_node_coord[bound_face.face_node[2]][i] - m_node_coord[bound_face.face_node[0]][i];
+                    v2[i] = m_node_coord[bound_face.face_node[3]][i] - m_node_coord[bound_face.face_node[1]][i];
+                }
+            }
+            CrossProduct(v1, v2, bound_face.normal.data());
+            double norm = sqrt(bound_face.normal[0] * bound_face.normal[0] + bound_face.normal[1] * bound_face.normal[1] +
+                bound_face.normal[2] * bound_face.normal[2]);
+            for (int i = 0; i < 3; i++)
+            {
+                bound_face.normal[i] /= norm;
+            }
+        }
+    }
 
-	}
-
-	void GridFactoryFNFDM3D::ExtendNeighborNode(Grid* grid)
-	{
-		// ππΩ®Ω⁄µ„KD ˜
-		NodeTopo* node_topo = grid->GetNodeTopo();
-		auto& nodeCoord = node_topo->GetCoordinate();
-		auto& nodeNeibor = node_topo->GetNeighborCloud();
-		auto& nodeType = node_topo->GetType();
-		//≥ı ºªØvtkµ„
-		vtkNew<vtkPoints> points;
-		for (int i = 0; i < nodeCoord.size(); ++i)
-		{
-			points->InsertNextPoint(nodeCoord[i].data());
-		}
-		//∞—vtkµ„◊™ªªŒ™vtkploydata
-		vtkNew<vtkPolyData> polydata;
-		polydata->SetPoints(points);
-		//Ω´vtkploydata◊™ªªŒ™vtkµ„∂®Œª∆˜
-		vtkNew<vtkVertexGlyphFilter> glyphFilter;
-		glyphFilter->SetInputData(polydata);
-		glyphFilter->Update();
-		//ππΩ®KD ˜
-		vtkNew<vtkKdTreePointLocator> kdTree;
-		kdTree->SetDataSet(glyphFilter->GetOutput());
-		kdTree->BuildLocator();
-		int point_num = kdTree->GetDataSet()->GetNumberOfPoints();
-		int neibor_num_before = 0;
-		int neibor_num_after = 0;
-		int min_neibor_num = 1E5;
-		int max_neibor_num = 0;
-		// ¿©’πƒ⁄≤øΩ⁄µ„¡⁄æ”Ω⁄µ„£¨”√”⁄º∆À„Ã›∂»
-		std::set<int> neibor_set;
-		for (int iNode = 0; iNode < m_NodeNum; iNode++)
-		{
-			if (nodeType[iNode] != NodeType::inner)
-				continue;
-			neibor_set.clear();
-			neibor_num_before = nodeNeibor[iNode].size();
-			double max_distance = 0;
-			for (auto& iNeibor : nodeNeibor[iNode])
-			{
-				max_distance = Max(max_distance, (nodeCoord[iNeibor] - nodeCoord[iNode]).norm());
-				neibor_set.insert(iNeibor);
-
-			}
-			//“‘µ±«∞Ω⁄µ„Œ™÷––ƒ£¨“‘◊Ó¥Ûæ‡¿ÎŒ™∞Îæ∂£¨’“µΩ∑∂Œßƒ⁄µƒΩ⁄µ„
-			double search_radius = max_distance * 1.00001;
-			vtkNew<vtkIdList> result;
-			while (result->GetNumberOfIds() < 6)
-			{
-				kdTree->FindPointsWithinRadius(search_radius, nodeCoord[iNode].data(), result);
-				if (result->GetNumberOfIds() > 50)
-				{
-					search_radius *= 0.9;
-					result->Reset();
-				}
-				else
-					search_radius *= 1.1;
-			}
-			for (int i = 0; i < result->GetNumberOfIds(); ++i)
-			{
-				neibor_set.insert(result->GetId(i));
-			}
-			neibor_set.erase(iNode);
-
-			neibor_num_after = neibor_set.size();
-			nodeNeibor[iNode].clear();
-			nodeNeibor[iNode].reserve(neibor_set.size());
-			for (auto& i : neibor_set)
-			{
-				nodeNeibor[iNode].emplace_back(i);
-			}
-			min_neibor_num = Min(min_neibor_num, neibor_num_after);
-			max_neibor_num = Max(max_neibor_num, neibor_num_after);
-			if (neibor_num_after < neibor_num_before)
-				Log::info("node:{} neibor num before:{} neibor num after:{}", iNode, neibor_num_before, neibor_num_after);
-		}
-		Log::info("min neibor num:{} max neibor num:{}", min_neibor_num, max_neibor_num);
-	}
-
-	void GridFactoryFNFDM3D::ReadCellFile(Grid* grid)
-	{
-		std::ifstream fin;
-		fin.open("cell.dat");
-		int nodeNum;
-		int cellNum;
-		std::string separator = " \r\n\t#$;\"";
-		std::string line;
-		while (std::getline(fin, line))
-		{
-			if (line.empty())
-				continue;
-			std::transform(line.begin(), line.end(), line.begin(), std::toupper);
-			line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
-			size_t start_id_node_num = line.find("N=");
-			if (start_id_node_num == std::string::npos)
-				continue;
-			start_id_node_num += 2;
-			size_t end_id_node_num = line.find_first_of(',');
-			std::string node_num_str = line.substr(start_id_node_num, end_id_node_num - start_id_node_num);
-			line.erase(0, end_id_node_num + 1);
-			size_t start_id_cell_num = line.find("E=");
-			if (start_id_cell_num == std::string::npos)
-				continue;
-			start_id_cell_num += 2;
-			size_t end_id_cell_num = line.find_first_of(',');
-			std::string cell_num_str = line.substr(start_id_cell_num, end_id_cell_num - start_id_cell_num);
-			nodeNum = std::stoi(node_num_str);
-			cellNum = std::stoi(cell_num_str);
-			break;
-		}
-		//Ã¯π˝Ω⁄µ„◊¯±Í
-		for (int i = 0; i < nodeNum; i++)
-		{
-			fin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		}
-
-
-
-		CellTopo* cellTopo = grid->GetCellTopo();
-		Log::info("Total cell num:{}", cellNum);
-		auto& cell_node = cellTopo->GetNodeIndex();
-		cell_node.resize(cellNum);
-		IArray cellNeiborNodeIndex(8);
-		for (int iCell = 0; iCell < cellNum; iCell++)
-		{
-			fin >> cellNeiborNodeIndex[0] >> cellNeiborNodeIndex[1] >> cellNeiborNodeIndex[2] >> cellNeiborNodeIndex[3]
-				>> cellNeiborNodeIndex[4] >> cellNeiborNodeIndex[5] >> cellNeiborNodeIndex[6] >> cellNeiborNodeIndex[7];
-			cellNeiborNodeIndex[0] -= 1;
-			cellNeiborNodeIndex[1] -= 1;
-			cellNeiborNodeIndex[2] -= 1;
-			cellNeiborNodeIndex[3] -= 1;
-			cellNeiborNodeIndex[4] -= 1;
-			cellNeiborNodeIndex[5] -= 1;
-			cellNeiborNodeIndex[6] -= 1;
-			cellNeiborNodeIndex[7] -= 1;
-			cell_node[iCell] = cellNeiborNodeIndex;
-		}
-		fin.close();
-	}
-
-	void GridFactoryFNFDM3D::ReadBoundFaceFile(Grid* grid)
-	{
-		std::ifstream fin;
-		fin.open("bound.dat");
-		int nodeNum;
-		int boundNum;
-		std::string separator = " \r\n\t#$;\"";
-		std::string line;
-		while (std::getline(fin, line))
-		{
-			if (line.empty())
-				continue;
-			std::transform(line.begin(), line.end(), line.begin(), std::toupper);
-			line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
-			size_t start_id_node_num = line.find("N=");
-			if (start_id_node_num == std::string::npos)
-				continue;
-			start_id_node_num += 2;
-			size_t end_id_node_num = line.find_first_of(',');
-			std::string node_num_str = line.substr(start_id_node_num, end_id_node_num - start_id_node_num);
-			line.erase(0, end_id_node_num + 1);
-			size_t start_id_cell_num = line.find("E=");
-			if (start_id_cell_num == std::string::npos)
-				continue;
-			start_id_cell_num += 2;
-			size_t end_id_cell_num = line.find_first_of(',');
-			std::string cell_num_str = line.substr(start_id_cell_num, end_id_cell_num - start_id_cell_num);
-			nodeNum = std::stoi(node_num_str);
-			boundNum = std::stoi(cell_num_str);
-			break;
-		}
-		//Ã¯π˝Ω⁄µ„◊¯±Í
-		for (int i = 0; i < nodeNum; i++)
-		{
-			fin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		}
-		Array<IArray> bound_node(boundNum);
-		IArray boundNodeIndex(4);
-		for (int iBound = 0; iBound < boundNum; iBound++)
-		{
-			fin >> boundNodeIndex[0] >> boundNodeIndex[1] >> boundNodeIndex[2] >> boundNodeIndex[3];
-			boundNodeIndex[0] -= 1;
-			boundNodeIndex[1] -= 1;
-			boundNodeIndex[2] -= 1;
-			boundNodeIndex[3] -= 1;
-			if (boundNodeIndex[2] == boundNodeIndex[3])
-				bound_node[iBound] = IArray{ boundNodeIndex[0],boundNodeIndex[1],boundNodeIndex[2] };
-			else
-				bound_node[iBound] = boundNodeIndex;
-		}
-		fin.close();
-		IArray bound_face_node_num(boundNum);
-		for (int iBound = 0; iBound < boundNum; iBound++)
-		{
-			bound_face_node_num[iBound] = bound_node[iBound].size();
-		}
-		FaceTopo* bound_topo = grid->GetFaceTopo();
-		NodeTopo* node_topo = grid->GetNodeTopo();
-		auto& node_coord = node_topo->GetCoordinate();
-		bound_topo->Allocate(boundNum, bound_face_node_num.data());
-		double area;
-		double v1[3], v2[3];
-		for (int iBound = 0;iBound < boundNum;iBound++)
-		{
-			bound_topo->SetFace2Node(iBound, bound_node[iBound].data(), bound_node[iBound].size());
-			if (bound_node[iBound].size() == 3)
-			{
-				area = TriangleArea(node_coord[bound_node[iBound][0]].data(), node_coord[bound_node[iBound][1]].data(), node_coord[bound_node[iBound][2]].data());
-			}
-			else
-			{
-				area = QuadrangleArea(node_coord[bound_node[iBound][0]].data(), node_coord[bound_node[iBound][1]].data(), node_coord[bound_node[iBound][2]].data(), node_coord[bound_node[iBound][3]].data());
-			}
-			bound_topo->SetArea(iBound, area);
-			double* normal = bound_topo->GetNormal(iBound);
-			if (bound_node[iBound].size() == 3)
-			{
-				v1[0] = node_coord[bound_node[iBound][1]].x() - node_coord[bound_node[iBound][0]].x();
-				v1[1] = node_coord[bound_node[iBound][1]].y() - node_coord[bound_node[iBound][0]].y();
-				v1[2] = node_coord[bound_node[iBound][1]].z() - node_coord[bound_node[iBound][0]].z();
-				v2[0] = node_coord[bound_node[iBound][2]].x() - node_coord[bound_node[iBound][0]].x();
-				v2[1] = node_coord[bound_node[iBound][2]].y() - node_coord[bound_node[iBound][0]].y();
-				v2[2] = node_coord[bound_node[iBound][2]].z() - node_coord[bound_node[iBound][0]].z();
-			}
-			else
-			{
-				v1[0] = node_coord[bound_node[iBound][1]].x() - node_coord[bound_node[iBound][0]].x();
-				v1[1] = node_coord[bound_node[iBound][1]].y() - node_coord[bound_node[iBound][0]].y();
-				v1[2] = node_coord[bound_node[iBound][1]].z() - node_coord[bound_node[iBound][0]].z();
-				v2[0] = node_coord[bound_node[iBound][2]].x() - node_coord[bound_node[iBound][0]].x();
-				v2[1] = node_coord[bound_node[iBound][2]].y() - node_coord[bound_node[iBound][0]].y();
-				v2[2] = node_coord[bound_node[iBound][2]].z() - node_coord[bound_node[iBound][0]].z();
-			}
-			CrossProduct(v1, v2, normal);
-			double norm = sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
-			normal[0] /= norm;
-			normal[1] /= norm;
-			normal[2] /= norm;
-		}
-	}
-
-}
+} // namespace zaran

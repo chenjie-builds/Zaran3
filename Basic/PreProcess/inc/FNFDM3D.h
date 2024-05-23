@@ -6,35 +6,60 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	FNFDM3D.h															||
-//*	@brief	读取三维自由节点有限差分网格											||
+//*	@brief	璇诲彇涓夌淮鑷敱鑺傜偣鏈夐檺宸垎缃戞牸											||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include"GridListFactory.h"
+#include "FaceFNFDM.h"
+#include "GridListFactory.h"
+#include "NodeFNFDM.h"
+#include <string>
+#include <unordered_map>
+#include <vector>
+#include"GridFNFDM.h"
 namespace zaran
 {
-	class GridFactoryFNFDM3D :public GridListFactory
-	{
-	public:
-		GridFactoryFNFDM3D();
-		void Create(Grid*& gridList) override;
-	private:
-		void ReadFile(Grid* gridList);
-		void SortNeiborNode(Grid* gridList);
-		/// @brief 扩展邻居节点，使用kd树，找到范围内的节点
-		/// @param gridList 
-		void ExtendNeighborNode(Grid* gridList);
-		void ReadCellFile(Grid* gridList);
-		void ReadBoundFaceFile(Grid* gridList);
-	private:
-		string m_node_file_name;
-		string m_ele_file_name;
-		string m_bnd_file_name;
-		int m_NodeNum;
-		int m_BoundNodeNum;
-		DArray m_NodeX, m_NodeY, m_NodeZ;
-		map<int, IArray> m_NodeNeiborNodeIndex;
-		IArray m_InletNodeIndex, m_OutletNodeIndex, m_WallNodeIndex;
-		IArray m_InletNeiborNodeIndex, m_OutletNeiborNodeIndex, m_WallNeiborNodeIndex;
-	};
-}
+  class GridCreaterFN : public GridCreater
+  {
+  public:
+    GridCreaterFN(const string& node_file_name = "node.dat", const string& ele_file_name = "cell.dat", const string& bnd_file_name = "bound.dat");
+    GridFN* CreateGrid() override;
+  private:
+    void ReadNodeFile();
+    void SortNeiborNode();
+    void ExtendNeighborNode();
+    void ReadCellFile();
+    void ReadBoundFile();
+    void CheckNode();
+    void CheckUnkownNode();
+    void AddSelfToNeighbor();
+    void ConvertToGrid(GridFN*& grid);
+  private:
+    struct BoundNode
+    {
+      std::string type;
+      int bound_index;
+      int ref_index;
+      double normal[3];
+    };
+    struct BoundFace
+    {
+      std::vector<int> face_node;
+      std::vector<int> face_cell;
+      std::vector<double> normal;
+      double area;
+    };
+
+
+  private:
+    string m_node_file_name;
+    string m_ele_file_name;
+    string m_bnd_file_name;
+    std::vector<std::vector<double>> m_node_coord;
+    std::vector<std::vector<int>> m_node_neibor;
+    std::vector<NodeType> m_node_type;
+    std::vector<BoundNode> m_bound_node;
+    std::vector<std::vector<int>> m_cell_node;
+    std::vector<BoundFace> m_bound_face;
+  };
+} // namespace zaran

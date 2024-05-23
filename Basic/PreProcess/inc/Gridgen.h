@@ -2,10 +2,12 @@
 #include "GridListFactory.h"
 namespace zaran
 {
-	class Gridgen :public GridListFactory
+	class Gridgen :public GridCreater
 	{
 	public:
-		void Create(Grid*& grid) override;
+		Gridgen();
+		~Gridgen();
+		GridBase* CreateGrid() override;
 	private:
 		void ReadGridgenCoord();
 		void SetGridFileName(std::string& fileName);

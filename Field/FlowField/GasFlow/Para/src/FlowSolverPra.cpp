@@ -10,34 +10,40 @@ FlowSolverPara::FlowSolverPara()
 
 FlowSolverPara::~FlowSolverPara()
 {
+	if (m_gas)
+	{
+		delete m_gas;
+		m_gas = nullptr;
+	}
 	Log::info("FlowSolverPara is destroyed!");
 	exit(0);
 }
 
 void FlowSolverPara::Init()
 {
+	m_equ_num = 5;
 	double inflow_Ma = GlobalData::GetDouble("inflowMachNumber");
 	double inflow_gamma = GlobalData::GetDouble("inflowGamma");
 	double inflow_density = GlobalData::GetDouble("inflowDensity");
 	double inflow_temperature = GlobalData::GetDouble("inflowTemperature");
 	double inflow_Mw = GlobalData::GetDouble("inflowMw");
 	double ref_length = GlobalData::GetDouble("refLength");
-	m_dimensionless.SetRefValue(inflow_density, inflow_gamma, inflow_Mw,ref_length, inflow_temperature);
+	m_dimensionless.SetRefValue(inflow_density, inflow_gamma, inflow_Mw, ref_length, inflow_temperature);
 	double inflow_attack_angle = GlobalData::GetDouble("inflowAttackAngle");
 	double inflow_slide_angle = GlobalData::GetDouble("inflowSlideAngle");
-	PerfectGas gas(inflow_Mw, inflow_gamma, m_dimensionless);
-	double inflow_sonic_speed = gas.GetSonicSpeed(m_dimensionless.GetTempDL(inflow_temperature));
+	m_gas = new PerfectGas(inflow_Mw, inflow_gamma, m_dimensionless);
+	double inflow_sonic_speed = m_gas->CalcSoundSpeed(m_dimensionless.GetTempDL(inflow_temperature));
 	m_inflow_velocity_x = inflow_Ma * inflow_sonic_speed * cos(inflow_attack_angle) * cos(inflow_slide_angle);
 	m_inflow_velocity_y = inflow_Ma * inflow_sonic_speed * sin(inflow_attack_angle) * cos(inflow_slide_angle);
 	m_inflow_velocity_z = inflow_Ma * inflow_sonic_speed * sin(inflow_slide_angle);
-	m_inflow_density =m_dimensionless.GetDensityDL(inflow_density);
-	m_inflow_pressure =gas.GetPressureFromDensityAndTemperature(m_inflow_density, m_dimensionless.GetTempDL(inflow_temperature));
+	m_inflow_density = m_dimensionless.GetDensityDL(inflow_density);
+	m_inflow_pressure = m_gas->CalcPressure(m_inflow_density, m_dimensionless.GetTempDL(inflow_temperature));
 	string inflow_type = GlobalData::GetString("initFieldType");
 	if (inflow_type == "FarFlow")
 	{
 		m_init_field_type = InitFieldType::FarFlow;
 	}
-	else if(inflow_type == "FarFieldNoVelocity")
+	else if (inflow_type == "FarFieldNoVelocity")
 	{
 		m_init_field_type = InitFieldType::FarFlowNoVelocity;
 	}
@@ -106,7 +112,7 @@ void FlowSolverPara::Init()
 	{
 		n_limiter_type = LimiterType::vk;
 	}
-	else if (limiter_type=="1st-order")
+	else if (limiter_type == "1st-order")
 	{
 		n_limiter_type = LimiterType::first_order;
 	}
@@ -141,7 +147,7 @@ const DArray& FlowSolverPara::GetRKCoef() const
 
 
 
-void FlowSolverPara::SetInitFieldType( InitFieldType&  initflowType)
+void FlowSolverPara::SetInitFieldType(InitFieldType& initflowType)
 {
 	m_init_field_type = initflowType;
 }
@@ -194,6 +200,12 @@ void FlowSolverPara::SetLimiterType(const LimiterType& limiterType)
 void zaran::FlowSolverPara::SetBackupFieldFileName(const std::string& backupFieldFileName)
 {
 	m_backup_field_file_name = backupFieldFileName;
+}
+
+const int& zaran::FlowSolverPara::GetEquNum() const
+{
+	return m_equ_num;
+
 }
 
 const double& zaran::FlowSolverPara::GetInflowDensity() const
