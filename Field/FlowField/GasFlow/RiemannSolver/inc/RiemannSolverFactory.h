@@ -13,15 +13,10 @@
 #include "RiemannSolver.h"
 namespace zaran
 {
-	class RiemannSolverFactory
+
+	class RiemannSolverBuilder
 	{
 	public:
-		void Create(Ptr<RiemannSolver>& riemannSolver,string& riemannSolverName);
-	private:
-		void CreateVanLeer(Ptr<RiemannSolver>& riemannSolver);
-		void CreateHLLC(Ptr<RiemannSolver>& riemannSolver);
-		void CreateRoe(Ptr<RiemannSolver>& riemannSolver);
-		void CreateStegerWarming(Ptr<RiemannSolver>& riemannSolver);
-		void CreateAusmpw(Ptr<RiemannSolver>& riemannSolver);
+		 RiemannSolver* Create(RiemannSolverType type);
 	};
 }

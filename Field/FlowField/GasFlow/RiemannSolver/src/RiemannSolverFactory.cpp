@@ -6,46 +6,34 @@
 #include "StegerWarming.h"
 #include "log.h"
 using namespace zaran;
-void RiemannSolverFactory::Create(Ptr<RiemannSolver>& riemannSolver, string& riemannSolverName)
+
+
+RiemannSolver* RiemannSolverBuilder::Create(RiemannSolverType type)
 {
-	if (riemannSolverName == "VanLeer")
-		CreateVanLeer(riemannSolver);
-	else if (riemannSolverName == "Roe")
-		CreateRoe(riemannSolver);
-	else if (riemannSolverName == "Ausmpw")
-		CreateAusmpw(riemannSolver);
-	else if (riemannSolverName == "HLLC")
-		CreateHLLC(riemannSolver);
-	else if (riemannSolverName == "StegerWarming")
-		CreateStegerWarming(riemannSolver);
+	if (type == RiemannSolverType::VanLeer)
+	{
+		return new Vanleer();
+	}
+	else if (type == RiemannSolverType::Ausmpw)
+	{
+		return new Ausmpw();
+	}
+	else if (type == RiemannSolverType::Roe)
+	{
+		return new Roe();
+	}
+	else if (type == RiemannSolverType::HLLC)
+	{
+		return new HLLC();
+	}
+	else if (type == RiemannSolverType::StegerWarming)
+	{
+		return new StegerWarming();
+	}
 	else
 	{
-		Log::warn("unsupportted riemann solver name: {}", riemannSolverName);
+		Log::warn("RiemannSolverBuilder::Create: unknown RiemannSolverType");
+		Log::warn("RiemannSolverBuilder::Create: Using default RiemannSolverType: VanLeer");
+		return new Vanleer();
 	}
-
-}
-
-void RiemannSolverFactory::CreateVanLeer(Ptr<RiemannSolver>& riemannSolver)
-{
-	riemannSolver = std::make_shared<Vanleer>();
-}
-
-void RiemannSolverFactory::CreateHLLC(Ptr<RiemannSolver>& riemannSolver)
-{
-	riemannSolver = std::make_shared<HLLC>();
-}
-
-void RiemannSolverFactory::CreateRoe(Ptr<RiemannSolver>& riemannSolver)
-{
-	riemannSolver = std::make_shared<Roe>();
-}
-
-void RiemannSolverFactory::CreateStegerWarming(Ptr<RiemannSolver>& riemannSolver)
-{
-	riemannSolver = std::make_shared<StegerWarming>();
-}
-
-void RiemannSolverFactory::CreateAusmpw(Ptr<RiemannSolver>& riemannSolver)
-{
-	riemannSolver = std::make_shared<Ausmpw>();
 }

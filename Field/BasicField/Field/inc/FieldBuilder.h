@@ -18,10 +18,10 @@
 #include "Field.h"
 namespace zaran
 {
-    class FieldFactory
+    class FieldBuilder
     {
     public:
-        FieldFactory(GridType grid_type, FieldSolverType solver_type,Dimension dim) :m_grid_type(grid_type), m_solver_type(solver_type),m_dim(dim) {};
+        FieldBuilder(GridType grid_type, FieldSolverType solver_type,Dimension dim) :m_grid_type(grid_type), m_solver_type(solver_type),m_dim(dim) {};
         void Create();
        Field** GetField() { return m_field; }
     private:

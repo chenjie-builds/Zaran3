@@ -14,6 +14,15 @@
 #include "RiemannSolverPara.h"
 namespace zaran
 {
+	//数值通量计算方法
+	enum class RiemannSolverType
+	{
+		VanLeer,
+		HLLC,
+		Roe,
+		StegerWarming,
+		Ausmpw
+	};
 	class RiemannSolver
 	{
 	public:

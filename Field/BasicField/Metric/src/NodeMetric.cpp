@@ -19,7 +19,7 @@ namespace zaran
 
     void NodeMetric::CalcMetric()
     {
-        auto node = m_grid->GetNodeTopo();
+        auto node = m_grid->GetNode();
         int node_num = node->GetNodeNum();
         const double* xRight, * xLeft, * yRight, * yLeft, * zRight, * zLeft;
         xRight = xLeft = yRight = yLeft = zRight = zLeft = nullptr;
@@ -57,7 +57,7 @@ namespace zaran
 
     void NodeMetric::CheckJacobian()
     {
-        auto node = m_grid->GetNodeTopo();
+        auto node = m_grid->GetNode();
         int node_num = node->GetNodeNum();
         for (int iNode = 0;iNode < node_num;++iNode)
         {
@@ -76,7 +76,7 @@ namespace zaran
     {
         if (!m_exist_error_jacobi)
             return;
-        auto node = m_grid->GetNodeTopo();
+        auto node = m_grid->GetNode();
         int node_num = node->GetNodeNum();
         const double* xRight, * xLeft, * yRight, * yLeft, * zRight, * zLeft;
         xRight = xLeft = yRight = yLeft = zRight = zLeft = nullptr;
@@ -227,18 +227,18 @@ namespace zaran
         coef_xi[0] = jacobian * (coef_y[1] * coef_z[2] - coef_y[2] * coef_z[1]);
         coef_xi[1] = -jacobian * (coef_x[1] * coef_z[2] - coef_x[2] * coef_z[1]);
         coef_xi[2] = jacobian * (coef_x[1] * coef_y[2] - coef_x[2] * coef_y[1]);
-        coef_xi[3] = -(coef_x[3]*coef_xi[0] + coef_x[3]*coef_xi[1] + coef_x[3]*coef_xi[2]);
+        coef_xi[3] = -(coef_x[3] * coef_xi[0] + coef_x[3] * coef_xi[1] + coef_x[3] * coef_xi[2]);
 
         coef_eta[0] = -jacobian * (coef_y[0] * coef_z[2] - coef_y[2] * coef_z[0]);
         coef_eta[1] = jacobian * (coef_x[0] * coef_z[2] - coef_x[2] * coef_z[0]);
         coef_eta[2] = -jacobian * (coef_x[0] * coef_y[2] - coef_x[2] * coef_y[0]);
-        coef_eta[3] = -(coef_y[3]*coef_eta[0] + coef_y[3]*coef_eta[1] + coef_y[3]*coef_eta[2]);
+        coef_eta[3] = -(coef_y[3] * coef_eta[0] + coef_y[3] * coef_eta[1] + coef_y[3] * coef_eta[2]);
 
         coef_zeta[0] = jacobian * (coef_y[0] * coef_z[1] - coef_y[1] * coef_z[0]);
         coef_zeta[1] = -jacobian * (coef_x[0] * coef_z[1] - coef_x[1] * coef_z[0]);
         coef_zeta[2] = jacobian * (coef_x[0] * coef_y[1] - coef_x[1] * coef_y[0]);
-        coef_zeta[3] = -(coef_z[3]*coef_zeta[0] + coef_z[3]*coef_zeta[1] + coef_z[3]*coef_zeta[2]);
-
+        coef_zeta[3] = -(coef_z[3] * coef_zeta[0] + coef_z[3] * coef_zeta[1] + coef_z[3] * coef_zeta[2]);
+        
         coef_tau[0] = 0.0;
         coef_tau[1] = 0.0;
         coef_tau[2] = 0.0;

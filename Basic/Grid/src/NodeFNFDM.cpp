@@ -36,12 +36,12 @@ namespace zaran
 		sum_node = sum_face = sum_cell = 0;
 		for (int i = 0; i < node_num; i++)
 		{
-			sum_node += neighbor_node_num[i];
-			sum_face += neighbor_face_num[i];
-			sum_cell += neighbor_cell_num[i];
 			m_neighor_node_index[i] = sum_node;
 			m_neighor_face_index[i] = sum_face;
 			m_neighor_cell_index[i] = sum_cell;
+			sum_node += neighbor_node_num[i];
+			sum_face += neighbor_face_num[i];
+			sum_cell += neighbor_cell_num[i];
 		}
 		m_neighor_node = new int[sum_node];
 		m_neighor_face = new int[sum_face];

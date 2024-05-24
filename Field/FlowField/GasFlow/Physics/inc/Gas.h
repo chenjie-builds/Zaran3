@@ -6,20 +6,20 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	Gas.h																||
-//*	@brief	ÆøÌå»ùÀà																||
+//*	@brief	æ°”ä½“åŸºç±»																||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
 #include"CommonPara.h"
 #include"Dimensionless.h"
-const double GAS_CONSTANT = 8.3143;//Í¨ÓÃÆøÌå³£ÊıJ/(mol*k)
+const double GAS_CONSTANT = 8.3143;//é€šç”¨æ°”ä½“å¸¸æ•°J/(mol*k)
 enum class FluidType
 {
 	PerfectGas,
 	RealGas,
 };
-//±íÊ¾ÆøÌåµÄ³éÏó»ùÀà£¬µ±Ç°Ö»ÓĞ»ù±¾¹¦ÄÜ
-//ºóĞø»¹ÓĞÕ³ĞÔ£¬·Ö×ÓÁ¿µÈ¹¦ÄÜ¼ÓÈë
+//è¡¨ç¤ºæ°”ä½“çš„æŠ½è±¡åŸºç±»ï¼Œå½“å‰åªæœ‰åŸºæœ¬åŠŸèƒ½
+//åç»­è¿˜æœ‰ç²˜æ€§ï¼Œåˆ†å­é‡ç­‰åŠŸèƒ½åŠ å…¥
 class Gas
 {
 public:
@@ -27,26 +27,29 @@ public:
 	virtual double GetRm()const = 0;
 	virtual double GetMw() const = 0;
 	virtual double GetGamma() const = 0;
-	//¸ù¾İÎÂ¶È¼ÆËãÉùËÙ
+	//æ ¹æ®æ¸©åº¦è®¡ç®—å£°é€Ÿ
 	virtual double CalcSoundSpeed(const double& T) = 0;
-	//¸ù¾İÃÜ¶ÈºÍÑ¹Á¦¼ÆËãÉùËÙ
+	//æ ¹æ®å¯†åº¦å’Œå‹åŠ›è®¡ç®—å£°é€Ÿ
 	virtual double CalcSoundSpeed(const double& density, const double& pressure) = 0;
-	//¸ù¾İÎÂ¶ÈÃÜ¶È¼ÆËãÑ¹Á¦
+	//æ ¹æ®æ¸©åº¦å¯†åº¦è®¡ç®—å‹åŠ›
 	virtual double CalcPressure(const double& density, const double& T)const = 0;
-	//¸ù¾İ×´Ì¬·½³Ì¼ÆËãÎÂ¶È
+	//æ ¹æ®çŠ¶æ€æ–¹ç¨‹è®¡ç®—æ¸©åº¦
 	virtual double CalcTemperature(const double& density, const double& p) = 0;
-	virtual double CalcMul(const double& T) = 0;   //¸ù¾İÎÂ¶È£¬ÀûÓÃsoutherland¹«Ê½¼ÆËã²ãÁ÷Õ³ĞÔÏµÊı¦Ìl
-	virtual double CalcMut(const double& T) = 0;   //¸ù¾İÎÂ¶È£¬¼ÆËãÍÄÁ÷Õ³ĞÔÏµÊı¦Ìt
-	virtual double CalcMu(const double& T) = 0;    //¸ù¾İÎÂ¶ÈÇó½âÕ³ĞÔÏµÊı¦Ì
-	virtual double CalcKl(const double& T) = 0;    //¸ù¾İÎÂ¶È£¬Çó³ö²ãÁ÷´«ÈÈÏµÊı
-	virtual double CalcKt(const double& T) = 0;    //¸ù¾İÎÂ¶È£¬Çó³öÍÄÁ÷´«ÈÈÏµÊı
-	virtual double CalcK(const double& T) = 0;     //¸ù¾İÎÂ¶È£¬Çó³ö´«ÈÈÏµÊı
-	virtual double GetCp()const = 0;	//Çó³ö¶¨Ñ¹±ÈÈÈCp
-	virtual double GetCv()const = 0;	//Çó³ö¶¨Èİ±ÈÈÈCv
-	//¸ù¾İÎÂ¶ÈºÍËÙ¶ÈÇó³ö×ÜÄÜ
+	virtual double CalcMul(const double& T) = 0;   //æ ¹æ®æ¸©åº¦ï¼Œåˆ©ç”¨southerlandå…¬å¼è®¡ç®—å±‚æµç²˜æ€§ç³»æ•°Î¼l
+	virtual double CalcMut(const double& T) = 0;   //æ ¹æ®æ¸©åº¦ï¼Œè®¡ç®—æ¹æµç²˜æ€§ç³»æ•°Î¼t
+	virtual double CalcMu(const double& T) = 0;    //æ ¹æ®æ¸©åº¦æ±‚è§£ç²˜æ€§ç³»æ•°Î¼
+	virtual double CalcKl(const double& T) = 0;    //æ ¹æ®æ¸©åº¦ï¼Œæ±‚å‡ºå±‚æµä¼ çƒ­ç³»æ•°
+	virtual double CalcKt(const double& T) = 0;    //æ ¹æ®æ¸©åº¦ï¼Œæ±‚å‡ºæ¹æµä¼ çƒ­ç³»æ•°
+	virtual double CalcK(const double& T) = 0;     //æ ¹æ®æ¸©åº¦ï¼Œæ±‚å‡ºä¼ çƒ­ç³»æ•°
+	virtual double GetCp()const = 0;	//æ±‚å‡ºå®šå‹æ¯”çƒ­Cp
+	virtual double GetCv()const = 0;	//æ±‚å‡ºå®šå®¹æ¯”çƒ­Cv
+	//æ ¹æ®æ¸©åº¦å’Œé€Ÿåº¦æ±‚å‡ºæ€»èƒ½
 	virtual double CalcEnergy(const double& T, const double& velocity) = 0;
-	//¸ù¾İÃÜ¶ÈÑ¹Á¦ºÍËÙ¶ÈÇó³ö×ÜÄÜ
-	virtual double CalcEnergy(const double& density, const double& pressure, const double& velocity) = 0;//¸ù¾İÃÜ¶ÈÑ¹Á¦ºÍËÙ¶ÈÇó³ö×ÜÄÚÄÜ
+	//æ ¹æ®å¯†åº¦å‹åŠ›å’Œé€Ÿåº¦æ±‚å‡ºæ€»èƒ½
+	virtual double CalcEnergy(const double& density, const double& pressure, const double& velocity) = 0;//æ ¹æ®å¯†åº¦å‹åŠ›å’Œé€Ÿåº¦æ±‚å‡ºæ€»å†…èƒ½
+	virtual	void Prim2Cons(const double* prim, double* cons)=0;
+	virtual void Cons2Prim(const double* cons, double* prim)=0;
+
 private:
 
 };

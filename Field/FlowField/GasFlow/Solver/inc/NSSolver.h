@@ -26,7 +26,7 @@ namespace zaran
 	{
 	public:
 		NSSolver(int index, string name, FlowSolverPara* para, GridBase* grid, FieldData* fieldData);
-		~NSSolver() {}
+		~NSSolver();
 		void Init()override;
 		void InitField()override;
 	protected:
@@ -40,6 +40,7 @@ namespace zaran
 		void Postprocess()override;
 		virtual void CalcMetric() = 0;
 	protected:
+		Gas* GetGas() { return m_gas; }
 		void CalcPrimGrad()override;
 		virtual	void CalcPrimGradBound() = 0;
 		// 使用最小二乘求梯度
@@ -63,10 +64,8 @@ namespace zaran
 	protected:
 		// 原始变量到守恒变量
 		virtual	void Prim2Cons() = 0;
-		void Prim2Cons(const double* prim, double* cons);
 		// 守恒变量到原始变量
 		virtual void Cons2Prim() {}
-		void Cons2Prim(const double* cons, double* prim);
 		virtual void ZeroResidual() = 0;
 		// 计算流动通量残差
 		virtual void ConvectiveResidual() = 0;
@@ -88,11 +87,9 @@ namespace zaran
 		virtual void FixPrimtive() = 0;
 		virtual	void CalcForce() {};
 	protected:
-
+		Gas* m_gas;
 		//通量求解器
-		Ptr<RiemannSolver> m_riemann_solver;
-		//降阶标识，对于二阶精度的格式，降阶到一阶
-		IArray m_reduce_order;
+		RiemannSolver* m_riemann_solver;
 
 	};
 }

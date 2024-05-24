@@ -5,12 +5,18 @@
 namespace zaran
 {
 
-    NSSolver::NSSolver(int index, string name, FlowSolverPara* para, GridBase* grid, FieldData* fieldData)
-    :FlowSolver(index, name, para, grid, fieldData)
+	NSSolver::NSSolver(int index, string name, FlowSolverPara* para, GridBase* grid, FieldData* fieldData)
+		:FlowSolver(index, name, para, grid, fieldData)
 	{
-    }
+	}
 
-void NSSolver::Init()
+	NSSolver::~NSSolver()
+	{
+		delete[] m_riemann_solver;
+		delete[] m_gas;
+	}
+
+	void NSSolver::Init()
 	{
 		InitSolver();
 		InitField();
@@ -18,8 +24,8 @@ void NSSolver::Init()
 	}
 	void NSSolver::InitField()
 	{
-		FlowSolverPara* para = GetPara();
-		const InitFieldType& init_type = para->GetInitFieldType();
+		auto para = GetPara();
+		auto init_type = para->GetInitFieldType();
 		if (init_type == InitFieldType::FarFlowNoVelocity)
 		{
 			InitFieldFarFieldNoVelocity();
@@ -44,11 +50,11 @@ void NSSolver::Init()
 	void NSSolver::InitSolver()
 	{
 		Log::info("Initialize NS Solver!");
-		SetEquNum(5);
 		FlowSolver::InitSolver();
-		std::string riemannSolverType = GlobalData::GetString("riemannSolver");
-		RiemannSolverFactory riemannSolverFactory;
-		riemannSolverFactory.Create(m_riemann_solver, riemannSolverType);
+		RiemannSolverBuilder riemannSolverFactory;
+		m_riemann_solver = riemannSolverFactory.Create(GetPara()->GetRiemannSolverType());
+		auto ref_value = GetPara()->GetDimensionless();
+		m_gas=new PerfectGas(ref_value.GetRefMw(), ref_value.GetRefGamma(), ref_value);
 		Log::info("NS Solver Initialize Finished!");
 	}
 
@@ -78,11 +84,11 @@ void NSSolver::Init()
 		CalcTimeStepLocal();
 		double dt = GlobalData::GetDouble("dt");
 		double current_time = GlobalData::GetDouble("currentTime");
-		double endTime = GlobalData::GetDouble("endTime");
-		if (current_time + dt > endTime)
+		double end_time = GlobalData::GetDouble("endTime");
+		if (current_time + dt > end_time)
 		{
-			dt = endTime - current_time;
-			current_time = endTime;
+			dt = end_time - current_time;
+			current_time = end_time;
 		}
 		else
 			current_time += dt;
@@ -100,7 +106,7 @@ void NSSolver::Init()
 
 	void NSSolver::CalcPrimGrad()
 	{
-		FlowSolverPara* para = GetPara();
+		auto para = GetPara();
 		if (para->GetGradScheme() == GradScheme::wls)
 		{
 			CalcGradWLS();
@@ -119,7 +125,7 @@ void NSSolver::Init()
 		}
 		CalcPrimGradBound();
 	}
-	
+
 	void NSSolver::CalcResidual()
 	{
 		ZeroResidual();
@@ -143,32 +149,6 @@ void NSSolver::Init()
 	void NSSolver::NoGradient()
 	{
 		// do nothing
-	}
-
-	void NSSolver::Prim2Cons(const double* prim, double* cons)
-	{
-		FlowSolverPara* para = GetPara();
-		Gas* gas = para->GetGas();
-		double gamma = gas->GetGamma();
-		double v2 = prim[1] * prim[1] + prim[2] * prim[2] + prim[3] * prim[3];
-		cons[0] = prim[0];
-		cons[1] = prim[0] * prim[1];
-		cons[2] = prim[0] * prim[2];
-		cons[3] = prim[0] * prim[3];
-		cons[4] = 0.5 * prim[0] * v2 + prim[4] / (gamma - 1);
-	}
-
-	void NSSolver::Cons2Prim(const double* cons, double* prim)
-	{
-		FlowSolverPara* para = GetPara();
-		Gas* gas = para->GetGas();
-		double gamma = gas->GetGamma();
-		prim[0] = cons[0];
-		prim[1] = cons[1] / cons[0];
-		prim[2] = cons[2] / cons[0];
-		prim[3] = cons[3] / cons[0];
-		double v2 = prim[1] * prim[1] + prim[2] * prim[2] + prim[3] * prim[3];
-		prim[4] = (cons[4] - 0.5 * cons[0] * v2) * (gamma - 1);
 	}
 
 } // namespace zaran

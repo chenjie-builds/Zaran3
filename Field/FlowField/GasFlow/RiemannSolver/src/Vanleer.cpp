@@ -36,12 +36,12 @@ void Vanleer::Solver(RiemannSolverPara& para)
 	}
 	else
 	{
-		double fluxMass = 0.25 * rhoL * para.c_left * (para.mach_left + 1) * (para.mach_left + 1);
-		para.flux[0] += fluxMass * deltaNorm;
-		para.flux[1] += fluxMass * deltaNorm * (para.norm(0) / deltaNorm * (-para.vn_left / deltaNorm + 2 * para.c_left) / para.gamma_left + uL);
-		para.flux[2] += fluxMass * deltaNorm * (para.norm(1) / deltaNorm * (-para.vn_left / deltaNorm + 2 * para.c_left) / para.gamma_left + vL);
-		para.flux[3] += fluxMass * deltaNorm * (para.norm(2) / deltaNorm * (-para.vn_left / deltaNorm + 2 * para.c_left) / para.gamma_left + wL);
-		para.flux[4] += fluxMass * deltaNorm * (para.vn_left / deltaNorm * (-para.vn_left / deltaNorm + 2 * para.c_left) / (para.gamma_left + 1)
+		double flux_mass = 0.25 * rhoL * para.c_left * (para.mach_left + 1) * (para.mach_left + 1);
+		para.flux[0] += flux_mass * deltaNorm;
+		para.flux[1] += flux_mass * deltaNorm * (para.norm(0) / deltaNorm * (-para.vn_left / deltaNorm + 2 * para.c_left) / para.gamma_left + uL);
+		para.flux[2] += flux_mass * deltaNorm * (para.norm(1) / deltaNorm * (-para.vn_left / deltaNorm + 2 * para.c_left) / para.gamma_left + vL);
+		para.flux[3] += flux_mass * deltaNorm * (para.norm(2) / deltaNorm * (-para.vn_left / deltaNorm + 2 * para.c_left) / para.gamma_left + wL);
+		para.flux[4] += flux_mass * deltaNorm * (para.vn_left / deltaNorm * (-para.vn_left / deltaNorm + 2 * para.c_left) / (para.gamma_left + 1)
 			+ 2 * para.c_left * para.c_left / (para.gamma_left * para.gamma_left - 1)
 			+ 0.5 * para.v2_left - para.nt * (-para.vn_left / deltaNorm + 2 * para.c_left) / para.gamma_left);
 	}
@@ -65,12 +65,12 @@ void Vanleer::Solver(RiemannSolverPara& para)
 	}
 	else
 	{
-		double fluxMass = -0.25 * rhoR * para.c_right * (para.mach_right - 1) * (para.mach_right - 1);
-		para.flux[0] += fluxMass * deltaNorm;
-		para.flux[1] += fluxMass * deltaNorm * (para.norm(0) / deltaNorm * (-para.vn_right / deltaNorm - 2 * para.c_right) / para.gamma_right + uR);
-		para.flux[2] += fluxMass * deltaNorm * (para.norm(1) / deltaNorm * (-para.vn_right / deltaNorm - 2 * para.c_right) / para.gamma_right + vR);
-		para.flux[3] += fluxMass * deltaNorm * (para.norm(2) / deltaNorm * (-para.vn_right / deltaNorm - 2 * para.c_right) / para.gamma_right + wR);
-		para.flux[4] += fluxMass * deltaNorm * (para.vn_right / deltaNorm * (-para.vn_right / deltaNorm - 2 * para.c_right) / (para.gamma_right + 1)
+		double flux_mass = -0.25 * rhoR * para.c_right * (para.mach_right - 1) * (para.mach_right - 1);
+		para.flux[0] += flux_mass * deltaNorm;
+		para.flux[1] += flux_mass * deltaNorm * (para.norm(0) / deltaNorm * (-para.vn_right / deltaNorm - 2 * para.c_right) / para.gamma_right + uR);
+		para.flux[2] += flux_mass * deltaNorm * (para.norm(1) / deltaNorm * (-para.vn_right / deltaNorm - 2 * para.c_right) / para.gamma_right + vR);
+		para.flux[3] += flux_mass * deltaNorm * (para.norm(2) / deltaNorm * (-para.vn_right / deltaNorm - 2 * para.c_right) / para.gamma_right + wR);
+		para.flux[4] += flux_mass * deltaNorm * (para.vn_right / deltaNorm * (-para.vn_right / deltaNorm - 2 * para.c_right) / (para.gamma_right + 1)
 			+ 2 * para.c_right * para.c_right / (para.gamma_right * para.gamma_right - 1)
 			+ 0.5 * para.v2_right - para.nt * (-para.vn_right / deltaNorm - 2 * para.c_right) / para.gamma_right);
 	}

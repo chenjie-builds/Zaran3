@@ -23,7 +23,7 @@ ResAnalyzerFN::~ResAnalyzerFN()
 
 void ResAnalyzerFN::Analyze()
 {
-    auto node = m_grid->GetNodeTopo();
+    auto node = m_grid->GetNode();
     int node_num = node->GetNodeNum();
     for (int iVar = 0; iVar < m_var_num; iVar++)
     {
@@ -59,7 +59,7 @@ void ResAnalyzerFN::Analyze()
             }
             ave_res += m_res[iVar][iNode] * m_res[iVar][iNode];
         }
-        ave_res = sqrt(m_ave_residual[iVar] / node_num);
+        ave_res = sqrt(ave_res / node_num);
         m_max_residual[iVar] = max_res;
         m_ave_residual[iVar] = ave_res;
         m_max_residual_node[iVar] = max_res_node;

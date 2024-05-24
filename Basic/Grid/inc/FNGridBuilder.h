@@ -11,7 +11,7 @@
 //==============================================================================||
 #pragma once
 #include "FaceFNFDM.h"
-#include "GridListFactory.h"
+#include "GridBuilder.h"
 #include "NodeFNFDM.h"
 #include <string>
 #include <unordered_map>
@@ -19,10 +19,10 @@
 #include"GridFNFDM.h"
 namespace zaran
 {
-  class GridCreaterFN : public GridCreater
+  class FNGridBuilder : public GridCreater
   {
   public:
-    GridCreaterFN(const string& node_file_name = "node.dat", const string& ele_file_name = "cell.dat", const string& bnd_file_name = "bound.dat");
+    FNGridBuilder(const string& node_file_name = "node.dat", const string& ele_file_name = "cell.dat", const string& bnd_file_name = "bound.dat");
     GridFN* CreateGrid() override;
   private:
     void ReadNodeFile();

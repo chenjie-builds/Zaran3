@@ -2,47 +2,47 @@
 using namespace zaran;
 Boundary::Boundary()
 {
-	m_bound_index = -1;
-	m_ghost_index = -1;
-	m_inner_index = -1;
-	m_norm[0]=m_norm[1]=m_norm[2]=0.0;
+	m_idx_bound = -1;
+	m_idx_ghost = -1;
+	m_idx_ref = -1;
+	m_norm_bound[0]=m_norm_bound[1]=m_norm_bound[2]=0.0;
 }
 
-Boundary::Boundary(int boundIndex, int innerIndex, int ghostIndex,const double* norm)
+Boundary::Boundary(int idx_bound, int idx_ref, int idx_ghost,const double* norm_bound)
 {
-	m_bound_index = boundIndex;
-	m_inner_index = innerIndex;
-	m_ghost_index = ghostIndex;
+	m_idx_bound = idx_bound;
+	m_idx_ref = idx_ref;
+	m_idx_ghost = idx_ghost;
 	for(int i=0;i<3;i++)
 	{
-		m_norm[i] = norm[i];
+		m_norm_bound[i] = norm_bound[i];
 	}
 }
 
-void Boundary::SetGhostIndex(const int& ghostIndex)
+void Boundary::SetIdxGhost(const int& idx_ghost)
 {
-	m_ghost_index = ghostIndex;
+	m_idx_ghost = idx_ghost;
 }
 
-void Boundary::SetInnerIndex(const int& innerIndex)
+void Boundary::SetIdxRef(const int& idx_ref)
 {
-	m_inner_index = innerIndex;
+	m_idx_ref = idx_ref;
 }
 
-void Boundary::SetNode(const int& boundIndex)
+void Boundary::SetIdxBound(const int& idx_bound)
 {
-	m_bound_index = boundIndex;
+	m_idx_bound = idx_bound;
 }
-void Boundary::SetNorm(const DVector3D& boundNorm)
+void Boundary::SetNormBound(const DVector3D& boundNorm)
 {
 	for(int i=0;i<3;i++)
 	{
-		m_norm[i] = boundNorm[i];
+		m_norm_bound[i] = boundNorm[i];
 	}
 }
 
 bool Boundary::operator==(const Boundary& bound)
 {
-	return m_bound_index == bound.m_bound_index && m_ghost_index == bound.m_ghost_index && m_inner_index == bound.m_inner_index && m_norm == bound.m_norm;
+	return m_idx_bound == bound.m_idx_bound && m_idx_ghost == bound.m_idx_ghost && m_idx_ref == bound.m_idx_ref && m_norm_bound == bound.m_norm_bound;
 }
 

@@ -1,17 +1,17 @@
-#include "FieldFactory.h"
-#include "GridListFactory.h"
-#include"FNFDM3D.h"
+#include "FieldBuilder.h"
+#include "GridBuilder.h"
+#include"FNGridBuilder.h"
 #include"NSSolverFNFDM.h"
 #include "FieldNS.h"
 namespace zaran
 {
-    void FieldFactory::Create()
+    void FieldBuilder::Create()
     {
         GridCreater* grid_factory;
 
         if (m_grid_type == GridType::Flexible)
         {
-            grid_factory = new GridCreaterFN();
+            grid_factory = new FNGridBuilder();
         }
         // else if (m_grid_type == GridType::Zaran)
         // {
@@ -38,17 +38,17 @@ namespace zaran
         delete[] grid_factory;
     }
 
-    void FieldFactory::CreateGrid()
+    void FieldBuilder::CreateGrid()
     {
 
     }
 
-    void FieldFactory::CreateField()
+    void FieldBuilder::CreateField()
     {
 
     }
 
-    void FieldFactory::CreateSolver()
+    void FieldBuilder::CreateSolver()
     {
 
     }

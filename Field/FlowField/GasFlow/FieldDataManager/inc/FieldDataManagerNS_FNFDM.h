@@ -26,6 +26,7 @@ namespace zaran
         void SetTimeStep(int iNode, double dt);
     public:
         double GetPrimitive(int iEqu, int iNode);
+        double * GetPrimitive(int iEqu);
         double* GetDensity();
         double GetDensity(int iNode);
         double* GetVelocity(int iDim);

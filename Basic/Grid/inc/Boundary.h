@@ -17,21 +17,21 @@ namespace zaran
 	{
 	public:
 		Boundary();
-		Boundary(int nodeIndex, int innerIndex, int ghostIndex, const double* norm);
+		Boundary(int idx_bound, int idx_ref, int idx_ghost, const double* norm_bound);
 		~Boundary() {};
-		void SetGhostIndex(const int& ghostIndex);
-		void SetInnerIndex(const int& innnerIndex);
-		void SetNode(const int& nodeIndex);
-		void SetNorm(const DVector3D& boundNorm);
-		int& GetIndex() { return m_bound_index; }
-		int& GetInnerIndex() { return m_inner_index; }
-		int& GetGhostIndex() { return m_ghost_index; }
-		const double* GetNorm() { return m_norm; }
+		void SetIdxGhost(const int& idx_ghost);
+		void SetIdxRef(const int& innnerIndex);
+		void SetIdxBound(const int& idx_bound);
+		void SetNormBound(const DVector3D& boundNorm);
+		int& GetIdxBound() { return m_idx_bound; }
+		int& GetIdxRef() { return m_idx_ref; }
+		int& GetIdxGhost() { return m_idx_ghost; }
+		const double* GetNormBound() { return m_norm_bound; }
 		bool operator==(const Boundary& bound);
 	private:
-		int m_bound_index;
-		int m_inner_index;
-		int m_ghost_index;
-		double m_norm[3];
+		int m_idx_bound;
+		int m_idx_ref;
+		int m_idx_ghost;
+		double m_norm_bound[3];
 	};
 }

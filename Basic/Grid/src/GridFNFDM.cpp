@@ -7,6 +7,11 @@ namespace zaran
         m_face = nullptr;
         m_cell = nullptr;
         m_boundary_map = nullptr;
+        m_inner_node_num = 0;
+        m_inner_node_index = nullptr;
+        m_bound_node_num = 0;
+        m_bound_node_index = nullptr;
+        m_total_node_num = 0;
     }
     GridFN::~GridFN()
     {
@@ -25,10 +30,27 @@ namespace zaran
             delete m_cell;
             m_cell = nullptr;
         }
+        if (m_boundary_map)
+        {
+            delete m_boundary_map;
+            m_boundary_map = nullptr;
+        }
+        if (m_inner_node_index)
+        {
+            delete[] m_inner_node_index;
+            m_inner_node_index = nullptr;
+        }
+        if (m_bound_node_index)
+        {
+            delete[] m_bound_node_index;
+            m_bound_node_index = nullptr;
+        }
     }
     void GridFN::SetNode(NodeFN* node)
     {
         m_node = node;
+        if (m_node)
+            InitNode();
     }
     void GridFN::SetFace(FaceFN* face)
     {
@@ -44,25 +66,25 @@ namespace zaran
     }
     int GridFN::GetTotalNodeNum() const
     {
-        return m_node->GetNodeNum();
+        return m_total_node_num;
     }
     int GridFN::GetInnerNodeNum() const
     {
-        return 0;
+        return m_inner_node_num;
     }
     int GridFN::GetBoundNodeNum() const
     {
-        return 0;
+        return m_bound_node_num;
     }
-    NodeFN* GridFN::GetNodeTopo()
+    NodeFN* GridFN::GetNode()
     {
         return m_node;
     }
-    FaceFN* GridFN::GetFaceTopo()
+    FaceFN* GridFN::GetFace()
     {
         return m_face;
     }
-    CellFN* GridFN::GetCellTopo()
+    CellFN* GridFN::GetCell()
     {
         return m_cell;
     }
@@ -70,4 +92,44 @@ namespace zaran
     {
         return m_boundary_map;
     }
-} // namespace zaran
+    int* GridFN::GetInnerNode()
+    {
+        return m_inner_node_index;
+    }
+    int* GridFN::GetBoundNode()
+    {
+        return m_bound_node_index;
+    }
+    void GridFN::InitNode()
+    {
+        m_total_node_num = m_node->GetNodeNum();
+        for (int iNode = 0; iNode < m_total_node_num; iNode++)
+        {
+            if (m_node->GetType(iNode) == NodeType::inner)
+            {
+                m_inner_node_num++;
+            }
+            else
+            {
+                m_bound_node_num++;
+            }
+        }
+        m_inner_node_index = new int[m_inner_node_num];
+        m_bound_node_index = new int[m_bound_node_num];
+        int inner_index = 0;
+        int bound_index = 0;
+        for (int iNode = 0; iNode < m_total_node_num; iNode++)
+        {
+            if (m_node->GetType(iNode) == NodeType::inner)
+            {
+                m_inner_node_index[inner_index] = iNode;
+                inner_index++;
+            }
+            else
+            {
+                m_bound_node_index[bound_index] = iNode;
+                bound_index++;
+            }
+        }
+    }
+}

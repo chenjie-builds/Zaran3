@@ -13,7 +13,7 @@ void BoundaryMap::AddBoundary(const std::string& name, Boundary& bound)
 		auto& boundVec = it->second;
 		for (int iBound = 0; iBound < boundVec.size(); ++iBound)
 		{
-			if (boundVec[iBound].GetIndex() > bound.GetIndex())
+			if (boundVec[iBound].GetIdxBound() > bound.GetIdxBound())
 			{
 				boundVec.insert(boundVec.begin() + iBound, bound);
 				return;

@@ -91,6 +91,11 @@ namespace zaran
         return m_prim[iEqu][iNode];
     }
 
+    double* DataManagerNS_FNFDM::GetPrimitive(int iEqu)
+    {
+        return  m_prim[iEqu];
+    }
+
     double DataManagerNS_FNFDM::GetDensity(int iNode)
     {
         return m_prim[0][iNode];

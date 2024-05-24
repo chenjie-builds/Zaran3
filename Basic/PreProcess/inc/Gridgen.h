@@ -1,5 +1,5 @@
 #pragma once
-#include "GridListFactory.h"
+#include "GridBuilder.h"
 namespace zaran
 {
 	class Gridgen :public GridCreater

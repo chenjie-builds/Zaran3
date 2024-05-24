@@ -1,4 +1,4 @@
-#include "FNFDM3D.h"
+#include "FNGridBuilder.h"
 #include "BasicType.h"
 #include "Log.h"
 #include "MathBasic.h"
@@ -13,11 +13,11 @@
 namespace zaran
 {
 
-    GridCreaterFN::GridCreaterFN(const string& node_file_name, const string& ele_file_name, const string& bnd_file_name) :m_node_file_name(node_file_name), m_ele_file_name(ele_file_name), m_bnd_file_name(bnd_file_name)
+    FNGridBuilder::FNGridBuilder(const string& node_file_name, const string& ele_file_name, const string& bnd_file_name) :m_node_file_name(node_file_name), m_ele_file_name(ele_file_name), m_bnd_file_name(bnd_file_name)
     {
     }
 
-    GridFN* GridCreaterFN::CreateGrid()
+    GridFN* FNGridBuilder::CreateGrid()
     {
         ReadNodeFile();
         ReadCellFile();
@@ -26,13 +26,13 @@ namespace zaran
         // ExtendNeighborNode();
         CheckNode();
         CheckUnkownNode();
-        // AddSelfToNeighbor();
+        AddSelfToNeighbor();
         GridFN* grid = new GridFN("FNFDM", 0, 3);
         ConvertToGrid(grid);
         return grid;
     }
 
-    void GridCreaterFN::ReadNodeFile()
+    void FNGridBuilder::ReadNodeFile()
     {
         std::ifstream fin(m_node_file_name);
         int node_num;
@@ -230,7 +230,7 @@ namespace zaran
             fin >> bound_node.bound_index >> bound_node.ref_index >> tempIndex1;
             bound_node.bound_index -= 1;
             bound_node.ref_index -= 1;
-            bound_node.type = "slipWall";
+            bound_node.type = "wall";
             double mod_norm = 0;
             for (int j = 0; j < 3; j++)
             {
@@ -242,12 +242,12 @@ namespace zaran
             {
                 bound_node.normal[j] /= mod_norm;
             }
-            m_node_type[bound_node.bound_index] = NodeType::slipWall;
+            m_node_type[bound_node.bound_index] = NodeType::wall;
         }
         fin.close();
     }
 
-    void GridCreaterFN::SortNeiborNode()
+    void FNGridBuilder::SortNeiborNode()
     {
         struct node_pair
         {
@@ -453,7 +453,7 @@ namespace zaran
         }
     }
 
-    void GridCreaterFN::ExtendNeighborNode()
+    void FNGridBuilder::ExtendNeighborNode()
     {
         // 构建节点KD�?
         // 初始化vtk�?
@@ -514,16 +514,14 @@ namespace zaran
                 neibor_set.insert(result->GetId(i));
             }
             neibor_set.erase(iNode);
-
-            neibor_num_after = neibor_set.size();
             nodeNeibor.resize(6);//差分模板不改变
-            nodeNeibor.reserve(neibor_set.size());
             for (auto& i : neibor_set)
             {
                 //如果nodeNeibor中没有该节点，添加该节点
                 if (std::find(nodeNeibor.begin(), nodeNeibor.end(), i) == nodeNeibor.end())
-                    nodeNeibor.emplace_back(i);
+                    nodeNeibor.push_back(i);
             }
+            neibor_num_after = nodeNeibor.size();
             min_neibor_num = Min(min_neibor_num, neibor_num_after);
             max_neibor_num = Max(max_neibor_num, neibor_num_after);
             if (neibor_num_after < neibor_num_before)
@@ -532,7 +530,7 @@ namespace zaran
         Log::info("min neibor num:{} max neibor num:{}", min_neibor_num, max_neibor_num);
     }
 
-    void GridCreaterFN::ReadCellFile()
+    void FNGridBuilder::ReadCellFile()
     {
         std::ifstream fin;
         fin.open("cell.dat");
@@ -584,7 +582,7 @@ namespace zaran
         fin.close();
     }
 
-    void GridCreaterFN::CheckNode()
+    void FNGridBuilder::CheckNode()
     {
         double delta = 1e-5;
         double min_angle = LARGE_NUMBER;
@@ -691,7 +689,7 @@ namespace zaran
             m_node_neibor[min_angle_index][4], m_node_neibor[min_angle_index][5]);
         Log::info("-------- Axis Node 1: {}, Node 2: {}", min_angle_neibor_index1, min_angle_neibor_index2);
     }
-    void GridCreaterFN::CheckUnkownNode()
+    void FNGridBuilder::CheckUnkownNode()
     {
         int node_num = m_node_coord.size();
         for (size_t i = 0; i < node_num; i++)
@@ -703,30 +701,27 @@ namespace zaran
         }
         Log::info("Check undefined node done");
     }
-    void GridCreaterFN::AddSelfToNeighbor()
+    void FNGridBuilder::AddSelfToNeighbor()
     {
         int node_num = m_node_coord.size();
         for (int iNode = 0; iNode < node_num; iNode++)
         {
+            if (m_node_type[iNode] != NodeType::inner)
+                continue;
             bool find_current = false;
-            auto& currentNeibor = m_node_neibor[iNode];
-            for (int iNeibor = 0; iNeibor < currentNeibor.size(); iNeibor++)
+            auto& current_neighbor = m_node_neibor[iNode];
+            for (int iNeibor = 0; iNeibor < current_neighbor.size(); iNeibor++)
             {
-                auto& neighbor_neighbor = m_node_neibor[currentNeibor[iNeibor]];
-                for (int jNeibor = 0; jNeibor < neighbor_neighbor.size(); jNeibor++)
+                auto& neighbors_neighbor = m_node_neibor[current_neighbor[iNeibor]];
+                if (std::find(neighbors_neighbor.begin(), neighbors_neighbor.end(), iNode) == neighbors_neighbor.end())
                 {
-                    if (neighbor_neighbor[jNeibor] == iNode)
-                        find_current = true;
-                }
-                if (find_current == false)
-                {
-                    neighbor_neighbor.push_back(iNode);
+                    neighbors_neighbor.push_back(iNode);
                 }
             }
         }
         Log::info("Add self to neibor node's neibor node done");
     }
-    void GridCreaterFN::ConvertToGrid(GridFN*& grid)
+    void FNGridBuilder::ConvertToGrid(GridFN*& grid)
     {
         int node_num = m_node_coord.size();
         std::vector<int> neighbor_node_num(node_num);
@@ -792,9 +787,9 @@ namespace zaran
         {
             boundary_map->AddBoundary(m_bound_node[iFace].type, Boundary(m_bound_node[iFace].bound_index, m_bound_node[iFace].ref_index, 0, m_bound_node[iFace].normal));
         }
-        grid->SetBoundaryMap(boundary_map); 
+        grid->SetBoundaryMap(boundary_map);
     }
-    void GridCreaterFN::ReadBoundFile()
+    void FNGridBuilder::ReadBoundFile()
     {
         std::ifstream fin;
         fin.open("bound.dat");

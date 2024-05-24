@@ -12,7 +12,6 @@
 //==============================================================================||
 #pragma once
 #include "BasicType.h"
-#include "CoordTrans.h"
 #include "NodeBase.h"
 namespace zaran
 {
@@ -21,8 +20,7 @@ enum class NodeType // 节点类型
     inner,       // 内部点，不是边界
     inlet,       // 入口
     outlet,      // 出口
-    slipWall,    // 滑移壁面
-    noSlipWall,  // 无滑移壁面
+    wall,    // 壁面
     hole,        // 洞边界
     symmetry,    // 对称面
     farfield,    // 远场

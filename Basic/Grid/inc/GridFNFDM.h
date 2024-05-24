@@ -32,14 +32,23 @@ namespace zaran
     int GetTotalNodeNum() const;
     int GetInnerNodeNum() const;
     int GetBoundNodeNum() const;
-    NodeFN* GetNodeTopo();
-    FaceFN* GetFaceTopo();
-    CellFN* GetCellTopo();
+    NodeFN* GetNode();
+    FaceFN* GetFace();
+    CellFN* GetCell();
     BoundaryMap* GetBoundaryMap();
+    int* GetInnerNode();
+    int* GetBoundNode();
+  protected:
+    void InitNode();
   private:
     NodeFN* m_node;
     FaceFN* m_face;
     CellFN* m_cell;
     BoundaryMap* m_boundary_map;
+    int m_inner_node_num;
+    int* m_inner_node_index;
+    int m_bound_node_num;
+    int* m_bound_node_index;
+    int m_total_node_num;
   };
 } // namespace zaran

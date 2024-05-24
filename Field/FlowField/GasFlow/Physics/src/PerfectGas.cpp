@@ -69,3 +69,23 @@ double PerfectGas::CalcPressure(const double& density, const double& T)const
 {
 	return density * T / m_gamma;
 }
+
+void PerfectGas::Prim2Cons(const double* prim, double* cons)
+{
+	double v2 = prim[1] * prim[1] + prim[2] * prim[2] + prim[3] * prim[3];
+	cons[0] = prim[0];
+	cons[1] = prim[0] * prim[1];
+	cons[2] = prim[0] * prim[2];
+	cons[3] = prim[0] * prim[3];
+	cons[4] = 0.5 * prim[0] * v2 + prim[4] / (m_gamma - 1);
+}
+
+void PerfectGas::Cons2Prim(const double* cons, double* prim)
+{
+	prim[0] = cons[0];
+	prim[1] = cons[1] / cons[0];
+	prim[2] = cons[2] / cons[0];
+	prim[3] = cons[3] / cons[0];
+	double v2 = prim[1] * prim[1] + prim[2] * prim[2] + prim[3] * prim[3];
+	prim[4] = (cons[4] - 0.5 * cons[0] * v2) * (m_gamma - 1);
+}

@@ -34,6 +34,8 @@ public:
 	double CalcEnergy(const double& density, const double& pressure, const double& velocity);//根据密度压力和速度求出总内能
 	//根据密度和温度求出压力
 	double CalcPressure(const double& density, const double& T)const;
+	void Prim2Cons(const double* prim, double* cons)override;
+	void Cons2Prim(const double* cons, double* prim)override;
 private:
 	double m_gamma;	//比热比 
 	double m_Mw;     //摩尔质量 kg/mol

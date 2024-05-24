@@ -1,8 +1,8 @@
 #include<fstream>
 #include"simulation.h"
 #include "GlobalData.h"
-#include "log.h"
-#include"FieldFactory.h"
+#include "Log.h"
+#include "FieldBuilder.h"
 #include"ReadSTL.h"
 #include"PolyData.h"
 #include"File.h"
@@ -166,7 +166,7 @@ void zaran::Simulation::SolveField()
 		Log::warn("Unsupported Solver Type! Please Check!");
 		system("pause");
 	}
-	FieldFactory* fieldFactory = new FieldFactory(grid_type, solver_type, dim);
+	FieldBuilder* fieldFactory = new FieldBuilder(grid_type, solver_type, dim);
 	fieldFactory->Create();
 	Field** field = fieldFactory->GetField();
 	Controller* controller = new Controller(field, 1);

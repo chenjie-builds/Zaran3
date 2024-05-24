@@ -6,7 +6,6 @@ namespace zaran
         Solver(index, name, para, grid)
     {
         m_field_data = fieldData;
-        m_equ_num = 0;
     }
 
     FieldSolver::~FieldSolver()

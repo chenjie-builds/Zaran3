@@ -12,8 +12,8 @@ void zaran::Visual::WriteTecplotBinary(Field *field)
     FieldNS_FNFDM *fieldNS = dynamic_cast<FieldNS_FNFDM *>(field);
     auto data_manager = fieldNS->GetDataManager();
     auto grid = fieldNS->GetGrid();
-    auto cell = grid->GetCellTopo();
-    auto node = grid->GetNodeTopo();
+    auto cell = grid->GetCell();
+    auto node = grid->GetNode();
 
     const double *density, *velocity_x, *velocity_y, *velocity_z, *pressure;
     density = data_manager->GetDensity();
@@ -81,7 +81,7 @@ void zaran::Visual::WriteTecplotBinary(Field *field)
     i = TECNODE142(&connectivityCount, cell_nodes.data());
 
     /// bound face
-    auto face_topo = grid->GetFaceTopo();
+    auto face_topo = grid->GetFace();
     cell_num = face_topo->GetFaceNum();
     zone_name = "grid_" + grid->GetName() + "_bound";
     zone_type = 3; // Brick

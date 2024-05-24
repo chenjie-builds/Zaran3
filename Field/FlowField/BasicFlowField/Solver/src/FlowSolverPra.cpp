@@ -122,6 +122,32 @@ void FlowSolverPara::Init()
 		system("pause");
 	}
 	m_backup_field_file_name = GlobalData::GetString("backupFieldFileName");
+	std::string riemann_solver_type = GlobalData::GetString("riemannSolver");
+	if (riemann_solver_type == "HLLC")
+	{
+		m_riemann_solver_type = RiemannSolverType::HLLC;
+	}
+	else if (riemann_solver_type == "VanLeer")
+	{
+		m_riemann_solver_type = RiemannSolverType::VanLeer;
+	}
+	else if (riemann_solver_type == "Roe")
+	{
+		m_riemann_solver_type = RiemannSolverType::Roe;
+	}
+	else if (riemann_solver_type == "StegerWarming")
+	{
+		m_riemann_solver_type = RiemannSolverType::StegerWarming;
+	}
+	else if (riemann_solver_type == "Ausmpw")
+	{
+		m_riemann_solver_type = RiemannSolverType::Ausmpw;
+	}
+	else
+	{
+		Log::warn("Unsupported Riemann Solver Type: {}, Please Check Control File!", riemann_solver_type);
+		system("pause");
+	}
 
 }
 
@@ -185,6 +211,11 @@ const std::string& zaran::FlowSolverPara::GetBackupFieldFileName() const
 const Dimensionless& zaran::FlowSolverPara::GetDimensionless() const
 {
 	return m_dimensionless;
+}
+
+const RiemannSolverType& zaran::FlowSolverPara::GetRiemannSolverType() const
+{
+	return m_riemann_solver_type;
 }
 
 void FlowSolverPara::SetGradScheme(const GradScheme& gradScheme)

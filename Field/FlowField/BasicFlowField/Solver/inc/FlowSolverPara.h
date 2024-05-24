@@ -15,6 +15,7 @@
 #include"BasicType.h"
 #include"Dimensionless.h"
 #include"Gas.h"
+#include "RiemannSolver.h"
 namespace zaran
 {
 	//梯度求解方法
@@ -62,6 +63,7 @@ namespace zaran
 		const std::string& GetBackupFieldFileName()const;
 		const Dimensionless& GetDimensionless()const;
 		Gas* GetGas() { return m_gas; }
+		const RiemannSolverType& GetRiemannSolverType()const;
 	private:
 		int m_equ_num;
 		Gas* m_gas;
@@ -87,5 +89,6 @@ namespace zaran
 		LimiterType n_limiter_type;
 		// 备份流场文件名，用于续算
 		std::string m_backup_field_file_name;
+		RiemannSolverType m_riemann_solver_type;
 	};
 }
