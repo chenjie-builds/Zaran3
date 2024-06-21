@@ -1,3 +1,7 @@
+## Version: 3.3.1
+>2024.06.21
+
+修复DataManagerNS中的问题
 ## Version: 3.3.0
 >2024.06.21
 

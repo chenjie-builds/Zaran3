@@ -13,7 +13,7 @@ namespace zaran
         delete[] m_cons;
         delete[] m_residual;
         delete[] m_limiter;
-        for (int iEqu = 0; iEqu < m_data_num; iEqu++)
+        for (int iEqu = 0; iEqu < m_equ_num; iEqu++)
         {
             delete[] m_viscous_flux[iEqu];
             delete[] m_prim_grad[iEqu];
@@ -118,12 +118,12 @@ namespace zaran
 
     double* DataManagerNS::GetPressure()
     {
-        return m_prim[m_data_num - 1];
+        return m_prim[m_equ_num - 1];
     }
 
     double DataManagerNS::GetPressure(int iNode)
     {
-        return m_prim[m_data_num - 1][iNode];
+        return m_prim[m_equ_num - 1][iNode];
     }
 
     double DataManagerNS::GetTimeStep(int iNode)
