@@ -1,4 +1,4 @@
-#include"Simulation.h"
+#include"Application.h"
 #include "Log.h"
 #include"BasicType.h"
 #include"Test.h"
@@ -7,9 +7,9 @@ int main()
 {
 	using namespace zaran;
 	Logger::Start();
-	Simulation* simulation = new Simulation();
-	simulation->Run();
-	delete[] simulation;
+	Application* app = new Application();
+	app->Run();
+	delete[] app;
 	Log::info("计算结束！按任意键退出……");
 	std::cin.get();
 }

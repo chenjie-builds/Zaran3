@@ -1145,7 +1145,7 @@ namespace zaran
 			m_grad_wlsq->CalcGradient(grid, m_data_manager->GetViscousFlux(iEqu, 2), m_data_manager->GetViscousFluxGrad(iEqu, 2, 0), m_data_manager->GetViscousFluxGrad(iEqu, 2, 1), m_data_manager->GetViscousFluxGrad(iEqu, 2, 2));
 		}
 	}
-	void NSSolverFNFDM::SourceTermResidual()
+	void NSSolverFNFDM::SourceResidual()
 	{
 	}
 

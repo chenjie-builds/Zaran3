@@ -1,4 +1,4 @@
-#include "controller.h"
+#include "FieldController.h"
 #include "log.h"
 #include <fstream>
 #include"FlowSolver.h"
@@ -9,17 +9,21 @@ using namespace zaran;
 
 
 
-Controller::Controller(Field** field, int field_size)
+FieldController::FieldController(FieldManager* global_Field)
 {
-    m_field = field;
-    m_field_size = field_size;
+    m_global_field = global_Field;
 }
 
-Controller::~Controller()
+FieldController::~FieldController()
 {
+    if (m_global_field != nullptr)
+    {
+        delete m_global_field;
+        m_global_field = nullptr;
+    }
 }
 
-void Controller::Initialize()
+void FieldController::Initialize()
 {
     if (!GlobalData::IsExist("currentIter"))
     {
@@ -30,20 +34,20 @@ void Controller::Initialize()
         double startTime = GlobalData::GetDouble("startTime");
         GlobalData::Update("currentTime", startTime);
     }
-    for (size_t iField = 0; iField < m_field_size; iField++)
+    for (size_t iField = 0; iField < m_global_field->GetFieldSize(); iField++)
     {
-        m_field[iField]->GetSolver()->Init();
+        m_global_field->GetField(iField)->GetSolver()->Init();
     }
 }
 
-void Controller::SaveDataTecplot()
+void FieldController::SaveDataTecplot()
 {
-    for (size_t iField = 0; iField < m_field_size; iField++)
+    for (size_t iField = 0; iField < m_global_field->GetFieldSize(); iField++)
     {
-        m_visual->WriteTecplotBinary(m_field[iField]);
+        m_visual->WriteTecplotBinary(m_global_field->GetField(iField));
     }
 }
-void Controller::SaveDataVTK(std::ostream& os)
+void FieldController::SaveDataVTK(std::ostream& os)
 {
     /*os << "# vtk DataFile Version 4.2\n";
     for (size_t iGrid = 0; iGrid < grid_.size(); iGrid++)
@@ -84,7 +88,7 @@ void Controller::SaveDataVTK(std::ostream& os)
     }*/
 }
 
-void Controller::SolveField()
+void FieldController::SolveField()
 {
     Log::info("Start to solve field!");
     Initialize();
@@ -104,11 +108,11 @@ void Controller::SolveField()
     PostSolve();
 }
 
-void Controller::CalcResidual()
+void FieldController::CalcResidual()
 {
-    for (size_t iField = 0; iField < m_field_size; iField++)
+    for (size_t iField = 0; iField < m_global_field->GetFieldSize(); iField++)
     {
-        auto field = dynamic_cast<FieldNS_FNFDM*>(m_field[iField]);
+        auto field = dynamic_cast<FieldNS_FNFDM*>(m_global_field->GetField(iField));
         auto solver = field->GetSolver();
         auto grid = field->GetGrid();
         auto dataManager = field->GetDataManager();
@@ -120,7 +124,7 @@ void Controller::CalcResidual()
     m_res_flag = true;
 }
 
-void Controller::SaveFieldData()
+void FieldController::SaveFieldData()
 {
     SaveDataTecplot();
     std::string back_dir = GlobalData::GetString("backupFieldFolder");
@@ -133,16 +137,16 @@ void Controller::SaveFieldData()
     BackupGlobalData(back_dir);
 }
 
-void Controller::BackupFieldData(std::string& back_folder)
+void FieldController::BackupFieldData(std::string& back_folder)
 {
-    for (size_t iField = 0; iField < m_field_size; iField++)
+    for (size_t iField = 0; iField < m_global_field->GetFieldSize(); iField++)
     {
-        FieldSolver* solver = m_field[iField]->GetSolver();
+        FieldSolver* solver = m_global_field->GetField(iField)->GetSolver();
         solver->BackupField(back_folder);
     }
 }
 
-void Controller::BackupResidual(std::string& back_folder)
+void FieldController::BackupResidual(std::string& back_folder)
 {
     std::string residual_file = GlobalData::GetString("residualFileName");
     std::string residual_file_back = back_folder + "/" + residual_file;
@@ -158,7 +162,7 @@ void Controller::BackupResidual(std::string& back_folder)
     CopyFile(residual_file, residual_file_back);
 }
 
-void Controller::BackupLog(std::string& back_folder)
+void FieldController::BackupLog(std::string& back_folder)
 {
     std::string log_file = "log.txt";
     std::string log_file_back = back_folder + "/" + log_file;
@@ -174,7 +178,7 @@ void Controller::BackupLog(std::string& back_folder)
     CopyFile(log_file, log_file_back);
 }
 
-void Controller::BackupGlobalData(std::string& back_folder)
+void FieldController::BackupGlobalData(std::string& back_folder)
 {
     std::string global_file = "zaran.ini";
     std::string global_file_back = back_folder + "/" + global_file;
@@ -190,7 +194,7 @@ void Controller::BackupGlobalData(std::string& back_folder)
     GlobalData::Backup(back_folder);
 }
 
-bool Controller::IsStopSolve()
+bool FieldController::IsStopSolve()
 {
     double endTime = GlobalData::GetDouble("endTime");
     int currentIter = GlobalData::GetInt("currentIter");
@@ -218,7 +222,7 @@ bool Controller::IsStopSolve()
     }
     return false;
 }
-void Controller::SaveResidual()
+void FieldController::SaveResidual()
 {
     int currentIter = GlobalData::GetInt("currentIter");
     string residual_file = GlobalData::GetString("residualFileName");
@@ -238,31 +242,31 @@ void Controller::SaveResidual()
     }
 }
 
-void Controller::SolveFieldOneStep()
+void FieldController::SolveFieldOneStep()
 {
-    for (size_t iField = 0; iField < m_field_size; iField++)
+    for (size_t iField = 0; iField < m_global_field->GetFieldSize(); iField++)
     {
-        FieldSolver* solver = m_field[iField]->GetSolver();
+        FieldSolver* solver = m_global_field->GetField(iField)->GetSolver();
         solver->Solve();
     }
 }
 
-void Controller::PreSolve()
+void FieldController::PreSolve()
 {
     int currentIter = GlobalData::GetInt("currentIter");
     GlobalData::Update("currentIter", ++currentIter);
-    for (size_t iField = 0; iField < m_field_size; iField++)
+    for (size_t iField = 0; iField < m_global_field->GetFieldSize(); iField++)
     {
-        FieldSolver* solver = m_field[iField]->GetSolver();
+        FieldSolver* solver = m_global_field->GetField(iField)->GetSolver();
         solver->Preprocess();
     }
 }
 
-void Controller::PostSolve()
+void FieldController::PostSolve()
 {
-    for (size_t iField = 0; iField < m_field_size; iField++)
+    for (size_t iField = 0; iField < m_global_field->GetFieldSize(); iField++)
     {
-        FieldSolver* solver = m_field[iField]->GetSolver();
+        FieldSolver* solver = m_global_field->GetField(iField)->GetSolver();
         solver->Postprocess();
     }
     CommInterNodeData();
@@ -282,7 +286,7 @@ void Controller::PostSolve()
     }
 }
 
-void Controller::CommInterNodeData()
+void FieldController::CommInterNodeData()
 {
     //for (size_t iSolver = 0; iSolver < solverVec_->GetSolverNumber(); iSolver++)
     //{

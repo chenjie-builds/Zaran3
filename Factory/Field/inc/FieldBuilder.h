@@ -11,28 +11,24 @@
 //==============================================================================||
 #pragma once
 #include "BasicType.h"
-#include "SolverVec.h"
 #include "solver.h"
 #include "flowsolver.h"
 #include "NSSolver.h"
-#include "Field.h"
+#include "GlobalField.h"
 namespace zaran
 {
     class FieldBuilder
     {
     public:
         FieldBuilder(GridType grid_type, FieldSolverType solver_type,Dimension dim) :m_grid_type(grid_type), m_solver_type(solver_type),m_dim(dim) {};
-        void Create();
-       Field** GetField() { return m_field; }
+        FieldManager* Create();
     private:
         void CreateGrid();
         void CreateField();
         void CreateSolver();
     private:
-        Field** m_field;
         GridType m_grid_type;
         FieldSolverType m_solver_type;
         Dimension m_dim;
-
     };
 }

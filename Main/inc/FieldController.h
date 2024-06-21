@@ -12,15 +12,17 @@
 #pragma once
 #include "BasicType.h"
 #include "Visual.h"
-#include "Field.h"
+#include"GlobalField.h"
 #include <iostream>
 namespace zaran
 {
-    class Controller
+    /// @brief 控制器类，用于控制流场求解
+    /// @details 控制流场求解的前处理，求解，后处理，Feild之间的交互
+    class FieldController
     {
     public:
-        Controller(Field** field, int field_size);
-        ~Controller();
+        FieldController(FieldManager* field);
+        ~FieldController();
     public:
         // 流场求解
         void SolveField();
@@ -45,7 +47,6 @@ namespace zaran
     protected:
         //输出流场数据
         void SaveFieldData();
-
         // 备份边界节点数据
         void SaveWallNode();
         // 备份残差
@@ -54,9 +55,6 @@ namespace zaran
         void SaveDataVTK(std::ostream& os);
         // 输出流场为Tecplot格式
         void SaveDataTecplot();
-
-
-
         // 备份流场数据，用于续算
         void BackupFieldData(std::string& back_folder);
         // 备份残差文件
@@ -66,8 +64,7 @@ namespace zaran
         // 备份全局参数
         void BackupGlobalData(std::string& back_folder);
     private:
-        int m_field_size;
-        Field** m_field;
+        FieldManager* m_global_field;
         Ptr<Visual> m_visual;
         double m_max_res;
         double m_ave_res;

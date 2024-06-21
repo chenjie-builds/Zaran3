@@ -7,10 +7,10 @@
 #include "FieldNSStruct.h"
 namespace zaran
 {
-    void FieldBuilder::Create()
+    FieldManager* FieldBuilder::Create()
     {
+        FieldManager* global_field = new FieldManager();
         GridFactory* grid_factory;
-
         if (m_grid_type == GridType::Flexible)
         {
             grid_factory = new FNGridFactorySYSU();
@@ -30,22 +30,21 @@ namespace zaran
             system("pause");
         }
         GridBase* grid = grid_factory->CreateGrid();
-        m_field = new Field * [1];
-        for (int i = 0; i < 1; ++i)
+        Field* field;
+        if (m_solver_type == FieldSolverType::NS_FNFDM)
+            field = new FieldNS_FNFDM(grid);
+        else if (m_solver_type == FieldSolverType::NS_Struct)
         {
-            if (m_solver_type == FieldSolverType::NS_FNFDM)
-                m_field[i] = new FieldNS_FNFDM(grid);
-            else if (m_solver_type == FieldSolverType::NS_Struct)
-            {
-                m_field[i] = new FieldNS_Struct(grid);
-            }
-            else
-            {
-                Log::warn("Unsupported Solver Type! Please Check!");
-                system("pause");
-            }
+            field = new FieldNS_Struct(grid);
         }
+        else
+        {
+            Log::warn("Unsupported Solver Type! Please Check!");
+            system("pause");
+        }
+        global_field->AddField(field);
         delete[] grid_factory;
+        return global_field;
     }
 
     void FieldBuilder::CreateGrid()

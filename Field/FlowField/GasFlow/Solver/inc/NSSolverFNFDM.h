@@ -71,7 +71,7 @@ namespace zaran
 		void CalcViscousFlux() override;
 		void CalcViscousFluxGrad()override;
 		//计算源项
-		void SourceTermResidual() override;
+		void SourceResidual() override;
 		/// 计算气动力
 		void CalcForce()override;
 		void BoundaryCondition()override;

@@ -6,29 +6,29 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	Simulation.h														||
-//*	@brief	Ä£ÄâÀà, ¸ù¾İÈÎÎñµÄ²»Í¬Ö´ĞĞ²»Í¬ÈÎÎñ										||
+//*	@brief	æ¨¡æ‹Ÿç±», æ ¹æ®ä»»åŠ¡çš„ä¸åŒæ‰§è¡Œä¸åŒä»»åŠ¡										||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
 #include "GlobalData.h"
-#include "controller.h"
+#include "FieldController.h"
 #include "GridFactory.h"
 #include "GridList.h"
 namespace zaran
 {
 
-	enum class SimulationTask
+	enum class TaskType
 	{
 		SOLVE_FIELD = 0,
 		CONVERT_GRID = 1,
 		READ_MODEL = 2
 	};
 
-	//·ÂÕæÀà£¬ÓÃÓÚ¿ØÖÆ¼ÆËãÁ÷³Ì
-	class Simulation
+	//åº”ç”¨ç±»ï¼Œç”¨äºæ§åˆ¶æ•´ä¸ªç¨‹åºçš„åŠŸèƒ½
+	class Application
 	{
 	public:
-		Simulation() :
+		Application() :
 			globalDataFileName_("zaran.ini"),
 			programVersion_("V3.3.2_alpha"),
 			lastModifyDate_("2024/04/15"),
@@ -36,28 +36,28 @@ namespace zaran
 		{
 			GlobalData::Init();
 		}
-		~Simulation() {};
+		~Application() {};
 		void Run();
 	protected:
-		//¶ÁÈ¡¿ØÖÆÎÄ¼ş²ÎÊı
+		//è¯»å–æ§åˆ¶æ–‡ä»¶å‚æ•°
 		void ReadGlobalData();
-		void InitSimulationTask();
+		void InitTask();
 		void ShowInfo();
 		void SolveField();
 		void ConvertGrid();	
 		void ReadModel();
 	private:
-		SimulationTask task_;
-		//²ÎÊıÎÄ¼şÃû
+		TaskType m_task;
+		//å‚æ•°æ–‡ä»¶å
 		string globalDataFileName_;
-		//Íø¸ñÉú³É¹¤³§
+		//ç½‘æ ¼ç”Ÿæˆå·¥å‚
 		Ptr<GridFactory> gridListFatory_;
-		//³ÌĞò°æ±¾ºÅ, ÄÚ²¿Éú³É
+		//ç¨‹åºç‰ˆæœ¬å·, å†…éƒ¨ç”Ÿæˆ
 		string programVersion_;
-		//³ÌĞòÉÏ´Î¸ü¸ÄÈÕÆÚ, ÄÚ²¿Éú³É
+		//ç¨‹åºä¸Šæ¬¡æ›´æ”¹æ—¥æœŸ, å†…éƒ¨ç”Ÿæˆ
 		string lastModifyDate_;
-		//³ÌĞòÖ§³ÖµÄ×îĞ¡¿ØÖÆÎÄ¼ş°æ±¾ºÅ, Èç¹û¶ÁÈ¡µÄ°æ±¾ºÅµÍÓÚ´Ë°æ±¾, ½«²»½øĞĞ¼ÆËã
-		//×÷ÓÃ: ·ÀÖ¹³ÌĞò¸üĞÂºó£¬ĞèÒª¸ü¶àµÄ¿ØÖÆÎÄ¼şĞÅÏ¢£¬ÀÏ°æ±¾¿ØÖÆÎÄ¼şÎ´Ìí¼Óµ¼ÖÂ¼ÆËãÊ§°Ü
+		//ç¨‹åºæ”¯æŒçš„æœ€å°æ§åˆ¶æ–‡ä»¶ç‰ˆæœ¬å·, å¦‚æœè¯»å–çš„ç‰ˆæœ¬å·ä½äºæ­¤ç‰ˆæœ¬, å°†ä¸è¿›è¡Œè®¡ç®—
+		//ä½œç”¨: é˜²æ­¢ç¨‹åºæ›´æ–°åï¼Œéœ€è¦æ›´å¤šçš„æ§åˆ¶æ–‡ä»¶ä¿¡æ¯ï¼Œè€ç‰ˆæœ¬æ§åˆ¶æ–‡ä»¶æœªæ·»åŠ å¯¼è‡´è®¡ç®—å¤±è´¥
 		string minSupportCtrlFileVersion_;
 	};
 

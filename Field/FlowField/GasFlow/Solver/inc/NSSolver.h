@@ -67,7 +67,7 @@ namespace zaran
 		virtual void CalcViscousFlux() = 0;
 		virtual void CalcViscousFluxGrad() = 0;
 		//计算源项
-		virtual void SourceTermResidual() = 0;
+		virtual void SourceResidual() = 0;
 		// 计算流场残差，即右端项
 		virtual void CalcResidual();
 		/// @brief 检查原始变量

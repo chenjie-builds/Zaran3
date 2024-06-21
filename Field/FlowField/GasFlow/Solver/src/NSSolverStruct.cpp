@@ -403,7 +403,6 @@ void NSSolverStruct::CalcTimeStepLocal()
                 }
             }
         }
-
     }
     void NSSolverStruct::ViscousResidual()
     {
@@ -417,7 +416,7 @@ void NSSolverStruct::CalcTimeStepLocal()
     {
         //todo
     }
-    void NSSolverStruct::SourceTermResidual()
+    void NSSolverStruct::SourceResidual()
     {
         //todo
     }

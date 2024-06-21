@@ -39,7 +39,7 @@ namespace zaran
         void CalcViscousFlux() override;
         void CalcViscousFluxGrad()override;
         //计算源项
-        void SourceTermResidual() override;
+        void SourceResidual() override;
         void BoundaryCondition()override;
         void InletBC(BoundStruct& bound);
         void OutletBC(BoundStruct& bound);

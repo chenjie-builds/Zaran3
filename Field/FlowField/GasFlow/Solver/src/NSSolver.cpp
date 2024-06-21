@@ -107,7 +107,7 @@ namespace zaran
 		ZeroResidual();
 		ConvectiveResidual();
 		ViscousResidual();
-		SourceTermResidual();
+		SourceResidual();
 	}
 
 	void NSSolver::UpdateField()
