@@ -60,7 +60,7 @@ namespace zaran
     {
         m_cell = cell;
     }
-    void GridFN::SetBoundaryMap(BoundaryMap* boundaryMap)
+    void GridFN::SetBoundaryMap(BoundMapFN* boundaryMap)
     {
         m_boundary_map = boundaryMap;
     }
@@ -88,7 +88,7 @@ namespace zaran
     {
         return m_cell;
     }
-    BoundaryMap* GridFN::GetBoundaryMap()
+    BoundMapFN* GridFN::GetBoundaryMap()
     {
         return m_boundary_map;
     }

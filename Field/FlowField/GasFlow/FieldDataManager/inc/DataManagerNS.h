@@ -4,14 +4,14 @@
 #include "FieldDataManager.h"
 namespace zaran
 {
-    class DataManagerNS_FNFDM :public DataManager
+    class DataManagerNS :public DataManager
     {
     public:
-        DataManagerNS_FNFDM(GridFN* grid, FieldData* fieldData, int equ_num);
-        ~DataManagerNS_FNFDM();
+        DataManagerNS(FieldData* fieldData, int data_num);
+        ~DataManagerNS();
     public:
-        void CreateFieldData()override;
-        void RegisterFieldData()override;
+        void CreateData()override;
+        void RegisterData()override;
     public:
         void SetPrimitive(int iEqu, int iNode, double value);
         void SetConservative(int iEqu, int iNode, double value);
@@ -26,7 +26,7 @@ namespace zaran
         void SetTimeStep(int iNode, double dt);
     public:
         double GetPrimitive(int iEqu, int iNode);
-        double * GetPrimitive(int iEqu);
+        double* GetPrimitive(int iEqu);
         double* GetDensity();
         double GetDensity(int iNode);
         double* GetVelocity(int iDim);
@@ -50,9 +50,8 @@ namespace zaran
         double GetPrimitiveGrad(int iEqu, int iGradDim, int iNode);
         int* GetNonPhysical();
         int GetNonPhysical(int iNode);
-
     private:
-        GridFN* m_grid;
+        int m_equ_num = 5;
         /// @brief 基本变量, 1D 变量索引, 2D 节点索引
         double** m_prim;
         /// @brief 守恒变量, 1D 变量索引, 2D 节点索引
@@ -76,4 +75,5 @@ namespace zaran
         /// @brief 非物理点标记
         int* m_non_physical;
     };
+
 }

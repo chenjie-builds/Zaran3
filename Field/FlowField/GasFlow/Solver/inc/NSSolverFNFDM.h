@@ -6,22 +6,22 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	Solver_NS_3D.h															||
-//*	@brief	ÈıÎ¬NS ·½³ÌÇó½âÆ÷														||
+//*	@brief	ä¸‰ç»´NS æ–¹ç¨‹æ±‚è§£å™¨														||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
 #include "NSSolver.h"
 #include "GridFNFDM.h"
-#include "FieldDataManagerNS_FNFDM.h"
+#include "DataManagerNS.h"
 #include"Residual.h"
 #include"GradWLSQ.h"
-#include"NodeMetric.h"
+#include"NodeMetricsFN.h"
 namespace zaran
 {
 	class NSSolverFNFDM :public NSSolver
 	{
 	public:
-		NSSolverFNFDM(int index, string name, FlowSolverPara* para, GridFN* grid, FieldData* fieldData, DataManagerNS_FNFDM* data_manager);
+		NSSolverFNFDM(int index, string name, FlowSolverPara* para, GridFN* grid, FieldData* fieldData, DataManagerNS* data_manager);
 		~NSSolverFNFDM();
 	protected:
 		void InitFieldFarFlow()override;
@@ -30,8 +30,9 @@ namespace zaran
 		void CalcMetric()override;
 		void BackupField(std::string& back_folder)override;
 	protected:
+		void Preprocess()override;
 		void CalcTimeStepLocal() override;
-		void SnycTimeStepWithGlobal(double& dt)override;
+		void ReduceTimeStep(double& dt)override;
 		void RungeKutta()override;
 		void Prim2Cons()override;
 		void Cons2Prim()override;
@@ -45,11 +46,14 @@ namespace zaran
 		void MidPointReconstruct1stOrder(int index_left, int index_right, double* value_rec_left, double* value_rec_right);
 
 	protected:
-		void CalcPrimGradBound()override;
-		void CalcGradWLS()override;
+		void CalcPrimGrad();
+		void CalcPrimGradBound();
+		void CalcGradWLS();
+		void CalcGradFNFDM();
+		void NoGradient();
 
-		// ¼ÆËãÏŞÖÆÆ÷ÏµÊı
-		void CalcLimiter()override;
+		// è®¡ç®—é™åˆ¶å™¨ç³»æ•°
+		void CalcLimiter();
 		void CalcLimiterVK();
 		void CalcLimiterBJ();
 		void CalcLimiterNone();
@@ -60,29 +64,29 @@ namespace zaran
 		void FixPrimtive()override;
 
 		void ZeroResidual() override;
-		// ¼ÆËãÁ÷¶¯Í¨Á¿
+		// è®¡ç®—æµåŠ¨é€šé‡
 		void ConvectiveResidual()override;
-		//¼ÆËãÕ³ĞÔÍ¨Á¿
+		//è®¡ç®—ç²˜æ€§é€šé‡
 		void ViscousResidual() override;
 		void CalcViscousFlux() override;
 		void CalcViscousFluxGrad()override;
-		//¼ÆËãÔ´Ïî
+		//è®¡ç®—æºé¡¹
 		void SourceTermResidual() override;
-		/// ¼ÆËãÆø¶¯Á¦
+		/// è®¡ç®—æ°”åŠ¨åŠ›
 		void CalcForce()override;
 		void BoundaryCondition()override;
-		// ³¬ÉùËÙÈë¿Ú±ß½çÌõ¼ş
-		virtual void InletBC(Boundary& bound);
-		// ³¬ÉùËÙ³ö¿Ú±ß½çÌõ¼ş
-		virtual void OutletBC(Boundary& bound);
-		// ±ÚÃæ±ß½çÌõ¼ş
-		virtual void  WallBC(Boundary& bound);
-		// ÀèÂü±ß½çÌõ¼ş
-		virtual void RiemannBC(Boundary& bound);
+		// è¶…å£°é€Ÿå…¥å£è¾¹ç•Œæ¡ä»¶
+		virtual void InletBC(BoundFN& bound);
+		// è¶…å£°é€Ÿå‡ºå£è¾¹ç•Œæ¡ä»¶
+		virtual void OutletBC(BoundFN& bound);
+		// å£é¢è¾¹ç•Œæ¡ä»¶
+		virtual void  WallBC(BoundFN& bound);
+		// é»æ›¼è¾¹ç•Œæ¡ä»¶
+		virtual void RiemannBC(BoundFN& bound);
 	protected:
 		virtual GridFN* GetGrid();
 	private:
-		DataManagerNS_FNFDM* m_data_manager;
+		DataManagerNS* m_data_manager;
 		GradWLSQ* m_grad_wlsq;
 		NodeMetric* m_node_metric;
 	};

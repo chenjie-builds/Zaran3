@@ -2,7 +2,7 @@
 #include "Field.h"
 #include"GridFNFDM.h"
 #include"NSSolverFNFDM.h"
-#include "FieldDataManagerNS_FNFDM.h"
+#include "DataManagerNS.h"
 #include "residual.h"
 namespace zaran
 {
@@ -15,7 +15,7 @@ namespace zaran
         GridFN* GetGrid() override;
         NSSolverFNFDM* GetSolver() override;
         FlowSolverPara* GetSolverPara() override;
-        DataManagerNS_FNFDM* GetDataManager() override;
+        DataManagerNS* GetDataManager() override;
         ResAnalyzerFN* GetResAnalyzer() { return m_res_analyze; }
     protected:
         void Allocate() override;

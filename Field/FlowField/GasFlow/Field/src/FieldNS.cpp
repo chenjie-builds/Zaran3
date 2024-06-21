@@ -26,16 +26,16 @@ namespace zaran
     {
         return static_cast<FlowSolverPara*>(Field::GetSolverPara());
     }
-    DataManagerNS_FNFDM* FieldNS_FNFDM::GetDataManager()
+    DataManagerNS* FieldNS_FNFDM::GetDataManager()
     {
-        return static_cast<DataManagerNS_FNFDM*>(Field::GetDataManager());
+        return static_cast<DataManagerNS*>(Field::GetDataManager());
     }
     void FieldNS_FNFDM::Allocate()
     {
         Field::Allocate();
         m_solver_para = new FlowSolverPara();
         m_solver_para->Init();
-        m_dataManager = new DataManagerNS_FNFDM(GetGrid(), GetFieldData(), GetSolverPara()->GetEquNum());
+        m_dataManager = new DataManagerNS(GetFieldData(), GetGrid()->GetTotalNodeNum());
         m_solver = new NSSolverFNFDM(1, "NS_FNFDM", GetSolverPara(), GetGrid(), GetFieldData(), GetDataManager());
         double** res = new double* [GetSolverPara()->GetEquNum()];
         for (int i = 0; i < GetSolverPara()->GetEquNum(); ++i)

@@ -12,7 +12,7 @@
 #pragma once
 #include "GlobalData.h"
 #include "controller.h"
-#include "GridBuilder.h"
+#include "GridFactory.h"
 #include "GridList.h"
 namespace zaran
 {
@@ -51,7 +51,7 @@ namespace zaran
 		//参数文件名
 		string globalDataFileName_;
 		//网格生成工厂
-		Ptr<GridCreater> gridListFatory_;
+		Ptr<GridFactory> gridListFatory_;
 		//程序版本号, 内部生成
 		string programVersion_;
 		//程序上次更改日期, 内部生成

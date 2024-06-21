@@ -6,13 +6,15 @@ namespace zaran
     class DataManager
     {
     public:
-        DataManager( FieldData* fieldData, int equ_num);
+        DataManager( FieldData* fieldData, int data_num);
        virtual ~DataManager();
     public:
-       virtual void CreateFieldData()=0;
-       virtual void RegisterFieldData()=0;
+       virtual void CreateData()=0;
+       virtual void RegisterData()=0;
     protected:
+        /// @brief 场数据
         FieldData* m_data;
-        int m_equ_num;
+        /// @brief 数据个数
+        int m_data_num;
     };
 }

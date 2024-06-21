@@ -21,6 +21,9 @@ class NodeStruct : public NodeBase
     ~NodeStruct();
     void SetCoord(int i, int j, int k, const double *coord);
     const double *GetCoord(int i, int j, int k) const;
+    int GetNi() const { return m_ni; }
+    int GetNj() const { return m_nj; }
+    int GetNk() const { return m_nk; }
   protected:
     int GetIndex(int i, int j, int k) const;
   protected:

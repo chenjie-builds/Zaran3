@@ -6,18 +6,18 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	Limiter.h															||
-//*	@brief	ÏŞÖÆÆ÷º¯Êı															||
+//*	@brief	é™åˆ¶å™¨å‡½æ•°															||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
 namespace zaran
 {
-	enum class LimiterType//ÏŞÖÆÆ÷ÀàĞÍ
+	enum class LimiterType//é™åˆ¶å™¨ç±»å‹
 	{
-		none,//ÎŞÏŞÖÆÆ÷
-		barth,//BarthÏŞÖÆÆ÷
-		first_order,//Ò»½×ÏŞÖÆÆ÷
-		vk//VenkatakrishnanÏŞÖÆÆ÷
+		none,//æ— é™åˆ¶å™¨
+		barth,//Barthé™åˆ¶å™¨
+		first_order,//ä¸€é˜¶é™åˆ¶å™¨
+		vk//Venkatakrishnané™åˆ¶å™¨
 	};
 	double LimiterNone(const double& x, const double& y);
 	double LimiterMinMod(const double& x, const double& y);

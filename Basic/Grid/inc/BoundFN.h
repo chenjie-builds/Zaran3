@@ -13,12 +13,12 @@
 #include"BasicType.h"
 namespace zaran
 {
-	class Boundary
+	class BoundFN
 	{
 	public:
-		Boundary();
-		Boundary(int idx_bound, int idx_ref, int idx_ghost, const double* norm_bound);
-		~Boundary() {};
+		BoundFN();
+		BoundFN(int idx_bound, int idx_ref, int idx_ghost, const double* norm_bound);
+		~BoundFN() {};
 		void SetIdxGhost(const int& idx_ghost);
 		void SetIdxRef(const int& innnerIndex);
 		void SetIdxBound(const int& idx_bound);
@@ -27,7 +27,7 @@ namespace zaran
 		int& GetIdxRef() { return m_idx_ref; }
 		int& GetIdxGhost() { return m_idx_ghost; }
 		const double* GetNormBound() { return m_norm_bound; }
-		bool operator==(const Boundary& bound);
+		bool operator==(const BoundFN& bound);
 	private:
 		int m_idx_bound;
 		int m_idx_ref;

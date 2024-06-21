@@ -19,7 +19,7 @@
 #include "Limiter.h"
 #include "Gas.h"
 #include"PerfectGas.h"
-#include "Boundary.h"
+#include "BoundFN.h"
 namespace zaran
 {
 	class NSSolver :public FlowSolver
@@ -41,13 +41,6 @@ namespace zaran
 		virtual void CalcMetric() = 0;
 	protected:
 		Gas* GetGas() { return m_gas; }
-		void CalcPrimGrad()override;
-		virtual	void CalcPrimGradBound() = 0;
-		// 使用最小二乘求梯度
-		virtual void CalcGradWLS() = 0;
-		// 使用非结构有限差分法求梯度
-		virtual void CalcGradUFDM();
-		void NoGradient();
 		/*
 		 * 时间步计算与时间推进相关函数
 		 */
@@ -77,8 +70,6 @@ namespace zaran
 		virtual void SourceTermResidual() = 0;
 		// 计算流场残差，即右端项
 		virtual void CalcResidual();
-		// 计算限制器系数
-		virtual void CalcLimiter() = 0;
 		/// @brief 检查原始变量
 		virtual void CheckPrimtive() = 0;
 		/// @brief 检查残差

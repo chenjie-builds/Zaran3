@@ -1,17 +1,23 @@
 #include "FieldBuilder.h"
-#include "GridBuilder.h"
-#include"FNGridBuilder.h"
+#include "GridFactory.h"
+#include"FNGridFactory.h"
+#include"GridStructFactory.h"
 #include"NSSolverFNFDM.h"
 #include "FieldNS.h"
+#include "FieldNSStruct.h"
 namespace zaran
 {
     void FieldBuilder::Create()
     {
-        GridCreater* grid_factory;
+        GridFactory* grid_factory;
 
         if (m_grid_type == GridType::Flexible)
         {
-            grid_factory = new FNGridBuilder();
+            grid_factory = new FNGridFactorySYSU();
+        }
+        else if (m_grid_type == GridType::Structured)
+        {
+            grid_factory = new GridStructFactory();
         }
         // else if (m_grid_type == GridType::Zaran)
         // {
@@ -29,6 +35,10 @@ namespace zaran
         {
             if (m_solver_type == FieldSolverType::NS_FNFDM)
                 m_field[i] = new FieldNS_FNFDM(grid);
+            else if (m_solver_type == FieldSolverType::NS_Struct)
+            {
+                m_field[i] = new FieldNS_Struct(grid);
+            }
             else
             {
                 Log::warn("Unsupported Solver Type! Please Check!");

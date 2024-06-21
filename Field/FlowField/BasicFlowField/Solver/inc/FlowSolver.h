@@ -28,7 +28,7 @@ class FlowSolver : public FieldSolver
     void Solve() override;
     void Postprocess() override;
     // 同步时间步长为全局时间步
-    virtual void SnycTimeStepWithGlobal(double &dt) = 0;
+    virtual void ReduceTimeStep(double &dt) = 0;
 
   public:
     // 计算当前时刻的CFL数
@@ -41,8 +41,6 @@ class FlowSolver : public FieldSolver
   public:
     // 时间推进
     virtual void TimeAdvance() = 0;
-    // 计算变量梯度
-    virtual void CalcPrimGrad() = 0;
 
 
   protected:

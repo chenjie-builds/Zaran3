@@ -10,18 +10,18 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include "Boundary.h"
+#include "BoundFN.h"
 #include"BasicType.h"
 namespace zaran
 {
-	class BoundaryMap
+	class BoundMapFN
 	{
 	public:
-		void AddBoundary(const string& name, Boundary& bound);
-		int GetBoundaryTypeName() { return boundaryMap_.size(); }
-		Array<Boundary>& GetBoundary(const string& name);
-		map<string, Array<Boundary>>& GetBoundaryMap() { return boundaryMap_; }
+		void AddBoundary(const string& name, BoundFN& bound);
+		int GetBoundaryTypeName() { return m_bound_map.size(); }
+		Array<BoundFN>& GetBoundary(const string& name);
+		map<string, Array<BoundFN>>& GetBoundaryMap() { return m_bound_map; }
 	private:
-		map<string, Array<Boundary>>boundaryMap_;
+		map<string, Array<BoundFN>>m_bound_map;
 	};
 }

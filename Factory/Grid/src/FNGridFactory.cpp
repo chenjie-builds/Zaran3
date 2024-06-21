@@ -1,4 +1,4 @@
-#include "FNGridBuilder.h"
+#include "FNGridFactory.h"
 #include "BasicType.h"
 #include "Log.h"
 #include "MathBasic.h"
@@ -13,11 +13,11 @@
 namespace zaran
 {
 
-    FNGridBuilder::FNGridBuilder(const string& node_file_name, const string& ele_file_name, const string& bnd_file_name) :m_node_file_name(node_file_name), m_ele_file_name(ele_file_name), m_bnd_file_name(bnd_file_name)
+    FNGridFactorySYSU::FNGridFactorySYSU(const string& node_file_name, const string& ele_file_name, const string& bnd_file_name) :m_node_file_name(node_file_name), m_ele_file_name(ele_file_name), m_bnd_file_name(bnd_file_name)
     {
     }
 
-    GridFN* FNGridBuilder::CreateGrid()
+    GridFN* FNGridFactorySYSU::CreateGrid()
     {
         ReadNodeFile();
         ReadCellFile();
@@ -32,7 +32,7 @@ namespace zaran
         return grid;
     }
 
-    void FNGridBuilder::ReadNodeFile()
+    void FNGridFactorySYSU::ReadNodeFile()
     {
         std::ifstream fin(m_node_file_name);
         int node_num;
@@ -247,7 +247,7 @@ namespace zaran
         fin.close();
     }
 
-    void FNGridBuilder::SortNeiborNode()
+    void FNGridFactorySYSU::SortNeiborNode()
     {
         struct node_pair
         {
@@ -453,7 +453,7 @@ namespace zaran
         }
     }
 
-    void FNGridBuilder::ExtendNeighborNode()
+    void FNGridFactorySYSU::ExtendNeighborNode()
     {
         // 构建节点KD�?
         // 初始化vtk�?
@@ -530,7 +530,7 @@ namespace zaran
         Log::info("min neibor num:{} max neibor num:{}", min_neibor_num, max_neibor_num);
     }
 
-    void FNGridBuilder::ReadCellFile()
+    void FNGridFactorySYSU::ReadCellFile()
     {
         std::ifstream fin;
         fin.open("cell.dat");
@@ -582,13 +582,17 @@ namespace zaran
         fin.close();
     }
 
-    void FNGridBuilder::CheckNode()
+    void FNGridFactorySYSU::CheckNode()
     {
         double delta = 1e-5;
         double min_angle = LARGE_NUMBER;
         int min_angle_index;
         int min_angle_neibor_index1, min_angle_neibor_index2;
         int node_num = m_node_coord.size();
+        //各个方向的最小夹角, i,j,k方向
+        double min_angle_i = LARGE_NUMBER, min_angle_j = LARGE_NUMBER, min_angle_k = LARGE_NUMBER;
+        //各个方向最小夹角的节点索引
+        int min_angle_index_i, min_angle_index_j, min_angle_index_k;
         for (size_t iNode = 0; iNode < node_num; iNode++)
         {
             if (m_node_type[iNode] != NodeType::inner)
@@ -650,7 +654,7 @@ namespace zaran
                 std::swap(neighbor_index[4], neighbor_index[5]);
             }
             // 计算坐标轴之间的最小夹角
-            double temp_min = LARGE_NUMBER;
+            double temp_min_angle = LARGE_NUMBER;
             int temp_index1, temp_index2;
             for (int iNeigh = 0; iNeigh < 6; ++iNeigh)
             {
@@ -658,24 +662,49 @@ namespace zaran
                 {
                     vec[0][k] = m_node_coord[neighbor_index[iNeigh]][k] - m_node_coord[iNode][k];
                 }
-                for (int jNode = iNeigh + 1; jNode < 6; ++jNode)
+                for (int jNeigh = iNeigh + 1; jNeigh < 6; ++jNeigh)
                 {
                     for (int k = 0; k < 3; ++k)
                     {
-                        vec[1][k] = m_node_coord[neighbor_index[jNode]][k] - m_node_coord[iNode][k];
+                        vec[1][k] = m_node_coord[neighbor_index[jNeigh]][k] - m_node_coord[iNode][k];
                     }
                     double angle = AngleOfTwoArray3D(vec[0].data(), vec[1].data());
-                    if (angle < temp_min)
+                    if (angle < temp_min_angle)
                     {
-                        temp_min = angle;
+                        temp_min_angle = angle;
                         temp_index1 = neighbor_index[iNeigh];
-                        temp_index2 = neighbor_index[jNode];
+                        temp_index2 = neighbor_index[jNeigh];
                     }
+                    if (iNeigh == 0 && jNeigh == 1)
+                    {
+                        if (angle < min_angle_i)
+                        {
+                            min_angle_i = angle;
+                            min_angle_index_i = iNode;
+                        }
+                    }
+                    if (iNeigh == 2 && jNeigh == 3)
+                    {
+                        if (angle < min_angle_j)
+                        {
+                            min_angle_j = angle;
+                            min_angle_index_j = iNode;
+                        }
+                    }
+                    if (iNeigh == 4 && jNeigh == 5)
+                    {
+                        if (angle < min_angle_k)
+                        {
+                            min_angle_k = angle;
+                            min_angle_index_k = iNode;
+                        }
+                    }
+
                 }
             }
-            if (temp_min < min_angle)
+            if (temp_min_angle < min_angle)
             {
-                min_angle = temp_min;
+                min_angle = temp_min_angle;
                 min_angle_index = iNode;
                 min_angle_neibor_index1 = temp_index1;
                 min_angle_neibor_index2 = temp_index2;
@@ -688,8 +717,20 @@ namespace zaran
             m_node_neibor[min_angle_index][1], m_node_neibor[min_angle_index][2], m_node_neibor[min_angle_index][3],
             m_node_neibor[min_angle_index][4], m_node_neibor[min_angle_index][5]);
         Log::info("-------- Axis Node 1: {}, Node 2: {}", min_angle_neibor_index1, min_angle_neibor_index2);
+        Log::info("Min angle i: {}, Node index: {}", min_angle_i, min_angle_index_i);
+        Log::info("-------- Coord: {}, {}, {}", m_node_coord[min_angle_index_i][0], m_node_coord[min_angle_index_i][1],
+            m_node_coord[min_angle_index_i][2]);
+        Log::info("-------- Neighbor: {}, {}, {}, {}, {}, {}", m_node_neibor[min_angle_index_i][0], m_node_neibor[min_angle_index_i][1], m_node_neibor[min_angle_index_i][2], m_node_neibor[min_angle_index_i][3], m_node_neibor[min_angle_index_i][4], m_node_neibor[min_angle_index_i][5]);
+        Log::info("Min angle j: {}, Node index: {}", min_angle_j, min_angle_index_j);
+        Log::info("-------- Coord: {}, {}, {}", m_node_coord[min_angle_index_j][0], m_node_coord[min_angle_index_j][1],
+            m_node_coord[min_angle_index_j][2]);
+        Log::info("-------- Neighbor: {}, {}, {}, {}, {}, {}", m_node_neibor[min_angle_index_j][0], m_node_neibor[min_angle_index_j][1], m_node_neibor[min_angle_index_j][2], m_node_neibor[min_angle_index_j][3], m_node_neibor[min_angle_index_j][4], m_node_neibor[min_angle_index_j][5]);
+        Log::info("Min angle k: {}, Node index: {}", min_angle_k, min_angle_index_k);
+        Log::info("-------- Coord: {}, {}, {}", m_node_coord[min_angle_index_k][0], m_node_coord[min_angle_index_k][1],
+            m_node_coord[min_angle_index_k][2]);
+        Log::info("-------- Neighbor: {}, {}, {}, {}, {}, {}", m_node_neibor[min_angle_index_k][0], m_node_neibor[min_angle_index_k][1], m_node_neibor[min_angle_index_k][2], m_node_neibor[min_angle_index_k][3], m_node_neibor[min_angle_index_k][4], m_node_neibor[min_angle_index_k][5]);
     }
-    void FNGridBuilder::CheckUnkownNode()
+    void FNGridFactorySYSU::CheckUnkownNode()
     {
         int node_num = m_node_coord.size();
         for (size_t i = 0; i < node_num; i++)
@@ -701,7 +742,7 @@ namespace zaran
         }
         Log::info("Check undefined node done");
     }
-    void FNGridBuilder::AddSelfToNeighbor()
+    void FNGridFactorySYSU::AddSelfToNeighbor()
     {
         int node_num = m_node_coord.size();
         for (int iNode = 0; iNode < node_num; iNode++)
@@ -721,7 +762,7 @@ namespace zaran
         }
         Log::info("Add self to neibor node's neibor node done");
     }
-    void FNGridBuilder::ConvertToGrid(GridFN*& grid)
+    void FNGridFactorySYSU::ConvertToGrid(GridFN*& grid)
     {
         int node_num = m_node_coord.size();
         std::vector<int> neighbor_node_num(node_num);
@@ -782,14 +823,14 @@ namespace zaran
         }
         grid->SetFace(face);
 
-        BoundaryMap* boundary_map = new BoundaryMap();
+        BoundMapFN* boundary_map = new BoundMapFN();
         for (int iFace = 0; iFace < m_bound_node.size(); iFace++)
         {
-            boundary_map->AddBoundary(m_bound_node[iFace].type, Boundary(m_bound_node[iFace].bound_index, m_bound_node[iFace].ref_index, 0, m_bound_node[iFace].normal));
+            boundary_map->AddBoundary(m_bound_node[iFace].type, BoundFN(m_bound_node[iFace].bound_index, m_bound_node[iFace].ref_index, 0, m_bound_node[iFace].normal));
         }
         grid->SetBoundaryMap(boundary_map);
     }
-    void FNGridBuilder::ReadBoundFile()
+    void FNGridFactorySYSU::ReadBoundFile()
     {
         std::ifstream fin;
         fin.open("bound.dat");

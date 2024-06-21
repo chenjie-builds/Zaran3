@@ -14,25 +14,31 @@
 #include "NodeStruct.h"
 #include "FaceStruct.h"
 #include "CellStruct.h"
+#include"BoundMapStruct.h"
 namespace zaran
 {
 	class GridStruct :public GridBase
 	{
 	public:
-		GridStruct(const string& name, int index, int dim, GridType type);
+		GridStruct(const string& name, int index, int dim);
 		virtual ~GridStruct();
 	public:
 		int GetNi();
 		int GetNj();
 		int GetNk();
-		void SetNodeNum(int ni, int nj, int nk);
 		void GetNodeNum(int& ni, int& nj, int& nk);
+		int GetTotalNodeNum();
+		NodeStruct* GetNode() { return m_node; }
+		FaceStruct* GetFace() { return m_face; }
+		CellStruct* GetCell() { return m_cell; }
+		BoundMapStruct* GetBoundMap() { return m_bound_map; }
 	public:
 		void GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd);
 	private:
-		int m_ni, m_nj, m_nk;//三个方向的节点个数
+		int m_ghost_size;
 		NodeStruct* m_node;
 		FaceStruct* m_face;
 		CellStruct* m_cell;
+		BoundMapStruct* m_bound_map;
 	};
 }

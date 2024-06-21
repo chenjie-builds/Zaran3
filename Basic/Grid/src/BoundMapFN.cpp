@@ -1,12 +1,12 @@
-#include "BoundaryMap.h"
-#include "log.h"
+#include "BoundMapFN.h"
+#include "Log.h"
 using namespace zaran;
-void BoundaryMap::AddBoundary(const std::string& name, Boundary& bound)
+void BoundMapFN::AddBoundary(const std::string& name, BoundFN& bound)
 {
-	auto it = boundaryMap_.find(name);
-	if (it == boundaryMap_.end())
+	auto it = m_bound_map.find(name);
+	if (it == m_bound_map.end())
 	{
-		boundaryMap_.insert({ name,std::vector<Boundary>({bound}) });
+		m_bound_map.insert({ name,std::vector<BoundFN>({bound}) });
 	}
 	else
 	{
@@ -27,10 +27,10 @@ void BoundaryMap::AddBoundary(const std::string& name, Boundary& bound)
 	}
 }
 
-std::vector<Boundary>& BoundaryMap::GetBoundary(const std::string& name)
+std::vector<BoundFN>& BoundMapFN::GetBoundary(const std::string& name)
 {
-	auto it = boundaryMap_.find(name);
-	if (it == boundaryMap_.end())
+	auto it = m_bound_map.find(name);
+	if (it == m_bound_map.end())
 	{
 		Log::info("Boundary Name:{}, is not found!", name);
 	}

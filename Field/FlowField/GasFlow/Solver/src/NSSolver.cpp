@@ -51,8 +51,8 @@ namespace zaran
 	{
 		Log::info("Initialize NS Solver!");
 		FlowSolver::InitSolver();
-		RiemannSolverBuilder riemannSolverFactory;
-		m_riemann_solver = riemannSolverFactory.Create(GetPara()->GetRiemannSolverType());
+		RiemannSolverBuilder riemann_solver_builder;
+		m_riemann_solver = riemann_solver_builder.Create(GetPara()->GetRiemannSolverType());
 		auto ref_value = GetPara()->GetDimensionless();
 		m_gas=new PerfectGas(ref_value.GetRefMw(), ref_value.GetRefGamma(), ref_value);
 		Log::info("NS Solver Initialize Finished!");
@@ -61,8 +61,6 @@ namespace zaran
 	void NSSolver::Preprocess()
 	{
 		CalcTimeStep();
-		CalcPrimGrad();
-		CalcLimiter();
 	}
 
 	void NSSolver::Postprocess()
@@ -96,34 +94,12 @@ namespace zaran
 		int isSteady = GlobalData::GetInt("isSteady");
 		if (isSteady == 0)
 		{
-			SnycTimeStepWithGlobal(dt);
+			ReduceTimeStep(dt);
 		}
 	}
 	void NSSolver::TimeAdvance()
 	{
 		RungeKutta();
-	}
-
-	void NSSolver::CalcPrimGrad()
-	{
-		auto para = GetPara();
-		if (para->GetGradScheme() == GradScheme::wls)
-		{
-			CalcGradWLS();
-		}
-		else if (para->GetGradScheme() == GradScheme::ufdm)
-		{
-			CalcGradUFDM();
-		}
-		else if (para->GetGradScheme() == GradScheme::noGrad)
-		{
-			NoGradient();
-		}
-		else
-		{
-			Log::warn("Unsupported Gradiend Scheme!");
-		}
-		CalcPrimGradBound();
 	}
 
 	void NSSolver::CalcResidual()
@@ -134,21 +110,9 @@ namespace zaran
 		SourceTermResidual();
 	}
 
-	void NSSolver::CalcGradUFDM()
-	{
-		Log::warn("TO DO Gradient Function UFDM!");
-	}
-
 	void NSSolver::UpdateField()
 	{
 		Cons2Prim();
-	}
-
-
-
-	void NSSolver::NoGradient()
-	{
-		// do nothing
 	}
 
 } // namespace zaran
