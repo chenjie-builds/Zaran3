@@ -27,19 +27,43 @@ namespace zaran
 		}
 
 	}
+	void GridStruct::Allocate(int ni, int nj, int nk, int ghost_size)
+	{
+		m_ghost_size = ghost_size;
+		if (m_node != nullptr)
+		{
+			delete m_node;
+			m_node = nullptr;
+		}
+		if (m_face != nullptr)
+		{
+			delete m_face;
+			m_face = nullptr;
+		}
+		if (m_cell != nullptr)
+		{
+			delete m_cell;
+			m_cell = nullptr;
+		}
+		m_node = new NodeStruct();
+		m_node->Allocate(ni + ghost_size * 2, nj + ghost_size * 2, nk + ghost_size * 2);
+		m_face = new FaceStruct();
+		m_cell = new CellStruct();
+		m_cell->Allocate(ni + ghost_size * 2 - 1, nj + ghost_size * 2 - 1, nk + ghost_size * 2 - 1);
+	}
 	int GridStruct::GetNi()
 	{
-		return m_node->GetNi();
+		return m_node->GetINum();
 	}
 
 	int GridStruct::GetNj()
 	{
-		return m_node->GetNj();
+		return m_node->GetJNum();
 	}
 
 	int GridStruct::GetNk()
 	{
-		return m_node->GetNk();
+		return m_node->GetKNum();
 	}
 	void GridStruct::GetNodeNum(int& ni, int& nj, int& nk)
 	{
@@ -47,17 +71,17 @@ namespace zaran
 		nj = GetNj();
 		nk = GetNk();
 	}
-    int GridStruct::GetTotalNodeNum()
-    {
-        return GetNi() * GetNj() * GetNk();
-    }
+	int GridStruct::GetTotalNodeNum()
+	{
+		return GetNi() * GetNj() * GetNk();
+	}
 	void GridStruct::GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd)
 	{
 		iStart = m_ghost_size;
-		iEnd = GetNi() - m_ghost_size;
+		iEnd = GetNi() - 2 * m_ghost_size;
 		jStart = m_ghost_size;
-		jEnd = GetNj() - m_ghost_size;
+		jEnd = GetNj() - 2 * m_ghost_size;
 		kStart = m_ghost_size;
-		kEnd = GetNk() - m_ghost_size;
+		kEnd = GetNk() - 2 * m_ghost_size;
 	}
 }

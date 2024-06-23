@@ -1,29 +1,43 @@
 #include "CellStruct.h"
 namespace zaran
 {
-CellStruct::CellStruct(int ni, int nj, int nk) : m_ni(ni), m_nj(nj), m_nk(nk)
+CellStruct::CellStruct() 
 {
-    SetCellNum(ni * nj * nk);
+    m_center_coord = nullptr;
+    m_i_num = 0;
+    m_j_num = 0;
+    m_k_num = 0;
 }
 CellStruct::~CellStruct()
 {
-    if (m_center)
-        delete[] m_center;
+    if (m_center_coord)
+        delete[] m_center_coord;
 }
-void CellStruct::SetCenterCoord(int i, int j, int k, double *center)
+void CellStruct::Allocate(int i_num, int j_num, int k_num)
 {
-    int index = GetIndex(i, j, k) * 3;
-    for (int i = 0; i < 3; i++)
+    m_i_num = i_num;
+    m_j_num = j_num;
+    m_k_num = k_num;
+    if (m_center_coord)
     {
-        m_center[index + i] = center[i];
+        delete[] m_center_coord;
+    }
+    m_center_coord = new double[3 * i_num * j_num * k_num];
+}
+void CellStruct::SetCenterCoord(int idx_i, int idx_j, int idx_k, double *center)
+{
+    int index = GetIdx(idx_i, idx_j, idx_k) * 3;
+    for (int i_dim = 0; i_dim < 3; i_dim++)
+    {
+        m_center_coord[index + i_dim] = center[i_dim];
     }
 }
-const double *CellStruct::GetCenterCoord(int i, int j, int k) const
+const double *CellStruct::GetCenterCoord(int idx_i, int idx_j, int idx_k) const
 {
-    return m_center + 3 * GetIndex(i, j, k);
+    return m_center_coord + 3 * GetIdx(idx_i, idx_j, idx_k);
 }
-int CellStruct::GetIndex(int i, int j, int k) const
+int CellStruct::GetIdx(int idx_i, int idx_j, int idx_k) const
 {
-    return i + j * m_ni + k * m_ni * m_nj;
+    return idx_i + idx_j * m_i_num + idx_k * m_i_num * m_j_num;
 }
 } // namespace zaran

@@ -1,27 +1,44 @@
 #include "NodeStruct.h"
 using namespace zaran;
-NodeStruct::NodeStruct(int ni, int nj, int nk) : m_ni(ni), m_nj(nj), m_nk(nk)
+NodeStruct::NodeStruct() 
 {
-    m_coord = new double[3 * ni * nj * nk];
-    SetNodeNum(ni * nj * nk);
+    m_coord = nullptr;
+    m_i_num = 0;
+    m_j_num = 0;
+    m_k_num = 0;
+
 }
 NodeStruct::~NodeStruct()
 {
     delete[] m_coord;
 }
 
-void NodeStruct::SetCoord(int i, int j, int k, const double *coord)
+void zaran::NodeStruct::Allocate(int i_num, int j_num, int k_num)
 {
-    int index = 3 * GetIndex(i, j, k);
-    m_coord[index] = coord[0];
-    m_coord[index + 1] = coord[1];
-    m_coord[index + 2] = coord[2];
+    m_i_num = i_num;
+    m_j_num = j_num;
+    m_k_num = k_num;
+    if(m_coord != nullptr)
+    {
+        delete[] m_coord;
+    }
+    m_coord = new double[3 * i_num * j_num * k_num];
+    SetNodeNum(i_num * j_num * k_num);
 }
-const double *NodeStruct::GetCoord(int i, int j, int k) const
+
+void NodeStruct::SetCoord(int idx_i, int idx_j, int idx_k, const double *coord)
 {
-    return m_coord + 3 * GetIndex(i, j, k);
+    int index = 3 * GetIdx(idx_i, idx_j, idx_k);
+    for(int i_dim = 0; i_dim < 3; i_dim++)
+    { 
+        m_coord[index + i_dim] = coord[i_dim];
+    }
 }
-int NodeStruct::GetIndex(int i, int j, int k) const
+const double *NodeStruct::GetCoord(int idx_i, int idx_j, int idx_k) const
 {
-    return i + j * m_ni + k * m_ni * m_nj;
+    return m_coord + 3 * GetIdx(idx_i, idx_j, idx_k);
+}
+int NodeStruct::GetIdx(int idx_i, int idx_j, int idx_k) const
+{
+    return idx_i + idx_j * m_i_num + idx_k * m_i_num * m_j_num;
 }

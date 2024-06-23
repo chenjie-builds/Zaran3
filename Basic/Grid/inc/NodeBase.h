@@ -13,17 +13,17 @@
 #pragma once
 namespace zaran
 {
-class NodeBase
-{
+  class NodeBase
+  {
   public:
     NodeBase();
     virtual ~NodeBase();
   public:
     // 返回节点总数
-    const int &GetNodeNum() const;
+    const int& GetNodeNum() const;
   protected:
-  void SetNodeNum(int node_num);
+    void SetNodeNum(int node_num);
   private:
     int m_node_num;
-};
+  };
 } // namespace zaran

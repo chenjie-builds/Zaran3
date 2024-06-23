@@ -183,7 +183,7 @@ namespace zaran
             coef_y[2] = 0.0;
             coef_z[0] = 0.0;
             coef_z[1] = 0.0;
-            coef_z[2] = 0.0;
+            coef_z[2] = 1.0;
             coef_z[3] = 0.0;
         }
         else

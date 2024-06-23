@@ -22,6 +22,7 @@ namespace zaran
 	public:
 		GridStruct(const string& name, int index, int dim);
 		virtual ~GridStruct();
+		void Allocate(int ni, int nj, int nk, int ghost_size);
 	public:
 		int GetNi();
 		int GetNj();

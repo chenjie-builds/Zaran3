@@ -5,14 +5,17 @@ namespace zaran
 class CellStruct : public CellBase
 {
   public:
-    CellStruct(int ni, int nj, int nk) ;
+    CellStruct() ;
     virtual ~CellStruct();
-    void SetCenterCoord(int i, int j, int k, double *center);
-    const double *GetCenterCoord(int i, int j, int k) const;
+    void Allocate(int i_num, int j_num, int k_num);
+    void SetCenterCoord(int idx_i, int idx_j, int idx_k, double *center);
+    const double *GetCenterCoord(int idx_i, int idx_j, int idx_k) const;
   protected:
-    int GetIndex(int i, int j, int k) const;
+    int GetIdx(int idx_i, int idx_j, int idx_k) const;
   private:
-    int m_ni, m_nj, m_nk;
-    double *m_center;
+    /// @brief 单元个数，分别为i、j、k方向的单元个数，显然每个方向的单元个数是节点个数减一
+    int m_i_num, m_j_num, m_k_num;
+    /// @brief 中心坐标
+    double *m_center_coord;
 };
 } // namespace zaran

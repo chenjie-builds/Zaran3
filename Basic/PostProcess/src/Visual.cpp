@@ -7,15 +7,15 @@
 #include <vector>
 #include "FieldNS.h"
 using namespace zaran;
-void zaran::Visual::WriteTecplotBinary(Field *field)
+void zaran::Visual::WriteTecplotBinary(Field* field)
 {
-    FieldNS_FNFDM *fieldNS = dynamic_cast<FieldNS_FNFDM *>(field);
+    FieldNS_FNFDM* fieldNS = dynamic_cast<FieldNS_FNFDM*>(field);
     auto data_manager = fieldNS->GetDataManager();
     auto grid = fieldNS->GetGrid();
     auto cell = grid->GetCell();
     auto node = grid->GetNode();
 
-    const double *density, *velocity_x, *velocity_y, *velocity_z, *pressure;
+    const double* density, * velocity_x, * velocity_y, * velocity_z, * pressure;
     density = data_manager->GetDensity();
     velocity_x = data_manager->GetVelocity(0);
     velocity_y = data_manager->GetVelocity(1);
@@ -38,8 +38,8 @@ void zaran::Visual::WriteTecplotBinary(Field *field)
     string grid_name = "grid_" + grid->GetName();
     string var_name = "x y z rho u v w p";
     std::string file_name = "result/" + std::to_string(GlobalData::GetInt("currentIter")) + ".plt";
-    int i = TECINI142(grid_name.c_str(), var_name.c_str(), file_name.c_str(), (char *)".", &file_format, &fileType,
-                      &debug, &vIsDouble);
+    int i = TECINI142(grid_name.c_str(), var_name.c_str(), file_name.c_str(), (char*)".", &file_format, &fileType,
+        &debug, &vIsDouble);
     string zone_name = "grid_" + grid->GetName() + "_zone";
     INTEGER4 zone_type = 5; // Brick
     INTEGER4 face_num = 6;
@@ -52,11 +52,11 @@ void zaran::Visual::WriteTecplotBinary(Field *field)
     INTEGER4 isBlock = 1;
     INTEGER4 nFConns = 0;
     INTEGER4 FNMode = 0;
-    int valueLocation[] = {1, 1, 1, 1, 1, 1, 1, 1};
+    int valueLocation[] = { 1, 1, 1, 1, 1, 1, 1, 1 };
     int shrConn = 0;
-    i = TECZNE142((char *)zone_name.c_str(), &zone_type, &node_num, &cell_num, &face_num, &iCellMax, &jCellMax,
-                  &kCellMax, &solution_time, &strandID, &parentZn, &isBlock, &nFConns, &FNMode, 0, 0, 0, NULL,
-                  valueLocation, NULL, &shrConn);
+    i = TECZNE142((char*)zone_name.c_str(), &zone_type, &node_num, &cell_num, &face_num, &iCellMax, &jCellMax,
+        &kCellMax, &solution_time, &strandID, &parentZn, &isBlock, &nFConns, &FNMode, 0, 0, 0, NULL,
+        valueLocation, NULL, &shrConn);
 
     i = TECDAT142(&node_num, x.data(), &vIsDouble);
     i = TECDAT142(&node_num, y.data(), &vIsDouble);
@@ -70,8 +70,8 @@ void zaran::Visual::WriteTecplotBinary(Field *field)
     std::vector<INTEGER4> cell_nodes(connectivityCount);
     for (int iCell = 0; iCell < cell_num; ++iCell)
     {
-		int node_num=cell->GetNodeNum(iCell);
-		auto cell2node = cell->GetNode(iCell);
+        int node_num = cell->GetNodeNum(iCell);
+        auto cell2node = cell->GetNode(iCell);
         for (int iNode = 0; iNode < node_num; ++iNode)
         {
             cell_nodes[iCell * 8 + iNode] = cell2node[iNode] + 1;
@@ -94,9 +94,9 @@ void zaran::Visual::WriteTecplotBinary(Field *field)
     isBlock = 1;
     nFConns = 0;
     FNMode = 0;
-    i = TECZNE142((char *)zone_name.c_str(), &zone_type, &node_num, &cell_num, &face_num, &iCellMax, &jCellMax,
-                  &kCellMax, &solution_time, &strandID, &parentZn, &isBlock, &nFConns, &FNMode, 0, 0, 0, NULL,
-                  valueLocation, NULL, &shrConn);
+    i = TECZNE142((char*)zone_name.c_str(), &zone_type, &node_num, &cell_num, &face_num, &iCellMax, &jCellMax,
+        &kCellMax, &solution_time, &strandID, &parentZn, &isBlock, &nFConns, &FNMode, 0, 0, 0, NULL,
+        valueLocation, NULL, &shrConn);
 
     i = TECDAT142(&node_num, x.data(), &vIsDouble);
     i = TECDAT142(&node_num, y.data(), &vIsDouble);
@@ -111,7 +111,7 @@ void zaran::Visual::WriteTecplotBinary(Field *field)
     Array<INTEGER4> face_nodes(connectivityCount);
     for (int iFace = 0; iFace < cell_num; ++iFace)
     {
-        int *face2node = face_topo->GetFace2Node(iFace);
+        int* face2node = face_topo->GetFace2Node(iFace);
         int n_node = face_topo->GetFaceNodeNum(iFace);
         for (int iNode = 0; iNode < n_node; ++iNode)
         {
@@ -130,7 +130,40 @@ void zaran::Visual::WriteTecplotBinary(Field *field)
 
     i = TECEND142();
 }
-void Visual::WriteVTK(Field *field)
+void Visual::WriteTecplotBinary(FieldNS_Struct* field)
+{
+    auto grid = field->GetGrid();
+    auto node = grid->GetNode();
+    auto data_manager = field->GetDataManager();
+    StructIdxProxy* idx_proxy = new StructIdxProxy(grid);
+    int ni, nj, nk;
+    grid->GetNodeNum(ni, nj, nk);
+    const double* density = data_manager->GetDensity();
+    const double* velocity_x = data_manager->GetVelocity(0);
+    const double* velocity_y = data_manager->GetVelocity(1);
+    const double* velocity_z = data_manager->GetVelocity(2);
+    const double* pressure = data_manager->GetPressure();
+    // 以ASCII格式写入，后期可以改为二进制格式
+    std::ofstream out("result/" + std::to_string(GlobalData::GetInt("currentIter")) + ".dat");
+    out << "TITLE=\"Flow Field\"\n";
+    out << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\"\n";
+    out << "ZONE I=" << ni << ", J=" << nj << ", K=" << nk << ", F=POINT\n";
+    for (int k = 0;k < nk;++k)
+    {
+        for (int j = 0;j < nj;++j)
+        {
+            for (int i = 0;i < ni;++i)
+            {
+                int idx = idx_proxy->GetIdx(i, j, k);
+                out << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1] << " " << node->GetCoord(i, j, k)[2] << " " << density[idx] << " " << velocity_x[idx] << " " << velocity_y[idx] << " " << velocity_z[idx] << " " << pressure[idx] << "\n";
+            }
+        }
+
+    }
+    out.close();
+    delete idx_proxy;
+}
+void Visual::WriteVTK(Field* field)
 {
     // TO DO
 }

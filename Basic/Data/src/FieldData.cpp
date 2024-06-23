@@ -11,8 +11,6 @@ namespace zaran
 
 	FieldData::~FieldData()
 	{
-		std::cout << "FieldData::~FieldData()" << std::endl;
-		exit(0);
 		for (int i = 0; i < m_data.size(); i++)
 		{
 			if (m_data_type[i] == FieldDataType::integer)

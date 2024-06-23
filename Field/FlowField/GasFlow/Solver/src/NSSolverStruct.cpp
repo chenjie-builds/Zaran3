@@ -95,11 +95,11 @@ namespace  zaran
         double min_jacobian = LARGE_NUMBER;
         int max_jacobian_node = -1;
         int min_jacobian_node = -1;
-        for (int i = is; i < ie; ++i)
+        for (int i = is; i <= ie; ++i)
         {
-            for (int j = js; j < je; ++j)
+            for (int j = js; j <= je; ++j)
             {
-                for (int k = ks; k < ke; ++k)
+                for (int k = ks; k <= ke; ++k)
                 {
                     int idx = m_idx_proxy->GetIdx(i, j, k);
                     xLeft = node->GetCoord(i - 1, j, k);
@@ -137,7 +137,7 @@ namespace  zaran
     {
         NSSolver::Preprocess();
     }
-void NSSolverStruct::CalcTimeStepLocal()
+    void NSSolverStruct::CalcTimeStepLocal()
     {
         auto grid = GetGrid();
         int is, ie, js, je, ks, ke;

@@ -44,7 +44,18 @@ void FieldController::SaveDataTecplot()
 {
     for (size_t iField = 0; iField < m_global_field->GetFieldSize(); iField++)
     {
-        m_visual->WriteTecplotBinary(m_global_field->GetField(iField));
+        if(m_global_field->GetField(iField)->GetFieldType()==FieldType::NS_Structured)
+        {
+            m_visual->WriteTecplotBinary(static_cast<FieldNS_Struct*>(m_global_field->GetField(iField)));
+        }
+        else if (m_global_field->GetField(iField)->GetFieldType() == FieldType::NS_FlexibleNode)
+        {
+            m_visual->WriteTecplotBinary(static_cast<FieldNS_FNFDM*>(m_global_field->GetField(iField)));
+        }
+        else 
+        {
+            Log::warn("Field type is not supported!");
+        }
     }
 }
 void FieldController::SaveDataVTK(std::ostream& os)
