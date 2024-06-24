@@ -34,7 +34,7 @@ namespace zaran
 	public:
 		const string& GetName()const { return m_name; }
 		const size_t& GetIndex()const { return m_index; }
-		const int& GetDimension()const { return m_dim; }
+		const int& GetDim()const { return m_dim; }
 		const GridType& GetType()const { return m_type; }
 	private:
 		string m_name;//Íø¸ñÃû³Æ

@@ -20,7 +20,7 @@ namespace zaran
 	{
 		InitSolver();
 		InitField();
-		CalcMetric();
+		CalcMetrics();
 	}
 	void NSSolver::InitField()
 	{

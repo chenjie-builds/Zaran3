@@ -6,7 +6,7 @@ namespace zaran
 	NSSolverFNFDM::NSSolverFNFDM(int index, string name, FlowSolverPara* para, GridFN* grid, FieldData* fieldData, DataManagerNS* data_manager)
 		:NSSolver(index, name, para, grid, fieldData), m_data_manager(data_manager)
 	{
-		m_node_metric = new NodeMetric(grid->GetTotalNodeNum());
+		m_node_metric = new Metrics(grid->GetTotalNodeNum());
 		m_grad_wlsq = new GradWLSQ(grid);
 	}
 
@@ -30,7 +30,7 @@ namespace zaran
 		for (int iVal = 0; iVal < para->GetEquNum(); ++iVal)
 		{
 			for (int iNode = 0; iNode < n_node; ++iNode)
-				m_data_manager->SetPrimitive(iVal, iNode, prim_far[iVal]);
+				m_data_manager->SetPrim(iVal, iNode, prim_far[iVal]);
 		}
 	}
 	void NSSolverFNFDM::InitFieldFarFieldNoVelocity()
@@ -40,11 +40,11 @@ namespace zaran
 		int node_num = grid->GetTotalNodeNum();
 		for (int iNode = 0; iNode < node_num; ++iNode)
 		{
-			m_data_manager->SetPrimitive(0, iNode, para->GetInflowDensity());
-			m_data_manager->SetPrimitive(1, iNode, 0.0);
-			m_data_manager->SetPrimitive(2, iNode, 0.0);
-			m_data_manager->SetPrimitive(3, iNode, 0.0);
-			m_data_manager->SetPrimitive(4, iNode, para->GetInflowPressure());
+			m_data_manager->SetPrim(0, iNode, para->GetInflowDensity());
+			m_data_manager->SetPrim(1, iNode, 0.0);
+			m_data_manager->SetPrim(2, iNode, 0.0);
+			m_data_manager->SetPrim(3, iNode, 0.0);
+			m_data_manager->SetPrim(4, iNode, para->GetInflowPressure());
 		}
 	}
 	void NSSolverFNFDM::InitFieldBackup()
@@ -65,12 +65,12 @@ namespace zaran
 			for (int iVal = 0; iVal < para->GetEquNum(); ++iVal)
 			{
 				fin >> value;
-				m_data_manager->SetPrimitive(iVal, iNode, value);
+				m_data_manager->SetPrim(iVal, iNode, value);
 			}
 		}
 		fin.close();
 	}
-	void NSSolverFNFDM::CalcMetric()
+	void NSSolverFNFDM::CalcMetrics()
 	{
 		Log::info("Compute NS 3D Coordination Transformation Coefficients");
 		auto grid = GetGrid();
@@ -93,7 +93,7 @@ namespace zaran
 			xRight = node->GetCoord(neighbors[1]);
 			yLeft = node->GetCoord(neighbors[2]);
 			yRight = node->GetCoord(neighbors[3]);
-			if (grid->GetDimension() == 3)
+			if (grid->GetDim() == 3)
 			{
 				zLeft = node->GetCoord(neighbors[4]);
 				zRight = node->GetCoord(neighbors[5]);
@@ -132,7 +132,7 @@ namespace zaran
 		{
 			for (int iVal = 0; iVal < para->GetEquNum(); ++iVal)
 			{
-				fout << m_data_manager->GetPrimitive(iVal, iNode) << " ";
+				fout << m_data_manager->GetPrim(iVal, iNode) << " ";
 			}
 			fout << std::endl;
 		}
@@ -161,7 +161,7 @@ namespace zaran
 				jacobi = m_node_metric->GetJacobian(iNode);
 				for (int iVal = 0; iVal < 5; ++iVal)
 				{
-					m_data_manager->SetConservative(iVal, iNode, m_data_manager->GetConservative(iVal, iNode) + dt * rk_coef[iStage] * m_data_manager->GetResidual(iVal, iNode) * jacobi);
+					m_data_manager->SetCons(iVal, iNode, m_data_manager->GetCons(iVal, iNode) + dt * rk_coef[iStage] * m_data_manager->GetResidual(iVal, iNode) * jacobi);
 				}
 			}
 		}
@@ -175,13 +175,13 @@ namespace zaran
 #pragma omp parallel for
 		for (int iNode = 0; iNode < node_num; ++iNode)
 		{
-			double prim[5] = { m_data_manager->GetPrimitive(0, iNode), m_data_manager->GetPrimitive(1, iNode), m_data_manager->GetPrimitive(2, iNode),
-							m_data_manager->GetPrimitive(3, iNode), m_data_manager->GetPrimitive(4, iNode) };
+			double prim[5] = { m_data_manager->GetPrim(0, iNode), m_data_manager->GetPrim(1, iNode), m_data_manager->GetPrim(2, iNode),
+							m_data_manager->GetPrim(3, iNode), m_data_manager->GetPrim(4, iNode) };
 			double cons[5];
 			gas->Prim2Cons(prim, cons);
 			for (int iVal = 0; iVal < 5; ++iVal)
 			{
-				m_data_manager->SetConservative(iVal, iNode, cons[iVal]);
+				m_data_manager->SetCons(iVal, iNode, cons[iVal]);
 			}
 		}
 	}
@@ -196,13 +196,13 @@ namespace zaran
 			double cons[5];
 			for (int iVal = 0; iVal < 5; ++iVal)
 			{
-				cons[iVal] = m_data_manager->GetConservative(iVal, iNode);
+				cons[iVal] = m_data_manager->GetCons(iVal, iNode);
 			}
 			double prim[5];
 			GetGas()->Cons2Prim(cons, prim);
 			for (int iVal = 0; iVal < 5; ++iVal)
 			{
-				m_data_manager->SetPrimitive(iVal, iNode, prim[iVal]);
+				m_data_manager->SetPrim(iVal, iNode, prim[iVal]);
 			}
 		}
 	}
@@ -218,14 +218,14 @@ namespace zaran
 		vec_node2neighbor[2] = node->GetCoord(index_right)[2] - node->GetCoord(index_left)[2];
 		for (int iVal = 0; iVal < equ_num; ++iVal)
 		{
-			value_rec_left[iVal] = m_data_manager->GetPrimitive(iVal, index_left) + 0.5 * m_data_manager->GetLimiter(iVal, index_left) *
-				(vec_node2neighbor[0] * m_data_manager->GetPrimitiveGrad(iVal, 0, index_left) +
-					vec_node2neighbor[1] * m_data_manager->GetPrimitiveGrad(iVal, 1, index_left) +
-					vec_node2neighbor[2] * m_data_manager->GetPrimitiveGrad(iVal, 2, index_left));
-			value_rec_right[iVal] = m_data_manager->GetPrimitive(iVal, index_right) - 0.5 * m_data_manager->GetLimiter(iVal, index_right) *
-				(vec_node2neighbor[0] * m_data_manager->GetPrimitiveGrad(iVal, 0, index_right) +
-					vec_node2neighbor[1] * m_data_manager->GetPrimitiveGrad(iVal, 1, index_right) +
-					vec_node2neighbor[2] * m_data_manager->GetPrimitiveGrad(iVal, 2, index_right));
+			value_rec_left[iVal] = m_data_manager->GetPrim(iVal, index_left) + 0.5 * m_data_manager->GetLimiter(iVal, index_left) *
+				(vec_node2neighbor[0] * m_data_manager->GetPrimGrad(iVal, 0, index_left) +
+					vec_node2neighbor[1] * m_data_manager->GetPrimGrad(iVal, 1, index_left) +
+					vec_node2neighbor[2] * m_data_manager->GetPrimGrad(iVal, 2, index_left));
+			value_rec_right[iVal] = m_data_manager->GetPrim(iVal, index_right) - 0.5 * m_data_manager->GetLimiter(iVal, index_right) *
+				(vec_node2neighbor[0] * m_data_manager->GetPrimGrad(iVal, 0, index_right) +
+					vec_node2neighbor[1] * m_data_manager->GetPrimGrad(iVal, 1, index_right) +
+					vec_node2neighbor[2] * m_data_manager->GetPrimGrad(iVal, 2, index_right));
 		}
 	}
 
@@ -236,8 +236,8 @@ namespace zaran
 		auto node = grid->GetNode();
 		for (int iVal = 0; iVal < equ_num; ++iVal)
 		{
-			value_rec_left[iVal] = m_data_manager->GetPrimitive(iVal, index_left);
-			value_rec_right[iVal] = m_data_manager->GetPrimitive(iVal, index_right);
+			value_rec_left[iVal] = m_data_manager->GetPrim(iVal, index_left);
+			value_rec_right[iVal] = m_data_manager->GetPrim(iVal, index_right);
 		}
 	}
 
@@ -304,8 +304,8 @@ namespace zaran
 		GetGas()->Prim2Cons(prim_far, cons_far);
 		for (int iVal = 0; iVal < 5; ++iVal)
 		{
-			m_data_manager->SetPrimitive(iVal, bound_index, prim_far[iVal]);
-			m_data_manager->SetConservative(iVal, bound_index, cons_far[iVal]);
+			m_data_manager->SetPrim(iVal, bound_index, prim_far[iVal]);
+			m_data_manager->SetCons(iVal, bound_index, cons_far[iVal]);
 		}
 	}
 
@@ -316,13 +316,13 @@ namespace zaran
 		double prim[5], cons[5];
 		for (int iVal = 0; iVal < 5; ++iVal)
 		{
-			prim[iVal] = m_data_manager->GetPrimitive(iVal, inner_index);
+			prim[iVal] = m_data_manager->GetPrim(iVal, inner_index);
 		}
 		GetGas()->Prim2Cons(prim, cons);
 		for (int iVal = 0; iVal < 5; ++iVal)
 		{
-			m_data_manager->SetPrimitive(iVal, idx_bnd, prim[iVal]);
-			m_data_manager->SetConservative(iVal, idx_bnd, cons[iVal]);
+			m_data_manager->SetPrim(iVal, idx_bnd, prim[iVal]);
+			m_data_manager->SetCons(iVal, idx_bnd, cons[iVal]);
 		}
 	}
 
@@ -334,7 +334,7 @@ namespace zaran
 		double prim_bnd[5];
 		for (int iVal = 0; iVal < 5; ++iVal)
 		{
-			prim_bnd[iVal] = m_data_manager->GetPrimitive(iVal, idx_ref);
+			prim_bnd[iVal] = m_data_manager->GetPrim(iVal, idx_ref);
 		}
 		double vel_bnd[3] = { prim_bnd[1], prim_bnd[2], prim_bnd[3] };
 		double vn = vel_bnd[0] * norm_bnd[0] + vel_bnd[1] * norm_bnd[1] + vel_bnd[2] * norm_bnd[2];
@@ -345,8 +345,8 @@ namespace zaran
 		GetGas()->Prim2Cons(prim_bnd, cons_bnd);
 		for (int iVal = 0; iVal < 5; ++iVal)
 		{
-			m_data_manager->SetPrimitive(iVal, idx_bnd, prim_bnd[iVal]);
-			m_data_manager->SetConservative(iVal, idx_bnd, cons_bnd[iVal]);
+			m_data_manager->SetPrim(iVal, idx_bnd, prim_bnd[iVal]);
+			m_data_manager->SetCons(iVal, idx_bnd, cons_bnd[iVal]);
 		}
 	}
 
@@ -355,10 +355,10 @@ namespace zaran
 		int idx_ref = bound.GetIdxRef();
 		int idx_bnd = bound.GetIdxBound();
 		auto norm_bnd = bound.GetNormBound();
-		double prim_in[5] = { m_data_manager->GetPrimitive(0, idx_ref), m_data_manager->GetPrimitive(1, idx_ref), m_data_manager->GetPrimitive(2, idx_ref),
-							m_data_manager->GetPrimitive(3, idx_ref), m_data_manager->GetPrimitive(4, idx_ref) };
-		double prim_bnd[5] = { m_data_manager->GetPrimitive(0, idx_bnd), m_data_manager->GetPrimitive(1, idx_bnd), m_data_manager->GetPrimitive(2, idx_bnd),
-								m_data_manager->GetPrimitive(3, idx_bnd), m_data_manager->GetPrimitive(4, idx_bnd) };
+		double prim_in[5] = { m_data_manager->GetPrim(0, idx_ref), m_data_manager->GetPrim(1, idx_ref), m_data_manager->GetPrim(2, idx_ref),
+							m_data_manager->GetPrim(3, idx_ref), m_data_manager->GetPrim(4, idx_ref) };
+		double prim_bnd[5] = { m_data_manager->GetPrim(0, idx_bnd), m_data_manager->GetPrim(1, idx_bnd), m_data_manager->GetPrim(2, idx_bnd),
+								m_data_manager->GetPrim(3, idx_bnd), m_data_manager->GetPrim(4, idx_bnd) };
 		FlowSolverPara* para = GetPara();
 		auto gas = GetGas();
 		double gamma = gas->GetGamma();
@@ -379,16 +379,16 @@ namespace zaran
 			{
 				for (int iVal = 0; iVal < 5; ++iVal)
 				{
-					m_data_manager->SetPrimitive(iVal, idx_bnd, prim_in[iVal]);
+					m_data_manager->SetPrim(iVal, idx_bnd, prim_in[iVal]);
 				}
 			}
 			else // 超声速入口
 			{
-				m_data_manager->SetPrimitive(0, idx_bnd, para->GetInflowDensity());
-				m_data_manager->SetPrimitive(1, idx_bnd, para->GetInflowVelocityX());
-				m_data_manager->SetPrimitive(2, idx_bnd, para->GetInflowVelocityY());
-				m_data_manager->SetPrimitive(3, idx_bnd, para->GetInflowVelocityZ());
-				m_data_manager->SetPrimitive(4, idx_bnd, para->GetInflowPressure());
+				m_data_manager->SetPrim(0, idx_bnd, para->GetInflowDensity());
+				m_data_manager->SetPrim(1, idx_bnd, para->GetInflowVelocityX());
+				m_data_manager->SetPrim(2, idx_bnd, para->GetInflowVelocityY());
+				m_data_manager->SetPrim(3, idx_bnd, para->GetInflowVelocityZ());
+				m_data_manager->SetPrim(4, idx_bnd, para->GetInflowPressure());
 			}
 		}
 		else
@@ -401,29 +401,29 @@ namespace zaran
 			if (vn_bound <= 0) // 亚声速入口
 			{
 				double entropy = (prim_far[4] / pow(prim_far[0], gamma));
-				m_data_manager->SetPrimitive(0, idx_bnd, pow(c_bound * c_bound / (entropy * gamma), 1.0 / gamma1));
-				m_data_manager->SetPrimitive(1, idx_bnd, prim_far[1] + norm_bnd[0] * (vn_bound - vn_far));
-				m_data_manager->SetPrimitive(2, idx_bnd, prim_far[2] + norm_bnd[1] * (vn_bound - vn_far));
-				m_data_manager->SetPrimitive(3, idx_bnd, prim_far[3] + norm_bnd[2] * (vn_bound - vn_far));
-				m_data_manager->SetPrimitive(4, idx_bnd, c_bound * c_bound * m_data_manager->GetPrimitive(0, idx_bnd) / gamma);
+				m_data_manager->SetPrim(0, idx_bnd, pow(c_bound * c_bound / (entropy * gamma), 1.0 / gamma1));
+				m_data_manager->SetPrim(1, idx_bnd, prim_far[1] + norm_bnd[0] * (vn_bound - vn_far));
+				m_data_manager->SetPrim(2, idx_bnd, prim_far[2] + norm_bnd[1] * (vn_bound - vn_far));
+				m_data_manager->SetPrim(3, idx_bnd, prim_far[3] + norm_bnd[2] * (vn_bound - vn_far));
+				m_data_manager->SetPrim(4, idx_bnd, c_bound * c_bound * m_data_manager->GetPrim(0, idx_bnd) / gamma);
 			}
 			else // 亚声速出口
 			{
 				double entropy = prim_in[4] / pow(prim_in[0], gamma);
-				m_data_manager->SetPrimitive(0, idx_bnd, pow(c_bound * c_bound / (entropy * gamma), 1.0 / gamma1));
-				m_data_manager->SetPrimitive(1, idx_bnd, prim_in[1] + norm_bnd[0] * (vn_bound - vn_in));
-				m_data_manager->SetPrimitive(2, idx_bnd, prim_in[2] + norm_bnd[1] * (vn_bound - vn_in));
-				m_data_manager->SetPrimitive(3, idx_bnd, prim_in[3] + norm_bnd[2] * (vn_bound - vn_in));
-				m_data_manager->SetPrimitive(4, idx_bnd, c_bound * c_bound * m_data_manager->GetPrimitive(0, idx_bnd) / gamma);
+				m_data_manager->SetPrim(0, idx_bnd, pow(c_bound * c_bound / (entropy * gamma), 1.0 / gamma1));
+				m_data_manager->SetPrim(1, idx_bnd, prim_in[1] + norm_bnd[0] * (vn_bound - vn_in));
+				m_data_manager->SetPrim(2, idx_bnd, prim_in[2] + norm_bnd[1] * (vn_bound - vn_in));
+				m_data_manager->SetPrim(3, idx_bnd, prim_in[3] + norm_bnd[2] * (vn_bound - vn_in));
+				m_data_manager->SetPrim(4, idx_bnd, c_bound * c_bound * m_data_manager->GetPrim(0, idx_bnd) / gamma);
 			}
 		}
 		for (int iVal = 0; iVal < 5; ++iVal)
-			prim_bnd[iVal] = m_data_manager->GetPrimitive(iVal, idx_bnd);
+			prim_bnd[iVal] = m_data_manager->GetPrim(iVal, idx_bnd);
 		double cons_bound[5];
 		GetGas()->Prim2Cons(prim_bnd, cons_bound);
 		for (int iVal = 0; iVal < 5; ++iVal)
 		{
-			m_data_manager->SetConservative(iVal, idx_bnd, cons_bound[iVal]);
+			m_data_manager->SetCons(iVal, idx_bnd, cons_bound[iVal]);
 		}
 	}
 	void NSSolverFNFDM::CalcPrimGrad()
@@ -483,7 +483,7 @@ namespace zaran
 		int equ_num = GetPara()->GetEquNum();
 		for (int iEqu = 0; iEqu < equ_num; ++iEqu)
 		{
-			m_grad_wlsq->CalcGradient(grid, m_data_manager->GetPrimitive(iEqu), m_data_manager->GetPrimitiveGrad(iEqu, 0), m_data_manager->GetPrimitiveGrad(iEqu, 1), m_data_manager->GetPrimitiveGrad(iEqu, 2));
+			m_grad_wlsq->CalcGradient(grid, m_data_manager->GetPrim(iEqu), m_data_manager->GetPrimitiveGrad(iEqu, 0), m_data_manager->GetPrimitiveGrad(iEqu, 1), m_data_manager->GetPrimitiveGrad(iEqu, 2));
 		}
 	}
 
@@ -541,13 +541,13 @@ namespace zaran
 				auto currentNodeCoord = node->GetCoord(iNode);
 				auto neighborNode = node->GetNeighborNode(iNode);
 				int nNeighbor = node->GetNeighborNodeNum(iNode);
-				double current_val = m_data_manager->GetPrimitive(iVal, iNode);
+				double current_val = m_data_manager->GetPrim(iVal, iNode);
 				double maxVal = current_val;
 				double minVal = current_val;
 				for (int iNeighbor = 0; iNeighbor < nNeighbor; ++iNeighbor)
 				{
-					maxVal = Max(maxVal, m_data_manager->GetPrimitive(iVal, neighborNode[iNeighbor]));
-					minVal = Min(minVal, m_data_manager->GetPrimitive(iVal, neighborNode[iNeighbor]));
+					maxVal = Max(maxVal, m_data_manager->GetPrim(iVal, neighborNode[iNeighbor]));
+					minVal = Min(minVal, m_data_manager->GetPrim(iVal, neighborNode[iNeighbor]));
 				}
 				eps = venkatCoeff * (maxVal - minVal);
 				eps = eps * eps + SMALL_NUMBER;
@@ -561,7 +561,7 @@ namespace zaran
 					auto neighborNodeCoord = node->GetCoord(neighborNode[iNeighbor]);
 					double delta2 = 0.0;
 					for (int iDim = 0; iDim < 3; ++iDim)
-						delta2 += (neighborNodeCoord[iDim] - currentNodeCoord[iDim]) * m_data_manager->GetPrimitiveGrad(iVal, iDim, iNode);
+						delta2 += (neighborNodeCoord[iDim] - currentNodeCoord[iDim]) * m_data_manager->GetPrimGrad(iVal, iDim, iNode);
 					delta2 *= 0.5;
 					if (delta2 > 0)
 					{
@@ -599,15 +599,15 @@ namespace zaran
 				auto currentNodeCoord = node->GetCoord(iNode);
 				auto neighborNode = node->GetNeighborNode(iNode);
 				auto nNeighbor = node->GetNeighborNodeNum(iNode);
-				maxVal = m_data_manager->GetPrimitive(iVal, iNode);
-				minVal = m_data_manager->GetPrimitive(iVal, iNode);
+				maxVal = m_data_manager->GetPrim(iVal, iNode);
+				minVal = m_data_manager->GetPrim(iVal, iNode);
 				for (int iNeighbor = 0; iNeighbor < nNeighbor; ++iNeighbor)
 				{
-					maxVal = Max(maxVal, m_data_manager->GetPrimitive(iVal, neighborNode[iNeighbor]));
-					minVal = Min(minVal, m_data_manager->GetPrimitive(iVal, neighborNode[iNeighbor]));
+					maxVal = Max(maxVal, m_data_manager->GetPrim(iVal, neighborNode[iNeighbor]));
+					minVal = Min(minVal, m_data_manager->GetPrim(iVal, neighborNode[iNeighbor]));
 				}
-				double deltaMax = maxVal - m_data_manager->GetPrimitive(iVal, iNode);
-				double deltaMin = minVal - m_data_manager->GetPrimitive(iVal, iNode);
+				double deltaMax = maxVal - m_data_manager->GetPrim(iVal, iNode);
+				double deltaMin = minVal - m_data_manager->GetPrim(iVal, iNode);
 				double tempCoef = LARGE_NUMBER;
 				m_data_manager->SetLimiter(iVal, iNode, LARGE_NUMBER);
 				for (int iNeighbor = 0; iNeighbor < nNeighbor; ++iNeighbor)
@@ -615,15 +615,15 @@ namespace zaran
 					auto neighborNodeCoord = node->GetCoord(neighborNode[iNeighbor]);
 					double delta2 = 0.0;
 					for (int iDim = 0; iDim < 3; ++iDim)
-						delta2 += (neighborNodeCoord[iDim] - currentNodeCoord[iDim]) * m_data_manager->GetPrimitiveGrad(iVal, iDim, iNode);
+						delta2 += (neighborNodeCoord[iDim] - currentNodeCoord[iDim]) * m_data_manager->GetPrimGrad(iVal, iDim, iNode);
 					delta2 *= 0.5;
 					if (delta2 > 0)
 					{
-						tempCoef = LimiterBarth(maxVal - m_data_manager->GetPrimitive(iVal, iNode), delta2);
+						tempCoef = LimiterBarth(maxVal - m_data_manager->GetPrim(iVal, iNode), delta2);
 					}
 					else if (delta2 < 0)
 					{
-						tempCoef = LimiterBarth(minVal - m_data_manager->GetPrimitive(iVal, iNode), delta2);
+						tempCoef = LimiterBarth(minVal - m_data_manager->GetPrim(iVal, iNode), delta2);
 					}
 					else
 					{
@@ -716,7 +716,7 @@ namespace zaran
 			{
 				for (int iVal = 0; iVal < equ_num; ++iVal)
 				{
-					if (isnan(m_data_manager->GetPrimitive(iVal, iNode)) || isinf(m_data_manager->GetPrimitive(iVal, iNode)))
+					if (isnan(m_data_manager->GetPrim(iVal, iNode)) || isinf(m_data_manager->GetPrim(iVal, iNode)))
 					{
 						exist_nonphysical = true;
 						break;
@@ -729,8 +729,8 @@ namespace zaran
 				nonphysical_node_num++;
 				Log::info("Step: {}, Non-physical Node: {}", GlobalData::GetInt("currentIter"), iNode);
 				Log::warn("Non-physical Node: {}, neighbor num: {}, prim: {:6E},{:6E},{:6E},{:6E},{:6E}", iNode,
-					node->GetNeighborNodeNum(iNode), m_data_manager->GetPrimitive(0, iNode), m_data_manager->GetPrimitive(1, iNode),
-					m_data_manager->GetPrimitive(2, iNode), m_data_manager->GetPrimitive(3, iNode), m_data_manager->GetPrimitive(4, iNode));
+					node->GetNeighborNodeNum(iNode), m_data_manager->GetPrim(0, iNode), m_data_manager->GetPrim(1, iNode),
+					m_data_manager->GetPrim(2, iNode), m_data_manager->GetPrim(3, iNode), m_data_manager->GetPrim(4, iNode));
 				Log::warn("Non-physical Node: {}, coord: {:6E}, {:6E}, {:6E},", iNode, node->GetCoord(iNode)[0],
 					node->GetCoord(iNode)[1], node->GetCoord(iNode)[2]);
 				int neighbor_num = node->GetNeighborNodeNum(iNode);
@@ -739,12 +739,12 @@ namespace zaran
 					Log::warn("Neighbor Node: {}, index:{}, neighbor_num: {}, Jacobian: {:6E},\n prim: {:6E},{:6E},{:6E},{:6E},{:6E}\ndensity_grad: {:6E},{:6E},{:6E},\npressure_grad: {:6E},{:6E},{:6E},\n,limiter: {:6E},{:6E},{:6E},{:6E},{:6E}\n",
 						iNeighbor, node->GetNeighborNode(iNode)[iNeighbor], node->GetNeighborNodeNum(node->GetNeighborNode(iNode)[iNeighbor]),
 						m_node_metric->GetJacobian(node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrimitive(0, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimitive(1, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrimitive(2, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimitive(3, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrimitive(4, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimitiveGrad(0, 0, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrimitiveGrad(0, 1, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimitiveGrad(0, 2, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrimitiveGrad(4, 0, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimitiveGrad(4, 1, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrimitiveGrad(4, 2, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetLimiter(0, node->GetNeighborNode(iNode)[iNeighbor]),
+						m_data_manager->GetPrim(0, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrim(1, node->GetNeighborNode(iNode)[iNeighbor]),
+						m_data_manager->GetPrim(2, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrim(3, node->GetNeighborNode(iNode)[iNeighbor]),
+						m_data_manager->GetPrim(4, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimGrad(0, 0, node->GetNeighborNode(iNode)[iNeighbor]),
+						m_data_manager->GetPrimGrad(0, 1, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimGrad(0, 2, node->GetNeighborNode(iNode)[iNeighbor]),
+						m_data_manager->GetPrimGrad(4, 0, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimGrad(4, 1, node->GetNeighborNode(iNode)[iNeighbor]),
+						m_data_manager->GetPrimGrad(4, 2, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetLimiter(0, node->GetNeighborNode(iNode)[iNeighbor]),
 						m_data_manager->GetLimiter(1, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetLimiter(2, node->GetNeighborNode(iNode)[iNeighbor]),
 						m_data_manager->GetLimiter(3, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetLimiter(4, node->GetNeighborNode(iNode)[iNeighbor]));
 					for (int jNeighbor = 0;jNeighbor < node->GetNeighborNodeNum(node->GetNeighborNode(iNode)[iNeighbor]);jNeighbor++)
@@ -760,8 +760,8 @@ namespace zaran
 			{
 				Log::info("Step: {}, Non-physical Node: {}", GlobalData::GetInt("currentIter"), iNode);
 				Log::warn("Non-physical Node: {}, neighbor num: {}, prim: {:6E},{:6E},{:6E},{:6E},{:6E}", iNode,
-					node->GetNeighborNodeNum(iNode), m_data_manager->GetPrimitive(0, iNode), m_data_manager->GetPrimitive(1, iNode),
-					m_data_manager->GetPrimitive(2, iNode), m_data_manager->GetPrimitive(3, iNode), m_data_manager->GetPrimitive(4, iNode));
+					node->GetNeighborNodeNum(iNode), m_data_manager->GetPrim(0, iNode), m_data_manager->GetPrim(1, iNode),
+					m_data_manager->GetPrim(2, iNode), m_data_manager->GetPrim(3, iNode), m_data_manager->GetPrim(4, iNode));
 				Log::warn("Non-physical Node: {}, coord: {:6E}, {:6E}, {:6E},", iNode, node->GetCoord(iNode)[0],
 					node->GetCoord(iNode)[1], node->GetCoord(iNode)[2]);
 				int neighbor_num = node->GetNeighborNodeNum(iNode);
@@ -770,12 +770,12 @@ namespace zaran
 					Log::warn("Neighbor Node: {}, index:{}, neighbor_num: {}, Jacobian: {:6E},\n prim: {:6E},{:6E},{:6E},{:6E},{:6E}\ndensity_grad: {:6E},{:6E},{:6E},\npressure_grad: {:6E},{:6E},{:6E},\n,limiter: {:6E},{:6E},{:6E},{:6E},{:6E}\n",
 						iNeighbor, node->GetNeighborNode(iNode)[iNeighbor], node->GetNeighborNodeNum(node->GetNeighborNode(iNode)[iNeighbor]),
 						m_node_metric->GetJacobian(node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrimitive(0, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimitive(1, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrimitive(2, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimitive(3, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrimitive(4, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimitiveGrad(0, 0, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrimitiveGrad(0, 1, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimitiveGrad(0, 2, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrimitiveGrad(4, 0, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimitiveGrad(4, 1, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrimitiveGrad(4, 2, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetLimiter(0, node->GetNeighborNode(iNode)[iNeighbor]),
+						m_data_manager->GetPrim(0, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrim(1, node->GetNeighborNode(iNode)[iNeighbor]),
+						m_data_manager->GetPrim(2, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrim(3, node->GetNeighborNode(iNode)[iNeighbor]),
+						m_data_manager->GetPrim(4, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimGrad(0, 0, node->GetNeighborNode(iNode)[iNeighbor]),
+						m_data_manager->GetPrimGrad(0, 1, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimGrad(0, 2, node->GetNeighborNode(iNode)[iNeighbor]),
+						m_data_manager->GetPrimGrad(4, 0, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimGrad(4, 1, node->GetNeighborNode(iNode)[iNeighbor]),
+						m_data_manager->GetPrimGrad(4, 2, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetLimiter(0, node->GetNeighborNode(iNode)[iNeighbor]),
 						m_data_manager->GetLimiter(1, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetLimiter(2, node->GetNeighborNode(iNode)[iNeighbor]),
 						m_data_manager->GetLimiter(3, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetLimiter(4, node->GetNeighborNode(iNode)[iNeighbor]));
 					for (int jNeighbor = 0;jNeighbor < node->GetNeighborNodeNum(node->GetNeighborNode(iNode)[iNeighbor]);jNeighbor++)
@@ -864,39 +864,39 @@ namespace zaran
 			}
 			for (int iVal = 0; iVal < equ_num; ++iVal)
 			{
-				if (isnan(m_data_manager->GetPrimitive(iVal, iNode)) || isinf(m_data_manager->GetPrimitive(iVal, iNode)))
+				if (isnan(m_data_manager->GetPrim(iVal, iNode)) || isinf(m_data_manager->GetPrim(iVal, iNode)))
 				{
-					m_data_manager->SetPrimitive(iVal, iNode, 0);
+					m_data_manager->SetPrim(iVal, iNode, 0);
 					for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
 					{
 						if (m_data_manager->GetNonPhysical(physical_neighbor[iNeighbor]) == 1)
 							continue;
-						m_data_manager->SetPrimitive(iVal, iNode, m_data_manager->GetPrimitive(iVal, physical_neighbor[iNeighbor]) * weight[iNeighbor]);
+						m_data_manager->SetPrim(iVal, iNode, m_data_manager->GetPrim(iVal, physical_neighbor[iNeighbor]) * weight[iNeighbor]);
 					}
 				}
 			}
-			if (m_data_manager->GetPrimitive(0, iNode) < 0)
-				m_data_manager->SetPrimitive(0, iNode, 0);
+			if (m_data_manager->GetPrim(0, iNode) < 0)
+				m_data_manager->SetPrim(0, iNode, 0);
 			for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
 			{
 				if (m_data_manager->GetNonPhysical(physical_neighbor[iNeighbor]) == 1)
 					continue;
-				m_data_manager->SetPrimitive(0, iNode, m_data_manager->GetPrimitive(0, iNode) + m_data_manager->GetPrimitive(0, physical_neighbor[iNeighbor]) * weight[iNeighbor]);
+				m_data_manager->SetPrim(0, iNode, m_data_manager->GetPrim(0, iNode) + m_data_manager->GetPrim(0, physical_neighbor[iNeighbor]) * weight[iNeighbor]);
 			}
-			if (m_data_manager->GetPrimitive(0, iNode) < 0)
-				m_data_manager->SetPrimitive(0, iNode, 0);
+			if (m_data_manager->GetPrim(0, iNode) < 0)
+				m_data_manager->SetPrim(0, iNode, 0);
 			for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
 			{
 				if (m_data_manager->GetNonPhysical(physical_neighbor[iNeighbor]) == 1)
 					continue;
-				m_data_manager->SetPrimitive(4, iNode, m_data_manager->GetPrimitive(1, iNode) + m_data_manager->GetPrimitive(4, physical_neighbor[iNeighbor]) * weight[iNeighbor]);
+				m_data_manager->SetPrim(4, iNode, m_data_manager->GetPrim(1, iNode) + m_data_manager->GetPrim(4, physical_neighbor[iNeighbor]) * weight[iNeighbor]);
 			}
-			double prim[5] = { m_data_manager->GetPrimitive(0, iNode),m_data_manager->GetPrimitive(1, iNode),m_data_manager->GetPrimitive(2, iNode),m_data_manager->GetPrimitive(3, iNode),m_data_manager->GetPrimitive(4, iNode) };
+			double prim[5] = { m_data_manager->GetPrim(0, iNode),m_data_manager->GetPrim(1, iNode),m_data_manager->GetPrim(2, iNode),m_data_manager->GetPrim(3, iNode),m_data_manager->GetPrim(4, iNode) };
 			double cons[5];
 			GetGas()->Prim2Cons(prim, cons);
 			for (int iVal = 0; iVal < 5; ++iVal)
 			{
-				m_data_manager->SetConservative(iVal, iNode, cons[iVal]);
+				m_data_manager->SetCons(iVal, iNode, cons[iVal]);
 				m_data_manager->SetResidual(iVal, iNode, 0.0);
 			}
 		}
@@ -923,9 +923,9 @@ namespace zaran
 		for (int iNode = 0; iNode < inner_node_num; ++iNode)
 		{
 			int idx = inner_node[iNode];
-			auto xi = m_node_metric->GetMetricXi(idx);
-			auto eta = m_node_metric->GetMetricEta(idx);
-			auto zeta = m_node_metric->GetMetricZeta(idx);
+			auto xi = m_node_metric->GetXi(idx);
+			auto eta = m_node_metric->GetEta(idx);
+			auto zeta = m_node_metric->GetZeta(idx);
 			auto jacobi = m_node_metric->GetJacobian(idx);
 			double c = sqrt(gamma * m_data_manager->GetPressure(idx) / m_data_manager->GetDensity(idx));
 			double norm_xi = sqrt(xi[0] * xi[0] + xi[1] * xi[1] + xi[2] * xi[2]);
@@ -992,37 +992,37 @@ namespace zaran
 			double jacobi = m_node_metric->GetJacobian(idx);
 			auto neighbor = node->GetNeighborNode(idx);
 			// i direction
-			riemann_para[0].norm(0) = m_node_metric->GetMetricXi(idx)[0];
-			riemann_para[0].norm(1) = m_node_metric->GetMetricXi(idx)[1];
-			riemann_para[0].norm(2) = m_node_metric->GetMetricXi(idx)[2];
-			riemann_para[0].nt = m_node_metric->GetMetricXi(idx)[3];
-			riemann_para[1].norm(0) = m_node_metric->GetMetricXi(idx)[0];
-			riemann_para[1].norm(1) = m_node_metric->GetMetricXi(idx)[1];
-			riemann_para[1].norm(2) = m_node_metric->GetMetricXi(idx)[2];
-			riemann_para[1].nt = m_node_metric->GetMetricXi(idx)[3];
+			riemann_para[0].norm(0) = m_node_metric->GetXi(idx)[0];
+			riemann_para[0].norm(1) = m_node_metric->GetXi(idx)[1];
+			riemann_para[0].norm(2) = m_node_metric->GetXi(idx)[2];
+			riemann_para[0].nt = m_node_metric->GetXi(idx)[3];
+			riemann_para[1].norm(0) = m_node_metric->GetXi(idx)[0];
+			riemann_para[1].norm(1) = m_node_metric->GetXi(idx)[1];
+			riemann_para[1].norm(2) = m_node_metric->GetXi(idx)[2];
+			riemann_para[1].nt = m_node_metric->GetXi(idx)[3];
 			MidPointReconstruct2ndOrder(idx, neighbor[1], &riemann_para[0].prim_left(0), &riemann_para[0].prim_right(0));
 			MidPointReconstruct2ndOrder(neighbor[0], idx, &riemann_para[1].prim_left(0), &riemann_para[1].prim_right(0));
 			// j direction
-			riemann_para[2].norm(0) = m_node_metric->GetMetricEta(idx)[0];
-			riemann_para[2].norm(1) = m_node_metric->GetMetricEta(idx)[1];
-			riemann_para[2].norm(2) = m_node_metric->GetMetricEta(idx)[2];
-			riemann_para[2].nt = m_node_metric->GetMetricEta(idx)[3];
-			riemann_para[3].norm(0) = m_node_metric->GetMetricEta(idx)[0];
-			riemann_para[3].norm(1) = m_node_metric->GetMetricEta(idx)[1];
-			riemann_para[3].norm(2) = m_node_metric->GetMetricEta(idx)[2];
-			riemann_para[3].nt = m_node_metric->GetMetricEta(idx)[3];
+			riemann_para[2].norm(0) = m_node_metric->GetEta(idx)[0];
+			riemann_para[2].norm(1) = m_node_metric->GetEta(idx)[1];
+			riemann_para[2].norm(2) = m_node_metric->GetEta(idx)[2];
+			riemann_para[2].nt = m_node_metric->GetEta(idx)[3];
+			riemann_para[3].norm(0) = m_node_metric->GetEta(idx)[0];
+			riemann_para[3].norm(1) = m_node_metric->GetEta(idx)[1];
+			riemann_para[3].norm(2) = m_node_metric->GetEta(idx)[2];
+			riemann_para[3].nt = m_node_metric->GetEta(idx)[3];
 			MidPointReconstruct2ndOrder(idx, neighbor[3], &riemann_para[2].prim_left(0), &riemann_para[2].prim_right(0));
 			MidPointReconstruct2ndOrder(neighbor[2], idx, &riemann_para[3].prim_left(0), &riemann_para[3].prim_right(0));
 
 			// k direction
-			riemann_para[4].norm(0) = m_node_metric->GetMetricZeta(idx)[0];
-			riemann_para[4].norm(1) = m_node_metric->GetMetricZeta(idx)[1];
-			riemann_para[4].norm(2) = m_node_metric->GetMetricZeta(idx)[2];
-			riemann_para[4].nt = m_node_metric->GetMetricZeta(idx)[3];
-			riemann_para[5].norm(0) = m_node_metric->GetMetricZeta(idx)[0];
-			riemann_para[5].norm(1) = m_node_metric->GetMetricZeta(idx)[1];
-			riemann_para[5].norm(2) = m_node_metric->GetMetricZeta(idx)[2];
-			riemann_para[5].nt = m_node_metric->GetMetricZeta(idx)[3];
+			riemann_para[4].norm(0) = m_node_metric->GetZeta(idx)[0];
+			riemann_para[4].norm(1) = m_node_metric->GetZeta(idx)[1];
+			riemann_para[4].norm(2) = m_node_metric->GetZeta(idx)[2];
+			riemann_para[4].nt = m_node_metric->GetZeta(idx)[3];
+			riemann_para[5].norm(0) = m_node_metric->GetZeta(idx)[0];
+			riemann_para[5].norm(1) = m_node_metric->GetZeta(idx)[1];
+			riemann_para[5].norm(2) = m_node_metric->GetZeta(idx)[2];
+			riemann_para[5].nt = m_node_metric->GetZeta(idx)[3];
 			MidPointReconstruct2ndOrder(idx, neighbor[5], &riemann_para[4].prim_left(0), &riemann_para[4].prim_right(0));
 			MidPointReconstruct2ndOrder(neighbor[4], idx, &riemann_para[5].prim_left(0), &riemann_para[5].prim_right(0));
 			// check negative density and pressure
@@ -1096,16 +1096,16 @@ namespace zaran
 		double lamda;
 		for (int iNode = 0; iNode < node_num; ++iNode)
 		{
-			vel[0] = m_data_manager->GetPrimitive(1, iNode);
-			vel[1] = m_data_manager->GetPrimitive(2, iNode);
-			vel[2] = m_data_manager->GetPrimitive(3, iNode);
+			vel[0] = m_data_manager->GetPrim(1, iNode);
+			vel[1] = m_data_manager->GetPrim(2, iNode);
+			vel[2] = m_data_manager->GetPrim(3, iNode);
 			for (int iDim = 0; iDim < 3; ++iDim)
 			{
-				grad_rho[iDim] = m_data_manager->GetPrimitiveGrad(0, iDim, iNode);
-				grad_u[iDim] = m_data_manager->GetPrimitiveGrad(1, iDim, iNode);
-				grad_v[iDim] = m_data_manager->GetPrimitiveGrad(2, iDim, iNode);
-				grad_w[iDim] = m_data_manager->GetPrimitiveGrad(3, iDim, iNode);
-				grad_p[iDim] = m_data_manager->GetPrimitiveGrad(4, iDim, iNode);
+				grad_rho[iDim] = m_data_manager->GetPrimGrad(0, iDim, iNode);
+				grad_u[iDim] = m_data_manager->GetPrimGrad(1, iDim, iNode);
+				grad_v[iDim] = m_data_manager->GetPrimGrad(2, iDim, iNode);
+				grad_w[iDim] = m_data_manager->GetPrimGrad(3, iDim, iNode);
+				grad_p[iDim] = m_data_manager->GetPrimGrad(4, iDim, iNode);
 			}
 			tempeture = gas->CalcTemperature(m_data_manager->GetDensity(iNode), m_data_manager->GetPressure(iNode));
 			vis_coef = gas->CalcMu(tempeture);

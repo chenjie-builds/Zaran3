@@ -2,26 +2,26 @@
 #include"GridFNFDM.h"
 namespace zaran
 {
-    class ResAnalyzerFN
+    class ResInfo
     {
     public:
-        ResAnalyzerFN(GridFN* grid, double** res, int var_num);
-        ~ResAnalyzerFN();
-        void Analyze();
-        double GetMaxResidual(int iVar);
-        double GetAveResidual(int iVar);
-        double GetMaxResidualX(int iVar);
-        double GetMaxResidualY(int iVar);
-        double GetMaxResidualZ(int iVar);
+        ResInfo(int var_num);
+        ~ResInfo();
+        double GetMaxRes(int iVar);
+        double GetAveRes(int iVar);
+        const double* GetMaxResCoord(int iVar)const;
+        void SetMaxRes(int iVar, double value);
+        void SetAveRes(int iVar, double value);
+        void SetMaxResCoord(int iVar, const double* coord);
     private:
         int m_var_num;
-        GridFN* m_grid;
-        double** m_res;
-        double* m_max_residual;
-        double* m_ave_residual;
-        double* m_max_residual_x;
-        double* m_max_residual_y;
-        double* m_max_residual_z;
-        int* m_max_residual_node;
+        // 最大残差
+        double* m_max_res;
+        // 平均残差
+        double* m_ave_res;
+        // 最大残差坐标
+        double* m_max_res_coord;
+        // 最大残差编号
+        int* m_max_res_idx;
     };
 }

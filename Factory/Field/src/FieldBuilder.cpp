@@ -3,8 +3,8 @@
 #include"FNGridFactory.h"
 #include"GridStructFactory.h"
 #include"NSSolverFNFDM.h"
-#include "FieldNS.h"
-#include "FieldNSStruct.h"
+#include "NSFieldFN.h"
+#include "NSFieldStruct.h"
 namespace zaran
 {
     FieldManager* FieldBuilder::Create()
@@ -32,10 +32,10 @@ namespace zaran
         GridBase* grid = grid_factory->CreateGrid();
         Field* field;
         if (m_solver_type == FieldSolverType::NS_FNFDM)
-            field = new FieldNS_FNFDM(grid);
+            field = new NSFieldFNFDM(grid);
         else if (m_solver_type == FieldSolverType::NS_Struct)
         {
-            field = new FieldNS_Struct(grid);
+            field = new NSFieldStruct(grid);
         }
         else
         {

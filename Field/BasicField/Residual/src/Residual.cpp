@@ -1,95 +1,54 @@
 #include "Residual.h"
 #include"Log.h"
-using namespace zaran;
-ResAnalyzerFN::ResAnalyzerFN(GridFN* grid, double** res, int var_num) :m_grid(grid), m_res(res), m_var_num(var_num)
+namespace zaran
 {
-    m_max_residual = new double[m_var_num];
-    m_ave_residual = new double[m_var_num];
-    m_max_residual_x = new double[m_var_num];
-    m_max_residual_y = new double[m_var_num];
-    m_max_residual_z = new double[m_var_num];
-    m_max_residual_node = new int[m_var_num];
-}
-ResAnalyzerFN::~ResAnalyzerFN()
-{
-    delete[] m_max_residual;
-    delete[] m_ave_residual;
-    delete[] m_max_residual_x;
-    delete[] m_max_residual_y;
-    delete[] m_max_residual_z;
-    delete[] m_max_residual_node;
-    delete[] m_res;
-}
 
-void ResAnalyzerFN::Analyze()
-{
-    auto node = m_grid->GetNode();
-    int node_num = node->GetNodeNum();
-    for (int iVar = 0; iVar < m_var_num; iVar++)
+    ResInfo::ResInfo(int var_num) : m_var_num(var_num)
     {
-        m_max_residual[iVar] = -LARGE_NUMBER;
-        m_ave_residual[iVar] = 0;
+        m_max_res = new double[m_var_num];
+        m_ave_res = new double[m_var_num];
+        m_max_res_coord = new double[m_var_num*3];
+        m_max_res_idx = new int[m_var_num];
     }
-    double max_res = -LARGE_NUMBER;
-    double ave_res = 0;
-    int max_res_node = 0;
-    double max_res_x = 0;
-    double max_res_y = 0;
-    double max_res_z = 0;
-    for (int iVar = 0;iVar < m_var_num;iVar++)
+    ResInfo::~ResInfo()
     {
-        max_res = -LARGE_NUMBER;
-        ave_res = 0;
-        max_res_node = -1;
-#pragma omp parallel for reduction(max:max_res) reduction(+:ave_res)
-        for (int iNode = 0; iNode < node_num; iNode++)
+        delete[] m_max_res;
+        delete[] m_ave_res;
+        delete[] m_max_res_coord;
+        delete[] m_max_res_idx;
+    }
+
+    double ResInfo::GetMaxRes(int iVar)
+    {
+        return m_max_res[iVar];
+    }
+
+    double ResInfo::GetAveRes(int iVar)
+    {
+        return m_ave_res[iVar];
+    }
+
+    const double* ResInfo::GetMaxResCoord(int iVar) const
+    {
+        return m_max_res_coord + 3 * iVar;
+    }
+
+    void ResInfo::SetMaxRes(int iVar, double value)
+    {
+        m_max_res[iVar] = value;
+    }
+
+    void ResInfo::SetAveRes(int iVar, double value)
+    {
+        m_ave_res[iVar] = value;
+    }
+
+    void ResInfo::SetMaxResCoord(int iVar, const double* coord)
+    {
+        for (int i_dim = 0; i_dim < 3; i_dim++)
         {
-            if (node->GetType(iNode) != NodeType::inner)
-                continue;
-            if (abs(m_res[iVar][iNode]) > max_res)
-            {
-                max_res = abs(m_res[iVar][iNode]);
-                max_res_node = iNode;
-                max_res_x = node->GetCoord(iNode)[0];
-                max_res_y = node->GetCoord(iNode)[1];
-                if (m_grid->GetDimension() == 3)
-                {
-                    max_res_z = node->GetCoord(iNode)[2];
-                }
-            }
-            ave_res += m_res[iVar][iNode] * m_res[iVar][iNode];
+            m_max_res_coord[3 * iVar + i_dim] = coord[i_dim];
         }
-        ave_res = sqrt(ave_res / node_num);
-        m_max_residual[iVar] = max_res;
-        m_ave_residual[iVar] = ave_res;
-        m_max_residual_node[iVar] = max_res_node;
-        m_max_residual_x[iVar] = max_res_x;
-        m_max_residual_y[iVar] = max_res_y;
-        m_max_residual_z[iVar] = max_res_z;
     }
 
-}
-double ResAnalyzerFN::GetMaxResidual(int iVar)
-{
-    return m_max_residual[iVar];
-}
-
-double ResAnalyzerFN::GetAveResidual(int iVar)
-{
-    return m_ave_residual[iVar];
-}
-
-double ResAnalyzerFN::GetMaxResidualX(int iVar)
-{
-    return m_max_residual_x[iVar];
-}
-
-double ResAnalyzerFN::GetMaxResidualY(int iVar)
-{
-    return m_max_residual_y[iVar];
-}
-
-double ResAnalyzerFN::GetMaxResidualZ(int iVar)
-{
-    return m_max_residual_z[iVar];
 }

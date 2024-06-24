@@ -10,11 +10,21 @@ namespace  zaran
         nj = m_idx_proxy->GetNj();
         nk = m_idx_proxy->GetNk();
         int node_num = ni * nj * nk;
-        m_node_metric = new NodeMetric(node_num);
+        m_node_metrics = new Metrics(node_num);
 
     }
     NSSolverStruct::~NSSolverStruct()
     {
+        if (m_idx_proxy)
+        {
+            delete m_idx_proxy;
+            m_idx_proxy = nullptr;
+        }
+        if (m_node_metrics)
+        {
+            delete m_node_metrics;
+            m_node_metrics = nullptr;
+        }
     }
     void NSSolverStruct::InitFieldFarFlow()
     {
@@ -40,7 +50,7 @@ namespace  zaran
                         int idx = m_idx_proxy->GetIdx(i, j, k);
                         for (int iVal = 0; iVal < para->GetEquNum(); ++iVal)
                         {
-                            m_data_manager->SetPrimitive(iVal, idx, prim_far[iVal]);
+                            m_data_manager->SetPrim(iVal, idx, prim_far[iVal]);
                         }
                     }
                 }
@@ -69,7 +79,7 @@ namespace  zaran
                     int idx = m_idx_proxy->GetIdx(i, j, k);
                     for (int iVal = 0; iVal < para->GetEquNum(); ++iVal)
                     {
-                        m_data_manager->SetPrimitive(iVal, idx, prim_far[iVal]);
+                        m_data_manager->SetPrim(iVal, idx, prim_far[iVal]);
                     }
                 }
             }
@@ -79,7 +89,7 @@ namespace  zaran
     void NSSolverStruct::InitFieldBackup()
     {
     }
-    void NSSolverStruct::CalcMetric()
+    void NSSolverStruct::CalcMetrics()
     {
         Log::info("Compute Struct Coordination Transformation Coefficients...");
         auto grid = GetGrid();
@@ -106,20 +116,20 @@ namespace  zaran
                     xRight = node->GetCoord(i + 1, j, k);
                     yLeft = node->GetCoord(i, j - 1, k);
                     yRight = node->GetCoord(i, j + 1, k);
-                    if (grid->GetDimension() == 3)
+                    if (grid->GetDim() == 3)
                     {
                         zLeft = node->GetCoord(i, j, k - 1);
                         zRight = node->GetCoord(i, j, k + 1);
                     }
-                    m_node_metric->CalcMetric(idx, xRight, xLeft, yRight, yLeft, zRight, zLeft);
-                    if (m_node_metric->GetJacobian(idx) > max_jacobian)
+                    m_node_metrics->CalcMetric(idx, xRight, xLeft, yRight, yLeft, zRight, zLeft);
+                    if (m_node_metrics->GetJacobian(idx) > max_jacobian)
                     {
-                        max_jacobian = m_node_metric->GetJacobian(idx);
+                        max_jacobian = m_node_metrics->GetJacobian(idx);
                         max_jacobian_node = idx;
                     }
-                    if (m_node_metric->GetJacobian(idx) < min_jacobian)
+                    if (m_node_metrics->GetJacobian(idx) < min_jacobian)
                     {
-                        min_jacobian = m_node_metric->GetJacobian(idx);
+                        min_jacobian = m_node_metrics->GetJacobian(idx);
                         min_jacobian_node = idx;
                     }
                 }
@@ -146,17 +156,17 @@ namespace  zaran
         double cfl = para->GetCflNumber();
         double gamma = GetGas()->GetGamma();
         double min_dt = LARGE_NUMBER;
-        for (int k = ks; k < ke; ++k)
+        for (int k = ks; k <= ke; ++k)
         {
-            for (int j = js; j < je; ++j)
+            for (int j = js; j <= je; ++j)
             {
-                for (int i = is; i < ie; ++i)
+                for (int i = is; i <=ie; ++i)
                 {
                     int idx = m_idx_proxy->GetIdx(i, j, k);
-                    auto xi = m_node_metric->GetMetricXi(idx);
-                    auto eta = m_node_metric->GetMetricEta(idx);
-                    auto zeta = m_node_metric->GetMetricZeta(idx);
-                    auto jacobi = m_node_metric->GetJacobian(idx);
+                    auto xi = m_node_metrics->GetXi(idx);
+                    auto eta = m_node_metrics->GetEta(idx);
+                    auto zeta = m_node_metrics->GetZeta(idx);
+                    auto jacobi = m_node_metrics->GetJacobian(idx);
                     double c = sqrt(gamma * m_data_manager->GetPressure(idx) / m_data_manager->GetDensity(idx));
                     double norm_xi = sqrt(xi[0] * xi[0] + xi[1] * xi[1] + xi[2] * xi[2]);
                     double norm_eta = sqrt(eta[0] * eta[0] + eta[1] * eta[1] + eta[2] * eta[2]);
@@ -205,18 +215,18 @@ namespace  zaran
         for (int iStage = 0; iStage < rkStage; ++iStage)
         {
             CalcResidual();
-            for (int i = is;i < ie;++i)
+            for (int i = is;i <= ie;++i)
             {
-                for (int j = js;j < je;++j)
+                for (int j = js;j <= je;++j)
                 {
-                    for (int k = ks;k < ke;++k)
+                    for (int k = ks;k <= ke;++k)
                     {
                         int idx = m_idx_proxy->GetIdx(i, j, k);
                         dt = m_data_manager->GetTimeStep(idx);
-                        jacobi = m_node_metric->GetJacobian(idx);
+                        jacobi = m_node_metrics->GetJacobian(idx);
                         for (int iVal = 0; iVal < 5; ++iVal)
                         {
-                            m_data_manager->SetConservative(iVal, idx, m_data_manager->GetConservative(iVal, idx) + dt * rk_coef[iStage] * m_data_manager->GetResidual(iVal, idx) * jacobi);
+                            m_data_manager->SetCons(iVal, idx, m_data_manager->GetCons(iVal, idx) + dt * rk_coef[iStage] * m_data_manager->GetResidual(iVal, idx) * jacobi);
                         }
                     }
                 }
@@ -241,12 +251,12 @@ namespace  zaran
                     int idx = m_idx_proxy->GetIdx(i, j, k);
                     for (int iVal = 0; iVal < GetPara()->GetEquNum(); ++iVal)
                     {
-                        prim[iVal] = m_data_manager->GetPrimitive(iVal, idx);
+                        prim[iVal] = m_data_manager->GetPrim(iVal, idx);
                     }
                     gas->Prim2Cons(prim, cons);
                     for (int iEqu = 0; iEqu < GetPara()->GetEquNum(); ++iEqu)
                     {
-                        m_data_manager->SetConservative(iEqu, idx, cons[iEqu]);
+                        m_data_manager->SetCons(iEqu, idx, cons[iEqu]);
                     }
                 }
             }
@@ -270,12 +280,12 @@ namespace  zaran
                     int idx = m_idx_proxy->GetIdx(i, j, k);
                     for (int iVal = 0; iVal < GetPara()->GetEquNum(); ++iVal)
                     {
-                        cons[iVal] = m_data_manager->GetConservative(iVal, idx);
+                        cons[iVal] = m_data_manager->GetCons(iVal, idx);
                     }
                     gas->Cons2Prim(cons, prim);
                     for (int iEqu = 0; iEqu < GetPara()->GetEquNum(); ++iEqu)
                     {
-                        m_data_manager->SetPrimitive(iEqu, idx, prim[iEqu]);
+                        m_data_manager->SetPrim(iEqu, idx, prim[iEqu]);
                     }
                 }
             }
@@ -302,28 +312,28 @@ namespace  zaran
             }
         }
     }
-    void NSSolverStruct::MidNodeRec2nd(int index_left, int index_right, double* value_rec_left, double* value_rec_right)
+    void NSSolverStruct::MidNodeRec2nd(int idx_left, int idx_right, double* value_rec_left, double* value_rec_right)
     {
         int equ_num = GetPara()->GetEquNum();
         auto grid = GetGrid();
         auto node = grid->GetNode();
         int il, jl, kl, ir, jr, kr;
-        m_idx_proxy->GetIdxStruct(index_left, il, jl, kl);
-        m_idx_proxy->GetIdxStruct(index_right, ir, jr, kr);
+        m_idx_proxy->GetIdxStruct(idx_left, il, jl, kl);
+        m_idx_proxy->GetIdxStruct(idx_right, ir, jr, kr);
         double vec_node2neighbor[3];
         vec_node2neighbor[0] = node->GetCoord(il, jl, kl)[0] - node->GetCoord(ir, jr, kr)[0]; // (x_left - x_right)
         vec_node2neighbor[1] = node->GetCoord(il, jl, kl)[1] - node->GetCoord(ir, jr, kr)[1]; // (y_left - y_right)
         vec_node2neighbor[2] = node->GetCoord(il, jl, kl)[2] - node->GetCoord(ir, jr, kr)[2]; // (z_left - z_right)
         for (int iVal = 0; iVal < equ_num; ++iVal)
         {
-            value_rec_left[iVal] = m_data_manager->GetPrimitive(iVal, index_left) + 0.5 * m_data_manager->GetLimiter(iVal, index_left) *
-                (vec_node2neighbor[0] * m_data_manager->GetPrimitiveGrad(iVal, 0, index_left) +
-                    vec_node2neighbor[1] * m_data_manager->GetPrimitiveGrad(iVal, 1, index_left) +
-                    vec_node2neighbor[2] * m_data_manager->GetPrimitiveGrad(iVal, 2, index_left));
-            value_rec_right[iVal] = m_data_manager->GetPrimitive(iVal, index_right) - 0.5 * m_data_manager->GetLimiter(iVal, index_right) *
-                (vec_node2neighbor[0] * m_data_manager->GetPrimitiveGrad(iVal, 0, index_right) +
-                    vec_node2neighbor[1] * m_data_manager->GetPrimitiveGrad(iVal, 1, index_right) +
-                    vec_node2neighbor[2] * m_data_manager->GetPrimitiveGrad(iVal, 2, index_right));
+            value_rec_left[iVal] = m_data_manager->GetPrim(iVal, idx_left) + 0.5 * m_data_manager->GetLimiter(iVal, idx_left) *
+                (vec_node2neighbor[0] * m_data_manager->GetPrimGrad(iVal, 0, idx_left) +
+                    vec_node2neighbor[1] * m_data_manager->GetPrimGrad(iVal, 1, idx_left) +
+                    vec_node2neighbor[2] * m_data_manager->GetPrimGrad(iVal, 2, idx_left));
+            value_rec_right[iVal] = m_data_manager->GetPrim(iVal, idx_right) - 0.5 * m_data_manager->GetLimiter(iVal, idx_right) *
+                (vec_node2neighbor[0] * m_data_manager->GetPrimGrad(iVal, 0, idx_right) +
+                    vec_node2neighbor[1] * m_data_manager->GetPrimGrad(iVal, 1, idx_right) +
+                    vec_node2neighbor[2] * m_data_manager->GetPrimGrad(iVal, 2, idx_right));
         }
     }
     void NSSolverStruct::MidNodeRec1st(int index_left, int index_right, double* value_rec_left, double* value_rec_right)
@@ -332,8 +342,8 @@ namespace  zaran
         auto  grid = GetGrid();
         for (int iVal = 0; iVal < equ_num; ++iVal)
         {
-            value_rec_left[iVal] = m_data_manager->GetPrimitive(iVal, index_left);
-            value_rec_right[iVal] = m_data_manager->GetPrimitive(iVal, index_right);
+            value_rec_left[iVal] = m_data_manager->GetPrim(iVal, index_left);
+            value_rec_right[iVal] = m_data_manager->GetPrim(iVal, index_right);
         }
     }
     void NSSolverStruct::ConvectiveResidual()
@@ -350,45 +360,45 @@ namespace  zaran
             riemann_para[i].gamma_left = riemann_para[i].gamma_right = gas->GetGamma();
         }
         int idx;
-        for (int i = is;i < ie;++i)
+        for (int i = is;i <= ie;++i)
         {
-            for (int j = js;j < je;++j)
+            for (int j = js;j <= je;++j)
             {
-                for (int k = ks;k < ke;++k)
+                for (int k = ks;k <= ke;++k)
                 {
                     idx = m_idx_proxy->GetIdx(i, j, k);
-                    double jacobi = m_node_metric->GetJacobian(idx);
+                    double jacobi = m_node_metrics->GetJacobian(idx);
                     // i direction
-                    riemann_para[0].norm(0) = m_node_metric->GetMetricXi(idx)[0];
-                    riemann_para[0].norm(1) = m_node_metric->GetMetricXi(idx)[1];
-                    riemann_para[0].norm(2) = m_node_metric->GetMetricXi(idx)[2];
-                    riemann_para[0].nt = m_node_metric->GetMetricXi(idx)[3];
-                    riemann_para[1].norm(0) = m_node_metric->GetMetricXi(idx)[0];
-                    riemann_para[1].norm(1) = m_node_metric->GetMetricXi(idx)[1];
-                    riemann_para[1].norm(2) = m_node_metric->GetMetricXi(idx)[2];
-                    riemann_para[1].nt = m_node_metric->GetMetricXi(idx)[3];
+                    riemann_para[0].norm(0) = m_node_metrics->GetXi(idx)[0];
+                    riemann_para[0].norm(1) = m_node_metrics->GetXi(idx)[1];
+                    riemann_para[0].norm(2) = m_node_metrics->GetXi(idx)[2];
+                    riemann_para[0].nt = m_node_metrics->GetXi(idx)[3];
+                    riemann_para[1].norm(0) = m_node_metrics->GetXi(idx)[0];
+                    riemann_para[1].norm(1) = m_node_metrics->GetXi(idx)[1];
+                    riemann_para[1].norm(2) = m_node_metrics->GetXi(idx)[2];
+                    riemann_para[1].nt = m_node_metrics->GetXi(idx)[3];
                     MidNodeRec2nd(idx, m_idx_proxy->GetIdx(i + 1, j, k), &riemann_para[0].prim_left(0), &riemann_para[0].prim_right(0));
                     MidNodeRec2nd(m_idx_proxy->GetIdx(i - 1, j, k), idx, &riemann_para[1].prim_left(0), &riemann_para[1].prim_right(0));
                     // j direction
-                    riemann_para[2].norm(0) = m_node_metric->GetMetricEta(idx)[0];
-                    riemann_para[2].norm(1) = m_node_metric->GetMetricEta(idx)[1];
-                    riemann_para[2].norm(2) = m_node_metric->GetMetricEta(idx)[2];
-                    riemann_para[2].nt = m_node_metric->GetMetricEta(idx)[3];
-                    riemann_para[3].norm(0) = m_node_metric->GetMetricEta(idx)[0];
-                    riemann_para[3].norm(1) = m_node_metric->GetMetricEta(idx)[1];
-                    riemann_para[3].norm(2) = m_node_metric->GetMetricEta(idx)[2];
-                    riemann_para[3].nt = m_node_metric->GetMetricEta(idx)[3];
+                    riemann_para[2].norm(0) = m_node_metrics->GetEta(idx)[0];
+                    riemann_para[2].norm(1) = m_node_metrics->GetEta(idx)[1];
+                    riemann_para[2].norm(2) = m_node_metrics->GetEta(idx)[2];
+                    riemann_para[2].nt = m_node_metrics->GetEta(idx)[3];
+                    riemann_para[3].norm(0) = m_node_metrics->GetEta(idx)[0];
+                    riemann_para[3].norm(1) = m_node_metrics->GetEta(idx)[1];
+                    riemann_para[3].norm(2) = m_node_metrics->GetEta(idx)[2];
+                    riemann_para[3].nt = m_node_metrics->GetEta(idx)[3];
                     MidNodeRec2nd(idx, m_idx_proxy->GetIdx(i, j + 1, k), &riemann_para[2].prim_left(0), &riemann_para[2].prim_right(0));
                     MidNodeRec2nd(m_idx_proxy->GetIdx(i, j - 1, k), idx, &riemann_para[3].prim_left(0), &riemann_para[3].prim_right(0));
                     // k direction
-                    riemann_para[4].norm(0) = m_node_metric->GetMetricZeta(idx)[0];
-                    riemann_para[4].norm(1) = m_node_metric->GetMetricZeta(idx)[1];
-                    riemann_para[4].norm(2) = m_node_metric->GetMetricZeta(idx)[2];
-                    riemann_para[4].nt = m_node_metric->GetMetricZeta(idx)[3];
-                    riemann_para[5].norm(0) = m_node_metric->GetMetricZeta(idx)[0];
-                    riemann_para[5].norm(1) = m_node_metric->GetMetricZeta(idx)[1];
-                    riemann_para[5].norm(2) = m_node_metric->GetMetricZeta(idx)[2];
-                    riemann_para[5].nt = m_node_metric->GetMetricZeta(idx)[3];
+                    riemann_para[4].norm(0) = m_node_metrics->GetZeta(idx)[0];
+                    riemann_para[4].norm(1) = m_node_metrics->GetZeta(idx)[1];
+                    riemann_para[4].norm(2) = m_node_metrics->GetZeta(idx)[2];
+                    riemann_para[4].nt = m_node_metrics->GetZeta(idx)[3];
+                    riemann_para[5].norm(0) = m_node_metrics->GetZeta(idx)[0];
+                    riemann_para[5].norm(1) = m_node_metrics->GetZeta(idx)[1];
+                    riemann_para[5].norm(2) = m_node_metrics->GetZeta(idx)[2];
+                    riemann_para[5].nt = m_node_metrics->GetZeta(idx)[3];
                     MidNodeRec2nd(idx, m_idx_proxy->GetIdx(i, j, k + 1), &riemann_para[4].prim_left(0), &riemann_para[4].prim_right(0));
                     MidNodeRec2nd(m_idx_proxy->GetIdx(i, j, k - 1), idx, &riemann_para[5].prim_left(0), &riemann_para[5].prim_right(0));
                     for (int i = 0; i < 6; ++i)
@@ -443,7 +453,7 @@ namespace  zaran
 #pragma omp parallel for
                 for (int iBound = 0; iBound < bound.size(); ++iBound)
                 {
-                    RiemannBC(bound[iBound]);
+                    InletBC(bound[iBound]);
                 }
             }
             else if (bound_name == "outlet")
@@ -451,7 +461,7 @@ namespace  zaran
 #pragma omp parallel for
                 for (int iBound = 0; iBound < bound.size(); ++iBound)
                 {
-                    RiemannBC(bound[iBound]);
+                    OutletBC(bound[iBound]);
                 }
             }
             else if (bound_name == "wall")
@@ -484,8 +494,8 @@ namespace  zaran
         GetGas()->Prim2Cons(prim_far, cons_far);
         for (int iVal = 0; iVal < 5; ++iVal)
         {
-            m_data_manager->SetPrimitive(iVal, idx_ghost, prim_far[iVal]);
-            m_data_manager->SetConservative(iVal, idx_ghost, cons_far[iVal]);
+            m_data_manager->SetPrim(iVal, idx_ghost, prim_far[iVal]);
+            m_data_manager->SetCons(iVal, idx_ghost, cons_far[iVal]);
         }
     }
     void NSSolverStruct::OutletBC(BoundStruct& bound)
@@ -498,8 +508,8 @@ namespace  zaran
         int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
         for (int iVal = 0; iVal < 5; ++iVal)
         {
-            m_data_manager->SetPrimitive(iVal, idx_ghost, m_data_manager->GetPrimitive(iVal, idx_bound));
-            m_data_manager->SetConservative(iVal, idx_ghost, m_data_manager->GetConservative(iVal, idx_bound));
+            m_data_manager->SetPrim(iVal, idx_ghost, m_data_manager->GetPrim(iVal, idx_bound));
+            m_data_manager->SetCons(iVal, idx_ghost, m_data_manager->GetCons(iVal, idx_bound));
         }
     }
     void NSSolverStruct::WallBC(BoundStruct& bound)
@@ -515,8 +525,8 @@ namespace  zaran
         int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
         for (int iVal = 0; iVal < 5; ++iVal)
         {
-            m_data_manager->SetPrimitive(iVal, idx_bound, m_data_manager->GetPrimitive(iVal, idx_ghost));
-            m_data_manager->SetConservative(iVal, idx_bound, m_data_manager->GetConservative(iVal, idx_ghost));
+            m_data_manager->SetPrim(iVal, idx_bound, m_data_manager->GetPrim(iVal, idx_ghost));
+            m_data_manager->SetCons(iVal, idx_bound, m_data_manager->GetCons(iVal, idx_ghost));
         }
     }
     void NSSolverStruct::RiemannBC(BoundStruct& bound)
@@ -525,18 +535,23 @@ namespace  zaran
     }
     void NSSolverStruct::SymmetryBC(BoundStruct& bound)
     {
+
     }
     void NSSolverStruct::CheckPrimtive()
     {
+
     }
     void NSSolverStruct::CheckResidual()
     {
+
     }
     void NSSolverStruct::FixPrimtive()
     {
+
     }
     void NSSolverStruct::BackupField(std::string& back_folder)
     {
+
     }
     GridStruct* NSSolverStruct::GetGrid()
     {

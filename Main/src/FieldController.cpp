@@ -4,7 +4,7 @@
 #include"FlowSolver.h"
 #include"MathBasic.h"
 #include"File.h"
-#include"FieldNS.h"
+#include"NSFieldFN.h"
 using namespace zaran;
 
 
@@ -46,11 +46,11 @@ void FieldController::SaveDataTecplot()
     {
         if(m_global_field->GetField(iField)->GetFieldType()==FieldType::NS_Structured)
         {
-            m_visual->WriteTecplotBinary(static_cast<FieldNS_Struct*>(m_global_field->GetField(iField)));
+            m_visual->WriteTecplotBinary(static_cast<NSFieldStruct*>(m_global_field->GetField(iField)));
         }
         else if (m_global_field->GetField(iField)->GetFieldType() == FieldType::NS_FlexibleNode)
         {
-            m_visual->WriteTecplotBinary(static_cast<FieldNS_FNFDM*>(m_global_field->GetField(iField)));
+            m_visual->WriteTecplotBinary(static_cast<NSFieldFNFDM*>(m_global_field->GetField(iField)));
         }
         else 
         {
@@ -111,7 +111,7 @@ void FieldController::SolveField()
     while (true)
     {
         PreSolve();
-        SolveFieldOneStep();
+        SolveOneStep();
         PostSolve();
         if (IsStopSolve())
             break;
@@ -123,14 +123,11 @@ void FieldController::CalcResidual()
 {
     for (size_t iField = 0; iField < m_global_field->GetFieldSize(); iField++)
     {
-        auto field = dynamic_cast<FieldNS_FNFDM*>(m_global_field->GetField(iField));
-        auto solver = field->GetSolver();
-        auto grid = field->GetGrid();
-        auto dataManager = field->GetDataManager();
-        auto residual = field->GetResAnalyzer();
-        residual->Analyze();
-        m_max_res = residual->GetMaxResidual(0);
-        m_ave_res = residual->GetAveResidual(0);
+        auto field = dynamic_cast<FieldNS*>(m_global_field->GetField(iField));
+        field->CalcResidual();
+        auto res_info = field->GetResInfo();
+        m_max_res = res_info->GetMaxRes(0);
+        m_ave_res = res_info->GetAveRes(0);
     }
     m_res_flag = true;
 }
@@ -253,7 +250,7 @@ void FieldController::SaveResidual()
     }
 }
 
-void FieldController::SolveFieldOneStep()
+void FieldController::SolveOneStep()
 {
     for (size_t iField = 0; iField < m_global_field->GetFieldSize(); iField++)
     {

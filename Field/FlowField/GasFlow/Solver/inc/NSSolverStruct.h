@@ -15,7 +15,7 @@ namespace zaran
         void InitFieldFarFlow()override;
         void InitFieldFarFieldNoVelocity()override;
         void InitFieldBackup()override;
-        void CalcMetric()override;
+        void CalcMetrics()override;
     protected:
         void Preprocess()override;
         void CalcTimeStepLocal() override;
@@ -38,15 +38,15 @@ namespace zaran
         void ViscousResidual() override;
         void CalcViscousFlux() override;
         void CalcViscousFluxGrad()override;
-        //计算源项
         void SourceResidual() override;
+        
         void BoundaryCondition()override;
         void InletBC(BoundStruct& bound);
         void OutletBC(BoundStruct& bound);
         void WallBC(BoundStruct& bound);
         void RiemannBC(BoundStruct& bound);
         void SymmetryBC(BoundStruct& bound);
-        protected:
+    protected:
         void CheckPrimtive()override;
         void CheckResidual()override;
         void FixPrimtive()override;
@@ -54,9 +54,11 @@ namespace zaran
     protected:
         virtual GridStruct* GetGrid();
     private:
+        /// @brief 数据管理器，访问场数据
         DataManagerNS* m_data_manager;
-        NodeMetric* m_node_metric;
+        /// @brief 节点度量
+        Metrics* m_node_metrics;
+        /// @brief 索引代理，用于将结构节点索引转换为场数据索引
         StructIdxProxy* m_idx_proxy;
-
     };
 }

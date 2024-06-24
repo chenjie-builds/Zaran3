@@ -5,11 +5,11 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include "FieldNS.h"
+#include "NSFieldFN.h"
 using namespace zaran;
 void zaran::Visual::WriteTecplotBinary(Field* field)
 {
-    FieldNS_FNFDM* fieldNS = dynamic_cast<FieldNS_FNFDM*>(field);
+    NSFieldFNFDM* fieldNS = dynamic_cast<NSFieldFNFDM*>(field);
     auto data_manager = fieldNS->GetDataManager();
     auto grid = fieldNS->GetGrid();
     auto cell = grid->GetCell();
@@ -130,7 +130,7 @@ void zaran::Visual::WriteTecplotBinary(Field* field)
 
     i = TECEND142();
 }
-void Visual::WriteTecplotBinary(FieldNS_Struct* field)
+void Visual::WriteTecplotBinary(NSFieldStruct* field)
 {
     auto grid = field->GetGrid();
     auto node = grid->GetNode();

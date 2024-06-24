@@ -2,12 +2,12 @@
 #include "Log.h"
 namespace zaran
 {
-    NodeMetric::NodeMetric(int node_num)
+    Metrics::Metrics(int node_num)
     {
         m_metric = new double[node_num * (4 * 4 + 1)];
     }
 
-    NodeMetric::~NodeMetric()
+    Metrics::~Metrics()
     {
         delete[] m_metric;
     }
@@ -133,33 +133,33 @@ namespace zaran
     //     // 修复完成
     //     m_exist_error_jacobi = false;
     // }
-    const double* NodeMetric::GetMetricXi(int iNode) const
+    const double* Metrics::GetXi(int iNode) const
     {
         return m_metric + iNode * 17;
     }
 
-    const double* NodeMetric::GetMetricEta(int iNode) const
+    const double* Metrics::GetEta(int iNode) const
     {
         return m_metric + iNode * 17 + 4;
     }
 
-    const double* NodeMetric::GetMetricZeta(int iNode) const
+    const double* Metrics::GetZeta(int iNode) const
     {
         return m_metric + iNode * 17 + 8;
     }
 
-    const double* NodeMetric::GetMetricTau(int iNode) const
+    const double* Metrics::GetMetricTau(int iNode) const
     {
         return m_metric + iNode * 17 + 12;
     }
-    double NodeMetric::GetJacobian(int iNode) const
+    double Metrics::GetJacobian(int iNode) const
     {
         return m_metric[iNode * 17 + 16];
     }
 
   
 
-    void NodeMetric::CalcMetric(int iNode, const double* xRight, const double* xLeft, const double* yRight, const double* yLeft, const double* zRight, const double* zLeft)
+    void Metrics::CalcMetric(int iNode, const double* xRight, const double* xLeft, const double* yRight, const double* yLeft, const double* zRight, const double* zLeft)
     {
         double coef_x[4], coef_y[4], coef_z[4], coef_t[4];
         double* coef_xi = m_metric + iNode * m_metric_num;

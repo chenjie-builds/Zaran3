@@ -38,7 +38,7 @@ namespace zaran
 		void UpdateField()override;
 		void Preprocess()override;
 		void Postprocess()override;
-		virtual void CalcMetric() = 0;
+		virtual void CalcMetrics() = 0;
 	protected:
 		Gas* GetGas() { return m_gas; }
 		/*

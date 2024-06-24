@@ -8,26 +8,27 @@
 #include<vector>
 namespace zaran
 {
-    class GridStructFactory:public GridFactory
+  
+    class GridStructFactory :public GridFactory
     {
     public:
         GridStructFactory();
         GridStruct* CreateGrid();
-        void ConvertToGrid(GridStruct*& grid);
+        void ConvertToGrid(GridStruct* grid);
     private:
         void ReadNodeFile();
         void ReadBoundFile();
+        void SetBoundInfo(GridStruct* grid);
         struct NodeCoord
         {
             double coord[3];
         };
         struct BoundInfo
         {
-            int bound_type;
             int block_indx;
+            int bound_type;
             int i_start, i_end, j_start, j_end, k_start, k_end;
         };
-
     private:
         int m_dim;
         int m_ni, m_nj, m_nk;
@@ -36,7 +37,5 @@ namespace zaran
         std::vector<BoundInfo> m_bound_info;
         string m_node_file_name;
         string m_bnd_file_name;
-
-
     };
 }

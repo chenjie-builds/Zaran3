@@ -37,7 +37,6 @@ class FlowSolver : public FieldSolver
   protected:
     // 返回当前求解器的参数
     FlowSolverPara *GetPara() override;
-    // 从网格中取数据，为了防止每次直接使用数据名称
   public:
     // 时间推进
     virtual void TimeAdvance() = 0;

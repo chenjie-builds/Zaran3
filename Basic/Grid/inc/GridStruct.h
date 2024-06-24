@@ -22,6 +22,11 @@ namespace zaran
 	public:
 		GridStruct(const string& name, int index, int dim);
 		virtual ~GridStruct();
+		/// @brief 开辟内存空间
+		/// @param ni i方向上的节点总数
+		/// @param nj j方向上的节点总数 
+		/// @param nk k方向上的节点总数
+		/// @param ghost_size ghost节点层数
 		void Allocate(int ni, int nj, int nk, int ghost_size);
 	public:
 		int GetNi();
@@ -34,12 +39,24 @@ namespace zaran
 		CellStruct* GetCell() { return m_cell; }
 		BoundMapStruct* GetBoundMap() { return m_bound_map; }
 	public:
+		/// @brief 返回用于计算的节点范围,不包含ghost节点
+		/// @param iStart i方向上的起始索引
+		/// @param iEnd i方向上的结束索引
+		/// @param jStart j方向上的起始索引
+		/// @param jEnd j方向上的结束索引
+		/// @param kStart k方向上的起始索引
+		/// @param kEnd k方向上的结束索引
 		void GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd);
 	private:
+		/// @brief ghost节点层数
 		int m_ghost_size;
+		/// @brief 结构网格节点
 		NodeStruct* m_node;
+		/// @brief 	结构网格面
 		FaceStruct* m_face;
+		/// @brief 	结构网格单元
 		CellStruct* m_cell;
+		/// @brief 	边界条件
 		BoundMapStruct* m_bound_map;
 	};
 }

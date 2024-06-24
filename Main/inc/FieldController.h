@@ -30,7 +30,7 @@ namespace zaran
         // 前处理
         void PreSolve();
         // 计算一步
-        void SolveFieldOneStep();
+        void SolveOneStep();
         // 后处理
         void PostSolve();
     protected:

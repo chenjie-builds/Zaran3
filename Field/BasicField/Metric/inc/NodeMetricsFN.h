@@ -2,11 +2,13 @@
 #include "GridFNFDM.h"
 namespace zaran
 {
-    class NodeMetric
+    /// @brief 网格度量类
+    /// @details 用于计算网格度量
+    class Metrics
     {
     public:
-        NodeMetric(int node_num);
-        ~NodeMetric();
+        Metrics(int node_num);
+        ~Metrics();
         //计算度量
         // void CalcMetric();
         //检查Jacobian是否存在错误
@@ -14,11 +16,11 @@ namespace zaran
         //对存在错误的Jacobian进行修正
         // void FixJacobian();
         //获取Xi 方向度量
-        const  double* GetMetricXi(int iNode)const;
+        const  double* GetXi(int iNode)const;
         //获取Eta 方向度量
-        const double* GetMetricEta(int iNode)const;
+        const double* GetEta(int iNode)const;
         //获取Zeta 方向度量
-        const double* GetMetricZeta(int iNode)const;
+        const double* GetZeta(int iNode)const;
         //获取Tau度量
         const double* GetMetricTau(int iNode)const;
         //获取Jacobian

@@ -27,7 +27,7 @@ namespace zaran
 		void InitFieldFarFlow()override;
 		void InitFieldFarFieldNoVelocity()override;
 		void InitFieldBackup()override;
-		void CalcMetric()override;
+		void CalcMetrics()override;
 		void BackupField(std::string& back_folder)override;
 	protected:
 		void Preprocess()override;
@@ -88,6 +88,6 @@ namespace zaran
 	private:
 		DataManagerNS* m_data_manager;
 		GradWLSQ* m_grad_wlsq;
-		NodeMetric* m_node_metric;
+		Metrics* m_node_metric;
 	};
 }

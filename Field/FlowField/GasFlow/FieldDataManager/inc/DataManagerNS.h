@@ -4,6 +4,8 @@
 #include "FieldDataManager.h"
 namespace zaran
 {
+    /// @brief NS方程数据管理类
+    /// @details 用于管理NS方程的数据
     class DataManagerNS :public DataManager
     {
     public:
@@ -13,23 +15,76 @@ namespace zaran
         void CreateData()override;
         void RegisterData()override;
     public:
-        void SetPrimitive(int iEqu, int iNode, double value);
-        void SetConservative(int iEqu, int iNode, double value);
+        //! @brief 设置基本变量
+        /// @param iEqu 变量索引
+        /// @param iNode 节点索引 
+        /// @param value 输入的值 
+        void SetPrim(int iEqu, int iNode, double value);
+        //! @brief 设置守恒变量
+        /// @param iEqu 变量索引
+        /// @param iNode 节点索引
+        /// @param value 输入的值
+        void SetCons(int iEqu, int iNode, double value);
+        //! @brief 设置残差
+        /// @param iEqu 变量索引
+        /// @param iNode 节点索引
+        /// @param value 输入的值
         void SetResidual(int iEqu, int iNode, double value);
+        //! @brief 设置限制器系数
+        /// @param iEqu 变量索引
+        /// @param iNode 节点索引
+        /// @param value 输入的值
         void SetLimiter(int iEqu, int iNode, double value);
+        //! @brief 设置粘性通量
+        /// @param iEqu 变量索引
+        /// @param iDim 通量维度索引
+        /// @param iNode 节点索引
+        /// @param value 输入的值
         void SetViscousFlux(int iEqu, int iDim, int iNode, double value);
+        //! @brief 设置粘性通量梯度
+        /// @param iEqu 变量索引
+        /// @param iDim 通量维度索引
+        /// @param iGradDim 梯度维度索引
+        /// @param iNode 节点索引
+        /// @param value 输入的值
         void SetViscousFluxGrad(int iEqu, int iDim, int iGradDim, int iNode, double value);
+        //! @brief 设置原始变量梯度
+        /// @param iEqu 变量索引
+        /// @param iGradDim 梯度维度索引
+        /// @param iNode 节点索引
+        /// @param value 输入的值
         void SetPrimitiveGrad(int iEqu, int iGradDim, int iNode, double value);
+        //! @brief 设置温度
+        /// @param iNode 节点索引
+        /// @param value 输入的值
         void SetTemperature(int iNode, double value);
+        //! @brief 设置温度梯度
+        /// @param iGradDim 梯度维度索引
+        /// @param iNode 节点索引
         void SetTemperatureGrad(int iGradDim, int iNode, double value);
+        //! @brief 设置非物理点标记
+        /// @param iNode 节点索引
+        /// @param value 输入的值
         void SetNonPhysical(int iNode, int value);
+        //! @brief 设置时间步长
+        /// @param iNode 节点索引
+        /// @param dt 输入的值
         void SetTimeStep(int iNode, double dt);
     public:
-        double GetPrimitive(int iEqu, int iNode);
-        double* GetPrimitive(int iEqu);
+        //! @brief 获取基本变量
+        /// @param iEqu 变量索引
+        /// @param iNode 节点索引
+        double GetPrim(int iEqu, int iNode);
+        //! @brief 获取基本变量
+        /// @param iEqu 变量索引
+        /// @return 第 iEqu 个基本变量
+        double* GetPrim(int iEqu);
         double* GetDensity();
         double GetDensity(int iNode);
         double* GetVelocity(int iDim);
+        //! @brief 获取速度
+        /// @param iDim 速度维度索引
+        /// @param iNode 节点索引
         double GetVelocity(int iDim, int iNode);
         double* GetPressure();
         double GetPressure(int iNode);
@@ -37,7 +92,7 @@ namespace zaran
         double* GetTemperature();
         double GetTemperature(int iNode);
         double* GetConservative(int iEqu);
-        double GetConservative(int iEqu, int iNode);
+        double GetCons(int iEqu, int iNode);
         double* GetResidual(int iEqu);
         double GetResidual(int iEqu, int iNode);
         double* GetLimiter(int iEqu);
@@ -47,7 +102,7 @@ namespace zaran
         double* GetViscousFluxGrad(int iEqu, int iDim, int iGradDim);
         double GetViscousFluxGrad(int iEqu, int iDim, int iGradDim, int iNode);
         double* GetPrimitiveGrad(int iEqu, int iGradDim);
-        double GetPrimitiveGrad(int iEqu, int iGradDim, int iNode);
+        double GetPrimGrad(int iEqu, int iGradDim, int iNode);
         int* GetNonPhysical();
         int GetNonPhysical(int iNode);
     private:

@@ -31,12 +31,12 @@ namespace zaran
         delete[] m_temperture_grad;
     }
 
-    void DataManagerNS::SetPrimitive(int iEqu, int iNode, double value)
+    void DataManagerNS::SetPrim(int iEqu, int iNode, double value)
     {
         m_prim[iEqu][iNode] = value;
     }
 
-    void DataManagerNS::SetConservative(int iEqu, int iNode, double value)
+    void DataManagerNS::SetCons(int iEqu, int iNode, double value)
     {
         m_cons[iEqu][iNode] = value;
     }
@@ -86,12 +86,12 @@ namespace zaran
         m_dt[iNode] = dt;
     }
 
-    double DataManagerNS::GetPrimitive(int iEqu, int iNode)
+    double DataManagerNS::GetPrim(int iEqu, int iNode)
     {
         return m_prim[iEqu][iNode];
     }
 
-    double* DataManagerNS::GetPrimitive(int iEqu)
+    double* DataManagerNS::GetPrim(int iEqu)
     {
         return  m_prim[iEqu];
     }
@@ -146,7 +146,7 @@ namespace zaran
         return  m_cons[iEqu];
     }
 
-    double DataManagerNS::GetConservative(int iEqu, int iNode)
+    double DataManagerNS::GetCons(int iEqu, int iNode)
     {
         return m_cons[iEqu][iNode];
     }
@@ -196,7 +196,7 @@ namespace zaran
         return m_prim_grad[iEqu][iGradDim];
     }
 
-    double DataManagerNS::GetPrimitiveGrad(int iEqu, int iGradDim, int iNode)
+    double DataManagerNS::GetPrimGrad(int iEqu, int iGradDim, int iNode)
     {
         return m_prim_grad[iEqu][iGradDim][iNode];
     }

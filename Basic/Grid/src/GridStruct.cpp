@@ -7,6 +7,7 @@ namespace zaran
 		m_node = nullptr;
 		m_face = nullptr;
 		m_cell = nullptr;
+		m_bound_map = nullptr;
 	}
 	GridStruct::~GridStruct()
 	{
@@ -24,6 +25,11 @@ namespace zaran
 		{
 			delete[] m_cell;
 			m_cell = nullptr;
+		}
+		if (m_bound_map)
+		{
+			delete[] m_bound_map;
+			m_bound_map = nullptr;
 		}
 
 	}
@@ -45,11 +51,17 @@ namespace zaran
 			delete m_cell;
 			m_cell = nullptr;
 		}
+		if (m_bound_map != nullptr)
+		{
+			delete m_bound_map;
+			m_bound_map = nullptr;
+		}
 		m_node = new NodeStruct();
 		m_node->Allocate(ni + ghost_size * 2, nj + ghost_size * 2, nk + ghost_size * 2);
 		m_face = new FaceStruct();
 		m_cell = new CellStruct();
 		m_cell->Allocate(ni + ghost_size * 2 - 1, nj + ghost_size * 2 - 1, nk + ghost_size * 2 - 1);
+		m_bound_map = new BoundMapStruct();
 	}
 	int GridStruct::GetNi()
 	{
@@ -73,7 +85,7 @@ namespace zaran
 	}
 	int GridStruct::GetTotalNodeNum()
 	{
-		return GetNi() * GetNj() * GetNk();
+		return m_node->GetNodeNum();
 	}
 	void GridStruct::GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd)
 	{

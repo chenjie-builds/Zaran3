@@ -29,7 +29,7 @@ namespace zaran
 	class Field
 	{
 	public:
-		Field(GridBase* grid,FieldType fieldType);
+		Field(GridBase* grid, FieldType fieldType=FieldType::Unset);
 		virtual~Field();
 	public:
 		void SetIdx(int idx) { m_idx = idx; }
@@ -40,7 +40,7 @@ namespace zaran
 		virtual SolverPara* GetSolverPara() { return m_solver_para; }
 		virtual DataManager* GetDataManager() { return m_dataManager; }
 		FieldType GetFieldType() { return m_fieldType; }
-		protected:
+	protected:
 		virtual void Allocate();
 	protected:
 		/// @brief 本场在场数组中的索引

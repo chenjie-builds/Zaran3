@@ -8,7 +8,7 @@ namespace zaran
         // m_node_file_name = GlobalData::GetString("NodeFile");
         // m_bnd_file_name = GlobalData::GetString("BoundFile");
         m_node_file_name = "1.dat";
-        m_bnd_file_name = "1.fvbnd";
+        m_bnd_file_name = "1.inp";
 
     }
 
@@ -19,10 +19,11 @@ namespace zaran
         ReadBoundFile();
         GridStruct* grid = new GridStruct("Structured", 1, m_dim);
         ConvertToGrid(grid);
+        SetBoundInfo(grid);
         return grid;
     }
 
-    void GridStructFactory::ConvertToGrid(GridStruct*& grid)
+    void GridStructFactory::ConvertToGrid(GridStruct* grid)
     {
         grid->Allocate(m_ni, m_nj, m_nk, m_ghost_size);
         auto node = grid->GetNode();
@@ -106,19 +107,6 @@ namespace zaran
                 }
             }
         }
-
-        // print node coord for debug
-        for (int idx_k = 0;idx_k < m_nk + 2 * m_ghost_size;++idx_k)
-        {
-            for (int idx_j = 0;idx_j < m_nj + 2 * m_ghost_size;++idx_j)
-            {
-                for (int idx_i = 0;idx_i < m_ni + 2 * m_ghost_size;++idx_i)
-                {
-                    const double* coord = node->GetCoord(idx_i, idx_j, idx_k);
-                    Log::info("Node Coord:({},{},{})=({},{},{})", idx_i, idx_j, idx_k, coord[0], coord[1], coord[2]);
-                }
-            }
-        }
     }
 
     void GridStructFactory::ReadNodeFile()
@@ -184,7 +172,110 @@ namespace zaran
     }
     void GridStructFactory::ReadBoundFile()
     {
-        //TODO Read Bound File Here
-
+        // read inp file
+        std::ifstream bnd_file(m_bnd_file_name);
+        if (!bnd_file.is_open())
+        {
+            Log::error("Can't open bound file:{}, Please Check!", m_bnd_file_name);
+            system("pause");
+        }
+        int block_num;
+        bnd_file >> block_num;
+        for (int idx_block = 0;idx_block < block_num;++idx_block)
+        {
+            int block_idx;
+            bnd_file >> block_idx;
+            int ni, nj, nk;
+            bnd_file >> ni >> nj >> nk;
+            std::string block_name;
+            bnd_file >> block_name;
+            int bound_num;
+            bnd_file >> bound_num;
+            for (int idx_bound = 0;idx_bound < bound_num;++idx_bound)
+            {
+                BoundInfo bound_info;
+                bound_info.block_indx = block_idx;
+                bnd_file >> bound_info.i_start >> bound_info.i_end;
+                bnd_file >> bound_info.j_start >> bound_info.j_end;
+                bnd_file >> bound_info.k_start >> bound_info.k_end;
+                bnd_file >> bound_info.bound_type;
+                m_bound_info.push_back(bound_info);
+            }
+        }
+    }
+    void GridStructFactory::SetBoundInfo(GridStruct* grid)
+    {
+          std::map<int, string> gridgen_bound = { {0,"none"},{1,"interblock_connection"},{2,"wall"},{3,"symmetry"},{4,"farfield"},{5,"inlet"},{6,"outlet"} };
+        auto bound_map = grid->GetBoundMap();
+        auto node = grid->GetNode();
+        int i_bound, j_bound, k_bound;
+        int i_ghost, j_ghost, k_ghost;
+        int i_ref, j_ref, k_ref;
+        double bound_norm[3];
+        for (auto& bound_info : m_bound_info)
+        {
+            for (int idx_k = bound_info.k_start;idx_k <= bound_info.k_end;++idx_k)
+            {
+                for (int idx_j = bound_info.j_start;idx_j <= bound_info.j_end;++idx_j)
+                {
+                    for (int idx_i = bound_info.i_start;idx_i <= bound_info.i_end;++idx_i)
+                    {
+                        i_ghost = i_ref = i_bound = idx_i + m_ghost_size-1;
+                        j_ghost = j_ref = j_bound = idx_j + m_ghost_size-1;
+                        k_ghost = k_ref = k_bound = idx_k + m_ghost_size-1;
+                        if (bound_info.i_start == bound_info.i_end)
+                        {
+                            if (idx_i == 1)
+                            {
+                                i_ghost = i_bound - 1;
+                                i_ref = i_bound + 1;
+                            }
+                            else
+                            {
+                                i_ghost = i_bound + 1;
+                                i_ref = i_bound - 1;
+                            }
+                        }
+                        if (bound_info.j_start == bound_info.j_end)
+                        {
+                            if (idx_j == 1)
+                            {
+                                j_ghost = j_bound - 1;
+                                j_ref = j_bound + 1;
+                            }
+                            else
+                            {
+                                j_ghost = j_bound + 1;
+                                j_ref = j_bound - 1;
+                            }
+                        }
+                        if (bound_info.k_start == bound_info.k_end)
+                        {
+                            if (idx_k == 1)
+                            {
+                                k_ghost = k_bound - 1;
+                                k_ref = k_bound + 1;
+                            }
+                            else
+                            {
+                                k_ghost = k_bound + 1;
+                                k_ref = k_bound - 1;
+                            }
+                        }
+                        bound_norm[0] = node->GetCoord(i_ref, j_ref, k_ref)[0] - node->GetCoord(i_bound, j_bound, k_bound)[0];
+                        bound_norm[1] = node->GetCoord(i_ref, j_ref, k_ref)[1] - node->GetCoord(i_bound, j_bound, k_bound)[1];
+                        bound_norm[2] = node->GetCoord(i_ref, j_ref, k_ref)[2] - node->GetCoord(i_bound, j_bound, k_bound)[2];
+                        double normal = sqrt(bound_norm[0] * bound_norm[0] + bound_norm[1] * bound_norm[1] + bound_norm[2] * bound_norm[2]);
+                        for (int i = 0;i < 3;++i)
+                        {
+                            bound_norm[i] /= normal;
+                        }
+                        BoundStruct bound(i_bound, j_bound, k_bound, i_ref, j_ref, k_ref, i_ghost, j_ghost, k_ghost, bound_norm);
+                        bound_map->AddBoundary(gridgen_bound[bound_info.bound_type], bound);
+ 
+                    }
+                }
+            }
+        }
     }
 } // namespace zaran

@@ -11,14 +11,14 @@
 //==============================================================================||
 #pragma	once
 #include "Field.h"
-#include "FieldNSStruct.h"
+#include "NSFieldStruct.h"
 namespace zaran
 {
 	class Visual
 	{
 	public:
 		void WriteTecplotBinary(Field* field);
-		void WriteTecplotBinary(FieldNS_Struct* field);
+		void WriteTecplotBinary(NSFieldStruct* field);
 		void WriteVTK(Field* field);
 	};
 }
