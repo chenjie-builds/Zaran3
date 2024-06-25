@@ -205,7 +205,7 @@ namespace zaran
     }
     void GridStructFactory::SetBoundInfo(GridStruct* grid)
     {
-          std::map<int, string> gridgen_bound = { {0,"none"},{1,"interblock_connection"},{2,"wall"},{3,"symmetry"},{4,"farfield"},{5,"inlet"},{6,"outlet"} };
+        std::map<int, string> gridgen_bound = { {0,"none"},{1,"interblock_connection"},{2,"wall"},{3,"symmetry"},{4,"farfield"},{5,"inlet"},{6,"outlet"} };
         auto bound_map = grid->GetBoundMap();
         auto node = grid->GetNode();
         int i_bound, j_bound, k_bound;
@@ -220,9 +220,9 @@ namespace zaran
                 {
                     for (int idx_i = bound_info.i_start;idx_i <= bound_info.i_end;++idx_i)
                     {
-                        i_ghost = i_ref = i_bound = idx_i + m_ghost_size-1;
-                        j_ghost = j_ref = j_bound = idx_j + m_ghost_size-1;
-                        k_ghost = k_ref = k_bound = idx_k + m_ghost_size-1;
+                        i_ghost = i_ref = i_bound = idx_i + m_ghost_size - 1;
+                        j_ghost = j_ref = j_bound = idx_j + m_ghost_size - 1;
+                        k_ghost = k_ref = k_bound = idx_k + m_ghost_size - 1;
                         if (bound_info.i_start == bound_info.i_end)
                         {
                             if (idx_i == 1)
@@ -272,7 +272,6 @@ namespace zaran
                         }
                         BoundStruct bound(i_bound, j_bound, k_bound, i_ref, j_ref, k_ref, i_ghost, j_ghost, k_ghost, bound_norm);
                         bound_map->AddBoundary(gridgen_bound[bound_info.bound_type], bound);
- 
                     }
                 }
             }

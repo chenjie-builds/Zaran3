@@ -17,6 +17,7 @@ namespace zaran
         virtual void CalcResidual() = 0;
     protected:
         void Allocate() override;
+        /// @brief 残差信息，用于存储残差
         ResInfo* m_res_info;
     };
 }

@@ -3,52 +3,62 @@
 namespace zaran
 {
 
-    ResInfo::ResInfo(int var_num) : m_var_num(var_num)
+    ResInfo::ResInfo(int equ_num) : m_equ_num(equ_num)
     {
-        m_max_res = new double[m_var_num];
-        m_ave_res = new double[m_var_num];
-        m_max_res_coord = new double[m_var_num*3];
-        m_max_res_idx = new int[m_var_num];
+        m_res_inf = new double[m_equ_num];
+        m_ref_L2 = new double[m_equ_num];
+        m_res_inf_coord = new double[m_equ_num*3];
+        m_res_inf_idx = new int[m_equ_num];
     }
     ResInfo::~ResInfo()
     {
-        delete[] m_max_res;
-        delete[] m_ave_res;
-        delete[] m_max_res_coord;
-        delete[] m_max_res_idx;
+        delete[] m_res_inf;
+        delete[] m_ref_L2;
+        delete[] m_res_inf_coord;
+        delete[] m_res_inf_idx;
     }
 
-    double ResInfo::GetMaxRes(int iVar)
+    double ResInfo::GetInfNorm(int iVar)
     {
-        return m_max_res[iVar];
+        return m_res_inf[iVar];
     }
 
-    double ResInfo::GetAveRes(int iVar)
+    double ResInfo::GetL2Norm(int iVar)
     {
-        return m_ave_res[iVar];
+        return m_ref_L2[iVar];
     }
 
-    const double* ResInfo::GetMaxResCoord(int iVar) const
+    const double* ResInfo::GetInfNormCoord(int iVar) const
     {
-        return m_max_res_coord + 3 * iVar;
+        return m_res_inf_coord + 3 * iVar;
     }
 
-    void ResInfo::SetMaxRes(int iVar, double value)
+    int ResInfo::GetInfNormIdx(int iVar) const
     {
-        m_max_res[iVar] = value;
+        return m_res_inf_idx[iVar];
     }
 
-    void ResInfo::SetAveRes(int iVar, double value)
+    void ResInfo::SetInfNorm(int iVar, double value)
     {
-        m_ave_res[iVar] = value;
+        m_res_inf[iVar] = value;
     }
 
-    void ResInfo::SetMaxResCoord(int iVar, const double* coord)
+    void ResInfo::SetL2Norm(int iVar, double value)
+    {
+        m_ref_L2[iVar] = value;
+    }
+
+    void ResInfo::SetInfNormCoord(int iVar, const double* coord)
     {
         for (int i_dim = 0; i_dim < 3; i_dim++)
         {
-            m_max_res_coord[3 * iVar + i_dim] = coord[i_dim];
+            m_res_inf_coord[3 * iVar + i_dim] = coord[i_dim];
         }
+    }
+
+    void ResInfo::SetInfNormIdx(int iVar, int idx)
+    {
+        m_res_inf_idx[iVar] = idx;
     }
 
 }

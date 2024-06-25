@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	Solver.h															||
-//*	@brief	Çó½âÆ÷»ùÀà,Í¨¹ıÒ»Ğ©Ëã·¨ĞŞ¸ÄÍø¸ñÊı¾İ										||
+//*	@brief	æ±‚è§£å™¨åŸºç±»,é€šè¿‡ä¸€äº›ç®—æ³•ä¿®æ”¹ç½‘æ ¼æ•°æ®										||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
@@ -16,7 +16,7 @@
 namespace zaran
 {
 
-	//Íø¸ñÖ¸Õë
+	//ç½‘æ ¼æŒ‡é’ˆ
 	class Solver
 	{
 	public:
@@ -32,15 +32,15 @@ namespace zaran
 		virtual void Solve() = 0;
 		virtual void Preprocess() = 0;
 		virtual void Postprocess() = 0;
-		// ³õÊ¼»¯×Ô¼º
+		// åˆå§‹åŒ–è‡ªå·±
 		virtual void InitSolver() = 0;
 	protected:
 		// solver index
 		int index_;
 		string name_;
-		// È«³¡Íø¸ñÊı×é
+		// å…¨åœºç½‘æ ¼æ•°ç»„
 		GridBase* m_grid;
-		// solver µÄ²ÎÊı
+		// solver çš„å‚æ•°
 		SolverPara* para_;
 	};
 }

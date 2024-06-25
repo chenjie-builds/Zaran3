@@ -30,35 +30,35 @@ namespace zaran
         int equ_num = para->GetEquNum();
         int inner_node_num = grid->GetInnerNodeNum();
         auto inner_node = grid->GetInnerNode();
-        double max_res = -LARGE_NUMBER;
-        double ave_res = 0;
-        int max_res_node = 0;
-        double max_res_coord[3];
+        double norm_inf = -LARGE_NUMBER;
+        double norm_L2 = 0;
+        int norm_inf_node = 0;
+        double norm_inf_coord[3];
         for (int iEqu = 0;iEqu < equ_num;iEqu++)
         {
-            max_res = -LARGE_NUMBER;
-            ave_res = 0;
-            max_res_node = -1;
+            norm_inf = -LARGE_NUMBER;
+            norm_L2 = 0;
+            norm_inf_node = -1;
             auto res = GetDataManager()->GetResidual(iEqu);
-#pragma omp parallel for reduction(max:max_res) reduction(+:ave_res)
+#pragma omp parallel for reduction(max:norm_inf) reduction(+:norm_L2)
             for (int idx = 0; idx < inner_node_num; idx++)
             {
                 int iNode = inner_node[idx];
-                if (abs(res[iNode]) > max_res)
+                if (abs(res[iNode]) > norm_inf)
                 {
-                    max_res = abs(res[iNode]);
-                    max_res_node = iNode;
+                    norm_inf = abs(res[iNode]);
+                    norm_inf_node = iNode;
                     for (int iDim = 0;iDim < grid->GetDim();iDim++)
                     {
-                        max_res_coord[iDim] = node->GetCoord(iNode)[iDim];
+                        norm_inf_coord[iDim] = node->GetCoord(iNode)[iDim];
                     }
                 }
-                ave_res += res[iNode] * res[iNode];
+                norm_L2 += res[iNode] * res[iNode];
             }
-            ave_res = sqrt(ave_res / inner_node_num);
-            m_res_info->SetMaxRes(iEqu, max_res);
-            m_res_info->SetAveRes(iEqu, ave_res);
-            m_res_info->SetMaxResCoord(iEqu, max_res_coord);
+            norm_L2 = sqrt(norm_L2 / inner_node_num);
+            m_res_info->SetInfNorm(iEqu, norm_inf);
+            m_res_info->SetL2Norm(iEqu, norm_L2);
+            m_res_info->SetInfNormCoord(iEqu, norm_inf_coord);
         }
     }
     void NSFieldFNFDM::Allocate()

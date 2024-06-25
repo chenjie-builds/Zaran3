@@ -44,7 +44,7 @@ void FieldController::SaveDataTecplot()
 {
     for (size_t iField = 0; iField < m_global_field->GetFieldSize(); iField++)
     {
-        if(m_global_field->GetField(iField)->GetFieldType()==FieldType::NS_Structured)
+        if (m_global_field->GetField(iField)->GetFieldType() == FieldType::NS_Structured)
         {
             m_visual->WriteTecplotBinary(static_cast<NSFieldStruct*>(m_global_field->GetField(iField)));
         }
@@ -52,7 +52,7 @@ void FieldController::SaveDataTecplot()
         {
             m_visual->WriteTecplotBinary(static_cast<NSFieldFNFDM*>(m_global_field->GetField(iField)));
         }
-        else 
+        else
         {
             Log::warn("Field type is not supported!");
         }
@@ -126,8 +126,8 @@ void FieldController::CalcResidual()
         auto field = dynamic_cast<FieldNS*>(m_global_field->GetField(iField));
         field->CalcResidual();
         auto res_info = field->GetResInfo();
-        m_max_res = res_info->GetMaxRes(0);
-        m_ave_res = res_info->GetAveRes(0);
+        m_res_Linf = res_info->GetInfNorm(0);
+        m_res_L2 = res_info->GetL2Norm(0);
     }
     m_res_flag = true;
 }
@@ -212,7 +212,7 @@ bool FieldController::IsStopSolve()
     double currentTime = GlobalData::GetDouble("currentTime");
     if (m_res_flag == true)
     {
-        if (m_max_res < minResidual)
+        if (m_res_Linf < minResidual)
         {
             Log::info("Max Residual is small than {}, stop compute!", minResidual);
             return true;
@@ -239,13 +239,13 @@ void FieldController::SaveResidual()
     if (currentIter == 0)
     {
         std::ofstream fout(residual_file);
-        fout << "variables=step, time, MaxRes, AveRes\n";
+        fout << "variables=step, time, Res_Linf, Res_L2\n";
         fout.close();
     }
     else
     {
         std::ofstream fout(residual_file, std::ios::app);
-        fout << currentIter << "\t\t" << GlobalData::GetDouble("currentTime") << "\t\t" << m_max_res << "\t\t" << m_ave_res << std::endl;
+        fout << currentIter << "\t\t" << GlobalData::GetDouble("currentTime") << "\t\t" << m_res_Linf << "\t\t" << m_res_L2 << std::endl;
         fout.close();
     }
 }
@@ -284,7 +284,7 @@ void FieldController::PostSolve()
     if (currentIter % calResidualIter == 0 || IsStopSolve())
     {
         CalcResidual();
-        Log::info("currentIter={}, dt={:e}, max_res={:e}, ave_res={:e}", GlobalData::GetInt("currentIter"), GlobalData::GetDouble("dt"), m_max_res, m_ave_res);
+        Log::info("iter= {}, dt={:e}, res_Linf= {:e}, res_L2= {:e}", GlobalData::GetInt("currentIter"), GlobalData::GetDouble("dt"), m_res_Linf, m_res_L2);
         SaveResidual();
     }
     if (currentIter % writeFieldIter == 0 || IsStopSolve())

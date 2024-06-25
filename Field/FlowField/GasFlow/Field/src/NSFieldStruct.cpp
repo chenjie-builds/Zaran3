@@ -3,11 +3,13 @@ namespace zaran
 {
     NSFieldStruct::NSFieldStruct(GridBase* grid) :FieldNS(grid, FieldType::NS_Structured)
     {
+        m_idx_proxy = nullptr;
         Allocate();
     }
     NSFieldStruct::~NSFieldStruct()
     {
-        delete m_idx_proxy;
+        if (m_idx_proxy != nullptr)
+            delete m_idx_proxy;
     }
     GridStruct* NSFieldStruct::GetGrid()
     {
@@ -25,12 +27,14 @@ namespace zaran
         int equ_num = para->GetEquNum();
         int is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
+        double norm_inf = -LARGE_NUMBER;
+        double norm_l2 = 0;
+        int norm_inf_node = -1;
+        double norm_inf_coord[3];
         for (int iEqu = 0; iEqu < equ_num; iEqu++)
         {
-            double max_res = -LARGE_NUMBER;
-            double ave_res = 0;
-            int max_res_node = -1;
-            double max_res_coord[3];
+            norm_inf = -LARGE_NUMBER;
+            norm_l2 = 0;
             auto res = GetDataManager()->GetResidual(iEqu);
             for (int k = ks; k < ke; k++)
             {
@@ -39,22 +43,24 @@ namespace zaran
                     for (int i = is; i < ie; i++)
                     {
                         int iNode = m_idx_proxy->GetIdx(i, j, k);
-                        if (abs(res[iNode]) > max_res)
+                        if (abs(res[iNode]) > norm_inf)
                         {
-                            max_res = abs(res[iNode]);
-                            max_res_node = iNode;
+                            norm_inf = abs(res[iNode]);
+                            norm_inf_node = iNode;
                             for (int iDim = 0; iDim < grid->GetDim(); iDim++)
                             {
-                                max_res_coord[iDim] = node->GetCoord(i, j, k)[iDim];
+                                norm_inf_coord[iDim] = node->GetCoord(i, j, k)[iDim];
                             }
                         }
-                        ave_res += res[iNode] * res[iNode];
+                        norm_l2 += res[iNode] * res[iNode];
                     }
                 }
             }
-            ave_res = sqrt(ave_res / grid->GetTotalNodeNum());
-            m_res_info->SetMaxRes(iEqu, max_res);
-            m_res_info->SetAveRes(iEqu, ave_res);
+            norm_l2 = sqrt(norm_l2 / grid->GetTotalNodeNum());
+            m_res_info->SetInfNorm(iEqu, norm_inf);
+            m_res_info->SetL2Norm(iEqu, norm_l2);
+            m_res_info->SetInfNormCoord(iEqu, norm_inf_coord);
+            m_res_info->SetInfNormIdx(iEqu, norm_inf_node);
         }
     }
     void NSFieldStruct::Allocate()

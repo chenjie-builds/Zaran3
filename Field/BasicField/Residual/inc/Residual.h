@@ -2,26 +2,33 @@
 #include"GridFNFDM.h"
 namespace zaran
 {
+    /// @brief 记录残差信息
+    /// @details 记录每个方程的最大残差和平均残差，以及最大残差的坐标
+    /// @note 并不计算残差，只是记录残差信息，由Field类的派生类计算残差
     class ResInfo
     {
     public:
-        ResInfo(int var_num);
+        ResInfo(int equ_num);
         ~ResInfo();
-        double GetMaxRes(int iVar);
-        double GetAveRes(int iVar);
-        const double* GetMaxResCoord(int iVar)const;
-        void SetMaxRes(int iVar, double value);
-        void SetAveRes(int iVar, double value);
-        void SetMaxResCoord(int iVar, const double* coord);
+        double GetInfNorm(int iVar);
+        double GetL2Norm(int iVar);
+        const double* GetInfNormCoord(int iVar)const;
+        int GetInfNormIdx(int iVar)const;
+        void SetInfNorm(int iVar, double value);
+        void SetL2Norm(int iVar, double value);
+        void SetInfNormCoord(int iVar, const double* coord);
+        void SetInfNormIdx(int iVar, int idx);
+
     private:
-        int m_var_num;
-        // 最大残差
-        double* m_max_res;
-        // 平均残差
-        double* m_ave_res;
-        // 最大残差坐标
-        double* m_max_res_coord;
-        // 最大残差编号
-        int* m_max_res_idx;
+        int m_equ_num;
+        // 残差的L2范数
+        double* m_ref_L2;
+        // 残差的无穷范数
+        double* m_res_inf;
+        // 残差的无穷范数的坐标
+        double* m_res_inf_coord;
+        // 残差的无穷范数的索引
+        // 对于结构网格，还需要通过索引代理算出结构网格的节点编号
+        int* m_res_inf_idx;
     };
 }

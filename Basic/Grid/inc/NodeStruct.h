@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	NodeTopoInfoStruct.h												||
-//*	@brief	½á¹¹Íø¸ñ½ÚµãÍØÆËĞÅÏ¢, »¹Î´Íê³É, ºóÆÚ¿ÉÄÜÉ¾³ı							||
+//*	@brief	ç»“æ„ç½‘æ ¼èŠ‚ç‚¹æ‹“æ‰‘ä¿¡æ¯, è¿˜æœªå®Œæˆ, åæœŸå¯èƒ½åˆ é™¤							||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
@@ -20,29 +20,29 @@ class NodeStruct : public NodeBase
     NodeStruct();
     ~NodeStruct();
     void Allocate(int i_num, int j_num, int k_num);
-    /// @brief ÉèÖÃ½Úµã×ø±ê
-    /// @param idx_i i·½ÏòÉÏµÄË÷Òı
-    /// @param idx_j j·½ÏòÉÏµÄË÷Òı
-    /// @param idx_k k·½ÏòÉÏµÄË÷Òı
-    /// @param coord ÊäÈëµÄ×ø±ê£¬³¤¶ÈÎª3
+    /// @brief è®¾ç½®èŠ‚ç‚¹åæ ‡
+    /// @param idx_i iæ–¹å‘ä¸Šçš„ç´¢å¼•
+    /// @param idx_j jæ–¹å‘ä¸Šçš„ç´¢å¼•
+    /// @param idx_k kæ–¹å‘ä¸Šçš„ç´¢å¼•
+    /// @param coord è¾“å…¥çš„åæ ‡ï¼Œé•¿åº¦ä¸º3
     void SetCoord(int idx_i, int idx_j, int idx_k, const double *coord);
-    /// @brief »ñÈ¡½Úµã×ø±ê
-    /// @param idx_i i·½ÏòÉÏµÄË÷Òı
-    /// @param idx_j j·½ÏòÉÏµÄË÷Òı
-    /// @param idx_k k·½ÏòÉÏµÄË÷Òı
-    /// @return ·µ»Ø½Úµã×ø±ê£¬³¤¶ÈÎª3£¬²»¿ÉĞŞ¸Ä
+    /// @brief è·å–èŠ‚ç‚¹åæ ‡
+    /// @param idx_i iæ–¹å‘ä¸Šçš„ç´¢å¼•
+    /// @param idx_j jæ–¹å‘ä¸Šçš„ç´¢å¼•
+    /// @param idx_k kæ–¹å‘ä¸Šçš„ç´¢å¼•
+    /// @return è¿”å›èŠ‚ç‚¹åæ ‡ï¼Œé•¿åº¦ä¸º3ï¼Œä¸å¯ä¿®æ”¹
     const double *GetCoord(int idx_i, int idx_j, int idx_k) const;
     int GetINum() const { return m_i_num; }
     int GetJNum() const { return m_j_num; }
     int GetKNum() const { return m_k_num; }
   protected:
-    /// @brief ½«i,j,k×ª»»ÎªÒ»Î¬Êı×éµÄË÷Òı£¬ÓÃÓÚ·ÃÎÊ×ø±êÊı×é
-    /// @return Ò»Î¬Êı×éµÄË÷Òı
+    /// @brief å°†i,j,kè½¬æ¢ä¸ºä¸€ç»´æ•°ç»„çš„ç´¢å¼•ï¼Œç”¨äºè®¿é—®åæ ‡æ•°ç»„
+    /// @return ä¸€ç»´æ•°ç»„çš„ç´¢å¼•
     int GetIdx(int i, int j, int k) const;
   protected:
-    /// @brief ½Úµã¸öÊı£¬·Ö±ğÎªi,j,k·½ÏòÉÏµÄ½Úµã¸öÊı
+    /// @brief èŠ‚ç‚¹ä¸ªæ•°ï¼Œåˆ†åˆ«ä¸ºi,j,kæ–¹å‘ä¸Šçš„èŠ‚ç‚¹ä¸ªæ•°
     int m_i_num, m_j_num, m_k_num;
-    /// @brief ½Úµã×ø±ê£¬°´ÕÕÃ¿¸ö½Úµãx,y,zµÄË³Ğò´æ´¢
+    /// @brief èŠ‚ç‚¹åæ ‡ï¼ŒæŒ‰ç…§æ¯ä¸ªèŠ‚ç‚¹x,y,zçš„é¡ºåºå­˜å‚¨
     double *m_coord;
 };
 } // namespace zaran

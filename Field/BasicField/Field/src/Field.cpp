@@ -4,18 +4,37 @@ namespace zaran
     Field::Field(GridBase* grid, FieldType fieldType) :
         m_grid(grid), m_fieldType(fieldType)
     {
+        m_fieldData = nullptr;
+        m_solver = nullptr;
+        m_solver_para = nullptr;
+        m_dataManager = nullptr;
+        Allocate();
     }
     Field::~Field()
     {
-        delete m_fieldData;
-        delete m_solver;
-        delete m_solver_para;
-        delete m_grid;
-        delete m_dataManager;
+        if (m_fieldData != nullptr)
+        {
+            delete m_fieldData;
+        }
+        if (m_solver != nullptr)
+        {
+            delete m_solver;
+        }
+        if (m_solver_para != nullptr)
+        {
+            delete m_solver_para;
+        }
+        if (m_dataManager != nullptr)
+        {
+            delete m_dataManager;
+        }
+        if (m_grid != nullptr)
+        {
+            delete m_grid;
+        }
     }
     void Field::Allocate()
     {
         m_fieldData = new FieldData();
-
     }
 }

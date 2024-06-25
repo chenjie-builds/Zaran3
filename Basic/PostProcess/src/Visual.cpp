@@ -158,7 +158,6 @@ void Visual::WriteTecplotBinary(NSFieldStruct* field)
                 out << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1] << " " << node->GetCoord(i, j, k)[2] << " " << density[idx] << " " << velocity_x[idx] << " " << velocity_y[idx] << " " << velocity_z[idx] << " " << pressure[idx] << "\n";
             }
         }
-
     }
     out.close();
     delete idx_proxy;

@@ -66,8 +66,8 @@ namespace zaran
     private:
         FieldManager* m_global_field;
         Ptr<Visual> m_visual;
-        double m_max_res;
-        double m_ave_res;
+        double m_res_Linf;
+        double m_res_L2;
         bool m_res_flag;
     };
 

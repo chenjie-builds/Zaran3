@@ -19,6 +19,8 @@
 #include"FieldSolver.h"
 namespace zaran
 {
+	/// @brief 场的类型
+	/// @details 场的类型包括非结构化网格场，结构化网格场，用于告诉外部场的类型，如可视化模块等
 	enum class FieldType
 	{
 		NS_FlexibleNode,
@@ -29,7 +31,7 @@ namespace zaran
 	class Field
 	{
 	public:
-		Field(GridBase* grid, FieldType fieldType=FieldType::Unset);
+		Field(GridBase* grid, FieldType fieldType = FieldType::Unset);
 		virtual~Field();
 	public:
 		void SetIdx(int idx) { m_idx = idx; }
@@ -43,13 +45,19 @@ namespace zaran
 	protected:
 		virtual void Allocate();
 	protected:
-		/// @brief 本场在场数组中的索引
+		/// @brief 本场在全场数组中的索引
 		int m_idx;
+		/// @brief 场的网格，可能是结构化网格，也可能是非结构化网格
 		GridBase* m_grid;
+		/// @brief 场的求解器，用于求解场
 		FieldSolver* m_solver;
+		/// @brief 场的数据，包含场的值，梯度等
 		FieldData* m_fieldData;
+		/// @brief 场的求解器参数，用于设置求解器的参数
 		SolverPara* m_solver_para;
+		/// @brief 场的数据管理器，用于管理场的数据
 		DataManager* m_dataManager;
+		/// @brief 场的类型
 		FieldType m_fieldType;
 	};
 }
