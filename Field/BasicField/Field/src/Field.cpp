@@ -8,7 +8,7 @@ namespace zaran
         m_solver = nullptr;
         m_solver_para = nullptr;
         m_dataManager = nullptr;
-        Allocate();
+        m_fieldData = new FieldData();
     }
     Field::~Field()
     {
@@ -35,6 +35,10 @@ namespace zaran
     }
     void Field::Allocate()
     {
+        if(m_fieldData != nullptr)
+        {
+            delete m_fieldData;
+        }
         m_fieldData = new FieldData();
     }
 }

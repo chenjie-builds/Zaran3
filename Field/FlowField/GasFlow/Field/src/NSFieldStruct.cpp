@@ -3,8 +3,10 @@ namespace zaran
 {
     NSFieldStruct::NSFieldStruct(GridBase* grid) :FieldNS(grid, FieldType::NS_Structured)
     {
-        m_idx_proxy = nullptr;
-        Allocate();
+        m_dataManager = new DataManagerNS(GetFieldData(), GetGrid()->GetTotalNodeNum());
+        m_solver = new NSSolverStruct(1, "NS_Struct", GetSolverPara(), GetGrid(), GetFieldData(), GetDataManager());
+        m_res_info = new ResInfo(GetSolverPara()->GetEquNum());
+        m_idx_proxy = new StructIdxProxy(GetGrid());
     }
     NSFieldStruct::~NSFieldStruct()
     {
@@ -66,9 +68,25 @@ namespace zaran
     void NSFieldStruct::Allocate()
     {
         FieldNS::Allocate();
+        if (m_dataManager != nullptr)
+        {
+            delete m_dataManager;
+        }
         m_dataManager = new DataManagerNS(GetFieldData(), GetGrid()->GetTotalNodeNum());
+        if (m_solver != nullptr)
+        {
+            delete m_solver;
+        }
         m_solver = new NSSolverStruct(1, "NS_Struct", GetSolverPara(), GetGrid(), GetFieldData(), GetDataManager());
+        if (m_res_info != nullptr)
+        {
+            delete m_res_info;
+        }
         m_res_info = new ResInfo(GetSolverPara()->GetEquNum());
+        if (m_idx_proxy != nullptr)
+        {
+            delete m_idx_proxy;
+        }
         m_idx_proxy = new StructIdxProxy(GetGrid());
     }
 } // namespace zaran

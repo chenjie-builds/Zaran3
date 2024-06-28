@@ -23,7 +23,7 @@ namespace zaran
         ReadCellFile();
         ReadBoundFile();
         // SortNeiborNode();
-        // ExtendNeighborNode();
+        ExtendNeighborNode();
         CheckNode();
         CheckUnkownNode();
         AddSelfToNeighbor();

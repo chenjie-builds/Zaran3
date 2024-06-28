@@ -152,15 +152,15 @@ namespace zaran
 		for (int iStage = 0; iStage < rkStage; ++iStage)
 		{
 			CalcResidual();
-#pragma omp parallel for private(dt, jacobi)
-			for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
+			for (int iVal = 0; iVal < 5; ++iVal)
 			{
-				if (node->GetType(iNode) != NodeType::inner)
-					continue;
-				dt = m_data_manager->GetTimeStep(iNode);
-				jacobi = m_node_metric->GetJacobian(iNode);
-				for (int iVal = 0; iVal < 5; ++iVal)
+#pragma omp parallel for private(dt, jacobi)
+				for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 				{
+					if (node->GetType(iNode) != NodeType::inner)
+						continue;
+					dt = m_data_manager->GetTimeStep(iNode);
+					jacobi = m_node_metric->GetJacobian(iNode);
 					m_data_manager->SetCons(iVal, iNode, m_data_manager->GetCons(iVal, iNode) + dt * rk_coef[iStage] * m_data_manager->GetResidual(iVal, iNode) * jacobi);
 				}
 			}
@@ -589,9 +589,9 @@ namespace zaran
 		int node_num = grid->GetTotalNodeNum();
 		int equ_num = GetPara()->GetEquNum();
 		double maxVal, minVal;
-#pragma omp parallel for private(maxVal, minVal)
 		for (int iVal = 0; iVal < equ_num; ++iVal)
 		{
+#pragma omp parallel for private(maxVal, minVal)
 			for (int iNode = 0; iNode < node_num; ++iNode)
 			{
 				if (node->GetType(iNode) != NodeType::inner && node->GetType(iNode) != NodeType::hole)
@@ -731,7 +731,7 @@ namespace zaran
 				Log::warn("Non-physical Node: {}, neighbor num: {}, prim: {:6E},{:6E},{:6E},{:6E},{:6E}", iNode,
 					node->GetNeighborNodeNum(iNode), m_data_manager->GetPrim(0, iNode), m_data_manager->GetPrim(1, iNode),
 					m_data_manager->GetPrim(2, iNode), m_data_manager->GetPrim(3, iNode), m_data_manager->GetPrim(4, iNode));
-				Log::warn("Non-physical Node: {}, coord: {:6E}, {:6E}, {:6E},", iNode, node->GetCoord(iNode)[0],
+				Log::warn("Non-physical Node: {}, coord: {:6E}, {:6E}, {:6E}", iNode, node->GetCoord(iNode)[0],
 					node->GetCoord(iNode)[1], node->GetCoord(iNode)[2]);
 				int neighbor_num = node->GetNeighborNodeNum(iNode);
 				for (int iNeighbor = 0; iNeighbor < neighbor_num; ++iNeighbor)
@@ -755,36 +755,6 @@ namespace zaran
 				}
 				Log::error("exit");
 				exit(0);
-			}
-			if (iNode == 185792)
-			{
-				Log::info("Step: {}, Non-physical Node: {}", GlobalData::GetInt("currentIter"), iNode);
-				Log::warn("Non-physical Node: {}, neighbor num: {}, prim: {:6E},{:6E},{:6E},{:6E},{:6E}", iNode,
-					node->GetNeighborNodeNum(iNode), m_data_manager->GetPrim(0, iNode), m_data_manager->GetPrim(1, iNode),
-					m_data_manager->GetPrim(2, iNode), m_data_manager->GetPrim(3, iNode), m_data_manager->GetPrim(4, iNode));
-				Log::warn("Non-physical Node: {}, coord: {:6E}, {:6E}, {:6E},", iNode, node->GetCoord(iNode)[0],
-					node->GetCoord(iNode)[1], node->GetCoord(iNode)[2]);
-				int neighbor_num = node->GetNeighborNodeNum(iNode);
-				for (int iNeighbor = 0; iNeighbor < neighbor_num; ++iNeighbor)
-				{
-					Log::warn("Neighbor Node: {}, index:{}, neighbor_num: {}, Jacobian: {:6E},\n prim: {:6E},{:6E},{:6E},{:6E},{:6E}\ndensity_grad: {:6E},{:6E},{:6E},\npressure_grad: {:6E},{:6E},{:6E},\n,limiter: {:6E},{:6E},{:6E},{:6E},{:6E}\n",
-						iNeighbor, node->GetNeighborNode(iNode)[iNeighbor], node->GetNeighborNodeNum(node->GetNeighborNode(iNode)[iNeighbor]),
-						m_node_metric->GetJacobian(node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrim(0, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrim(1, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrim(2, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrim(3, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrim(4, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimGrad(0, 0, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrimGrad(0, 1, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimGrad(0, 2, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrimGrad(4, 0, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetPrimGrad(4, 1, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetPrimGrad(4, 2, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetLimiter(0, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetLimiter(1, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetLimiter(2, node->GetNeighborNode(iNode)[iNeighbor]),
-						m_data_manager->GetLimiter(3, node->GetNeighborNode(iNode)[iNeighbor]), m_data_manager->GetLimiter(4, node->GetNeighborNode(iNode)[iNeighbor]));
-					for (int jNeighbor = 0;jNeighbor < node->GetNeighborNodeNum(node->GetNeighborNode(iNode)[iNeighbor]);jNeighbor++)
-					{
-						Log::warn("Neighbor Node: {}, Neighbor: {}, index: {}, Jacobian: {:6E}",
-							iNeighbor, jNeighbor, node->GetNeighborNode(node->GetNeighborNode(iNode)[iNeighbor])[jNeighbor]), m_node_metric->GetJacobian(node->GetNeighborNode(node->GetNeighborNode(iNode)[iNeighbor])[jNeighbor]);
-					}
-				}
-
 			}
 		}
 		if (nonphysical_node_num > 0)

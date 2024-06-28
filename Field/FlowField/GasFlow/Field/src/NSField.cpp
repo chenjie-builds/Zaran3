@@ -3,13 +3,14 @@ namespace zaran
 {
     FieldNS::FieldNS(GridBase* grid, FieldType fieldType) :Field(grid, fieldType)
     {
-        m_res_info = nullptr;
-        Allocate();
+        m_solver_para = new FlowSolverPara();
+        m_solver_para->Init();
+
     }
     FieldNS::~FieldNS()
     {
-        if(m_res_info != nullptr)
-        delete m_res_info;
+        if (m_res_info != nullptr)
+            delete m_res_info;
     }
     FlowSolverPara* FieldNS::GetSolverPara()
     {
@@ -22,7 +23,10 @@ namespace zaran
     void FieldNS::Allocate()
     {
         Field::Allocate();
+        if(m_solver_para != nullptr)
+        {
+            delete m_solver_para;
+        }
         m_solver_para = new FlowSolverPara();
-        m_solver_para->Init();
     }
 }

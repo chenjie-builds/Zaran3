@@ -5,7 +5,9 @@ namespace zaran
     NSFieldFNFDM::NSFieldFNFDM(GridBase* grid)
         : FieldNS(grid, FieldType::NS_FlexibleNode)
     {
-        Allocate();
+        m_dataManager = new DataManagerNS(GetFieldData(), GetGrid()->GetTotalNodeNum());
+        m_solver = new NSSolverFNFDM(1, "NS_FNFDM", GetSolverPara(), GetGrid(), GetFieldData(), GetDataManager());
+        m_res_info = new ResInfo(GetSolverPara()->GetEquNum());
     }
 
     NSFieldFNFDM::~NSFieldFNFDM()
@@ -64,8 +66,20 @@ namespace zaran
     void NSFieldFNFDM::Allocate()
     {
         FieldNS::Allocate();
+        if (m_dataManager != nullptr)
+        {
+            delete m_dataManager;
+        }
         m_dataManager = new DataManagerNS(GetFieldData(), GetGrid()->GetTotalNodeNum());
+        if (m_solver != nullptr)
+        {
+            delete m_solver;
+        }
         m_solver = new NSSolverFNFDM(1, "NS_FNFDM", GetSolverPara(), GetGrid(), GetFieldData(), GetDataManager());
+        if (m_res_info != nullptr)
+        {
+            delete m_res_info;
+        }
         m_res_info = new ResInfo(GetSolverPara()->GetEquNum());
     }
 }
