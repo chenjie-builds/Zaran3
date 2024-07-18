@@ -107,8 +107,6 @@ namespace zaran
 	void Application::ShowInfo()
 	{
 		Log::info("********Zaran: A Totally Automatic CFD Software!********");
-		Log::info(">>>>>>>>Software Version: {}<<<<<<<<", programVersion_);
-		Log::info(">>>>>>>>Software Last Modify Date: {}<<<<<<<<", lastModifyDate_);
 		Log::info(">>>>>>>>Control File Version: {}<<<<<<<<", GlobalData::GetString("version"));
 		if (minSupportCtrlFileVersion_ > GlobalData::GetString("version"))
 		{

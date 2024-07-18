@@ -157,27 +157,27 @@ namespace zaran
         return m_metric[iNode * 17 + 16];
     }
 
-  
 
-    void Metrics::CalcMetric(int iNode, const double* xRight, const double* xLeft, const double* yRight, const double* yLeft, const double* zRight, const double* zLeft)
+
+    void Metrics::CalcMetric(int iNode, const double* iRight, const double* iLeft, const double* jRight, const double* jLeft, const double* kRight, const double* kLeft)
     {
         double coef_x[4], coef_y[4], coef_z[4], coef_t[4];
         double* coef_xi = m_metric + iNode * m_metric_num;
-        double* coef_eta =coef_xi + 4;
+        double* coef_eta = coef_xi + 4;
         double* coef_zeta = coef_eta + 4;
         double* coef_tau = coef_zeta + 4;
         double& jacobian = *(coef_tau + 4);
-        coef_x[0] = 0.5 * (xRight[0] - xLeft[0]);
-        coef_x[1] = 0.5 * (yRight[0] - yLeft[0]);
+        coef_x[0] = 0.5 * (iRight[0] - iLeft[0]);
+        coef_x[1] = 0.5 * (jRight[0] - jLeft[0]);
         coef_x[3] = 0.0;
-        coef_y[0] = 0.5 * (xRight[1] - xLeft[1]);
-        coef_y[1] = 0.5 * (yRight[1] - yLeft[1]);
+        coef_y[0] = 0.5 * (iRight[1] - iLeft[1]);
+        coef_y[1] = 0.5 * (jRight[1] - jLeft[1]);
         coef_y[3] = 0.0;
         coef_t[0] = 0.0;
         coef_t[1] = 0.0;
         coef_t[2] = 0.0;
         coef_t[3] = 1.0;
-        if (zLeft == nullptr && zRight == nullptr)
+        if (kLeft == nullptr && kRight == nullptr)
         {
             coef_x[2] = 0.0;
             coef_y[2] = 0.0;
@@ -188,11 +188,11 @@ namespace zaran
         }
         else
         {
-            coef_x[2] = 0.5 * (zRight[0] - zLeft[0]);
-            coef_y[2] = 0.5 * (zRight[1] - zLeft[1]);
-            coef_z[0] = 0.5 * (xRight[2] - xLeft[2]);
-            coef_z[1] = 0.5 * (yRight[2] - yLeft[2]);
-            coef_z[2] = 0.5 * (zRight[2] - zLeft[2]);
+            coef_x[2] = 0.5 * (kRight[0] - kLeft[0]);
+            coef_y[2] = 0.5 * (kRight[1] - kLeft[1]);
+            coef_z[0] = 0.5 * (iRight[2] - iLeft[2]);
+            coef_z[1] = 0.5 * (jRight[2] - jLeft[2]);
+            coef_z[2] = 0.5 * (kRight[2] - kLeft[2]);
             coef_z[3] = 0.0;
         }
         jacobian = coef_x[0] * (coef_y[1] * coef_z[2] - coef_y[2] * coef_z[1])
@@ -214,7 +214,7 @@ namespace zaran
         coef_zeta[1] = -jacobian * (coef_x[0] * coef_z[1] - coef_x[1] * coef_z[0]);
         coef_zeta[2] = jacobian * (coef_x[0] * coef_y[1] - coef_x[1] * coef_y[0]);
         coef_zeta[3] = -(coef_z[3] * coef_zeta[0] + coef_z[3] * coef_zeta[1] + coef_z[3] * coef_zeta[2]);
-        
+
         coef_tau[0] = 0.0;
         coef_tau[1] = 0.0;
         coef_tau[2] = 0.0;

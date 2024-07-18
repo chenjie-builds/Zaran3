@@ -36,8 +36,6 @@ namespace zaran
     protected:
         //初始化，包括求解器初始化和流场初始化
         void Initialize();
-        //计算流场中的最大和最小残差
-        double CalcMaxAveResidual();
         // 计算残差
         void CalcResidual();
         // 交互插值节点信息

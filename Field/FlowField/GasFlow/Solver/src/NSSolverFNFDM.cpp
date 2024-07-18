@@ -365,24 +365,24 @@ namespace zaran
 		double prim_far[5] = { para->GetInflowDensity(), para->GetInflowVelocityX(), para->GetInflowVelocityY(),
 							  para->GetInflowVelocityZ(), para->GetInflowPressure() };
 		double vel_in[3] = { prim_in[1], prim_in[2], prim_in[3] };
-		// ÀŸ∂»‘⁄±ﬂΩÁ∑®œÚ…œµƒÕ∂”∞
+		// ÈÄüÂ∫¶Âú®ËæπÁïåÊ≥ïÂêë‰∏äÁöÑÊäïÂΩ±
 		double vn_in = vel_in[0] * norm_bnd[0] + vel_in[1] * norm_bnd[1] + vel_in[2] * norm_bnd[2];
 		double vel_far[3] = { para->GetInflowVelocityX(), para->GetInflowVelocityY(), para->GetInflowVelocityZ() };
 		double vn_far = vel_far[0] * norm_bnd[0] + vel_far[1] * norm_bnd[1] + vel_far[2] * norm_bnd[2];
 		double c_in = sqrt(gamma * prim_in[4] / prim_in[0]);
 		double c_far = sqrt(gamma * para->GetInflowPressure() / para->GetInflowDensity());
 		double mach = sqrt(vel_in[0] * vel_in[0] + vel_in[1] * vel_in[1] + vel_in[2] * vel_in[2]) / c_in;
-		// ≥¨…˘ÀŸ≥ˆø⁄
+		// Ë∂ÖÂ£∞ÈÄüÂá∫Âè£
 		if (mach >= 1.0)
 		{
-			if (vn_in >= 0) // ≥¨…˘ÀŸ≥ˆø⁄
+			if (vn_in >= 0) // Ë∂ÖÂ£∞ÈÄüÂá∫Âè£
 			{
 				for (int iVal = 0; iVal < 5; ++iVal)
 				{
 					m_data_manager->SetPrim(iVal, idx_bnd, prim_in[iVal]);
 				}
 			}
-			else // ≥¨…˘ÀŸ»Îø⁄
+			else // Ë∂ÖÂ£∞ÈÄüÂÖ•Âè£
 			{
 				m_data_manager->SetPrim(0, idx_bnd, para->GetInflowDensity());
 				m_data_manager->SetPrim(1, idx_bnd, para->GetInflowVelocityX());
@@ -398,7 +398,7 @@ namespace zaran
 			double r_m = vn_far - 2.0 * c_far / gamma1;
 			double vn_bound = 0.5 * (r_p + r_m);
 			double c_bound = 0.25 * gamma1 * (r_p - r_m);
-			if (vn_bound <= 0) // —«…˘ÀŸ»Îø⁄
+			if (vn_bound <= 0) // ‰∫öÂ£∞ÈÄüÂÖ•Âè£
 			{
 				double entropy = (prim_far[4] / pow(prim_far[0], gamma));
 				m_data_manager->SetPrim(0, idx_bnd, pow(c_bound * c_bound / (entropy * gamma), 1.0 / gamma1));
@@ -407,7 +407,7 @@ namespace zaran
 				m_data_manager->SetPrim(3, idx_bnd, prim_far[3] + norm_bnd[2] * (vn_bound - vn_far));
 				m_data_manager->SetPrim(4, idx_bnd, c_bound * c_bound * m_data_manager->GetPrim(0, idx_bnd) / gamma);
 			}
-			else // —«…˘ÀŸ≥ˆø⁄
+			else // ‰∫öÂ£∞ÈÄüÂá∫Âè£
 			{
 				double entropy = prim_in[4] / pow(prim_in[0], gamma);
 				m_data_manager->SetPrim(0, idx_bnd, pow(c_bound * c_bound / (entropy * gamma), 1.0 / gamma1));
@@ -527,8 +527,10 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
+		auto para = GetPara();
 		int node_num = grid->GetTotalNodeNum();
 		int equ_num = GetPara()->GetEquNum();
+		double max_limit = para->GetMaxLimit();
 		double eps = 1e-6;
 		double venkatCoeff = 1.0e-5;
 		for (int iVal = 0; iVal < equ_num; ++iVal)
@@ -575,7 +577,7 @@ namespace zaran
 					{
 						limite_coef = 1.0;
 					}
-					limite_coef = Min(limite_coef, 0.5);
+					limite_coef = Min(limite_coef, max_limit);
 					m_data_manager->SetLimiter(iVal, iNode, Min(m_data_manager->GetLimiter(iVal, iNode), limite_coef));
 				}
 			}
@@ -586,6 +588,8 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
+		auto para = GetPara();
+		double max_limit=para->GetMaxLimit();
 		int node_num = grid->GetTotalNodeNum();
 		int equ_num = GetPara()->GetEquNum();
 		double maxVal, minVal;
@@ -608,7 +612,7 @@ namespace zaran
 				}
 				double deltaMax = maxVal - m_data_manager->GetPrim(iVal, iNode);
 				double deltaMin = minVal - m_data_manager->GetPrim(iVal, iNode);
-				double tempCoef = LARGE_NUMBER;
+				double temp_limit = LARGE_NUMBER;
 				m_data_manager->SetLimiter(iVal, iNode, LARGE_NUMBER);
 				for (int iNeighbor = 0; iNeighbor < nNeighbor; ++iNeighbor)
 				{
@@ -619,17 +623,18 @@ namespace zaran
 					delta2 *= 0.5;
 					if (delta2 > 0)
 					{
-						tempCoef = LimiterBarth(maxVal - m_data_manager->GetPrim(iVal, iNode), delta2);
+						temp_limit = LimiterBarth(maxVal - m_data_manager->GetPrim(iVal, iNode), delta2);
 					}
 					else if (delta2 < 0)
 					{
-						tempCoef = LimiterBarth(minVal - m_data_manager->GetPrim(iVal, iNode), delta2);
+						temp_limit = LimiterBarth(minVal - m_data_manager->GetPrim(iVal, iNode), delta2);
 					}
 					else
 					{
-						tempCoef = 1.0;
+						temp_limit = 1.0;
 					}
-					m_data_manager->SetLimiter(iVal, iNode, Min(m_data_manager->GetLimiter(iVal, iNode), tempCoef));
+					temp_limit = Min(temp_limit, max_limit);
+					m_data_manager->SetLimiter(iVal, iNode, Min(m_data_manager->GetLimiter(iVal, iNode), temp_limit));
 				}
 			}
 		}
@@ -763,24 +768,10 @@ namespace zaran
 			Log::warn("Non-physical Node Num: {}", nonphysical_node_num);
 			auto para = GetPara();
 			double cfl = para->GetCflNumber();
-			cfl = cfl / 5.0;
-			para->SetCflNumber(cfl);
+			para->ReduceCflNumber();
 			Log::warn("CFL Number is reduced to {}", cfl);
 		}
-		else
-		{
-			auto para = GetPara();
-			double cfl = para->GetCflNumber();
-			double cfl_max = GlobalData::GetDouble("cflNumber");
-			if (cfl < cfl_max)
-			{
-				cfl = Min(cfl_max, cfl * 1.6);
-				para->SetCflNumber(cfl);
-				Log::info("CFL Number is increased to {}", cfl);
-			}
-			else
-				para->SetCflNumber(cfl_max);
-		}
+
 	}
 
 	void NSSolverFNFDM::CheckResidual()

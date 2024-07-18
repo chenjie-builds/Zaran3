@@ -16,6 +16,7 @@
 #include"Dimensionless.h"
 #include"Gas.h"
 #include "RiemannSolver.h"
+#include"CFL.h"
 namespace zaran
 {
 	//梯度求解方法
@@ -37,15 +38,18 @@ namespace zaran
 	public:
 		FlowSolverPara();
 		virtual ~FlowSolverPara();
+		// 根据GlobalData初始化
 		void Init() override;
+		void InitCflNumber();
+		void InitLimiter();
 	public:
 		void SetInitFieldType(InitFieldType& initflowType);
 		void SetIsViscous(const int& isViscous);
-		void SetCflNumber(const double& cfl);
 		void SetRKCoef(const DArray& rkCoef);
 		void SetGradScheme(const GradScheme& gradScheme);
 		void SetLimiterType(const LimiterType& limiterType);
 		void SetBackupFieldFileName(const std::string& backupFieldFileName);
+		void SetCurrentStep(const int& currentStep);
 	public:
 		const int& GetEquNum()const;
 		const double& GetInflowDensity()const;
@@ -56,7 +60,9 @@ namespace zaran
 		const double& GetInflowTemperature()const;
 		const InitFieldType& GetInitFieldType()const;
 		const int& GetIsViscous()const;
+		const int& GetCurrentStep()const;
 		const double& GetCflNumber()const;
+		void ReduceCflNumber();
 		const DArray& GetRKCoef()const;
 		const GradScheme& GetGradScheme()const;
 		const LimiterType& GetLimiterType()const;
@@ -64,6 +70,7 @@ namespace zaran
 		const Dimensionless& GetDimensionless()const;
 		Gas* GetGas() { return m_gas; }
 		const RiemannSolverType& GetRiemannSolverType()const;
+		const double GetMaxLimit()const;
 	private:
 		int m_equ_num;
 		Gas* m_gas;
@@ -77,16 +84,19 @@ namespace zaran
 		double m_inflow_temperature;
 		// 流场初始化方式
 		InitFieldType m_init_field_type;
+		// 当前步数
+		int m_current_step;
 		// 是否为粘性
 		int m_is_viscous;
-		// CFL数, 决定计算步长
-		double m_cfl;
+		CFL* m_cfl;
 		// RK步数
 		DArray m_rk_coef;
 		// 梯度方法
 		GradScheme m_grad_scheme;
 		// 限制器
 		LimiterType n_limiter_type;
+		// 最大限制器系数，用于控制精度，0.0-1.0
+		double m_max_limit;
 		// 备份流场文件名，用于续算
 		std::string m_backup_field_file_name;
 		RiemannSolverType m_riemann_solver_type;

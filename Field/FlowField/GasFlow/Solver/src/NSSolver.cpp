@@ -54,12 +54,14 @@ namespace zaran
 		RiemannSolverBuilder riemann_solver_builder;
 		m_riemann_solver = riemann_solver_builder.Create(GetPara()->GetRiemannSolverType());
 		auto ref_value = GetPara()->GetDimensionless();
-		m_gas=new PerfectGas(ref_value.GetRefMw(), ref_value.GetRefGamma(), ref_value);
+		m_gas = new PerfectGas(ref_value.GetRefMw(), ref_value.GetRefGamma(), ref_value);
 		Log::info("NS Solver Initialize Finished!");
 	}
 
 	void NSSolver::Preprocess()
 	{
+		auto para = GetPara();
+		para->SetCurrentStep(para->GetCurrentStep() + 1);
 		CalcTimeStep();
 	}
 

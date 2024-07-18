@@ -31,6 +31,7 @@ namespace zaran
         /// @param value_rec_right reconstructed value of right side at mid point
         void MidNodeRec2nd(int idx_left, int idx_right, double* rec_value_left, double* rec_value_right);
         void MidNodeRec1st(int idx_left, int idx_right, double* rec_value_left, double* rec_value_right);
+        void MidNodeRecMUSCL(double* rec_value_left, double* rec_value_right, double* rec_value_mid);
 
         // 计算流动通量
         void ConvectiveResidual()override;

@@ -54,9 +54,9 @@ void GlobalData::Update(const string& varName, const dataVariant& varValue)
 
 void zaran::GlobalData::Backup(const string& back_folder)
 {
-	std::string data_file="zaran.ini";
+	std::string data_file = "zaran.ini";
 	std::ifstream fin(data_file);
-	std::ofstream fout(back_folder+"/"+data_file);
+	std::ofstream fout(back_folder + "/" + data_file);
 	std::string line;
 	std::string dataType;
 	std::string dataName;

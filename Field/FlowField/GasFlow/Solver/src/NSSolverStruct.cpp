@@ -346,6 +346,10 @@ namespace  zaran
             value_rec_right[iVal] = m_data_manager->GetPrim(iVal, index_right);
         }
     }
+    void NSSolverStruct::MidNodeRecMUSCL(double* rec_value_left, double* rec_value_right, double* rec_value_mid)
+    {
+        //todo
+    }
     void NSSolverStruct::ConvectiveResidual()
     {
         auto grid = GetGrid();

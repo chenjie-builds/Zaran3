@@ -208,7 +208,7 @@ bool FieldController::IsStopSolve()
     int currentIter = GlobalData::GetInt("currentIter");
     int calResidualIter = GlobalData::GetInt("calResidualIter");
     int maxIter = GlobalData::GetInt("maxIter");
-    double minResidual = GlobalData::GetDouble("minResidual");
+    int minResidual = GlobalData::GetInt("minResidual");
     double currentTime = GlobalData::GetDouble("currentTime");
     if (m_res_flag == true)
     {

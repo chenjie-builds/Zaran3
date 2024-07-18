@@ -30,9 +30,7 @@ namespace zaran
 	public:
 		Application() :
 			globalDataFileName_("zaran.ini"),
-			programVersion_("V3.3.2_alpha"),
-			lastModifyDate_("2024/04/15"),
-			minSupportCtrlFileVersion_("V3.3.3")
+			minSupportCtrlFileVersion_("V3.3.4")
 		{
 			GlobalData::Init();
 		}
@@ -52,10 +50,6 @@ namespace zaran
 		string globalDataFileName_;
 		//网格生成工厂
 		Ptr<GridFactory> gridListFatory_;
-		//程序版本号, 内部生成
-		string programVersion_;
-		//程序上次更改日期, 内部生成
-		string lastModifyDate_;
 		//程序支持的最小控制文件版本号, 如果读取的版本号低于此版本, 将不进行计算
 		//作用: 防止程序更新后，需要更多的控制文件信息，老版本控制文件未添加导致计算失败
 		string minSupportCtrlFileVersion_;
