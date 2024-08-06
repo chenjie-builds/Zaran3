@@ -20,15 +20,17 @@
 #include "Gas.h"
 #include"PerfectGas.h"
 #include "BoundFN.h"
+#include"DataManagerNS.h"
 namespace zaran
 {
 	class NSSolver :public FlowSolver
 	{
 	public:
-		NSSolver(int index, string name, FlowSolverPara* para, GridBase* grid, FieldData* fieldData);
+		NSSolver(int index, string name, FlowSolverPara* para, GridBase* grid, DataManagerNS* data_manager);
 		~NSSolver();
 		void Init()override;
 		void InitField()override;
+		DataManagerNS*GetDataManager()override;
 	protected:
 		virtual void InitFieldFarFlow() = 0;
 		virtual void InitFieldFarFieldNoVelocity() = 0;

@@ -105,7 +105,7 @@ namespace zaran
         double GetPrimGrad(int iEqu, int iGradDim, int iNode);
         int* GetNonPhysical();
         int GetNonPhysical(int iNode);
-    private:
+    protected:
         int m_equ_num = 5;
         /// @brief 基本变量, 1D 变量索引, 2D 节点索引
         double** m_prim;

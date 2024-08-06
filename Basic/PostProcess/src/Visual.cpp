@@ -136,8 +136,12 @@ void Visual::WriteTecplotBinary(NSFieldStruct* field)
     auto node = grid->GetNode();
     auto data_manager = field->GetDataManager();
     StructIdxProxy* idx_proxy = new StructIdxProxy(grid);
-    int ni, nj, nk;
-    grid->GetNodeNum(ni, nj, nk);
+    int is, ie, js, je, ks, ke;
+    grid->GetRange(is, ie, js, je, ks, ke);
+    int ni = ie - is+1;
+    int nj = je - js+1;
+    int nk = ke - ks+1;
+    int node_num = ni*nj*nk;
     const double* density = data_manager->GetDensity();
     const double* velocity_x = data_manager->GetVelocity(0);
     const double* velocity_y = data_manager->GetVelocity(1);
@@ -148,11 +152,11 @@ void Visual::WriteTecplotBinary(NSFieldStruct* field)
     out << "TITLE=\"Flow Field\"\n";
     out << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\"\n";
     out << "ZONE I=" << ni << ", J=" << nj << ", K=" << nk << ", F=POINT\n";
-    for (int k = 0;k < nk;++k)
+    for (int k = ks;k <= ke;++k)
     {
-        for (int j = 0;j < nj;++j)
+        for (int j = js;j <= je;++j)
         {
-            for (int i = 0;i < ni;++i)
+            for (int i = is;i <= ie;++i)
             {
                 int idx = idx_proxy->GetIdx(i, j, k);
                 out << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1] << " " << node->GetCoord(i, j, k)[2] << " " << density[idx] << " " << velocity_x[idx] << " " << velocity_y[idx] << " " << velocity_z[idx] << " " << pressure[idx] << "\n";

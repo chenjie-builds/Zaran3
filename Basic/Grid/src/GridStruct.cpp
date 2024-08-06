@@ -90,10 +90,10 @@ namespace zaran
 	void GridStruct::GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd)
 	{
 		iStart = m_ghost_size;
-		iEnd = GetNi() - 2 * m_ghost_size;
+		iEnd = GetNi() -  m_ghost_size-1;
 		jStart = m_ghost_size;
-		jEnd = GetNj() - 2 * m_ghost_size;
+		jEnd = GetNj() - m_ghost_size-1;
 		kStart = m_ghost_size;
-		kEnd = GetNk() - 2 * m_ghost_size;
+		kEnd = GetNk() -  m_ghost_size-1;
 	}
 }

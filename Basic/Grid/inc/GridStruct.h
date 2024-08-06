@@ -38,6 +38,7 @@ namespace zaran
 		FaceStruct* GetFace() { return m_face; }
 		CellStruct* GetCell() { return m_cell; }
 		BoundMapStruct* GetBoundMap() { return m_bound_map; }
+		int GetGhostSize() { return m_ghost_size; }
 	public:
 		/// @brief 返回用于计算的节点范围,不包含ghost节点
 		/// @param iStart i方向上的起始索引

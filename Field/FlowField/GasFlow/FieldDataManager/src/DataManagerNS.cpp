@@ -4,8 +4,6 @@ namespace zaran
 {
     DataManagerNS::DataManagerNS(FieldData* fieldData, int data_num) :DataManager(fieldData, data_num)
     {
-        CreateData();
-        RegisterData();
     }
     DataManagerNS::~DataManagerNS()
     {

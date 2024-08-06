@@ -212,7 +212,7 @@ bool FieldController::IsStopSolve()
     double currentTime = GlobalData::GetDouble("currentTime");
     if (m_res_flag == true)
     {
-        if (m_res_Linf < minResidual)
+        if (log10(m_res_Linf) < -minResidual)
         {
             Log::info("Max Residual is small than {}, stop compute!", minResidual);
             return true;

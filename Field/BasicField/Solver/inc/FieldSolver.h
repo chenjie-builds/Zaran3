@@ -12,7 +12,7 @@
 
 #pragma once
 #include"Solver.h"
-#include"FieldData.h"
+#include"FieldDataManager.h"
 namespace zaran
 {
 	enum class FieldSolverType
@@ -24,7 +24,7 @@ namespace zaran
 	class FieldSolver :public Solver
 	{
 	public:
-		FieldSolver(int index, string name, SolverPara* para, GridBase* grid, FieldData* fieldData) ;
+		FieldSolver(int index, string name, SolverPara* para, GridBase* grid, DataManager* data_manager) ;
 		virtual ~FieldSolver();
 	public:
 		// 初始化流场数据
@@ -34,12 +34,10 @@ namespace zaran
 		// 更新场数据, 根据迭代中间结果更新场数据
 		virtual void UpdateField() = 0;
 		// 备份场数据
-		virtual void BackupField(std::string&back_folder) = 0;
-		void SetFieldData(FieldData* fieldData) ;
-		// 获取Field Data
-		FieldData* GetFieldData() { return m_field_data; }
+		virtual void BackupField(std::string& back_folder) = 0;
+		virtual DataManager* GetDataManager() { return m_data_manager; }
 	private:
 		// 场数据
-		FieldData* m_field_data;
+		DataManager* m_data_manager;
 	};
 }

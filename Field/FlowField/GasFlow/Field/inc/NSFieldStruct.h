@@ -12,6 +12,7 @@ namespace zaran
         ~NSFieldStruct();
         GridStruct* GetGrid() override;
         NSSolverStruct* GetSolver() override;
+        DataManagerNSStruct* GetDataManager() override;
         void CalcResidual() override;
     protected:
         void Allocate() override;

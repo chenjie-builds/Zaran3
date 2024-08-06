@@ -5,12 +5,14 @@
 namespace zaran
 {
 
-	NSSolver::NSSolver(int index, string name, FlowSolverPara* para, GridBase* grid, FieldData* fieldData)
-		:FlowSolver(index, name, para, grid, fieldData)
-	{
-	}
 
-	NSSolver::~NSSolver()
+    NSSolver::NSSolver(int index, string name, FlowSolverPara* para, GridBase* grid, DataManagerNS* data_manager)
+	:FlowSolver(index, name, para, grid, data_manager)
+    {
+
+    }
+
+NSSolver::~NSSolver()
 	{
 		delete[] m_riemann_solver;
 		delete[] m_gas;
@@ -47,6 +49,10 @@ namespace zaran
 		Prim2Cons();
 		Log::info("Flow Field Initialize Finished!");
 	}
+    DataManagerNS* NSSolver::GetDataManager()
+    {
+        return static_cast<DataManagerNS*>(FieldSolver::GetDataManager());
+    }
 	void NSSolver::InitSolver()
 	{
 		Log::info("Initialize NS Solver!");

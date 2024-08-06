@@ -21,7 +21,7 @@ namespace zaran
 	class NSSolverFNFDM :public NSSolver
 	{
 	public:
-		NSSolverFNFDM(int index, string name, FlowSolverPara* para, GridFN* grid, FieldData* fieldData, DataManagerNS* data_manager);
+		NSSolverFNFDM(int index, string name, FlowSolverPara* para, GridFN* grid, DataManagerNS* data_manager);
 		~NSSolverFNFDM();
 	protected:
 		void InitFieldFarFlow()override;
@@ -86,7 +86,6 @@ namespace zaran
 	protected:
 		virtual GridFN* GetGrid();
 	private:
-		DataManagerNS* m_data_manager;
 		GradWLSQ* m_grad_wlsq;
 		Metrics* m_node_metric;
 	};

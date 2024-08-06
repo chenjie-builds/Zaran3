@@ -40,7 +40,7 @@ namespace zaran
 		virtual FieldSolver* GetSolver() { return m_solver; }
 		virtual FieldData* GetFieldData() { return m_fieldData; }
 		virtual SolverPara* GetSolverPara() { return m_solver_para; }
-		virtual DataManager* GetDataManager() { return m_dataManager; }
+		virtual DataManager* GetDataManager() { return m_data_manager; }
 		FieldType GetFieldType() { return m_fieldType; }
 	protected:
 		virtual void Allocate();
@@ -56,7 +56,7 @@ namespace zaran
 		/// @brief 场的求解器参数，用于设置求解器的参数
 		SolverPara* m_solver_para;
 		/// @brief 场的数据管理器，用于管理场的数据
-		DataManager* m_dataManager;
+		DataManager* m_data_manager;
 		/// @brief 场的类型
 		FieldType m_fieldType;
 	};

@@ -7,7 +7,7 @@ namespace zaran
         m_fieldData = nullptr;
         m_solver = nullptr;
         m_solver_para = nullptr;
-        m_dataManager = nullptr;
+        m_data_manager = nullptr;
         m_fieldData = new FieldData();
     }
     Field::~Field()
@@ -24,9 +24,9 @@ namespace zaran
         {
             delete m_solver_para;
         }
-        if (m_dataManager != nullptr)
+        if (m_data_manager != nullptr)
         {
-            delete m_dataManager;
+            delete m_data_manager;
         }
         if (m_grid != nullptr)
         {

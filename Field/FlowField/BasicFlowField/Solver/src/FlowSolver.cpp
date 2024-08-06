@@ -2,7 +2,7 @@
 #include "GlobalData.h"
 using namespace zaran;
 
-FlowSolver::FlowSolver(int index, string name, FlowSolverPara* para, GridBase* grid, FieldData* fieldData) :FieldSolver(index, name, para, grid, fieldData)
+FlowSolver::FlowSolver(int index, string name, FlowSolverPara* para, GridBase* grid, DataManager*data_manager) :FieldSolver(index, name, para, grid, data_manager)
 {
 }
 FlowSolver::~FlowSolver()

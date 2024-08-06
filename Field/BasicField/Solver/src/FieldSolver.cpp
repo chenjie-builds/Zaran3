@@ -2,18 +2,13 @@
 #include "Log.h"
 namespace zaran
 {
-    FieldSolver::FieldSolver(int index, string name, SolverPara* para, GridBase* grid, FieldData* fieldData) :
-        Solver(index, name, para, grid)
+    FieldSolver::FieldSolver(int index, string name, SolverPara* para, GridBase* grid,DataManager* data_manager) :
+        Solver(index, name, para, grid), m_data_manager(data_manager)
     {
-        m_field_data = fieldData;
     }
 
     FieldSolver::~FieldSolver()
     {
     }
 
-    void FieldSolver::SetFieldData(FieldData* fieldData)
-    {
-        m_field_data = fieldData;
-    }
 }

@@ -7,14 +7,15 @@ namespace zaran
     {
         // m_node_file_name = GlobalData::GetString("NodeFile");
         // m_bnd_file_name = GlobalData::GetString("BoundFile");
-        m_node_file_name = "1.dat";
-        m_bnd_file_name = "1.inp";
+        m_node_file_name = "mesh.dat";
+        m_bnd_file_name = "mesh.inp";
 
     }
 
     GridStruct* GridStructFactory::CreateGrid()
     {
-        m_ghost_size = 1;
+        // 镜像节点层数默认为3，后面可以从配置文件中读取
+        m_ghost_size = 3;
         ReadNodeFile();
         ReadBoundFile();
         GridStruct* grid = new GridStruct("Structured", 1, m_dim);
@@ -65,6 +66,11 @@ namespace zaran
                 ref_idx_k = idx_k;
                 dk = 0;
             }
+            if (m_dim == 2)
+            {
+                ref_idx_k = m_ghost_size;
+                dk = 0;
+            }
             for (int idx_j = 0;idx_j < nj;++idx_j)
             {
                 if (idx_j < m_ghost_size)
@@ -98,6 +104,11 @@ namespace zaran
                     {
                         ref_idx_i = idx_i;
                         di = 0;
+                    }
+
+                    if (di == 0 && dj == 0 && dk == 0)
+                    {
+                        continue;
                     }
                     ref_coord = node->GetCoord(ref_idx_i, ref_idx_j, ref_idx_k);
                     coord[0] = ref_coord[0] + 2 * (node->GetCoord(ref_idx_i + di, ref_idx_j, ref_idx_k)[0] - ref_coord[0]);
@@ -186,7 +197,11 @@ namespace zaran
             int block_idx;
             bnd_file >> block_idx;
             int ni, nj, nk;
-            bnd_file >> ni >> nj >> nk;
+            bnd_file >> ni >> nj;
+            if (m_dim == 3)
+            {
+                bnd_file >> nk;
+            }
             std::string block_name;
             bnd_file >> block_name;
             int bound_num;
@@ -197,7 +212,21 @@ namespace zaran
                 bound_info.block_indx = block_idx;
                 bnd_file >> bound_info.i_start >> bound_info.i_end;
                 bnd_file >> bound_info.j_start >> bound_info.j_end;
-                bnd_file >> bound_info.k_start >> bound_info.k_end;
+                if (m_dim == 3)
+                {
+                    bnd_file >> bound_info.k_start >> bound_info.k_end;
+                }
+                else
+                {
+                    bound_info.k_start = 1;
+                    bound_info.k_end = 1;
+                }
+                bound_info.i_start -= 1;
+                bound_info.j_start -= 1;
+                bound_info.k_start -= 1;
+                bound_info.i_end -= 1;
+                bound_info.j_end -= 1;
+                bound_info.k_end -= 1;
                 bnd_file >> bound_info.bound_type;
                 m_bound_info.push_back(bound_info);
             }
@@ -209,9 +238,8 @@ namespace zaran
         auto bound_map = grid->GetBoundMap();
         auto node = grid->GetNode();
         int i_bound, j_bound, k_bound;
-        int i_ghost, j_ghost, k_ghost;
-        int i_ref, j_ref, k_ref;
         double bound_norm[3];
+        int face_direction[3];
         for (auto& bound_info : m_bound_info)
         {
             for (int idx_k = bound_info.k_start;idx_k <= bound_info.k_end;++idx_k)
@@ -220,57 +248,45 @@ namespace zaran
                 {
                     for (int idx_i = bound_info.i_start;idx_i <= bound_info.i_end;++idx_i)
                     {
-                        i_ghost = i_ref = i_bound = idx_i + m_ghost_size - 1;
-                        j_ghost = j_ref = j_bound = idx_j + m_ghost_size - 1;
-                        k_ghost = k_ref = k_bound = idx_k + m_ghost_size - 1;
+                        i_bound = idx_i + m_ghost_size;
+                        j_bound = idx_j + m_ghost_size;
+                        k_bound = idx_k + m_ghost_size;
+                        face_direction[0] = face_direction[1] = face_direction[2] = 0;
                         if (bound_info.i_start == bound_info.i_end)
                         {
-                            if (idx_i == 1)
-                            {
-                                i_ghost = i_bound - 1;
-                                i_ref = i_bound + 1;
-                            }
+                            if (idx_i == 0)
+                                face_direction[0] = -1;
                             else
-                            {
-                                i_ghost = i_bound + 1;
-                                i_ref = i_bound - 1;
-                            }
+                                face_direction[0] = 1;
                         }
                         if (bound_info.j_start == bound_info.j_end)
                         {
-                            if (idx_j == 1)
-                            {
-                                j_ghost = j_bound - 1;
-                                j_ref = j_bound + 1;
-                            }
+                            if (idx_j == 0)
+                                face_direction[1] = -1;
                             else
-                            {
-                                j_ghost = j_bound + 1;
-                                j_ref = j_bound - 1;
-                            }
+                                face_direction[1] = 1;
                         }
-                        if (bound_info.k_start == bound_info.k_end)
+                        if (m_dim == 3)
                         {
-                            if (idx_k == 1)
+                            if (bound_info.k_start == bound_info.k_end)
                             {
-                                k_ghost = k_bound - 1;
-                                k_ref = k_bound + 1;
-                            }
-                            else
-                            {
-                                k_ghost = k_bound + 1;
-                                k_ref = k_bound - 1;
+                                if (idx_k == 0)
+                                    face_direction[2] = -1;
+                                else
+                                    face_direction[2] = 1;
                             }
                         }
-                        bound_norm[0] = node->GetCoord(i_ref, j_ref, k_ref)[0] - node->GetCoord(i_bound, j_bound, k_bound)[0];
-                        bound_norm[1] = node->GetCoord(i_ref, j_ref, k_ref)[1] - node->GetCoord(i_bound, j_bound, k_bound)[1];
-                        bound_norm[2] = node->GetCoord(i_ref, j_ref, k_ref)[2] - node->GetCoord(i_bound, j_bound, k_bound)[2];
+                        auto ref_node_coord = node->GetCoord(i_bound - face_direction[0], j_bound - face_direction[1], k_bound - face_direction[2]);
+                        auto bound_node_coord = node->GetCoord(i_bound, j_bound, k_bound);
+                        bound_norm[0] = bound_node_coord[0] - ref_node_coord[0];
+                        bound_norm[1] = bound_node_coord[1] - ref_node_coord[1];
+                        bound_norm[2] = bound_node_coord[2] - ref_node_coord[2];
                         double normal = sqrt(bound_norm[0] * bound_norm[0] + bound_norm[1] * bound_norm[1] + bound_norm[2] * bound_norm[2]);
                         for (int i = 0;i < 3;++i)
                         {
                             bound_norm[i] /= normal;
                         }
-                        BoundStruct bound(i_bound, j_bound, k_bound, i_ref, j_ref, k_ref, i_ghost, j_ghost, k_ghost, bound_norm);
+                        BoundStruct bound(i_bound, j_bound, k_bound, face_direction, bound_norm);
                         bound_map->AddBoundary(gridgen_bound[bound_info.bound_type], bound);
                     }
                 }
