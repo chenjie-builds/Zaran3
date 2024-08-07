@@ -40,6 +40,7 @@ namespace zaran
         int equ_num = para->GetEquNum();
         int is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
+        int total_node_num = (ie - is + 1) * (je - js + 1) * (ke - ks + 1);
         double norm_inf = -LARGE_NUMBER;
         double norm_l2 = 0;
         int norm_inf_node = -1;
@@ -49,27 +50,27 @@ namespace zaran
             norm_inf = -LARGE_NUMBER;
             norm_l2 = 0;
             auto res = GetDataManager()->GetResidual(iEqu);
-            for (int k = ks; k < ke; k++)
+            for (int k = ks; k <= ke; k++)
             {
-                for (int j = js; j < je; j++)
+                for (int j = js; j <= je; j++)
                 {
-                    for (int i = is; i < ie; i++)
+                    for (int i = is; i <= ie; i++)
                     {
-                        int iNode = m_idx_proxy->GetIdx(i, j, k);
-                        if (abs(res[iNode]) > norm_inf)
+                        int idx = m_idx_proxy->GetIdx(i, j, k);
+                        if (abs(res[idx]) > norm_inf)
                         {
-                            norm_inf = abs(res[iNode]);
-                            norm_inf_node = iNode;
+                            norm_inf = abs(res[idx]);
+                            norm_inf_node = idx;
                             for (int iDim = 0; iDim < grid->GetDim(); iDim++)
                             {
                                 norm_inf_coord[iDim] = node->GetCoord(i, j, k)[iDim];
                             }
                         }
-                        norm_l2 += res[iNode] * res[iNode];
+                        norm_l2 += res[idx] * res[idx];
                     }
                 }
             }
-            norm_l2 = sqrt(norm_l2 / grid->GetTotalNodeNum());
+            norm_l2 = sqrt(norm_l2 / total_node_num);
             m_res_info->SetInfNorm(iEqu, norm_inf);
             m_res_info->SetL2Norm(iEqu, norm_l2);
             m_res_info->SetInfNormCoord(iEqu, norm_inf_coord);

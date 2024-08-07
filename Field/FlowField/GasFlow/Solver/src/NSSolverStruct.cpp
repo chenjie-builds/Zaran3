@@ -88,10 +88,10 @@ namespace  zaran
                         data_manager->SetPrim(iVal, idx, prim_far[iVal]);
                     }
                     auto x = node->GetCoord(i, j, k)[0];
-                    if (x < 0.301)
+                    if (x < 0.3001)
                     {
                         data_manager->SetPrim(0, idx, 1.0);
-                        data_manager->SetPrim(1, idx, 0.75);
+                        data_manager->SetPrim(1, idx, 0.0);
                         data_manager->SetPrim(2, idx, 0.0);
                         data_manager->SetPrim(3, idx, 0.0);
                         data_manager->SetPrim(4, idx, 1.0);
@@ -104,6 +104,7 @@ namespace  zaran
                         data_manager->SetPrim(3, idx, 0.0);
                         data_manager->SetPrim(4, idx, 0.1);
                     }
+                    // data_manager->SetPrim(0, idx, pow(0.2 * i, 2) * pow(0.2 * j, 2.3));
 
                 }
             }
@@ -256,7 +257,11 @@ namespace  zaran
                     double u_xi = data_manager->GetVelocity(0, idx) * xi[0] + data_manager->GetVelocity(1, idx) * xi[1] + data_manager->GetVelocity(2, idx) * xi[2];
                     double u_eta = data_manager->GetVelocity(0, idx) * eta[0] + data_manager->GetVelocity(1, idx) * eta[1] + data_manager->GetVelocity(2, idx) * eta[2];
                     double u_zeta = data_manager->GetVelocity(0, idx) * zeta[0] + data_manager->GetVelocity(1, idx) * zeta[1] + data_manager->GetVelocity(2, idx) * zeta[2];
-                    double lamda = abs(u_xi) + abs(u_eta) + abs(u_zeta) + c * (norm_xi + norm_eta + norm_zeta);
+                    double lamda = abs(u_xi) + abs(u_eta) + c * (norm_xi + norm_eta );
+                    if(grid->GetDim() == 3)
+                    {
+                        lamda += abs(u_zeta) + c * norm_zeta;
+                    }
                     data_manager->SetTimeStep(idx, cfl / lamda);
                     if (data_manager->GetTimeStep(idx) < min_dt)
                     {
@@ -1117,6 +1122,7 @@ namespace  zaran
     {
         auto grid = GetGrid();
         auto para = GetPara();
+        auto node = grid->GetNode();
         auto data_manager = GetDataManager();
         auto gas = GetGas();
         auto equ_num = para->GetEquNum();
@@ -1154,6 +1160,7 @@ namespace  zaran
                         riemann_para[i].norm(2) = m_node_metrics->GetXi(idx)[2];
                         riemann_para[i].nt = m_node_metrics->GetXi(idx)[3];
                     }
+                    // Log::info("(i,j,k) = ({},{},{}), Coord: ({},{},{})", i, j, k, node->GetCoord(i, j, k)[0], node->GetCoord(i, j, k)[1], node->GetCoord(i, j, k)[2]);
                     for (int iVal = 0; iVal < equ_num; ++iVal)
                     {
                         riemann_para[0].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 0, m_idx_proxy->GetIdx(i - 3, j, k));
@@ -1342,7 +1349,6 @@ namespace  zaran
         CalcMidNodePrimWCNS5();
         CalcMidGhostNodePrimWCNS5();
         FluxDifferenceWCNS5();
-
     }
     void NSSolverStruct::ViscousResidual()
     {
@@ -1425,7 +1431,7 @@ namespace  zaran
         prim_far[3] = GetPara()->GetInflowVelocityZ();
         prim_far[4] = GetPara()->GetInflowPressure();
         prim_far[0] = 1.0;
-        prim_far[1] = 0.75;
+        prim_far[1] = 0.0;
         prim_far[2] = 0.0;
         prim_far[3] = 0.0;
         prim_far[4] = 1.0;
