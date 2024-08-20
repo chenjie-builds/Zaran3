@@ -10,7 +10,7 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include "solverpara.h"
+#include "SolverPara.h"
 #include "GlobalData.h"
 #include "GridList.h"
 namespace zaran
@@ -41,6 +41,6 @@ namespace zaran
 		// 全场网格数组
 		GridBase* m_grid;
 		// solver 的参数
-		SolverPara* para_;
+		SolverPara* m_para;
 	};
 }

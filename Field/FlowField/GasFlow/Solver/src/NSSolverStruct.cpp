@@ -1,8 +1,12 @@
 #include "NSSolverStruct.h"
-namespace  zaran
+
+#include "FlowSolverStructPara.h"
+#include "Log.h"
+namespace zaran
 {
-    NSSolverStruct::NSSolverStruct(int index, string name, FlowSolverPara* para, GridStruct* grid, DataManagerNSStruct* data_manager)
-        :NSSolver(index, name, para, grid, data_manager)
+    NSSolverStruct::NSSolverStruct(int index, string name, FlowSolverPara *para, GridStruct *grid,
+                                   DataManagerNSStruct *data_manager)
+        : NSSolver(index, name, para, grid, data_manager)
     {
         int ni, nj, nk;
         m_idx_proxy = new StructIdxProxy(grid);
@@ -11,6 +15,9 @@ namespace  zaran
         nk = m_idx_proxy->GetNk();
         int node_num = ni * nj * nk;
         m_node_metrics = new Metrics(node_num);
+        m_metrics_half_i = new Metrics(node_num);
+        m_metrics_half_j = new Metrics(node_num);
+        m_metrics_half_k = new Metrics(node_num);
     }
     NSSolverStruct::~NSSolverStruct()
     {
@@ -24,10 +31,37 @@ namespace  zaran
             delete m_node_metrics;
             m_node_metrics = nullptr;
         }
+        if (m_metrics_half_i)
+        {
+            delete m_metrics_half_i;
+            m_metrics_half_i = nullptr;
+        }
+        if (m_metrics_half_j)
+        {
+            delete m_metrics_half_j;
+            m_metrics_half_j = nullptr;
+        }
+        if (m_metrics_half_k)
+        {
+            delete m_metrics_half_k;
+            m_metrics_half_k = nullptr;
+        }
     }
-    DataManagerNSStruct* NSSolverStruct::GetDataManager()
+    DataManagerNSStruct *NSSolverStruct::GetDataManager()
     {
-        return static_cast<DataManagerNSStruct*>(NSSolver::GetDataManager());
+        return static_cast<DataManagerNSStruct *>(NSSolver::GetDataManager());
+    }
+    Metrics *NSSolverStruct::GetNodeMetrics()
+    {
+        return m_node_metrics;
+    }
+    StructIdxProxy *NSSolverStruct::GetIdxProxy()
+    {
+        return m_idx_proxy;
+    }
+    FlowSolverStructPara *NSSolverStruct::GetPara()
+    {
+        return static_cast<FlowSolverStructPara *>(NSSolver::GetPara());
     }
     void NSSolverStruct::InitFieldFarFlow()
     {
@@ -36,7 +70,7 @@ namespace  zaran
         auto ni = m_idx_proxy->GetNi();
         auto nj = m_idx_proxy->GetNj();
         auto nk = m_idx_proxy->GetNk();
-        FlowSolverPara* para = GetPara();
+        FlowSolverPara *para = GetPara();
         double prim_far[5];
         prim_far[0] = para->GetInflowDensity();
         prim_far[1] = para->GetInflowVelocityX();
@@ -69,7 +103,7 @@ namespace  zaran
         auto ni = m_idx_proxy->GetNi();
         auto nj = m_idx_proxy->GetNj();
         auto nk = m_idx_proxy->GetNk();
-        FlowSolverPara* para = GetPara();
+        FlowSolverPara *para = GetPara();
         double prim_far[5];
         prim_far[0] = para->GetInflowDensity();
         prim_far[1] = 0.0;
@@ -104,126 +138,3287 @@ namespace  zaran
                         data_manager->SetPrim(3, idx, 0.0);
                         data_manager->SetPrim(4, idx, 0.1);
                     }
-                    // data_manager->SetPrim(0, idx, pow(0.2 * i, 2) * pow(0.2 * j, 2.3));
-
+                    // data_manager->SetPrim(0, idx, pow(0.2 * i, 2) * pow(0.2 *
+                    // j, 2.3));
                 }
             }
         }
-
     }
     void NSSolverStruct::InitFieldBackup()
     {
     }
-    void NSSolverStruct::CalcMetrics()
+    void NSSolverStruct::CalcMetricsOriginal()
     {
-        Log::info("Compute Struct Coordination Transformation Coefficients...");
-        auto grid = GetGrid();
-        auto data_manager = GetDataManager();
-        auto ni = m_idx_proxy->GetNi();
-        auto nj = m_idx_proxy->GetNj();
-        auto nk = m_idx_proxy->GetNk();
-        auto node = grid->GetNode();
-        int is, ie, js, je, ks, ke;
-        grid->GetRange(is, ie, js, je, ks, ke);
-        const  double* xRight, * xLeft, * yRight, * yLeft, * zRight, * zLeft;
-        xRight = xLeft = yRight = yLeft = zRight = zLeft = nullptr;
-        double max_jacobian = -LARGE_NUMBER;
-        double min_jacobian = LARGE_NUMBER;
-        int max_jacobian_node = -1;
-        int min_jacobian_node = -1;
-        for (int i = is; i <= ie; ++i)
+        auto para = GetPara();
+        auto flux_diff_scheme = para->GetFluxDifferenceScheme();
+        if (flux_diff_scheme == FluxDifferenceScheme::SecondOrder)
         {
-            for (int j = js; j <= je; ++j)
+            CalcMetricsOriginal_2nd();
+        }
+        else if (flux_diff_scheme == FluxDifferenceScheme::SixthOrder)
+        {
+            CalcMetricsOriginal_6th();
+        }
+        else
+        {
+            Log::warn("FluxDifferenceScheme is not defined, use SecondOrder as default");
+            CalcMetricsOriginal_2nd();
+        }
+    }
+
+    void NSSolverStruct::CalcMetricsOriginal_2nd()
+    {
+        auto grid = GetGrid();
+        auto node = grid->GetNode();
+        auto node_metrics = GetNodeMetrics();
+        auto mid_metrics_i = GetMidMetricsI();
+        auto mid_metrics_j = GetMidMetricsJ();
+        auto mid_metrics_k = GetMidMetricsK();
+        auto idx_proxy = GetIdxProxy();
+        int ni = grid->GetNi();
+        int nj = grid->GetNj();
+        int nk = grid->GetNk();
+        // i+1/2,j+1/2,k+1/2处的坐标
+        std::vector<std::vector<double>> coord_i(ni * nj * nk, std::vector<double>(3)),
+            coord_j(ni * nj * nk, std::vector<double>(3)), coord_k(ni * nj * nk, std::vector<double>(3));
+
+        // 第一步：计算半点坐标
+        for (int k = 0; k < nk - 1; ++k)
+        {
+            for (int j = 0; j < nj - 1; ++j)
             {
-                for (int k = ks; k <= ke; ++k)
+                for (int i = 0; i < ni - 1; ++i)
                 {
-                    int idx = m_idx_proxy->GetIdx(i, j, k);
-                    xLeft = node->GetCoord(i - 1, j, k);
-                    xRight = node->GetCoord(i + 1, j, k);
-                    yLeft = node->GetCoord(i, j - 1, k);
-                    yRight = node->GetCoord(i, j + 1, k);
-                    if (grid->GetDim() == 3)
+                    for (int iDim = 0; iDim < 3; ++iDim)
                     {
-                        zLeft = node->GetCoord(i, j, k - 1);
-                        zRight = node->GetCoord(i, j, k + 1);
-                    }
-                    m_node_metrics->CalcMetric(idx, xRight, xLeft, yRight, yLeft, zRight, zLeft);
-                    if (m_node_metrics->GetJacobian(idx) > max_jacobian)
-                    {
-                        max_jacobian = m_node_metrics->GetJacobian(idx);
-                        max_jacobian_node = idx;
-                    }
-                    if (m_node_metrics->GetJacobian(idx) < min_jacobian)
-                    {
-                        min_jacobian = m_node_metrics->GetJacobian(idx);
-                        min_jacobian_node = idx;
+                        int idx = idx_proxy->GetIdx(i, j, k);
+                        coord_i[idx][iDim] = 0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i + 1, j, k)[iDim]);
+                        coord_j[idx][iDim] = 0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j + 1, k)[iDim]);
+                        coord_k[idx][iDim] = 0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j, k + 1)[iDim]);
                     }
                 }
             }
         }
-        Log::info("Compute Struct Coordination Transformation Coefficients Done.");
-        int max_i, max_j, max_k;
-        m_idx_proxy->GetIdxStruct(max_jacobian_node, max_i, max_j, max_k);
-        Log::info("Max Jacobian = {0}, Node = ({}, {}, {})", max_jacobian, max_i, max_j, max_k);
-        int min_i, min_j, min_k;
-        m_idx_proxy->GetIdxStruct(min_jacobian_node, min_i, min_j, min_k);
-        Log::info("Min Jacobian = {0}, Node = ({}, {}, {})", min_jacobian, min_i, min_j, min_k);
+        // 第二步：根据半点坐标计算整点度量系数
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    int idx = idx_proxy->GetIdx(i, j, k);
+                    auto coef_x = node_metrics->GetX(idx);
+                    auto coef_y = node_metrics->GetY(idx);
+                    auto coef_z = node_metrics->GetZ(idx);
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        // i direction
+                        coef_x[iDim] =
+                            coord_i[idx_proxy->GetIdx(i, j, k)][iDim] - coord_i[idx_proxy->GetIdx(i - 1, j, k)][iDim];
+                        // j direction
+                        coef_y[iDim] =
+                            coord_j[idx_proxy->GetIdx(i, j, k)][iDim] - coord_j[idx_proxy->GetIdx(i, j - 1, k)][iDim];
+                        // k direction
+                        coef_z[iDim] =
+                            coord_k[idx_proxy->GetIdx(i, j, k)][iDim] - coord_k[idx_proxy->GetIdx(i, j, k - 1)][iDim];
+                    }
+                    coef_x[3] = 0.0;
+                    coef_y[3] = 0.0;
+                    coef_z[3] = 0.0;
+                    if (grid->GetDim() == 2)
+                    {
+                        coef_z[0] = 0.0;
+                        coef_z[1] = 0.0;
+                        coef_z[2] = 1.0;
+                    }
+                    // 计算xi,eta,zeta
+                    auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
+                    coef_xi[0] = coef_y[1] * coef_z[2] - coef_z[1] * coef_y[2];
+                    coef_xi[1] = coef_z[1] * coef_x[2] - coef_x[1] * coef_z[2];
+                    coef_xi[2] = coef_x[1] * coef_y[2] - coef_y[1] * coef_x[2];
+                    coef_xi[3] = 0.0;
+                    auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
+                    coef_eta[0] = coef_y[2] * coef_z[0] - coef_z[2] * coef_y[0];
+                    coef_eta[1] = coef_z[2] * coef_x[0] - coef_x[2] * coef_z[0];
+                    coef_eta[2] = coef_x[2] * coef_y[0] - coef_y[2] * coef_x[0];
+                    coef_eta[3] = 0.0;
+                    auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+                    coef_zeta[0] = coef_y[0] * coef_z[1] - coef_z[0] * coef_y[1];
+                    coef_zeta[1] = coef_z[0] * coef_x[1] - coef_x[0] * coef_z[1];
+                    coef_zeta[2] = coef_x[0] * coef_y[1] - coef_y[0] * coef_x[1];
+                    coef_zeta[3] = 0.0;
+                }
+            }
+        }
+    }
+
+    void NSSolverStruct::CalcMetricsOriginal_6th()
+    {
+        auto grid = GetGrid();
+        auto node = grid->GetNode();
+        auto node_metrics = GetNodeMetrics();
+        auto idx_proxy = GetIdxProxy();
+        int ni = grid->GetNi();
+        int nj = grid->GetNj();
+        int nk = grid->GetNk();
+        // 用于度量系数计算的临时变量
+        std::vector<std::vector<double>> coord_i(ni * nj * nk, std::vector<double>(3)),
+            coord_j(ni * nj * nk, std::vector<double>(3)), coord_k(ni * nj * nk, std::vector<double>(3));
+
+        // 第一步：计算半点坐标
+        for (int k = 0; k < nk - 1; ++k)
+        {
+            for (int j = 0; j < nj - 1; ++j)
+            {
+                for (int i = 0; i < ni - 1; ++i)
+                {
+                    int idx = idx_proxy->GetIdx(i, j, k);
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        coord_i[idx_proxy->GetIdx(i, j, k)][iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i + 1, j, k)[iDim]);
+                        coord_j[idx_proxy->GetIdx(i, j, k)][iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j + 1, k)[iDim]);
+                        coord_k[idx_proxy->GetIdx(i, j, k)][iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j, k + 1)[iDim]);
+                    }
+                }
+            }
+        }
+        double diff_temp[6];
+        // 第二步：根据半点坐标计算整点度量系数
+        for (int k = 3; k < nk - 3; ++k)
+        {
+            for (int j = 3; j < nj - 3; ++j)
+            {
+                for (int i = 3; i < ni - 3; ++i)
+                {
+                    auto coef_x = GetNodeMetrics()->GetX(idx_proxy->GetIdx(i, j, k));
+                    auto coef_y = GetNodeMetrics()->GetY(idx_proxy->GetIdx(i, j, k));
+                    auto coef_z = GetNodeMetrics()->GetZ(idx_proxy->GetIdx(i, j, k));
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        // i direction
+                        diff_temp[0] = coord_i[idx_proxy->GetIdx(i - 3, j, k)][iDim];
+                        diff_temp[1] = coord_i[idx_proxy->GetIdx(i - 2, j, k)][iDim];
+                        diff_temp[2] = coord_i[idx_proxy->GetIdx(i - 1, j, k)][iDim];
+                        diff_temp[3] = coord_i[idx_proxy->GetIdx(i, j, k)][iDim];
+                        diff_temp[4] = coord_i[idx_proxy->GetIdx(i + 1, j, k)][iDim];
+                        diff_temp[5] = coord_i[idx_proxy->GetIdx(i + 2, j, k)][iDim];
+                        coef_x[iDim] = NodeDifferece6th(diff_temp);
+                        // j direction
+                        diff_temp[0] = coord_j[idx_proxy->GetIdx(i, j - 3, k)][iDim];
+                        diff_temp[1] = coord_j[idx_proxy->GetIdx(i, j - 2, k)][iDim];
+                        diff_temp[2] = coord_j[idx_proxy->GetIdx(i, j - 1, k)][iDim];
+                        diff_temp[3] = coord_j[idx_proxy->GetIdx(i, j, k)][iDim];
+                        diff_temp[4] = coord_j[idx_proxy->GetIdx(i, j + 1, k)][iDim];
+                        diff_temp[5] = coord_j[idx_proxy->GetIdx(i, j + 2, k)][iDim];
+                        coef_y[iDim] = NodeDifferece6th(diff_temp);
+                        // k direction
+                        diff_temp[0] = coord_k[idx_proxy->GetIdx(i, j, k - 3)][iDim];
+                        diff_temp[1] = coord_k[idx_proxy->GetIdx(i, j, k - 2)][iDim];
+                        diff_temp[2] = coord_k[idx_proxy->GetIdx(i, j, k - 1)][iDim];
+                        diff_temp[3] = coord_k[idx_proxy->GetIdx(i, j, k)][iDim];
+                        coef_z[iDim] = NodeDifferece6th(diff_temp);
+                    }
+                    coef_x[3] = 0.0;
+                    coef_y[3] = 0.0;
+                    coef_z[3] = 0.0;
+                    if (grid->GetDim() == 2)
+                    {
+                        coef_z[0] = 0.0;
+                        coef_z[1] = 0.0;
+                        coef_z[2] = 1.0;
+                    }
+                }
+            }
+        }
+        // 计算边界整点的度量系数
+        // i=1,2;ni-3,ni-2
+        for (int k = 0; k < nk; ++k)
+        {
+            for (int j = 0; j < nj; ++j)
+            {
+                int idx1 = idx_proxy->GetIdx(1, j, k);
+                int idx2 = idx_proxy->GetIdx(2, j, k);
+                int idx3 = idx_proxy->GetIdx(ni - 3, j, k);
+                int idx4 = idx_proxy->GetIdx(ni - 2, j, k);
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // i direction
+                    diff_temp[0] = coord_i[idx_proxy->GetIdx(0, j, k)][iDim];
+                    diff_temp[1] = coord_i[idx_proxy->GetIdx(1, j, k)][iDim];
+                    diff_temp[2] = coord_i[idx_proxy->GetIdx(2, j, k)][iDim];
+                    diff_temp[3] = coord_i[idx_proxy->GetIdx(3, j, k)][iDim];
+                    node_metrics->GetX(idx1)[iDim] = NodeDifferece4thRight(diff_temp);
+                    node_metrics->GetX(idx2)[iDim] = NodeDifferece4th(diff_temp);
+                    diff_temp[0] = coord_i[idx_proxy->GetIdx(ni - 4, j, k)][iDim];
+                    diff_temp[1] = coord_i[idx_proxy->GetIdx(ni - 3, j, k)][iDim];
+                    diff_temp[2] = coord_i[idx_proxy->GetIdx(ni - 2, j, k)][iDim];
+                    diff_temp[3] = coord_i[idx_proxy->GetIdx(ni - 1, j, k)][iDim];
+                    node_metrics->GetX(idx3)[iDim] = NodeDifferece4th(diff_temp);
+                    node_metrics->GetX(idx4)[iDim] = NodeDifferece4thLeft(diff_temp);
+                    // j direction
+                    diff_temp[0] = coord_j[idx_proxy->GetIdx(0, j, k)][iDim];
+                    diff_temp[1] = coord_j[idx_proxy->GetIdx(1, j, k)][iDim];
+                    diff_temp[2] = coord_j[idx_proxy->GetIdx(2, j, k)][iDim];
+                    diff_temp[3] = coord_j[idx_proxy->GetIdx(3, j, k)][iDim];
+                    node_metrics->GetY(idx1)[iDim] = NodeDifferece4thRight(diff_temp);
+                    node_metrics->GetY(idx2)[iDim] = NodeDifferece4th(diff_temp);
+                    diff_temp[0] = coord_j[idx_proxy->GetIdx(ni - 4, j, k)][iDim];
+                    diff_temp[1] = coord_j[idx_proxy->GetIdx(ni - 3, j, k)][iDim];
+                    diff_temp[2] = coord_j[idx_proxy->GetIdx(ni - 2, j, k)][iDim];
+                    diff_temp[3] = coord_j[idx_proxy->GetIdx(ni - 1, j, k)][iDim];
+                    node_metrics->GetY(idx3)[iDim] = NodeDifferece4th(diff_temp);
+                    node_metrics->GetY(idx4)[iDim] = NodeDifferece4thLeft(diff_temp);
+                    // k direction
+                    diff_temp[0] = coord_k[idx_proxy->GetIdx(0, j, k)][iDim];
+                    diff_temp[1] = coord_k[idx_proxy->GetIdx(1, j, k)][iDim];
+                    diff_temp[2] = coord_k[idx_proxy->GetIdx(2, j, k)][iDim];
+                    diff_temp[3] = coord_k[idx_proxy->GetIdx(3, j, k)][iDim];
+                    node_metrics->GetZ(idx1)[iDim] = NodeDifferece4thRight(diff_temp);
+                    node_metrics->GetZ(idx2)[iDim] = NodeDifferece4th(diff_temp);
+                    diff_temp[0] = coord_k[idx_proxy->GetIdx(ni - 4, j, k)][iDim];
+                    diff_temp[1] = coord_k[idx_proxy->GetIdx(ni - 3, j, k)][iDim];
+                    diff_temp[2] = coord_k[idx_proxy->GetIdx(ni - 2, j, k)][iDim];
+                    diff_temp[3] = coord_k[idx_proxy->GetIdx(ni - 1, j, k)][iDim];
+                    node_metrics->GetZ(idx3)[iDim] = NodeDifferece4th(diff_temp);
+                    node_metrics->GetZ(idx4)[iDim] = NodeDifferece4thLeft(diff_temp);
+                }
+                node_metrics->GetX(idx1)[3] = node_metrics->GetY(idx1)[3] = node_metrics->GetZ(idx1)[3] = 0.0;
+                node_metrics->GetX(idx2)[3] = node_metrics->GetY(idx2)[3] = node_metrics->GetZ(idx2)[3] = 0.0;
+                node_metrics->GetX(idx3)[3] = node_metrics->GetY(idx3)[3] = node_metrics->GetZ(idx3)[3] = 0.0;
+                node_metrics->GetX(idx4)[3] = node_metrics->GetY(idx4)[3] = node_metrics->GetZ(idx4)[3] = 0.0;
+                if (grid->GetDim() == 2)
+                {
+                    node_metrics->GetZ(idx1)[0] = node_metrics->GetZ(idx1)[1] = 0.0;
+                    node_metrics->GetZ(idx2)[0] = node_metrics->GetZ(idx2)[1] = 0.0;
+                    node_metrics->GetZ(idx3)[0] = node_metrics->GetZ(idx3)[1] = 0.0;
+                    node_metrics->GetZ(idx4)[0] = node_metrics->GetZ(idx4)[1] = 0.0;
+                    node_metrics->GetZ(idx2)[2] = 1.0;
+                    node_metrics->GetZ(idx1)[2] = 1.0;
+                    node_metrics->GetZ(idx3)[2] = 1.0;
+                    node_metrics->GetZ(idx4)[2] = 1.0;
+                }
+            }
+        }
+        // j=1,2;nj-3,nj-2
+        for (int k = 0; k < nk; ++k)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                int idx1 = idx_proxy->GetIdx(i, 1, k);
+                int idx2 = idx_proxy->GetIdx(i, 2, k);
+                int idx3 = idx_proxy->GetIdx(i, nj - 3, k);
+                int idx4 = idx_proxy->GetIdx(i, nj - 2, k);
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    diff_temp[0] = coord_i[idx_proxy->GetIdx(i, 0, k)][iDim];
+                    diff_temp[1] = coord_i[idx_proxy->GetIdx(i, 1, k)][iDim];
+                    diff_temp[2] = coord_i[idx_proxy->GetIdx(i, 2, k)][iDim];
+                    diff_temp[3] = coord_i[idx_proxy->GetIdx(i, 3, k)][iDim];
+                    node_metrics->GetX(idx1)[iDim] = NodeDifferece4thRight(diff_temp);
+                    node_metrics->GetX(idx2)[iDim] = NodeDifferece4th(diff_temp);
+                    diff_temp[0] = coord_i[idx_proxy->GetIdx(i, nj - 4, k)][iDim];
+                    diff_temp[1] = coord_i[idx_proxy->GetIdx(i, nj - 3, k)][iDim];
+                    diff_temp[2] = coord_i[idx_proxy->GetIdx(i, nj - 2, k)][iDim];
+                    diff_temp[3] = coord_i[idx_proxy->GetIdx(i, nj - 1, k)][iDim];
+                    node_metrics->GetX(idx3)[iDim] = NodeDifferece4th(diff_temp);
+                    node_metrics->GetX(idx4)[iDim] = NodeDifferece4thLeft(diff_temp);
+                    // j direction
+                    diff_temp[0] = coord_j[idx_proxy->GetIdx(i, 0, k)][iDim];
+                    diff_temp[1] = coord_j[idx_proxy->GetIdx(i, 1, k)][iDim];
+                    diff_temp[2] = coord_j[idx_proxy->GetIdx(i, 2, k)][iDim];
+                    diff_temp[3] = coord_j[idx_proxy->GetIdx(i, 3, k)][iDim];
+                    node_metrics->GetY(idx1)[iDim] = NodeDifferece4thRight(diff_temp);
+                    node_metrics->GetY(idx2)[iDim] = NodeDifferece4th(diff_temp);
+                    diff_temp[0] = coord_j[idx_proxy->GetIdx(i, nj - 4, k)][iDim];
+                    diff_temp[1] = coord_j[idx_proxy->GetIdx(i, nj - 3, k)][iDim];
+                    diff_temp[2] = coord_j[idx_proxy->GetIdx(i, nj - 2, k)][iDim];
+                    diff_temp[3] = coord_j[idx_proxy->GetIdx(i, nj - 1, k)][iDim];
+                    node_metrics->GetY(idx3)[iDim] = NodeDifferece4th(diff_temp);
+                    node_metrics->GetY(idx4)[iDim] = NodeDifferece4thLeft(diff_temp);
+                    // k direction
+                    diff_temp[0] = coord_k[idx_proxy->GetIdx(i, 0, k)][iDim];
+                    diff_temp[1] = coord_k[idx_proxy->GetIdx(i, 1, k)][iDim];
+                    diff_temp[2] = coord_k[idx_proxy->GetIdx(i, 2, k)][iDim];
+                    diff_temp[3] = coord_k[idx_proxy->GetIdx(i, 3, k)][iDim];
+                    node_metrics->GetZ(idx1)[iDim] = NodeDifferece4thRight(diff_temp);
+                    node_metrics->GetZ(idx2)[iDim] = NodeDifferece4th(diff_temp);
+                    diff_temp[0] = coord_k[idx_proxy->GetIdx(i, nj - 4, k)][iDim];
+                    diff_temp[1] = coord_k[idx_proxy->GetIdx(i, nj - 3, k)][iDim];
+                    diff_temp[2] = coord_k[idx_proxy->GetIdx(i, nj - 2, k)][iDim];
+                    diff_temp[3] = coord_k[idx_proxy->GetIdx(i, nj - 1, k)][iDim];
+                    node_metrics->GetZ(idx3)[iDim] = NodeDifferece4th(diff_temp);
+                    node_metrics->GetZ(idx4)[iDim] = NodeDifferece4thLeft(diff_temp);
+                }
+                node_metrics->GetX(idx1)[3] = node_metrics->GetY(idx1)[3] = node_metrics->GetZ(idx1)[3] = 0.0;
+                node_metrics->GetX(idx2)[3] = node_metrics->GetY(idx2)[3] = node_metrics->GetZ(idx2)[3] = 0.0;
+                node_metrics->GetX(idx3)[3] = node_metrics->GetY(idx3)[3] = node_metrics->GetZ(idx3)[3] = 0.0;
+            }
+        }
+        // k=1,2;nk-3,nk-2
+        for (int j = 0; j < nj; ++j)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                int idx1 = idx_proxy->GetIdx(i, j, 1);
+                int idx2 = idx_proxy->GetIdx(i, j, 2);
+                int idx3 = idx_proxy->GetIdx(i, j, nk - 3);
+                int idx4 = idx_proxy->GetIdx(i, j, nk - 2);
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // i direction
+                    diff_temp[0] = coord_i[idx_proxy->GetIdx(i, j, 0)][iDim];
+                    diff_temp[1] = coord_i[idx_proxy->GetIdx(i, j, 1)][iDim];
+                    diff_temp[2] = coord_i[idx_proxy->GetIdx(i, j, 2)][iDim];
+                    diff_temp[3] = coord_i[idx_proxy->GetIdx(i, j, 3)][iDim];
+                    node_metrics->GetX(idx1)[iDim] = NodeDifferece4thRight(diff_temp);
+                    node_metrics->GetX(idx2)[iDim] = NodeDifferece4th(diff_temp);
+                    diff_temp[0] = coord_i[idx_proxy->GetIdx(i, j, nk - 4)][iDim];
+                    diff_temp[1] = coord_i[idx_proxy->GetIdx(i, j, nk - 3)][iDim];
+                    diff_temp[2] = coord_i[idx_proxy->GetIdx(i, j, nk - 2)][iDim];
+                    diff_temp[3] = coord_i[idx_proxy->GetIdx(i, j, nk - 1)][iDim];
+                    node_metrics->GetX(idx3)[iDim] = NodeDifferece4th(diff_temp);
+                    node_metrics->GetX(idx4)[iDim] = NodeDifferece4thLeft(diff_temp);
+                    // j direction
+                    diff_temp[0] = coord_j[idx_proxy->GetIdx(i, j, 0)][iDim];
+                    diff_temp[1] = coord_j[idx_proxy->GetIdx(i, j, 1)][iDim];
+                    diff_temp[2] = coord_j[idx_proxy->GetIdx(i, j, 2)][iDim];
+                    diff_temp[3] = coord_j[idx_proxy->GetIdx(i, j, 3)][iDim];
+                    node_metrics->GetY(idx1)[iDim] = NodeDifferece4thRight(diff_temp);
+                    node_metrics->GetY(idx2)[iDim] = NodeDifferece4th(diff_temp);
+                    diff_temp[0] = coord_j[idx_proxy->GetIdx(i, j, nk - 4)][iDim];
+                    diff_temp[1] = coord_j[idx_proxy->GetIdx(i, j, nk - 3)][iDim];
+                    diff_temp[2] = coord_j[idx_proxy->GetIdx(i, j, nk - 2)][iDim];
+                    diff_temp[3] = coord_j[idx_proxy->GetIdx(i, j, nk - 1)][iDim];
+                    node_metrics->GetY(idx3)[iDim] = NodeDifferece4th(diff_temp);
+                    node_metrics->GetY(idx4)[iDim] = NodeDifferece4thLeft(diff_temp);
+                    // k direction
+                    diff_temp[0] = coord_k[idx_proxy->GetIdx(i, j, 0)][iDim];
+                    diff_temp[1] = coord_k[idx_proxy->GetIdx(i, j, 1)][iDim];
+                    diff_temp[2] = coord_k[idx_proxy->GetIdx(i, j, 2)][iDim];
+                    diff_temp[3] = coord_k[idx_proxy->GetIdx(i, j, 3)][iDim];
+                    node_metrics->GetZ(idx1)[iDim] = NodeDifferece4thRight(diff_temp);
+                    node_metrics->GetZ(idx2)[iDim] = NodeDifferece4th(diff_temp);
+                    diff_temp[0] = coord_k[idx_proxy->GetIdx(i, j, nk - 4)][iDim];
+                    diff_temp[1] = coord_k[idx_proxy->GetIdx(i, j, nk - 3)][iDim];
+                    diff_temp[2] = coord_k[idx_proxy->GetIdx(i, j, nk - 2)][iDim];
+                    diff_temp[3] = coord_k[idx_proxy->GetIdx(i, j, nk - 1)][iDim];
+                    node_metrics->GetZ(idx3)[iDim] = NodeDifferece4th(diff_temp);
+                    node_metrics->GetZ(idx4)[iDim] = NodeDifferece4thLeft(diff_temp);
+                }
+                node_metrics->GetX(idx1)[3] = node_metrics->GetY(idx1)[3] = node_metrics->GetZ(idx1)[3] = 0.0;
+                node_metrics->GetX(idx2)[3] = node_metrics->GetY(idx2)[3] = node_metrics->GetZ(idx2)[3] = 0.0;
+                node_metrics->GetX(idx3)[3] = node_metrics->GetY(idx3)[3] = node_metrics->GetZ(idx3)[3] = 0.0;
+                if (grid->GetDim() == 2)
+                {
+                    node_metrics->GetZ(idx1)[0] = node_metrics->GetZ(idx1)[1] = 0.0;
+                    node_metrics->GetZ(idx2)[0] = node_metrics->GetZ(idx2)[1] = 0.0;
+                    node_metrics->GetZ(idx3)[0] = node_metrics->GetZ(idx3)[1] = 0.0;
+                    node_metrics->GetZ(idx4)[0] = node_metrics->GetZ(idx4)[1] = 0.0;
+                    node_metrics->GetZ(idx1)[2] = node_metrics->GetZ(idx1)[3] = 1.0;
+                    node_metrics->GetZ(idx2)[2] = node_metrics->GetZ(idx2)[3] = 1.0;
+                    node_metrics->GetZ(idx3)[2] = node_metrics->GetZ(idx3)[3] = 1.0;
+                    node_metrics->GetZ(idx4)[2] = node_metrics->GetZ(idx4)[3] = 1.0;
+                }
+            }
+        }
+        // 计算整点的度量系数
+        for (int k = 1; k <= nk - 2; ++k)
+        {
+            for (int j = 1; j <= nj - 2; ++j)
+            {
+                for (int i = 1; i <= ni - 2; ++i)
+                {
+                    // 计算xi,eta,zeta
+                    auto coef_x = GetNodeMetrics()->GetX(idx_proxy->GetIdx(i, j, k));
+                    auto coef_y = GetNodeMetrics()->GetY(idx_proxy->GetIdx(i, j, k));
+                    auto coef_z = GetNodeMetrics()->GetZ(idx_proxy->GetIdx(i, j, k));
+                    auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
+                    coef_xi[0] = coef_y[1] * coef_z[2] - coef_z[1] * coef_y[2];
+                    coef_xi[1] = coef_z[1] * coef_x[2] - coef_x[1] * coef_z[2];
+                    coef_xi[2] = coef_x[1] * coef_y[2] - coef_y[1] * coef_x[2];
+                    coef_xi[3] = 0.0;
+                    auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
+                    coef_eta[0] = coef_y[2] * coef_z[0] - coef_z[2] * coef_y[0];
+                    coef_eta[1] = coef_z[2] * coef_x[0] - coef_x[2] * coef_z[0];
+                    coef_eta[2] = coef_x[2] * coef_y[0] - coef_y[2] * coef_x[0];
+                    coef_eta[3] = 0.0;
+                    auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+                    coef_zeta[0] = coef_y[0] * coef_z[1] - coef_z[0] * coef_y[1];
+                    coef_zeta[1] = coef_z[0] * coef_x[1] - coef_x[0] * coef_z[1];
+                    coef_zeta[2] = coef_x[0] * coef_y[1] - coef_y[0] * coef_x[1];
+                    coef_zeta[3] = 0.0;
+                }
+            }
+        }
+    }
+
+    void NSSolverStruct::CalcCoordTransCoef()
+    {
+        CalcMetrics();
+        CalcJacobian();
+    }
+    void NSSolverStruct::CalcMetrics()
+    {
+        auto para = GetPara();
+        auto metrics_type = para->GetMetricsType();
+        if (metrics_type == MetricsType::Originnal)
+        {
+            CalcMetricsOriginal();
+        }
+        else if (metrics_type == MetricsType::CMM1)
+        {
+            CalcMetricsCMM1();
+        }
+        else if (metrics_type == MetricsType::CMM2)
+        {
+            CalcMetricsCMM2();
+        }
+        else if (metrics_type == MetricsType::SCMM)
+        {
+            CalcMetricsSCMM();
+        }
+        else
+        {
+            Log::warn("MetricsType is not defined, use Originnal as default");
+            CalcMetricsOriginal();
+        }
+    }
+    void NSSolverStruct::CalcJacobian()
+    {
+        // 先试试V1
+        CalcJacobianV1();
+    }
+    void NSSolverStruct::CalcJacobianV1()
+    {
+        auto grid = GetGrid();
+        auto node = grid->GetNode();
+        int ni = grid->GetNi();
+        int nj = grid->GetNj();
+        int nk = grid->GetNk();
+        auto idx_proxy = GetIdxProxy();
+        auto node_metrics = GetNodeMetrics();
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    auto idx = idx_proxy->GetIdx(i, j, k);
+                    auto &jacobian = node_metrics->GetJacobian(idx);
+                    auto coef_x = node_metrics->GetX(idx);
+                    auto coef_y = node_metrics->GetY(idx);
+                    auto coef_z = node_metrics->GetZ(idx);
+                    jacobian = coef_x[0] * coef_y[1] * coef_z[2] - coef_x[0] * coef_y[2] * coef_z[1] +
+                               coef_x[1] * coef_y[2] * coef_z[0] - coef_x[1] * coef_y[0] * coef_z[2] +
+                               coef_x[2] * coef_y[0] * coef_z[1] - coef_x[2] * coef_y[1] * coef_z[0];
+                    jacobian = 1.0 / jacobian;
+                }
+            }
+        }
+    }
+    void NSSolverStruct::CalcJacobianV2()
+    {
     }
     void NSSolverStruct::CalcMetricsCMM1()
     {
-        Log::info("Compute Struct Coordination Transformation Coefficients...");
+        auto para = GetPara();
+        auto flux_diff_scheme = para->GetFluxDifferenceScheme();
+        if (flux_diff_scheme == FluxDifferenceScheme::SecondOrder)
+        {
+            CalcMetricsCMM1_2nd();
+        }
+        else if (flux_diff_scheme == FluxDifferenceScheme::SixthOrder)
+        {
+            CalcMetricsCMM1_6th();
+        }
+        else
+        {
+            Log::warn("FluxDifferenceScheme is not defined, use SecondOrder as default");
+            CalcMetricsCMM1_2nd();
+        }
+    }
+    void NSSolverStruct::CalcMetricsCMM1_2nd()
+    {
         auto grid = GetGrid();
-        auto data_manager = GetDataManager();
-        auto ni = m_idx_proxy->GetNi();
-        auto nj = m_idx_proxy->GetNj();
-        auto nk = m_idx_proxy->GetNk();
-        //CMM1计算度量系数时需要的中间数据，逆变换度量系数与坐标乘积
-        struct MetricsCMM1
-        {
-            double x_eta_y;
-            double x_zeta_z;
-            double y_eta_z;
-            double y_zeta_z;
-            double z_xi_x;
-            double z_eta_y;
-            double z_zeta_x;
-            double x[4];//x_xi, x_eta, x_zeta, x_tau
-            double y[4];//y_xi, y_eta, y_zeta, y_tau
-        };
-        //计算度量系数时的中间数据
-        std::vector<std::vector<std::vector<MetricsCMM1>>> metrics_temp;
         auto node = grid->GetNode();
-        int is, ie, js, je, ks, ke;
-        grid->GetRange(is, ie, js, je, ks, ke);
-        const  double* xRight, * xLeft, * yRight, * yLeft, * zRight, * zLeft;
-        xRight = xLeft = yRight = yLeft = zRight = zLeft = nullptr;
-        double max_jacobian = -LARGE_NUMBER;
-        double min_jacobian = LARGE_NUMBER;
-        int max_jacobian_node = -1;
-        int min_jacobian_node = -1;
-
-        for (int i = is; i <= ie; ++i)
+        auto coef = GetNodeMetrics();
+        Metrics *coef_mid[3] = {GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK()};
+        auto idx_proxy = GetIdxProxy();
+        auto Idx = [&](int i, int j, int k)
         {
-            for (int j = js; j <= je; ++j)
+            return idx_proxy->GetIdx(i, j, k);
+        };
+        int ni = grid->GetNi();
+        int nj = grid->GetNj();
+        int nk = grid->GetNk();
+        int idx_temp[3];
+        // i+1/2,j+1/2,k+1/2处的坐标
+        std::vector<std::vector<double>> coord_i(ni * nj * nk, std::vector<double>(3)),
+            coord_j(ni * nj * nk, std::vector<double>(3)), coord_k(ni * nj * nk, std::vector<double>(3));
+
+        // 第一步：计算半点坐标
+        for (int k = 0; k < nk - 1; ++k)
+        {
+            for (int j = 0; j < nj - 1; ++j)
             {
-                for (int k = ks; k <= ke; ++k)
+                for (int i = 0; i < ni - 1; ++i)
                 {
-
-
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        coord_i[Idx(i, j, k)][iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i + 1, j, k)[iDim]);
+                        coord_j[Idx(i, j, k)][iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j + 1, k)[iDim]);
+                        coord_k[Idx(i, j, k)][iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j, k + 1)[iDim]);
+                    }
                 }
             }
         }
-        Log::info("Compute Struct Coordination Transformation Coefficients Done.");
+        // 第二步：根据半点坐标计算整点逆变换度量系数
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    int idx = idx_proxy->GetIdx(i, j, k);
+                    auto coef_x = coef->GetX(idx);
+                    auto coef_y = coef->GetY(idx);
+                    auto coef_z = coef->GetZ(idx);
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        // i direction
+                        coef_x[iDim] = coord_i[Idx(i, j, k)][iDim] - coord_i[Idx(i - 1, j, k)][iDim];
+                        // j direction
+                        coef_y[iDim] = coord_j[Idx(i, j, k)][iDim] - coord_j[Idx(i, j - 1, k)][iDim];
+                        // k direction
+                        coef_z[iDim] = coord_k[Idx(i, j, k)][iDim] - coord_k[Idx(i, j, k - 1)][iDim];
+                    }
+                    coef_x[3] = 0.0;
+                    coef_y[3] = 0.0;
+                    coef_z[3] = 0.0;
+                    if (grid->GetDim() == 2)
+                    {
+                        coef_z[0] = 0.0;
+                        coef_z[1] = 0.0;
+                        coef_z[2] = 1.0;
+                    }
+                }
+            }
+        }
+        // 第三步：根据整点逆变换度量系数计算半点逆变换度量系数
+        for (int k = 1; k < nk - 2; ++k)
+        {
+            for (int j = 1; j < nj - 2; ++j)
+            {
+                for (int i = 1; i < ni - 2; ++i)
+                {
+                    int idx = idx_proxy->GetIdx(i, j, k);
+                    for (int iDim = 0; iDim < 3; iDim++)
+                    {
+                        // i+1/2
+                        coef_mid[0]->GetX(idx)[iDim] = 0.5 * (coef->GetX(idx)[iDim] + coef->GetX(Idx(i + 1, j, k))[iDim]);
+                        coef_mid[0]->GetY(idx)[iDim] = 0.5 * (coef->GetY(idx)[iDim] + coef->GetY(Idx(i + 1, j, k))[iDim]);
+                        coef_mid[0]->GetZ(idx)[iDim] = 0.5 * (coef->GetZ(idx)[iDim] + coef->GetZ(Idx(i + 1, j, k))[iDim]);
+                        // j+1/2
+                        coef_mid[1]->GetX(idx)[iDim] = 0.5 * (coef->GetX(idx)[iDim] + coef->GetX(Idx(i, j + 1, k))[iDim]);
+                        coef_mid[1]->GetY(idx)[iDim] = 0.5 * (coef->GetY(idx)[iDim] + coef->GetY(Idx(i, j + 1, k))[iDim]);
+                        coef_mid[1]->GetZ(idx)[iDim] = 0.5 * (coef->GetZ(idx)[iDim] + coef->GetZ(Idx(i, j + 1, k))[iDim]);
+                        // k+1/2
+                        coef_mid[2]->GetX(idx)[iDim] = 0.5 * (coef->GetX(idx)[iDim] + coef->GetX(Idx(i, j, k + 1))[iDim]);
+                        coef_mid[2]->GetY(idx)[iDim] = 0.5 * (coef->GetY(idx)[iDim] + coef->GetY(Idx(i, j, k + 1))[iDim]);
+                        coef_mid[2]->GetZ(idx)[iDim] = 0.5 * (coef->GetZ(idx)[iDim] + coef->GetZ(Idx(i, j, k + 1))[iDim]);
+                    }
+                }
+            }
+        }
+        // 第四步：计算边界半点的逆变换度量系数(二阶偏置插值)
+        // i=1/2；(ni-1)-1/2
+        for (int k = 0; k < nk; ++k)
+        {
+            for (int j = 0; j < nj; ++j)
+            {
+                auto idx = Idx(0, j, k);
+                idx_temp[0] = Idx(1, j, k);
+                idx_temp[1] = Idx(2, j, k);
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    coef_mid[0]->GetX(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetX(idx_temp[0])[iDim] - 1.0 * coef->GetX(idx_temp[1])[iDim]);
+                    coef_mid[0]->GetY(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetY(idx_temp[0])[iDim] - 1.0 * coef->GetY(idx_temp[1])[iDim]);
+                    coef_mid[0]->GetZ(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetZ(idx_temp[0])[iDim] - 1.0 * coef->GetZ(idx_temp[1])[iDim]);
+                }
+                idx = Idx(ni - 2, j, k);
+                idx_temp[0] = Idx(ni - 2, j, k);
+                idx_temp[1] = Idx(ni - 3, j, k);
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    coef_mid[0]->GetX(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetX(idx_temp[0])[iDim] - 1.0 * coef->GetX(idx_temp[1])[iDim]);
+                    coef_mid[0]->GetY(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetY(idx_temp[0])[iDim] - 1.0 * coef->GetY(idx_temp[1])[iDim]);
+                    coef_mid[0]->GetZ(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetZ(idx_temp[0])[iDim] - 1.0 * coef->GetZ(idx_temp[1])[iDim]);
+                }
+            }
+        }
+        // j=1/2；(nj-1)-1/2
+        for (int k = 0; k < nk; ++k)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                auto idx = Idx(i, 0, k);
+                idx_temp[0] = Idx(i, 1, k);
+                idx_temp[1] = Idx(i, 2, k);
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    coef_mid[1]->GetX(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetX(idx_temp[0])[iDim] - 1.0 * coef->GetX(idx_temp[1])[iDim]);
+                    coef_mid[1]->GetY(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetY(idx_temp[0])[iDim] - 1.0 * coef->GetY(idx_temp[1])[iDim]);
+                    coef_mid[1]->GetZ(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetZ(idx_temp[0])[iDim] - 1.0 * coef->GetZ(idx_temp[1])[iDim]);
+                }
+                idx = Idx(i, nj - 2, k);
+                idx_temp[0] = Idx(i, nj - 2, k);
+                idx_temp[1] = Idx(i, nj - 3, k);
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    coef_mid[1]->GetX(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetX(idx_temp[0])[iDim] - 1.0 * coef->GetX(idx_temp[1])[iDim]);
+                    coef_mid[1]->GetY(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetY(idx_temp[0])[iDim] - 1.0 * coef->GetY(idx_temp[1])[iDim]);
+                    coef_mid[1]->GetZ(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetZ(idx_temp[0])[iDim] - 1.0 * coef->GetZ(idx_temp[1])[iDim]);
+                }
+            }
+        }
+        // k=1/2；(nk-1)-1/2
+        for (int j = 0; j < nj; ++j)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                auto idx = Idx(i, j, 0);
+                idx_temp[0] = Idx(i, j, 1);
+                idx_temp[1] = Idx(i, j, 2);
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    coef_mid[2]->GetX(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetX(idx_temp[0])[iDim] - 1.0 * coef->GetX(idx_temp[1])[iDim]);
+                    coef_mid[2]->GetY(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetY(idx_temp[0])[iDim] - 1.0 * coef->GetY(idx_temp[1])[iDim]);
+                    coef_mid[2]->GetZ(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetZ(idx_temp[0])[iDim] - 1.0 * coef->GetZ(idx_temp[1])[iDim]);
+                }
+                idx = Idx(i, j, nk - 2);
+                idx_temp[0] = Idx(i, j, nk - 2);
+                idx_temp[1] = Idx(i, j, nk - 3);
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    coef_mid[2]->GetX(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetX(idx_temp[0])[iDim] - 1.0 * coef->GetX(idx_temp[1])[iDim]);
+                    coef_mid[2]->GetY(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetY(idx_temp[0])[iDim] - 1.0 * coef->GetY(idx_temp[1])[iDim]);
+                    coef_mid[2]->GetZ(idx)[iDim] =
+                        0.5 * (3.0 * coef->GetZ(idx_temp[0])[iDim] - 1.0 * coef->GetZ(idx_temp[1])[iDim]);
+                }
+            }
+        }
 
+        // 第五步：根据半点坐标和半点逆变换度量系数使用守恒形式计算整点度量系数（CMM1)
+        int idx_diff[3][2];
+        // 获取下标的lamda函数
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    // i direction
+                    auto coef_xi = coef->GetXi(Idx(i, j, k));
+                    coef_xi[0] = (coef_mid[2]->GetY(Idx(i, j, k))[1] * coord_k[Idx(i, j, k)][2] -
+                                  coef_mid[2]->GetY(Idx(i, j, k - 1))[1] * coord_k[Idx(i, j, k - 1)][2]) +
+                                 (coef_mid[1]->GetY(Idx(i, j, k))[2] * coord_j[Idx(i, j, k)][2] -
+                                  coef_mid[1]->GetY(Idx(i, j - 1, k))[2] * coord_j[Idx(i, j - 1, k)][2]);
+                    coef_xi[1] = (coef_mid[2]->GetZ(Idx(i, j, k))[1] * coord_k[Idx(i, j, k)][0] -
+                                  coef_mid[2]->GetZ(Idx(i, j, k - 1))[1] * coord_k[Idx(i, j, k - 1)][0]) +
+                                 (coef_mid[1]->GetZ(Idx(i, j, k))[2] * coord_j[Idx(i, j, k)][0] -
+                                  coef_mid[1]->GetZ(Idx(i, j - 1, k))[2] * coord_j[Idx(i, j - 1, k)][0]);
+                    coef_xi[2] = (coef_mid[2]->GetX(Idx(i, j, k))[1] * coord_k[Idx(i, j, k)][1] -
+                                  coef_mid[2]->GetX(Idx(i, j, k - 1))[1] * coord_k[Idx(i, j, k - 1)][1]) +
+                                 (coef_mid[1]->GetX(Idx(i, j, k))[2] * coord_j[Idx(i, j, k)][1] -
+                                  coef_mid[1]->GetX(Idx(i, j - 1, k))[2] * coord_j[Idx(i, j - 1, k)][1]);
+
+                    // j direction
+                    auto coef_eta = coef->GetEta(Idx(i, j, k));
+                    coef_eta[0] = (coef_mid[0]->GetY(Idx(i, j, k))[2] * coord_i[Idx(i, j, k)][2] -
+                                   coef_mid[0]->GetY(Idx(i - 1, j, k))[2] * coord_i[Idx(i - 1, j, k)][2]) +
+                                  (coef_mid[2]->GetY(Idx(i, j, k))[0] * coord_k[Idx(i, j, k)][2] -
+                                   coef_mid[2]->GetY(Idx(i, j, k - 1))[0] * coord_k[Idx(i, j, k - 1)][2]);
+                    coef_eta[1] = (coef_mid[0]->GetZ(Idx(i, j, k))[2] * coord_i[Idx(i, j, k)][0] -
+                                   coef_mid[0]->GetZ(Idx(i - 1, j, k))[2] * coord_i[Idx(i - 1, j, k)][0]) +
+                                  (coef_mid[2]->GetZ(Idx(i, j, k))[0] * coord_k[Idx(i, j, k)][0] -
+                                   coef_mid[2]->GetZ(Idx(i, j, k - 1))[0] * coord_k[Idx(i, j, k - 1)][0]);
+                    coef_eta[2] = (coef_mid[0]->GetX(Idx(i, j, k))[2] * coord_i[Idx(i, j, k)][1] -
+                                   coef_mid[0]->GetX(Idx(i - 1, j, k))[2] * coord_i[Idx(i - 1, j, k)][1]) +
+                                  (coef_mid[2]->GetX(Idx(i, j, k))[0] * coord_k[Idx(i, j, k)][1] -
+                                   coef_mid[2]->GetX(Idx(i, j, k - 1))[0] * coord_k[Idx(i, j, k - 1)][1]);
+                    // k direction
+                    auto coef_zeta = coef->GetZeta(Idx(i, j, k));
+                    coef_zeta[0] = (coef_mid[1]->GetY(Idx(i, j, k))[0] * coord_j[Idx(i, j, k)][2] -
+                                    coef_mid[1]->GetY(Idx(i, j - 1, k))[0] * coord_j[Idx(i, j - 1, k)][2]) +
+                                   (coef_mid[0]->GetY(Idx(i, j, k))[1] * coord_i[Idx(i, j, k)][2] -
+                                    coef_mid[0]->GetY(Idx(i - 1, j, k))[1] * coord_i[Idx(i - 1, j, k)][2]);
+                    coef_zeta[1] = (coef_mid[1]->GetZ(Idx(i, j, k))[0] * coord_j[Idx(i, j, k)][0] -
+                                    coef_mid[1]->GetZ(Idx(i, j - 1, k))[0] * coord_j[Idx(i, j - 1, k)][0]) +
+                                   (coef_mid[0]->GetZ(Idx(i, j, k))[1] * coord_i[Idx(i, j, k)][0] -
+                                    coef_mid[0]->GetZ(Idx(i - 1, j, k))[1] * coord_i[Idx(i - 1, j, k)][0]);
+                    coef_zeta[2] = (coef_mid[1]->GetX(Idx(i, j, k))[0] * coord_j[Idx(i, j, k)][1] -
+                                    coef_mid[1]->GetX(Idx(i, j - 1, k))[0] * coord_j[Idx(i, j - 1, k)][1]) +
+                                   (coef_mid[0]->GetX(Idx(i, j, k))[1] * coord_i[Idx(i, j, k)][1] -
+                                    coef_mid[0]->GetX(Idx(i - 1, j, k))[1] * coord_i[Idx(i - 1, j, k)][1]);
+                    if (grid->GetDim() == 2)
+                    {
+                        coef_zeta[0] = 0.0;
+                        coef_zeta[1] = 0.0;
+                        coef_zeta[2] = 1.0;
+                    }
+                    coef_xi[3] = coef_eta[3] = coef_zeta[3] = 0.0;
+                }
+            }
+        }
+    }
+    void NSSolverStruct::CalcMetricsCMM1_6th()
+    {
+        auto grid = GetGrid();
+        auto node = grid->GetNode();
+        auto coef = GetNodeMetrics();
+        Metrics *coef_mid[3] = {GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK()};
+        auto idx_proxy = GetIdxProxy();
+        auto Idx = [&](int i, int j, int k)
+        {
+            return idx_proxy->GetIdx(i, j, k);
+        };
+        int ni = grid->GetNi();
+        int nj = grid->GetNj();
+        int nk = grid->GetNk();
+        int idx_temp[3];
+        // i+1/2,j+1/2,k+1/2处的坐标
+        std::vector<std::vector<double>> coord_i(ni * nj * nk, std::vector<double>(3)),
+            coord_j(ni * nj * nk, std::vector<double>(3)), coord_k(ni * nj * nk, std::vector<double>(3));
+        // 计算之前，先把度量系数赋值为0
+        for (int i = 0; i < ni; ++i)
+        {
+            for (int j = 0; j < nj; ++j)
+            {
+                for (int k = 0; k < nk; ++k)
+                {
+                    for (int iDim = 0; iDim < 4; ++iDim)
+                    {
+                        coef->GetX(Idx(i, j, k))[iDim] = 0.0;
+                        coef->GetY(Idx(i, j, k))[iDim] = 0.0;
+                        coef->GetZ(Idx(i, j, k))[iDim] = 0.0;
+                        coef->GetXi(Idx(i, j, k))[iDim] = 0.0;
+                        coef->GetEta(Idx(i, j, k))[iDim] = 0.0;
+                        coef->GetZeta(Idx(i, j, k))[iDim] = 0.0;
+                        for (int jDim = 0; jDim < 3; ++jDim)
+                        {
+                            coef_mid[jDim]->GetX(Idx(i, j, k))[iDim] = 0.0;
+                            coef_mid[jDim]->GetY(Idx(i, j, k))[iDim] = 0.0;
+                            coef_mid[jDim]->GetZ(Idx(i, j, k))[iDim] = 0.0;
+                            coef_mid[jDim]->GetXi(Idx(i, j, k))[iDim] = 0.0;
+                            coef_mid[jDim]->GetEta(Idx(i, j, k))[iDim] = 0.0;
+                            coef_mid[jDim]->GetZeta(Idx(i, j, k))[iDim] = 0.0;
+                        }
+                    }
+                }
+            }
+        }
+        // 第一步：计算半点坐标
+        for (int k = 0; k < nk - 1; ++k)
+        {
+            for (int j = 0; j < nj - 1; ++j)
+            {
+                for (int i = 0; i < ni - 1; ++i)
+                {
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        coord_i[Idx(i, j, k)][iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i + 1, j, k)[iDim]);
+                        coord_j[Idx(i, j, k)][iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j + 1, k)[iDim]);
+                        coord_k[Idx(i, j, k)][iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j, k + 1)[iDim]);
+                    }
+                }
+            }
+        }
+        // 第二步：根据半点坐标计算整点逆变换度量系数
+        double diff_temp[6];
+        // i direction
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 3; i < ni - 3; ++i)
+                {
+                    auto coef_x = coef->GetX(Idx(i, j, k));
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        for (int iTemp = 0; iTemp < 6; iTemp++)
+                        {
+                            diff_temp[iTemp] = coord_i[Idx(i + iTemp - 3, j, k)][iDim];
+                        }
+                        coef_x[iDim] = NodeDifferece6th(diff_temp);
+                    }
+                    coef_x[3] = 0.0;
+                }
+            }
+        }
+        // j direction
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 3; j < nj - 3; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    auto coef_y = coef->GetY(Idx(i, j, k));
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        for (int iTemp = 0; iTemp < 6; iTemp++)
+                        {
+                            diff_temp[iTemp] = coord_j[Idx(i, j + iTemp - 3, k)][iDim];
+                        }
+                        coef_y[iDim] = NodeDifferece6th(diff_temp);
+                    }
+                    coef_y[3] = 0.0;
+                }
+            }
+        }
+        // k direction
+        for (int k = 3; k < nk - 3; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    auto coef_z = coef->GetZ(Idx(i, j, k));
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        for (int iTemp = 0; iTemp < 6; iTemp++)
+                        {
+                            diff_temp[iTemp] = coord_k[Idx(i, j, k + iTemp - 3)][iDim];
+                        }
+                        coef_z[iDim] = NodeDifferece6th(diff_temp);
+                    }
+                    coef_z[3] = 0.0;
+                    if (grid->GetDim() == 2)
+                    {
+                        coef_z[0] = 0.0;
+                        coef_z[1] = 0.0;
+                        coef_z[2] = 1.0;
+                    }
+                }
+            }
+        }
+        // 计算边界整点的度量系数
+        // i=1,2;ni-3,ni-2
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        diff_temp[iTemp] = coord_i[Idx(0 + iTemp, j, k)][iDim];
+                    }
+                    coef->GetX(Idx(1, j, k))[iDim] = NodeDifferece4thRight(diff_temp);
+                    coef->GetX(Idx(2, j, k))[iDim] = NodeDifferece4th(diff_temp);
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        diff_temp[iTemp] = coord_i[Idx(ni - 2 - iTemp, j, k)][iDim];
+                    }
+                    coef->GetX(Idx(ni - 2, j, k))[iDim] = NodeDifferece4thLeft(diff_temp);
+                    coef->GetX(Idx(ni - 3, j, k))[iDim] = -NodeDifferece4th(diff_temp);
+                }
+                coef->GetX(Idx(1, j, k))[3] = 0.0;
+                coef->GetX(Idx(2, j, k))[3] = 0.0;
+                coef->GetX(Idx(ni - 2, j, k))[3] = 0.0;
+                coef->GetX(Idx(ni - 3, j, k))[3] = 0.0;
+            }
+        }
+        // j=1,2;nj-3,nj-2
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int i = 1; i < ni - 1; ++i)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        diff_temp[iTemp] = coord_j[Idx(i, 0 + iTemp, k)][iDim];
+                    }
+                    coef->GetY(Idx(i, 1, k))[iDim] = NodeDifferece4thRight(diff_temp);
+                    coef->GetY(Idx(i, 2, k))[iDim] = NodeDifferece4th(diff_temp);
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        diff_temp[iTemp] = coord_j[Idx(i, nj - 2 - iTemp, k)][iDim];
+                    }
+                    coef->GetY(Idx(i, nj - 2, k))[iDim] = NodeDifferece4thLeft(diff_temp);
+                    coef->GetY(Idx(i, nj - 3, k))[iDim] = -NodeDifferece4th(diff_temp);
+                }
+                coef->GetY(Idx(i, 1, k))[3] = 0.0;
+                coef->GetY(Idx(i, 2, k))[3] = 0.0;
+                coef->GetY(Idx(i, nj - 2, k))[3] = 0.0;
+                coef->GetY(Idx(i, nj - 3, k))[3] = 0.0;
+            }
+        }
+        // k=1,2;nk-3,nk-2
+        for (int j = 1; j < nj - 1; ++j)
+        {
+            for (int i = 1; i < ni - 1; ++i)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        diff_temp[iTemp] = coord_k[Idx(i, j, 0 + iTemp)][iDim];
+                    }
+                    coef->GetZ(Idx(i, j, 1))[iDim] = NodeDifferece4thRight(diff_temp);
+                    coef->GetZ(Idx(i, j, 2))[iDim] = NodeDifferece4th(diff_temp);
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        diff_temp[iTemp] = coord_k[Idx(i, j, nk - 2 - iTemp)][iDim];
+                    }
+                    coef->GetZ(Idx(i, j, nk - 2))[iDim] = NodeDifferece4thLeft(diff_temp);
+                    coef->GetZ(Idx(i, j, nk - 3))[iDim] = -NodeDifferece4th(diff_temp);
+                }
+                coef->GetZ(Idx(i, j, 1))[3] = 0.0;
+                coef->GetZ(Idx(i, j, 2))[3] = 0.0;
+                coef->GetZ(Idx(i, j, nk - 2))[3] = 0.0;
+                coef->GetZ(Idx(i, j, nk - 3))[3] = 0.0;
+                if (grid->GetDim() == 2)
+                {
+                    coef->GetZ(Idx(i, j, 1))[0] = coef->GetZ(Idx(i, j, 1))[1] = 0.0;
+                    coef->GetZ(Idx(i, j, 2))[0] = coef->GetZ(Idx(i, j, 2))[1] = 0.0;
+                    coef->GetZ(Idx(i, j, nk - 2))[0] = coef->GetZ(Idx(i, j, nk - 2))[1] = 0.0;
+                    coef->GetZ(Idx(i, j, nk - 3))[0] = coef->GetZ(Idx(i, j, nk - 3))[1] = 0.0;
+                    coef->GetZ(Idx(i, j, 1))[2] = 1.0;
+                    coef->GetZ(Idx(i, j, 2))[2] = 1.0;
+                    coef->GetZ(Idx(i, j, nk - 2))[2] = 1.0;
+                }
+            }
+        }
+        // 第三步：根据整点逆变换度量系数计算半点逆变换度量系数
+        double inter_temp[6];
+        // i+1/2
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 3; i < ni - 4; ++i)
+                {
+                    for (int iDim = 0; iDim < 3; iDim++)
+                    {
+                        for (int iTemp = 0; iTemp < 6; iTemp++)
+                        {
+                            inter_temp[iTemp] = coef->GetX(Idx(i + iTemp - 2, j, k))[iDim];
+                        }
+                        coef_mid[0]->GetX(Idx(i, j, k))[iDim] = MidNodeInter6th(inter_temp);
+                        for (int iTemp = 0; iTemp < 6; iTemp++)
+                        {
+                            inter_temp[iTemp] = coef->GetY(Idx(i + iTemp - 2, j, k))[iDim];
+                        }
+                        coef_mid[0]->GetY(Idx(i, j, k))[iDim] = MidNodeInter6th(inter_temp);
+                        for (int iTemp = 0; iTemp < 6; iTemp++)
+                        {
+                            inter_temp[iTemp] = coef->GetZ(Idx(i + iTemp - 2, j, k))[iDim];
+                        }
+                        coef_mid[0]->GetZ(Idx(i, j, k))[iDim] = MidNodeInter6th(inter_temp);
+                    }
+                }
+            }
+        }
+        // j+1/2
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 3; j < nj - 4; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    for (int iDim = 0; iDim < 3; iDim++)
+                    {
+                        for (int iTemp = 0; iTemp < 6; iTemp++)
+                        {
+                            inter_temp[iTemp] = coef->GetX(Idx(i, j + iTemp - 2, k))[iDim];
+                        }
+                        coef_mid[1]->GetX(Idx(i, j, k))[iDim] = MidNodeInter6th(inter_temp);
+                        for (int iTemp = 0; iTemp < 6; iTemp++)
+                        {
+                            inter_temp[iTemp] = coef->GetY(Idx(i, j + iTemp - 2, k))[iDim];
+                        }
+                        coef_mid[1]->GetY(Idx(i, j, k))[iDim] = MidNodeInter6th(inter_temp);
+                        for (int iTemp = 0; iTemp < 6; iTemp++)
+                        {
+                            inter_temp[iTemp] = coef->GetZ(Idx(i, j + iTemp - 2, k))[iDim];
+                        }
+                        coef_mid[1]->GetZ(Idx(i, j, k))[iDim] = MidNodeInter6th(inter_temp);
+                    }
+                }
+            }
+        }
+        // k+1/2
+        for (int k = 3; k < nk - 4; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    for (int iDim = 0; iDim < 3; iDim++)
+                    {
+                        for (int iTemp = 0; iTemp < 6; iTemp++)
+                        {
+                            inter_temp[iTemp] = coef->GetX(Idx(i, j, k + iTemp - 2))[iDim];
+                        }
+                        coef_mid[2]->GetX(Idx(i, j, k))[iDim] = MidNodeInter6th(inter_temp);
+                        for (int iTemp = 0; iTemp < 6; iTemp++)
+                        {
+                            inter_temp[iTemp] = coef->GetY(Idx(i, j, k + iTemp - 2))[iDim];
+                        }
+                        coef_mid[2]->GetY(Idx(i, j, k))[iDim] = MidNodeInter6th(inter_temp);
+                        for (int iTemp = 0; iTemp < 6; iTemp++)
+                        {
+                            inter_temp[iTemp] = coef->GetZ(Idx(i, j, k + iTemp - 2))[iDim];
+                        }
+                        coef_mid[2]->GetZ(Idx(i, j, k))[iDim] = MidNodeInter6th(inter_temp);
+                    }
+                }
+            }
+        }
+        // 第四步：计算边界半点的逆变换度量系数(四阶偏置插值)
+        // i=1/2,3/2,5/2;ni-3/2,ni-5/2,ni-7/2
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // i=1/2，3/2，5/2
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetX(Idx(1 + iTemp, j, k))[iDim];
+                    }
+                    coef_mid[0]->GetX(Idx(0, j, k))[iDim] = MidNodeInter4thRight1(inter_temp);
+                    coef_mid[0]->GetX(Idx(1, j, k))[iDim] = MidNodeInter4thRight2(inter_temp);
+                    coef_mid[0]->GetX(Idx(2, j, k))[iDim] = MidNodeInter4th(inter_temp);
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetY(Idx(1 + iTemp, j, k))[iDim];
+                    }
+                    coef_mid[0]->GetY(Idx(0, j, k))[iDim] = MidNodeInter4thRight1(inter_temp);
+                    coef_mid[0]->GetY(Idx(1, j, k))[iDim] = MidNodeInter4thRight2(inter_temp);
+                    coef_mid[0]->GetY(Idx(2, j, k))[iDim] = MidNodeInter4th(inter_temp);
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetZ(Idx(1 + iTemp, j, k))[iDim];
+                    }
+                    coef_mid[0]->GetZ(Idx(0, j, k))[iDim] = MidNodeInter4thRight1(inter_temp);
+                    coef_mid[0]->GetZ(Idx(1, j, k))[iDim] = MidNodeInter4thRight2(inter_temp);
+                    coef_mid[0]->GetZ(Idx(2, j, k))[iDim] = MidNodeInter4th(inter_temp);
+                    // i=ni-3/2,ni-5/2,ni-7/2
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetX(Idx(ni - 5 + iTemp, j, k))[iDim];
+                    }
+                    coef_mid[0]->GetX(Idx(ni - 2, j, k))[iDim] = MidNodeInter4thLeft1(inter_temp);
+                    coef_mid[0]->GetX(Idx(ni - 3, j, k))[iDim] = MidNodeInter4thLeft2(inter_temp);
+                    coef_mid[0]->GetX(Idx(ni - 4, j, k))[iDim] = MidNodeInter4th(inter_temp);
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetY(Idx(ni - 5 + iTemp, j, k))[iDim];
+                    }
+                    coef_mid[0]->GetY(Idx(ni - 2, j, k))[iDim] = MidNodeInter4thLeft1(inter_temp);
+                    coef_mid[0]->GetY(Idx(ni - 3, j, k))[iDim] = MidNodeInter4thLeft2(inter_temp);
+                    coef_mid[0]->GetY(Idx(ni - 4, j, k))[iDim] = MidNodeInter4th(inter_temp);
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetZ(Idx(ni - 5 + iTemp, j, k))[iDim];
+                    }
+                    coef_mid[0]->GetZ(Idx(ni - 2, j, k))[iDim] = MidNodeInter4thLeft1(inter_temp);
+                    coef_mid[0]->GetZ(Idx(ni - 3, j, k))[iDim] = MidNodeInter4thLeft2(inter_temp);
+                    coef_mid[0]->GetZ(Idx(ni - 4, j, k))[iDim] = MidNodeInter4th(inter_temp);
+                }
+            }
+        }
+        // j=1/2,3/2,5/2;nj-3/2,nj-5/2,nj-7/2
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int i = 1; i < ni - 1; ++i)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // j=1/2，3/2，5/2
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetX(Idx(i, 1 + iTemp, k))[iDim];
+                    }
+                    coef_mid[1]->GetX(Idx(i, 0, k))[iDim] = MidNodeInter4thRight1(inter_temp);
+                    coef_mid[1]->GetX(Idx(i, 1, k))[iDim] = MidNodeInter4thRight2(inter_temp);
+                    coef_mid[1]->GetX(Idx(i, 2, k))[iDim] = MidNodeInter4th(inter_temp);
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetY(Idx(i, 1 + iTemp, k))[iDim];
+                    }
+                    coef_mid[1]->GetY(Idx(i, 0, k))[iDim] = MidNodeInter4thRight1(inter_temp);
+                    coef_mid[1]->GetY(Idx(i, 1, k))[iDim] = MidNodeInter4thRight2(inter_temp);
+                    coef_mid[1]->GetY(Idx(i, 2, k))[iDim] = MidNodeInter4th(inter_temp);
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetZ(Idx(i, 1 + iTemp, k))[iDim];
+                    }
+                    coef_mid[1]->GetZ(Idx(i, 0, k))[iDim] = MidNodeInter4thRight1(inter_temp);
+                    coef_mid[1]->GetZ(Idx(i, 1, k))[iDim] = MidNodeInter4thRight2(inter_temp);
+                    coef_mid[1]->GetZ(Idx(i, 2, k))[iDim] = MidNodeInter4th(inter_temp);
+                    // j=nj-3/2,nj-5/2,nj-7/2
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetX(Idx(i, nj - 5 + iTemp, k))[iDim];
+                    }
+                    coef_mid[1]->GetX(Idx(i, nj - 2, k))[iDim] = MidNodeInter4thLeft1(inter_temp);
+                    coef_mid[1]->GetX(Idx(i, nj - 3, k))[iDim] = MidNodeInter4thLeft2(inter_temp);
+                    coef_mid[1]->GetX(Idx(i, nj - 4, k))[iDim] = MidNodeInter4th(inter_temp);
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetY(Idx(i, nj - 5 + iTemp, k))[iDim];
+                    }
+                    coef_mid[1]->GetY(Idx(i, nj - 2, k))[iDim] = MidNodeInter4thLeft1(inter_temp);
+                    coef_mid[1]->GetY(Idx(i, nj - 3, k))[iDim] = MidNodeInter4thLeft2(inter_temp);
+                    coef_mid[1]->GetY(Idx(i, nj - 4, k))[iDim] = MidNodeInter4th(inter_temp);
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetZ(Idx(i, nj - 5 + iTemp, k))[iDim];
+                    }
+                    coef_mid[1]->GetZ(Idx(i, nj - 2, k))[iDim] = MidNodeInter4thLeft1(inter_temp);
+                    coef_mid[1]->GetZ(Idx(i, nj - 3, k))[iDim] = MidNodeInter4thLeft2(inter_temp);
+                    coef_mid[1]->GetZ(Idx(i, nj - 4, k))[iDim] = MidNodeInter4th(inter_temp);
+                }
+            }
+        }
+        // k=1/2,3/2,5/2;nk-3/2,nk-5/2,nk-7/2
+        for (int j = 1; j < nj - 1; ++j)
+        {
+            for (int i = 1; i < ni - 1; ++i)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // k=1/2，3/2，5/2
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetX(Idx(i, j, 1 + iTemp))[iDim];
+                    }
+                    coef_mid[2]->GetX(Idx(i, j, 0))[iDim] = MidNodeInter4thRight1(inter_temp);
+                    coef_mid[2]->GetX(Idx(i, j, 1))[iDim] = MidNodeInter4thRight2(inter_temp);
+                    coef_mid[2]->GetX(Idx(i, j, 2))[iDim] = MidNodeInter4th(inter_temp);
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetY(Idx(i, j, 1 + iTemp))[iDim];
+                    }
+                    coef_mid[2]->GetY(Idx(i, j, 0))[iDim] = MidNodeInter4thRight1(inter_temp);
+                    coef_mid[2]->GetY(Idx(i, j, 1))[iDim] = MidNodeInter4thRight2(inter_temp);
+                    coef_mid[2]->GetY(Idx(i, j, 2))[iDim] = MidNodeInter4th(inter_temp);
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetZ(Idx(i, j, 1 + iTemp))[iDim];
+                    }
+                    coef_mid[2]->GetZ(Idx(i, j, 0))[iDim] = MidNodeInter4thRight1(inter_temp);
+                    coef_mid[2]->GetZ(Idx(i, j, 1))[iDim] = MidNodeInter4thRight2(inter_temp);
+                    coef_mid[2]->GetZ(Idx(i, j, 2))[iDim] = MidNodeInter4th(inter_temp);
+                    // k=nk-3/2,nk-5/2,nk-7/2
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetX(Idx(i, j, nk - 5 + iTemp))[iDim];
+                    }
+                    coef_mid[2]->GetX(Idx(i, j, nk - 2))[iDim] = MidNodeInter4thLeft1(inter_temp);
+                    coef_mid[2]->GetX(Idx(i, j, nk - 3))[iDim] = MidNodeInter4thLeft2(inter_temp);
+                    coef_mid[2]->GetX(Idx(i, j, nk - 4))[iDim] = MidNodeInter4th(inter_temp);
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetY(Idx(i, j, nk - 5 + iTemp))[iDim];
+                    }
+                    coef_mid[2]->GetY(Idx(i, j, nk - 2))[iDim] = MidNodeInter4thLeft1(inter_temp);
+                    coef_mid[2]->GetY(Idx(i, j, nk - 3))[iDim] = MidNodeInter4thLeft2(inter_temp);
+                    coef_mid[2]->GetY(Idx(i, j, nk - 4))[iDim] = MidNodeInter4th(inter_temp);
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
+                    {
+                        inter_temp[iTemp] = coef->GetZ(Idx(i, j, nk - 5 + iTemp))[iDim];
+                    }
+                    coef_mid[2]->GetZ(Idx(i, j, nk - 2))[iDim] = MidNodeInter4thLeft1(inter_temp);
+                    coef_mid[2]->GetZ(Idx(i, j, nk - 3))[iDim] = MidNodeInter4thLeft2(inter_temp);
+                    coef_mid[2]->GetZ(Idx(i, j, nk - 4))[iDim] = MidNodeInter4th(inter_temp);
+                }
+            }
+        }
+        // 第五步：根据半点坐标和半点逆变换度量系数使用守恒形式计算整点度量系数（CMM1)
+        // i direction
+        double temp[6][6];
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 3; i < ni - 3; ++i)
+                {
+                    auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
+                    auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
+                    auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+                    // i direction
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        int idx = Idx(i - 3 + iTemp, j, k);
+                        temp[0][iTemp] = coef_mid[0]->GetY(idx)[2] * coord_i[idx][2]; // y_zeta*z
+                        temp[1][iTemp] = coef_mid[0]->GetZ(idx)[2] * coord_i[idx][0]; // z_zeta*x
+                        temp[2][iTemp] = coef_mid[0]->GetX(idx)[2] * coord_i[idx][1]; // x_zeta*y
+                        temp[3][iTemp] = coef_mid[0]->GetY(idx)[1] * coord_i[idx][2]; // y_eta*z
+                        temp[4][iTemp] = coef_mid[0]->GetZ(idx)[1] * coord_i[idx][0]; // z_eta*x
+                        temp[5][iTemp] = coef_mid[0]->GetX(idx)[1] * coord_i[idx][1]; // x_eta*y
+                    }
+                    coef_eta[0] += NodeDifferece6th(temp[0]);
+                    coef_eta[1] += NodeDifferece6th(temp[1]);
+                    coef_eta[2] += NodeDifferece6th(temp[2]);
+                    coef_zeta[0] -= NodeDifferece6th(temp[3]);
+                    coef_zeta[1] -= NodeDifferece6th(temp[4]);
+                    coef_zeta[2] -= NodeDifferece6th(temp[5]);
+                }
+            }
+        }
+        // j direction
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 3; j < nj - 3; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
+                    auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
+                    auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        int idx = Idx(i, j - 3 + iTemp, k);
+                        temp[0][iTemp] = coef_mid[1]->GetY(idx)[2] * coord_j[idx][2]; // y_zeta*z
+                        temp[1][iTemp] = coef_mid[1]->GetZ(idx)[2] * coord_j[idx][0]; // z_zeta*x
+                        temp[2][iTemp] = coef_mid[1]->GetX(idx)[2] * coord_j[idx][1]; // x_zeta*y
+                        temp[3][iTemp] = coef_mid[1]->GetY(idx)[0] * coord_j[idx][2]; // y_xi*z
+                        temp[4][iTemp] = coef_mid[1]->GetZ(idx)[0] * coord_j[idx][0]; // z_xi*x
+                        temp[5][iTemp] = coef_mid[1]->GetX(idx)[0] * coord_j[idx][1]; // x_xi*y
+                    }
+                    coef_xi[0] -= NodeDifferece6th(temp[0]);
+                    coef_xi[1] -= NodeDifferece6th(temp[1]);
+                    coef_xi[2] -= NodeDifferece6th(temp[2]);
+                    coef_zeta[0] += NodeDifferece6th(temp[3]);
+                    coef_zeta[1] += NodeDifferece6th(temp[4]);
+                    coef_zeta[2] += NodeDifferece6th(temp[5]);
+                }
+            }
+        }
+        // k direction
+        for (int k = 3; k < nk - 3; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
+                    auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
+                    auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        int idx = Idx(i, j, k - 3 + iTemp);
+                        temp[0][iTemp] = coef_mid[2]->GetY(idx)[1] * coord_k[idx][2]; // y_eta*z
+                        temp[1][iTemp] = coef_mid[2]->GetZ(idx)[1] * coord_k[idx][0]; // z_eta*x
+                        temp[2][iTemp] = coef_mid[2]->GetX(idx)[1] * coord_k[idx][1]; // x_eta*y
+                        temp[3][iTemp] = coef_mid[2]->GetY(idx)[0] * coord_k[idx][2]; // y_xi*z
+                        temp[4][iTemp] = coef_mid[2]->GetZ(idx)[0] * coord_k[idx][0]; // z_xi*x
+                        temp[5][iTemp] = coef_mid[2]->GetX(idx)[0] * coord_k[idx][1]; // x_xi*y
+                    }
+                    coef_xi[0] += NodeDifferece6th(temp[0]);
+                    coef_xi[1] += NodeDifferece6th(temp[1]);
+                    coef_xi[2] += NodeDifferece6th(temp[2]);
+                    coef_eta[0] -= NodeDifferece6th(temp[3]);
+                    coef_eta[1] -= NodeDifferece6th(temp[4]);
+                    coef_eta[2] -= NodeDifferece6th(temp[5]);
+                }
+            }
+        }
+        // 第六步：计算边界点度量系数
+        // i=1,2;ni-3,ni-2
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(1, j, k));
+                auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(1, j, k));
+                auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(1, j, k));
+                auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(2, j, k));
+                auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(2, j, k));
+                auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(2, j, k));
+                for (int iTemp = 0; iTemp < 5; iTemp++)
+                {
+                    int idx = Idx(0 + iTemp, j, k);
+                    temp[0][iTemp] = coef_mid[0]->GetY(idx)[2] * coord_i[idx][2]; // y_zeta*z
+                    temp[1][iTemp] = coef_mid[0]->GetZ(idx)[2] * coord_i[idx][0]; // z_zeta*x
+                    temp[2][iTemp] = coef_mid[0]->GetX(idx)[2] * coord_i[idx][1]; // x_zeta*y
+                    temp[3][iTemp] = coef_mid[0]->GetY(idx)[1] * coord_i[idx][2]; // y_eta*z
+                    temp[4][iTemp] = coef_mid[0]->GetZ(idx)[1] * coord_i[idx][0]; // z_eta*x
+                    temp[5][iTemp] = coef_mid[0]->GetX(idx)[1] * coord_i[idx][1]; // x_eta*y
+                }
+                coef_eta1[0] += NodeDifferece4thRight(temp[0]);
+                coef_eta1[1] += NodeDifferece4thRight(temp[1]);
+                coef_eta1[2] += NodeDifferece4thRight(temp[2]);
+                coef_zeta1[0] -= NodeDifferece4thRight(temp[3]);
+                coef_zeta1[1] -= NodeDifferece4thRight(temp[4]);
+                coef_zeta1[2] -= NodeDifferece4thRight(temp[5]);
+                coef_eta2[0] += NodeDifferece4th(temp[0]);
+                coef_eta2[1] += NodeDifferece4th(temp[1]);
+                coef_eta2[2] += NodeDifferece4th(temp[2]);
+                coef_zeta2[0] -= NodeDifferece4th(temp[3]);
+                coef_zeta2[1] -= NodeDifferece4th(temp[4]);
+                coef_zeta2[2] -= NodeDifferece4th(temp[5]);
+                auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(ni - 2, j, k));
+                auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(ni - 2, j, k));
+                auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(ni - 2, j, k));
+                auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(ni - 3, j, k));
+                auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(ni - 3, j, k));
+                auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(ni - 3, j, k));
+                for (int iTemp = 0; iTemp < 5; iTemp++)
+                {
+                    int idx = Idx(ni - 2 - iTemp, j, k);
+                    temp[0][iTemp] = coef_mid[0]->GetY(idx)[2] * coord_i[idx][2]; // y_zeta*z
+                    temp[1][iTemp] = coef_mid[0]->GetZ(idx)[2] * coord_i[idx][0]; // z_zeta*x
+                    temp[2][iTemp] = coef_mid[0]->GetX(idx)[2] * coord_i[idx][1]; // x_zeta*y
+                    temp[3][iTemp] = coef_mid[0]->GetY(idx)[1] * coord_i[idx][2]; // y_eta*z
+                    temp[4][iTemp] = coef_mid[0]->GetZ(idx)[1] * coord_i[idx][0]; // z_eta*x
+                    temp[5][iTemp] = coef_mid[0]->GetX(idx)[1] * coord_i[idx][1]; // x_eta*y
+                }
+                coef_eta_n2[0] += NodeDifferece4thLeft(temp[0]);
+                coef_eta_n2[1] += NodeDifferece4thLeft(temp[1]);
+                coef_eta_n2[2] += NodeDifferece4thLeft(temp[2]);
+                coef_zeta_n2[0] -= NodeDifferece4thLeft(temp[3]);
+                coef_zeta_n2[1] -= NodeDifferece4thLeft(temp[4]);
+                coef_zeta_n2[2] -= NodeDifferece4thLeft(temp[5]);
+                coef_eta_n3[0] += -NodeDifferece4th(temp[0]);
+                coef_eta_n3[1] += -NodeDifferece4th(temp[1]);
+                coef_eta_n3[2] += -NodeDifferece4th(temp[2]);
+                coef_zeta_n3[0] -= -NodeDifferece4th(temp[3]);
+                coef_zeta_n3[1] -= -NodeDifferece4th(temp[4]);
+                coef_zeta_n3[2] -= -NodeDifferece4th(temp[5]);
+            }
+        }
+        // j=1,2;nj-3,nj-2
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int i = 1; i < ni - 1; ++i)
+            {
+                auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, 1, k));
+                auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, 1, k));
+                auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, 1, k));
+                auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, 2, k));
+                auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, 2, k));
+                auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, 2, k));
+                for (int iTemp = 0; iTemp < 5; iTemp++)
+                {
+                    int idx = Idx(i, 0 + iTemp, k);
+                    temp[0][iTemp] = coef_mid[1]->GetY(idx)[2] * coord_j[idx][2]; // y_zeta*z
+                    temp[1][iTemp] = coef_mid[1]->GetZ(idx)[2] * coord_j[idx][0]; // z_zeta*x
+                    temp[2][iTemp] = coef_mid[1]->GetX(idx)[2] * coord_j[idx][1]; // x_zeta*y
+                    temp[3][iTemp] = coef_mid[1]->GetY(idx)[0] * coord_j[idx][2]; // y_xi*z
+                    temp[4][iTemp] = coef_mid[1]->GetZ(idx)[0] * coord_j[idx][0]; // z_xi*x
+                    temp[5][iTemp] = coef_mid[1]->GetX(idx)[0] * coord_j[idx][1]; // x_xi*y
+                }
+                coef_xi1[0] -= NodeDifferece4thRight(temp[0]);
+                coef_xi1[1] -= NodeDifferece4thRight(temp[1]);
+                coef_xi1[2] -= NodeDifferece4thRight(temp[2]);
+                coef_zeta1[0] += NodeDifferece4thRight(temp[3]);
+                coef_zeta1[1] += NodeDifferece4thRight(temp[4]);
+                coef_zeta1[2] += NodeDifferece4thRight(temp[5]);
+                coef_xi2[0] -= NodeDifferece4th(temp[0]);
+                coef_xi2[1] -= NodeDifferece4th(temp[1]);
+                coef_xi2[2] -= NodeDifferece4th(temp[2]);
+                coef_zeta2[0] += NodeDifferece4th(temp[3]);
+                coef_zeta2[1] += NodeDifferece4th(temp[4]);
+                coef_zeta2[2] += NodeDifferece4th(temp[5]);
+                auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, nj - 2, k));
+                auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, nj - 2, k));
+                auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, nj - 2, k));
+                auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, nj - 3, k));
+                auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, nj - 3, k));
+                auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, nj - 3, k));
+                for (int iTemp = 0; iTemp < 5; iTemp++)
+                {
+                    int idx = Idx(i, nj - 2 - iTemp, k);
+                    temp[0][iTemp] = coef_mid[1]->GetY(idx)[2] * coord_j[idx][2]; // y_zeta*z
+                    temp[1][iTemp] = coef_mid[1]->GetZ(idx)[2] * coord_j[idx][0]; // z_zeta*x
+                    temp[2][iTemp] = coef_mid[1]->GetX(idx)[2] * coord_j[idx][1]; // x_zeta*y
+                    temp[3][iTemp] = coef_mid[1]->GetY(idx)[0] * coord_j[idx][2]; // y_xi*z
+                    temp[4][iTemp] = coef_mid[1]->GetZ(idx)[0] * coord_j[idx][0]; // z_xi*x
+                    temp[5][iTemp] = coef_mid[1]->GetX(idx)[0] * coord_j[idx][1]; // x_xi*y
+                }
+                coef_xi_n2[0] -= NodeDifferece4thLeft(temp[0]);
+                coef_xi_n2[1] -= NodeDifferece4thLeft(temp[1]);
+                coef_xi_n2[2] -= NodeDifferece4thLeft(temp[2]);
+                coef_zeta_n2[0] += NodeDifferece4thLeft(temp[3]);
+                coef_zeta_n2[1] += NodeDifferece4thLeft(temp[4]);
+                coef_zeta_n2[2] += NodeDifferece4thLeft(temp[5]);
+                coef_xi_n3[0] -= -NodeDifferece4th(temp[0]);
+                coef_xi_n3[1] -= -NodeDifferece4th(temp[1]);
+                coef_xi_n3[2] -= -NodeDifferece4th(temp[2]);
+                coef_zeta_n3[0] += -NodeDifferece4th(temp[3]);
+                coef_zeta_n3[1] += -NodeDifferece4th(temp[4]);
+                coef_zeta_n3[2] += -NodeDifferece4th(temp[5]);
+            }
+        }
+        // k=1,2;nk-3,nk-2
+        for (int j = 1; j < nj - 1; ++j)
+        {
+            for (int i = 1; i < ni - 1; ++i)
+            {
+                auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, 1));
+                auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, 1));
+                auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, 1));
+                auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, 2));
+                auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, 2));
+                auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, 2));
+                for (int iTemp = 0; iTemp < 5; iTemp++)
+                {
+                    int idx = Idx(i, j, 0 + iTemp);
+                    temp[0][iTemp] = coef_mid[2]->GetY(idx)[1] * coord_k[idx][2]; // y_eta*z
+                    temp[1][iTemp] = coef_mid[2]->GetZ(idx)[1] * coord_k[idx][0]; // z_eta*x
+                    temp[2][iTemp] = coef_mid[2]->GetX(idx)[1] * coord_k[idx][1]; // x_eta*y
+                    temp[3][iTemp] = coef_mid[2]->GetY(idx)[0] * coord_k[idx][2]; // y_xi*z
+                    temp[4][iTemp] = coef_mid[2]->GetZ(idx)[0] * coord_k[idx][0]; // z_xi*x
+                    temp[5][iTemp] = coef_mid[2]->GetX(idx)[0] * coord_k[idx][1]; // x_xi*y
+                }
+                coef_xi1[0] += NodeDifferece4thRight(temp[0]);
+                coef_xi1[1] += NodeDifferece4thRight(temp[1]);
+                coef_xi1[2] += NodeDifferece4thRight(temp[2]);
+                coef_eta1[0] -= NodeDifferece4thRight(temp[3]);
+                coef_eta1[1] -= NodeDifferece4thRight(temp[4]);
+                coef_eta1[2] -= NodeDifferece4thRight(temp[5]);
+                coef_xi2[0] += NodeDifferece4th(temp[0]);
+                coef_xi2[1] += NodeDifferece4th(temp[1]);
+                coef_xi2[2] += NodeDifferece4th(temp[2]);
+                coef_eta2[0] -= NodeDifferece4th(temp[3]);
+                coef_eta2[1] -= NodeDifferece4th(temp[4]);
+                coef_eta2[2] -= NodeDifferece4th(temp[5]);
+                auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, nk - 2));
+                auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, nk - 2));
+                auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, nk - 2));
+                auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, nk - 3));
+                auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, nk - 3));
+                auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, nk - 3));
+                for (int iTemp = 0; iTemp < 5; iTemp++)
+                {
+                    int idx = Idx(i, j, nk - 2 - iTemp);
+                    temp[0][iTemp] = coef_mid[2]->GetY(idx)[1] * coord_k[idx][2]; // y_eta*z
+                    temp[1][iTemp] = coef_mid[2]->GetZ(idx)[1] * coord_k[idx][0]; // z_eta*x
+                    temp[2][iTemp] = coef_mid[2]->GetX(idx)[1] * coord_k[idx][1]; // x_eta*y
+                    temp[3][iTemp] = coef_mid[2]->GetY(idx)[0] * coord_k[idx][2]; // y_xi*z
+                    temp[4][iTemp] = coef_mid[2]->GetZ(idx)[0] * coord_k[idx][0]; // z_xi*x
+                    temp[5][iTemp] = coef_mid[2]->GetX(idx)[0] * coord_k[idx][1]; // x_xi*y
+                }
+                coef_xi_n2[0] += NodeDifferece4thLeft(temp[0]);
+                coef_xi_n2[1] += NodeDifferece4thLeft(temp[1]);
+                coef_xi_n2[2] += NodeDifferece4thLeft(temp[2]);
+                coef_eta_n2[0] -= NodeDifferece4thLeft(temp[3]);
+                coef_eta_n2[1] -= NodeDifferece4thLeft(temp[4]);
+                coef_eta_n2[2] -= NodeDifferece4thLeft(temp[5]);
+                coef_xi_n3[0] += -NodeDifferece4th(temp[0]);
+                coef_xi_n3[1] += -NodeDifferece4th(temp[1]);
+                coef_xi_n3[2] += -NodeDifferece4th(temp[2]);
+                coef_eta_n3[0] -= -NodeDifferece4th(temp[3]);
+                coef_eta_n3[1] -= -NodeDifferece4th(temp[4]);
+                coef_eta_n3[2] -= -NodeDifferece4th(temp[5]);
+            }
+        }
     }
     void NSSolverStruct::CalcMetricsCMM2()
     {
+        auto para = GetPara();
+        auto flux_diff_scheme = para->GetFluxDifferenceScheme();
+        if (flux_diff_scheme == FluxDifferenceScheme::SecondOrder)
+        {
+            CalcMetricsCMM2_2nd();
+        }
+        else if (flux_diff_scheme == FluxDifferenceScheme::SixthOrder)
+        {
+            CalcMetricsCMM2_6th();
+        }
+        else
+        {
+            Log::warn("FluxDifferenceScheme is not defined, use SecondOrder as default");
+            CalcMetricsCMM2_2nd();
+        }
+    }
+    void NSSolverStruct::CalcMetricsCMM2_2nd()
+    {
+        auto grid = GetGrid();
+        auto node = grid->GetNode();
+        auto node_metrics = GetNodeMetrics();
+        auto idx_proxy = GetIdxProxy();
+        int ni = grid->GetNi();
+        int nj = grid->GetNj();
+        int nk = grid->GetNk();
+        int idx_temp[3];
+        // 用于度量系数计算的临时变量
+        struct Coef
+        {
+            double x[4]; // x_xi,x_eta,x_zeta,x_t
+            double y[4]; // y_xi,y_eta,y_zeta,y_t
+            double z[4]; // z_xi,z_eta,z_zeta,z_t
+            double t[4];
+            double xi[4];
+            double eta[4];
+            double zeta[4];
+            double tau[4];
+            double coord[3]; // 坐标
+        };
+        // i+1/2,j+1/2,k+1/2系数
+        std::vector<std::vector<std::vector<Coef>>> coef_i(
+            ni, std::vector<std::vector<Coef>>(nj, std::vector<Coef>(nk, Coef())));
+        std::vector<std::vector<std::vector<Coef>>> coef_j(
+            ni, std::vector<std::vector<Coef>>(nj, std::vector<Coef>(nk, Coef())));
+        std::vector<std::vector<std::vector<Coef>>> coef_k(
+            ni, std::vector<std::vector<Coef>>(nj, std::vector<Coef>(nk, Coef())));
+        //(i,j,k)处的系数
+        std::vector<std::vector<std::vector<Coef>>> coef(ni,
+                                                         std::vector<std::vector<Coef>>(nj, std::vector<Coef>(nk, Coef())));
+        // 第一步：计算半点坐标
+        for (int k = 0; k < nk - 1; ++k)
+        {
+            for (int j = 0; j < nj - 1; ++j)
+            {
+                for (int i = 0; i < ni - 1; ++i)
+                {
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        coef_i[i][j][k].coord[iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i + 1, j, k)[iDim]);
+                        coef_j[i][j][k].coord[iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j + 1, k)[iDim]);
+                        coef_k[i][j][k].coord[iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j, k + 1)[iDim]);
+                    }
+                }
+            }
+        }
+        // 第二步：根据半点坐标计算整点逆变换度量系数
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        // i direction
+                        coef[i][j][k].x[iDim] = coef_i[i][j][k].coord[iDim] - coef_j[i - 1][j][k].coord[iDim];
+                        // j direction
+                        coef[i][j][k].y[iDim] = coef_j[i][j][k].coord[iDim] - coef_i[i][j - 1][k].coord[iDim];
+                        // k direction
+                        coef[i][j][k].z[iDim] = coef_k[i][j][k].coord[iDim] - coef_i[i][j][k - 1].coord[iDim];
+                    }
+                    coef[i][j][k].x[3] = 0.0;
+                    coef[i][j][k].y[3] = 0.0;
+                    coef[i][j][k].z[3] = 0.0;
+                    if (grid->GetDim() == 2)
+                    {
+                        coef[i][j][k].z[0] = 0.0;
+                        coef[i][j][k].z[1] = 0.0;
+                        coef[i][j][k].z[2] = 1.0;
+                    }
+                }
+            }
+        }
+        // 第三步：根据整点逆变换度量系数计算半点逆变换度量系数
+        for (int k = 1; k < nk - 2; ++k)
+        {
+            for (int j = 1; j < nj - 2; ++j)
+            {
+                for (int i = 1; i < ni - 2; ++i)
+                {
+                    for (int iDim = 0; iDim < 3; iDim++)
+                    {
+                        // i+1/2
+                        coef_i[i][j][k].x[iDim] = 0.5 * (coef[i][j][k].x[iDim] + coef[i + 1][j][k].x[iDim]);
+                        coef_i[i][j][k].y[iDim] = 0.5 * (coef[i][j][k].y[iDim] + coef[i + 1][j][k].y[iDim]);
+                        coef_i[i][j][k].z[iDim] = 0.5 * (coef[i][j][k].z[iDim] + coef[i + 1][j][k].z[iDim]);
+                        // j+1/2
+                        coef_j[i][j][k].x[iDim] = 0.5 * (coef[i][j][k].x[iDim] + coef[i][j + 1][k].x[iDim]);
+                        coef_j[i][j][k].y[iDim] = 0.5 * (coef[i][j][k].y[iDim] + coef[i][j + 1][k].y[iDim]);
+                        coef_j[i][j][k].z[iDim] = 0.5 * (coef[i][j][k].z[iDim] + coef[i][j + 1][k].z[iDim]);
+                        // k+1/2
+                        coef_k[i][j][k].x[iDim] = 0.5 * (coef[i][j][k].x[iDim] + coef[i][j][k + 1].x[iDim]);
+                        coef_k[i][j][k].y[iDim] = 0.5 * (coef[i][j][k].y[iDim] + coef[i][j][k + 1].y[iDim]);
+                        coef_k[i][j][k].z[iDim] = 0.5 * (coef[i][j][k].z[iDim] + coef[i][j][k + 1].z[iDim]);
+                    }
+                }
+            }
+        }
+        // 第四步：计算边界半点的逆变换度量系数（二阶偏置插值）
+        // i=1/2；(ni-1)-1/2
+        for (int k = 0; k < nk; ++k)
+        {
+            for (int j = 0; j < nj; ++j)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    coef_i[0][j][k].x[iDim] = 0.5 * (3.0 * coef[1][j][k].x[iDim] - 1.0 * coef[2][j][k].x[iDim]);
+                    coef_i[0][j][k].y[iDim] = 0.5 * (3.0 * coef[1][j][k].y[iDim] - 1.0 * coef[2][j][k].y[iDim]);
+                    coef_i[0][j][k].z[iDim] = 0.5 * (3.0 * coef[1][j][k].z[iDim] - 1.0 * coef[2][j][k].z[iDim]);
+                    coef_i[ni - 2][j][k].x[iDim] =
+                        0.5 * (3.0 * coef[ni - 2][j][k].x[iDim] - 1.0 * coef[ni - 3][j][k].x[iDim]);
+                    coef_i[ni - 2][j][k].y[iDim] =
+                        0.5 * (3.0 * coef[ni - 2][j][k].y[iDim] - 1.0 * coef[ni - 3][j][k].y[iDim]);
+                    coef_i[ni - 2][j][k].z[iDim] =
+                        0.5 * (3.0 * coef[ni - 2][j][k].z[iDim] - 1.0 * coef[ni - 3][j][k].z[iDim]);
+                }
+            }
+        }
+        // j=1/2；(nj-1)-1/2
+        for (int k = 0; k < nk; ++k)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    coef_j[i][0][k].x[iDim] = 0.5 * (3.0 * coef[i][1][k].x[iDim] - 1.0 * coef[i][2][k].x[iDim]);
+                    coef_j[i][0][k].y[iDim] = 0.5 * (3.0 * coef[i][1][k].y[iDim] - 1.0 * coef[i][2][k].y[iDim]);
+                    coef_j[i][0][k].z[iDim] = 0.5 * (3.0 * coef[i][1][k].z[iDim] - 1.0 * coef[i][2][k].z[iDim]);
+                    coef_j[i][nj - 2][k].x[iDim] =
+                        0.5 * (3.0 * coef[i][nj - 2][k].x[iDim] - 1.0 * coef[i][nj - 3][k].x[iDim]);
+                    coef_j[i][nj - 2][k].y[iDim] =
+                        0.5 * (3.0 * coef[i][nj - 2][k].y[iDim] - 1.0 * coef[i][nj - 3][k].y[iDim]);
+                    coef_j[i][nj - 2][k].z[iDim] =
+                        0.5 * (3.0 * coef[i][nj - 2][k].z[iDim] - 1.0 * coef[i][nj - 3][k].z[iDim]);
+                }
+            }
+        }
+        // k=1/2；(nk-1)-1/2
+        for (int j = 0; j < nj; ++j)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    coef_k[i][j][0].x[iDim] = 0.5 * (3.0 * coef[i][j][1].x[iDim] - 1.0 * coef[i][j][2].x[iDim]);
+                    coef_k[i][j][0].y[iDim] = 0.5 * (3.0 * coef[i][j][1].y[iDim] - 1.0 * coef[i][j][2].y[iDim]);
+                    coef_k[i][j][0].z[iDim] = 0.5 * (3.0 * coef[i][j][1].z[iDim] - 1.0 * coef[i][j][2].z[iDim]);
+                    coef_k[i][j][nk - 2].x[iDim] =
+                        0.5 * (3.0 * coef[i][j][nk - 2].x[iDim] - 1.0 * coef[i][j][nk - 3].x[iDim]);
+                    coef_k[i][j][nk - 2].y[iDim] =
+                        0.5 * (3.0 * coef[i][j][nk - 2].y[iDim] - 1.0 * coef[i][j][nk - 3].y[iDim]);
+                    coef_k[i][j][nk - 2].z[iDim] =
+                        0.5 * (3.0 * coef[i][j][nk - 2].z[iDim] - 1.0 * coef[i][j][nk - 3].z[iDim]);
+                }
+            }
+        }
+
+        // 第五步：根据半点坐标和半点逆变换度量系数使用守恒形式计算整点度量系数（CMM2）
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    // i direction
+                    auto coef_xi = node_metrics->GetXi(idx_proxy->GetIdx(i, j, k));
+                    coef_xi[0] = (coef_j[i][j][k].z[2] * coef_j[i][j][k].coord[1] -
+                                  coef_j[i][j - 1][k].z[2] * coef_j[i][j - 1][k].coord[1]) +
+                                 (coef_k[i][j][k].z[1] * coef_k[i][j][k].coord[1] -
+                                  coef_k[i][j][k - 1].z[1] * coef_k[i][j][k - 1].coord[1]);
+                    coef_xi[1] = (coef_j[i][j][k].x[2] * coef_j[i][j][k].coord[2] -
+                                  coef_j[i][j - 1][k].x[2] * coef_j[i][j - 1][k].coord[2]) +
+                                 (coef_k[i][j][k].x[1] * coef_k[i][j][k].coord[2] -
+                                  coef_k[i][j][k - 1].x[1] * coef_k[i][j][k - 1].coord[2]);
+                    coef_xi[2] = (coef_j[i][j][k].y[2] * coef_j[i][j][k].coord[0] -
+                                  coef_j[i][j - 1][k].y[2] * coef_j[i][j - 1][k].coord[0]) +
+                                 (coef_k[i][j][k].y[1] * coef_k[i][j][k].coord[0] -
+                                  coef_k[i][j][k - 1].y[1] * coef_k[i][j][k - 1].coord[0]);
+                    // j direction
+                    auto coef_eta = node_metrics->GetEta(idx_proxy->GetIdx(i, j, k));
+                    coef_eta[0] = (coef_i[i][j][k].z[2] * coef_i[i][j][k].coord[1] -
+                                   coef_i[i - 1][j][k].z[2] * coef_i[i - 1][j][k].coord[1]) +
+                                  (coef_k[i][j][k].z[0] * coef_k[i][j][k].coord[1] -
+                                   coef_k[i][j][k - 1].z[0] * coef_k[i][j][k - 1].coord[1]);
+                    coef_eta[1] = (coef_i[i][j][k].x[2] * coef_i[i][j][k].coord[2] -
+                                   coef_i[i - 1][j][k].x[2] * coef_i[i - 1][j][k].coord[2]) +
+                                  (coef_k[i][j][k].x[0] * coef_k[i][j][k].coord[2] -
+                                   coef_k[i][j][k - 1].x[0] * coef_k[i][j][k - 1].coord[2]);
+                    coef_eta[2] = (coef_i[i][j][k].y[2] * coef_i[i][j][k].coord[0] -
+                                   coef_i[i - 1][j][k].y[2] * coef_i[i - 1][j][k].coord[0]) +
+                                  (coef_k[i][j][k].y[0] * coef_k[i][j][k].coord[0] -
+                                   coef_k[i][j][k - 1].y[0] * coef_k[i][j][k - 1].coord[0]);
+                    // k direction
+                    auto coef_zeta = node_metrics->GetZeta(idx_proxy->GetIdx(i, j, k));
+                    coef_zeta[0] = (coef_i[i][j][k].y[1] * coef_i[i][j][k].coord[2] -
+                                    coef_i[i - 1][j][k].y[1] * coef_i[i - 1][j][k].coord[2]) +
+                                   (coef_j[i][j][k].y[0] * coef_j[i][j][k].coord[2] -
+                                    coef_j[i][j - 1][k].y[0] * coef_j[i][j - 1][k].coord[2]);
+                    coef_zeta[1] = (coef_i[i][j][k].x[1] * coef_i[i][j][k].coord[0] -
+                                    coef_i[i - 1][j][k].x[1] * coef_i[i - 1][j][k].coord[0]) +
+                                   (coef_j[i][j][k].x[0] * coef_j[i][j][k].coord[0] -
+                                    coef_j[i][j - 1][k].x[0] * coef_j[i][j - 1][k].coord[0]);
+                    coef_zeta[2] = (coef_i[i][j][k].eta[1] * coef_i[i][j][k].coord[1] -
+                                    coef_i[i - 1][j][k].eta[1] * coef_i[i - 1][j][k].coord[1]) +
+                                   (coef_j[i][j][k].eta[0] * coef_j[i][j][k].coord[1] -
+                                    coef_j[i][j - 1][k].eta[0] * coef_j[i][j - 1][k].coord[1]);
+                }
+            }
+        }
+    }
+    void NSSolverStruct::CalcMetricsCMM2_6th()
+    {
+        auto grid = GetGrid();
+        auto node = grid->GetNode();
+        auto node_metrics = GetNodeMetrics();
+        auto idx_proxy = GetIdxProxy();
+        int ni = grid->GetNi();
+        int nj = grid->GetNj();
+        int nk = grid->GetNk();
+        int idx_temp[3];
+        // 用于度量系数计算的临时变量
+        struct Coef
+        {
+            double x[4]; // x_xi,x_eta,x_zeta,x_t
+            double y[4]; // y_xi,y_eta,y_zeta,y_t
+            double z[4]; // z_xi,z_eta,z_zeta,z_t
+            double t[4];
+            double xi[4];
+            double eta[4];
+            double zeta[4];
+            double tau[4];
+            double coord[3]; // 坐标
+        };
+        // i+1/2,j+1/2,k+1/2系数
+        std::vector<std::vector<std::vector<Coef>>> coef_i(
+            ni, std::vector<std::vector<Coef>>(nj, std::vector<Coef>(nk, Coef())));
+        std::vector<std::vector<std::vector<Coef>>> coef_j(
+            ni, std::vector<std::vector<Coef>>(nj, std::vector<Coef>(nk, Coef())));
+        std::vector<std::vector<std::vector<Coef>>> coef_k(
+            ni, std::vector<std::vector<Coef>>(nj, std::vector<Coef>(nk, Coef())));
+        //(i,j,k)处的系数
+        std::vector<std::vector<std::vector<Coef>>> coef(ni,
+                                                         std::vector<std::vector<Coef>>(nj, std::vector<Coef>(nk, Coef())));
+        // 第一步：计算半点坐标
+        for (int k = 0; k < nk - 1; ++k)
+        {
+            for (int j = 0; j < nj - 1; ++j)
+            {
+                for (int i = 0; i < ni - 1; ++i)
+                {
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        coef_i[i][j][k].coord[iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i + 1, j, k)[iDim]);
+                        coef_j[i][j][k].coord[iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j + 1, k)[iDim]);
+                        coef_k[i][j][k].coord[iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j, k + 1)[iDim]);
+                    }
+                }
+            }
+        }
+        // 第二步：根据半点坐标计算整点逆变换度量系数
+        for (int k = 3; k < nk - 4; ++k)
+        {
+            for (int j = 3; j < nj - 4; ++j)
+            {
+                for (int i = 3; i < ni - 4; ++i)
+                {
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        // i direction
+                        coef[i][j][k].x[iDim] =
+                            75.0 / 64.0 * (coef_i[i][j][k].coord[iDim] - coef_j[i - 1][j][k].coord[iDim]) -
+                            25.0 / 64.0 * (coef_i[i + 1][j][k].coord[iDim] - coef_j[i - 2][j][k].coord[iDim]) +
+                            3.0 / 640.0 * (coef_i[i + 2][j][k].coord[iDim] - coef_j[i - 3][j][k].coord[iDim]);
+                        // j direction
+                        coef[i][j][k].y[iDim] =
+                            75.0 / 64.0 * (coef_j[i][j][k].coord[iDim] - coef_i[i][j - 1][k].coord[iDim]) -
+                            25.0 / 64.0 * (coef_j[i][j + 1][k].coord[iDim] - coef_i[i][j - 2][k].coord[iDim]) +
+                            3.0 / 640.0 * (coef_j[i][j + 2][k].coord[iDim] - coef_i[i][j - 3][k].coord[iDim]);
+                        // k direction
+                        coef[i][j][k].z[iDim] =
+                            75.0 / 64.0 * (coef_k[i][j][k].coord[iDim] - coef_i[i][j][k - 1].coord[iDim]) -
+                            25.0 / 64.0 * (coef_k[i][j][k + 1].coord[iDim] - coef_i[i][j][k - 2].coord[iDim]) +
+                            3.0 / 640.0 * (coef_k[i][j][k + 2].coord[iDim] - coef_i[i][j][k - 3].coord[iDim]);
+                    }
+                    coef[i][j][k].x[3] = 0.0;
+                    coef[i][j][k].y[3] = 0.0;
+                    coef[i][j][k].z[3] = 0.0;
+                    if (grid->GetDim() == 2)
+                    {
+                        coef[i][j][k].z[0] = 0.0;
+                        coef[i][j][k].z[1] = 0.0;
+                        coef[i][j][k].z[2] = 1.0;
+                    }
+                }
+            }
+        }
+        // 计算边界整点的度量系数
+        // i=1,2;ni-3,ni-2
+        for (int k = 0; k < nk; ++k)
+        {
+            for (int j = 0; j < nj; ++j)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // i direction
+                    coef[1][j][k].x[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef_i[0][j][k].x[iDim] - 17.0 * coef_i[1][j][k].x[iDim] -
+                                             9.0 * coef_i[2][j][k].x[iDim] + 5.0 * coef_i[3][j][k].x[iDim]);
+                    coef[2][j][k].x[iDim] = -27.0 / 24.0 * (coef_i[2][j][k].x[iDim] - coef_i[1][j][k].x[iDim]) -
+                                            1.0 / 24.0 * (coef_i[3][j][k].x[iDim] - coef_i[0][j][k].x[iDim]);
+                    coef[ni - 3][j][k].x[iDim] =
+                        27.0 / 24.0 * (coef_i[ni - 3][j][k].x[iDim] - coef_i[ni - 4][j][k].x[iDim]) +
+                        1.0 / 24.0 * (coef_i[ni - 2][j][k].x[iDim] - coef_i[ni - 5][j][k].x[iDim]);
+                    coef[ni - 2][j][k].x[iDim] =
+                        1.0 / 24.0 *
+                        (22.0 * coef_i[ni - 1][j][k].x[iDim] - 17.0 * coef_i[ni - 2][j][k].x[iDim] -
+                         9.0 * coef_i[ni - 3][j][k].x[iDim] + 5.0 * coef_i[ni - 4][j][k].x[iDim]);
+                    // j direction
+                    coef[1][j][k].y[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef[0][j][k].y[iDim] - 17.0 * coef[1][j][k].y[iDim] -
+                                             9.0 * coef[2][j][k].y[iDim] + 5.0 * coef[3][j][k].y[iDim]);
+                    coef[2][j][k].y[iDim] = -27.0 / 24.0 * (coef[2][j][k].y[iDim] - coef[1][j][k].y[iDim]) -
+                                            1.0 / 24.0 * (coef[3][j][k].y[iDim] - coef[0][j][k].y[iDim]);
+                    coef[ni - 3][j][k].y[iDim] = 27.0 / 24.0 * (coef[ni - 3][j][k].y[iDim] - coef[ni - 4][j][k].y[iDim]) +
+                                                 1.0 / 24.0 * (coef[ni - 2][j][k].y[iDim] - coef[ni - 5][j][k].y[iDim]);
+                    coef[ni - 2][j][k].y[iDim] = 1.0 / 24.0 *
+                                                 (22.0 * coef[ni - 1][j][k].y[iDim] - 17.0 * coef[ni - 2][j][k].y[iDim] -
+                                                  9.0 * coef[ni - 3][j][k].y[iDim] + 5.0 * coef[ni - 4][j][k].y[iDim]);
+                    // k direction
+                    coef[1][j][k].z[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef[0][j][k].z[iDim] - 17.0 * coef[1][j][k].z[iDim] -
+                                             9.0 * coef[2][j][k].z[iDim] + 5.0 * coef[3][j][k].z[iDim]);
+                    coef[2][j][k].z[iDim] = -27.0 / 24.0 * (coef[2][j][k].z[iDim] - coef[1][j][k].z[iDim]) -
+                                            1.0 / 24.0 * (coef[3][j][k].z[iDim] - coef[0][j][k].z[iDim]);
+                    coef[ni - 3][j][k].z[iDim] = 27.0 / 24.0 * (coef[ni - 3][j][k].z[iDim] - coef[ni - 4][j][k].z[iDim]) +
+                                                 1.0 / 24.0 * (coef[ni - 2][j][k].z[iDim] - coef[ni - 5][j][k].z[iDim]);
+                    coef[ni - 2][j][k].z[iDim] = 1.0 / 24.0 *
+                                                 (22.0 * coef[ni - 1][j][k].z[iDim] - 17.0 * coef[ni - 2][j][k].z[iDim] -
+                                                  9.0 * coef[ni - 3][j][k].z[iDim] + 5.0 * coef[ni - 4][j][k].z[iDim]);
+                }
+                coef[1][j][k].x[3] = coef[1][j][k].y[3] = coef[1][j][k].z[3] = 0.0;
+                coef[2][j][k].x[3] = coef[2][j][k].y[3] = coef[2][j][k].z[3] = 0.0;
+                coef[ni - 3][j][k].x[3] = coef[ni - 3][j][k].y[3] = coef[ni - 3][j][k].z[3] = 0.0;
+                coef[ni - 2][j][k].x[3] = coef[ni - 2][j][k].y[3] = coef[ni - 2][j][k].z[3] = 0.0;
+
+                if (grid->GetDim() == 2)
+                {
+                    coef[1][j][k].z[0] = 0.0;
+                    coef[1][j][k].z[1] = 0.0;
+                    coef[1][j][k].z[2] = 1.0;
+                    coef[2][j][k].z[0] = 0.0;
+                    coef[2][j][k].z[1] = 0.0;
+                    coef[2][j][k].z[2] = 1.0;
+                    coef[ni - 3][j][k].z[0] = 0.0;
+                    coef[ni - 3][j][k].z[1] = 0.0;
+                    coef[ni - 3][j][k].z[2] = 1.0;
+                    coef[ni - 2][j][k].z[0] = 0.0;
+                    coef[ni - 2][j][k].z[1] = 0.0;
+                    coef[ni - 2][j][k].z[2] = 1.0;
+                }
+            }
+        }
+        // j=1,2;nj-3,nj-2
+        for (int k = 0; k < nk; ++k)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // i direction
+                    coef[i][1][k].x[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef_i[i][0][k].x[iDim] - 17.0 * coef_i[i][1][k].x[iDim] -
+                                             9.0 * coef_i[i][2][k].x[iDim] + 5.0 * coef_i[i][3][k].x[iDim]);
+                    coef[i][2][k].x[iDim] = -27.0 / 24.0 * (coef_i[i][2][k].x[iDim] - coef_i[i][1][k].x[iDim]) -
+                                            1.0 / 24.0 * (coef_i[i][3][k].x[iDim] - coef_i[i][0][k].x[iDim]);
+                    coef[i][nj - 3][k].x[iDim] =
+                        27.0 / 24.0 * (coef_i[i][nj - 3][k].x[iDim] - coef_i[i][nj - 4][k].x[iDim]) +
+                        1.0 / 24.0 * (coef_i[i][nj - 2][k].x[iDim] - coef_i[i][nj - 5][k].x[iDim]);
+                    coef[i][nj - 2][k].x[iDim] =
+                        1.0 / 24.0 *
+                        (22.0 * coef_i[i][nj - 1][k].x[iDim] - 17.0 * coef_i[i][nj - 2][k].x[iDim] -
+                         9.0 * coef_i[i][nj - 3][k].x[iDim] + 5.0 * coef_i[i][nj - 4][k].x[iDim]);
+                    // j direction
+                    coef[i][1][k].y[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef[i][0][k].y[iDim] - 17.0 * coef[i][1][k].y[iDim] -
+                                             9.0 * coef[i][2][k].y[iDim] + 5.0 * coef[i][3][k].y[iDim]);
+                    coef[i][2][k].y[iDim] = -27.0 / 24.0 * (coef[i][2][k].y[iDim] - coef[i][1][k].y[iDim]) -
+                                            1.0 / 24.0 * (coef[i][3][k].y[iDim] - coef[i][0][k].y[iDim]);
+                    coef[i][nj - 3][k].y[iDim] = 27.0 / 24.0 * (coef[i][nj - 3][k].y[iDim] - coef[i][nj - 4][k].y[iDim]) +
+                                                 1.0 / 24.0 * (coef[i][nj - 2][k].y[iDim] - coef[i][nj - 5][k].y[iDim]);
+                    coef[i][nj - 2][k].y[iDim] = 1.0 / 24.0 *
+                                                 (22.0 * coef[i][nj - 1][k].y[iDim] - 17.0 * coef[i][nj - 2][k].y[iDim] -
+                                                  9.0 * coef[i][nj - 3][k].y[iDim] + 5.0 * coef[i][nj - 4][k].y[iDim]);
+                    // k direction
+                    coef[i][1][k].z[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef[i][0][k].z[iDim] - 17.0 * coef[i][1][k].z[iDim] -
+                                             9.0 * coef[i][2][k].z[iDim] + 5.0 * coef[i][3][k].z[iDim]);
+                    coef[i][2][k].z[iDim] = -27.0 / 24.0 * (coef[i][2][k].z[iDim] - coef[i][1][k].z[iDim]) -
+                                            1.0 / 24.0 * (coef[i][3][k].z[iDim] - coef[i][0][k].z[iDim]);
+                    coef[i][nj - 3][k].z[iDim] = 27.0 / 24.0 * (coef[i][nj - 3][k].z[iDim] - coef[i][nj - 4][k].z[iDim]) +
+                                                 1.0 / 24.0 * (coef[i][nj - 2][k].z[iDim] - coef[i][nj - 5][k].z[iDim]);
+                    coef[i][nj - 2][k].z[iDim] = 1.0 / 24.0 *
+                                                 (22.0 * coef[i][nj - 1][k].z[iDim] - 17.0 * coef[i][nj - 2][k].z[iDim] -
+                                                  9.0 * coef[i][nj - 3][k].z[iDim] + 5.0 * coef[i][nj - 4][k].z[iDim]);
+                }
+                coef[i][1][k].x[3] = coef[i][1][k].y[3] = coef[i][1][k].z[3] = 0.0;
+                coef[i][2][k].x[3] = coef[i][2][k].y[3] = coef[i][2][k].z[3] = 0.0;
+                coef[i][nj - 3][k].x[3] = coef[i][nj - 3][k].y[3] = coef[i][nj - 3][k].z[3] = 0.0;
+                coef[i][nj - 2][k].x[3] = coef[i][nj - 2][k].y[3] = coef[i][nj - 2][k].z[3] = 0.0;
+            }
+        }
+        // k=1,2;nk-3,nk-2
+        for (int j = 0; j < nj; ++j)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // i direction
+                    coef[i][j][1].x[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef_i[i][j][0].x[iDim] - 17.0 * coef_i[i][j][1].x[iDim] -
+                                             9.0 * coef_i[i][j][2].x[iDim] + 5.0 * coef_i[i][j][3].x[iDim]);
+                    coef[i][j][2].x[iDim] = -27.0 / 24.0 * (coef_i[i][j][2].x[iDim] - coef_i[i][j][1].x[iDim]) -
+                                            1.0 / 24.0 * (coef_i[i][j][3].x[iDim] - coef_i[i][j][0].x[iDim]);
+                    coef[i][j][nk - 3].x[iDim] =
+                        27.0 / 24.0 * (coef_i[i][j][nk - 3].x[iDim] - coef_i[i][j][nk - 4].x[iDim]) +
+                        1.0 / 24.0 * (coef_i[i][j][nk - 2].x[iDim] - coef_i[i][j][nk - 5].x[iDim]);
+                    coef[i][j][nk - 2].x[iDim] =
+                        1.0 / 24.0 *
+                        (22.0 * coef_i[i][j][nk - 1].x[iDim] - 17.0 * coef_i[i][j][nk - 2].x[iDim] -
+                         9.0 * coef_i[i][j][nk - 3].x[iDim] + 5.0 * coef_i[i][j][nk - 4].x[iDim]);
+                    // j direction
+                    coef[i][j][1].y[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef[i][j][0].y[iDim] - 17.0 * coef[i][j][1].y[iDim] -
+                                             9.0 * coef[i][j][2].y[iDim] + 5.0 * coef[i][j][3].y[iDim]);
+                    coef[i][j][2].y[iDim] = -27.0 / 24.0 * (coef[i][j][2].y[iDim] - coef[i][j][1].y[iDim]) -
+                                            1.0 / 24.0 * (coef[i][j][3].y[iDim] - coef[i][j][0].y[iDim]);
+                    coef[i][j][nk - 3].y[iDim] = 27.0 / 24.0 * (coef[i][j][nk - 3].y[iDim] - coef[i][j][nk - 4].y[iDim]) +
+                                                 1.0 / 24.0 * (coef[i][j][nk - 2].y[iDim] - coef[i][j][nk - 5].y[iDim]);
+                    coef[i][j][nk - 2].y[iDim] = 1.0 / 24.0 *
+                                                 (22.0 * coef[i][j][nk - 1].y[iDim] - 17.0 * coef[i][j][nk - 2].y[iDim] -
+                                                  9.0 * coef[i][j][nk - 3].y[iDim] + 5.0 * coef[i][j][nk - 4].y[iDim]);
+                    // k direction
+                    coef[i][j][1].z[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef[i][j][0].z[iDim] - 17.0 * coef[i][j][1].z[iDim] -
+                                             9.0 * coef[i][j][2].z[iDim] + 5.0 * coef[i][j][3].z[iDim]);
+                    coef[i][j][2].z[iDim] = -27.0 / 24.0 * (coef[i][j][2].z[iDim] - coef[i][j][1].z[iDim]) -
+                                            1.0 / 24.0 * (coef[i][j][3].z[iDim] - coef[i][j][0].z[iDim]);
+                    coef[i][j][nk - 3].z[iDim] = 27.0 / 24.0 * (coef[i][j][nk - 3].z[iDim] - coef[i][j][nk - 4].z[iDim]) +
+                                                 1.0 / 24.0 * (coef[i][j][nk - 2].z[iDim] - coef[i][j][nk - 5].z[iDim]);
+                    coef[i][j][nk - 2].z[iDim] = 1.0 / 24.0 *
+                                                 (22.0 * coef[i][j][nk - 1].z[iDim] - 17.0 * coef[i][j][nk - 2].z[iDim] -
+                                                  9.0 * coef[i][j][nk - 3].z[iDim] + 5.0 * coef[i][j][nk - 4].z[iDim]);
+                }
+                coef[i][j][1].x[3] = coef[i][j][1].y[3] = coef[i][j][1].z[3] = 0.0;
+                coef[i][j][2].x[3] = coef[i][j][2].y[3] = coef[i][j][2].z[3] = 0.0;
+                coef[i][j][nk - 3].x[3] = coef[i][j][nk - 3].y[3] = coef[i][j][nk - 3].z[3] = 0.0;
+                coef[i][j][nk - 2].x[3] = coef[i][j][nk - 2].y[3] = coef[i][j][nk - 2].z[3] = 0.0;
+            }
+        }
+        // 第三步：根据整点逆变换度量系数计算半点逆变换度量系数
+        for (int k = 3; k < nk - 4; ++k)
+        {
+            for (int j = 3; j < nj - 4; ++j)
+            {
+                for (int i = 3; i < ni - 4; ++i)
+                {
+                    for (int iDim = 0; iDim < 3; iDim++)
+                    {
+                        // i+1/2
+                        coef_i[i][j][k].x[iDim] = 75.0 / 128.0 * (coef[i][j][k].x[iDim] + coef[i + 1][j][k].x[iDim]) -
+                                                  25.0 / 256.0 * (coef[i - 1][j][k].x[iDim] + coef[i + 2][j][k].x[iDim]) +
+                                                  3.0 / 256.0 * (coef[i - 2][j][k].x[iDim] + coef[i + 3][j][k].x[iDim]);
+                        coef_i[i][j][k].y[iDim] = 75.0 / 128.0 * (coef[i][j][k].y[iDim] + coef[i + 1][j][k].y[iDim]) -
+                                                  25.0 / 256.0 * (coef[i - 1][j][k].y[iDim] + coef[i + 2][j][k].y[iDim]) +
+                                                  3.0 / 256.0 * (coef[i - 2][j][k].y[iDim] + coef[i + 3][j][k].y[iDim]);
+                        coef_i[i][j][k].z[iDim] = 75.0 / 128.0 * (coef[i][j][k].z[iDim] + coef[i + 1][j][k].z[iDim]) -
+                                                  25.0 / 256.0 * (coef[i - 1][j][k].z[iDim] + coef[i + 2][j][k].z[iDim]) +
+                                                  3.0 / 256.0 * (coef[i - 2][j][k].z[iDim] + coef[i + 3][j][k].z[iDim]);
+                        // j+1/2
+                        coef_j[i][j][k].x[iDim] = 75.0 / 128.0 * (coef[i][j][k].x[iDim] + coef[i][j + 1][k].x[iDim]) -
+                                                  25.0 / 256.0 * (coef[i][j - 1][k].x[iDim] + coef[i][j + 2][k].x[iDim]) +
+                                                  3.0 / 256.0 * (coef[i][j - 2][k].x[iDim] + coef[i][j + 3][k].x[iDim]);
+                        coef_j[i][j][k].y[iDim] = 75.0 / 128.0 * (coef[i][j][k].y[iDim] + coef[i][j + 1][k].y[iDim]) -
+                                                  25.0 / 256.0 * (coef[i][j - 1][k].y[iDim] + coef[i][j + 2][k].y[iDim]) +
+                                                  3.0 / 256.0 * (coef[i][j - 2][k].y[iDim] + coef[i][j + 3][k].y[iDim]);
+                        coef_j[i][j][k].z[iDim] = 75.0 / 128.0 * (coef[i][j][k].z[iDim] + coef[i][j + 1][k].z[iDim]) -
+                                                  25.0 / 256.0 * (coef[i][j - 1][k].z[iDim] + coef[i][j + 2][k].z[iDim]) +
+                                                  3.0 / 256.0 * (coef[i][j - 2][k].z[iDim] + coef[i][j + 3][k].z[iDim]);
+                        // k+1/2
+                        coef_k[i][j][k].x[iDim] = 75.0 / 128.0 * (coef[i][j][k].x[iDim] + coef[i][j][k + 1].x[iDim]) -
+                                                  25.0 / 256.0 * (coef[i][j][k - 1].x[iDim] + coef[i][j][k + 2].x[iDim]) +
+                                                  3.0 / 256.0 * (coef[i][j][k - 2].x[iDim] + coef[i][j][k + 3].x[iDim]);
+                        coef_k[i][j][k].y[iDim] = 75.0 / 128.0 * (coef[i][j][k].y[iDim] + coef[i][j][k + 1].y[iDim]) -
+                                                  25.0 / 256.0 * (coef[i][j][k - 1].y[iDim] + coef[i][j][k + 2].y[iDim]) +
+                                                  3.0 / 256.0 * (coef[i][j][k - 2].y[iDim] + coef[i][j][k + 3].y[iDim]);
+                        coef_k[i][j][k].z[iDim] = 75.0 / 128.0 * (coef[i][j][k].z[iDim] + coef[i][j][k + 1].z[iDim]) -
+                                                  25.0 / 256.0 * (coef[i][j][k - 1].z[iDim] + coef[i][j][k + 2].z[iDim]) +
+                                                  3.0 / 256.0 * (coef[i][j][k - 2].z[iDim] + coef[i][j][k + 3].z[iDim]);
+                    }
+                }
+            }
+        }
+        // 第四步：计算边界半点的逆变换度量系数(二阶偏置插值)
+        // i=1/2,3/2,5/2;ni-3/2,ni-5/2,ni-7/2
+        for (int k = 0; k < nk; ++k)
+        {
+            for (int j = 0; j < nj; ++j)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // i=1/2
+                    coef_i[0][j][k].x[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_i[1][j][k].x[iDim] - 35.0 * coef_i[2][j][k].x[iDim] +
+                                               21.0 * coef_i[3][j][k].x[iDim] - 5.0 * coef_i[4][j][k].x[iDim]);
+                    coef_i[0][j][k].y[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_i[1][j][k].y[iDim] - 35.0 * coef_i[2][j][k].y[iDim] +
+                                               21.0 * coef_i[3][j][k].y[iDim] - 5.0 * coef_i[4][j][k].y[iDim]);
+                    coef_i[0][j][k].z[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_i[1][j][k].z[iDim] - 35.0 * coef_i[2][j][k].z[iDim] +
+                                               21.0 * coef_i[3][j][k].z[iDim] - 5.0 * coef_i[4][j][k].z[iDim]);
+                    // i=3/2
+                    coef_i[1][j][k].x[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_i[1][j][k].x[iDim] + 15.0 * coef_i[2][j][k].x[iDim] -
+                                               5.0 * coef_i[3][j][k].x[iDim] + coef_i[4][j][k].x[iDim]);
+                    coef_i[1][j][k].y[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_i[1][j][k].y[iDim] + 15.0 * coef_i[2][j][k].y[iDim] -
+                                               5.0 * coef_i[3][j][k].y[iDim] + coef_i[4][j][k].y[iDim]);
+                    coef_i[1][j][k].z[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_i[1][j][k].z[iDim] + 15.0 * coef_i[2][j][k].z[iDim] -
+                                               5.0 * coef_i[3][j][k].z[iDim] + coef_i[4][j][k].z[iDim]);
+                    // i=5/2
+                    coef_i[2][j][k].x[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_i[1][j][k].x[iDim] - 9.0 * coef_i[2][j][k].x[iDim] +
+                                               9.0 * coef_i[3][j][k].x[iDim] - coef_i[4][j][k].x[iDim]);
+                    coef_i[2][j][k].y[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_i[1][j][k].y[iDim] - 9.0 * coef_i[2][j][k].y[iDim] +
+                                               9.0 * coef_i[3][j][k].y[iDim] - coef_i[4][j][k].y[iDim]);
+                    coef_i[2][j][k].z[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_i[1][j][k].z[iDim] - 9.0 * coef_i[2][j][k].z[iDim] +
+                                               9.0 * coef_i[3][j][k].z[iDim] - coef_i[4][j][k].z[iDim]);
+                    // i=ni-3/2
+                    coef_i[ni - 3][j][k].x[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_i[ni - 2][j][k].x[iDim] - 35.0 * coef_i[ni - 3][j][k].x[iDim] +
+                         21.0 * coef_i[ni - 4][j][k].x[iDim] - 5.0 * coef_i[ni - 5][j][k].x[iDim]);
+                    coef_i[ni - 3][j][k].y[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_i[ni - 2][j][k].y[iDim] - 35.0 * coef_i[ni - 3][j][k].y[iDim] +
+                         21.0 * coef_i[ni - 4][j][k].y[iDim] - 5.0 * coef_i[ni - 5][j][k].y[iDim]);
+                    coef_i[ni - 3][j][k].z[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_i[ni - 2][j][k].z[iDim] - 35.0 * coef_i[ni - 3][j][k].z[iDim] +
+                         21.0 * coef_i[ni - 4][j][k].z[iDim] - 5.0 * coef_i[ni - 5][j][k].z[iDim]);
+                    // i=ni-5/2
+                    coef_i[ni - 4][j][k].x[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_i[ni - 2][j][k].x[iDim] + 15.0 * coef_i[ni - 3][j][k].x[iDim] -
+                         5.0 * coef_i[ni - 4][j][k].x[iDim] + coef_i[ni - 5][j][k].x[iDim]);
+                    coef_i[ni - 4][j][k].y[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_i[ni - 2][j][k].y[iDim] + 15.0 * coef_i[ni - 3][j][k].y[iDim] -
+                         5.0 * coef_i[ni - 4][j][k].y[iDim] + coef_i[ni - 5][j][k].y[iDim]);
+                    coef_i[ni - 4][j][k].z[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_i[ni - 2][j][k].z[iDim] + 15.0 * coef_i[ni - 3][j][k].z[iDim] -
+                         5.0 * coef_i[ni - 4][j][k].z[iDim] + coef_i[ni - 5][j][k].z[iDim]);
+                    // i=ni-7/2
+                    coef_i[ni - 5][j][k].x[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_i[ni - 2][j][k].x[iDim] - 9.0 * coef_i[ni - 3][j][k].x[iDim] +
+                         9.0 * coef_i[ni - 4][j][k].x[iDim] - coef_i[ni - 5][j][k].x[iDim]);
+                    coef_i[ni - 5][j][k].y[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_i[ni - 2][j][k].y[iDim] - 9.0 * coef_i[ni - 3][j][k].y[iDim] +
+                         9.0 * coef_i[ni - 4][j][k].y[iDim] - coef_i[ni - 5][j][k].y[iDim]);
+                    coef_i[ni - 5][j][k].z[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_i[ni - 2][j][k].z[iDim] - 9.0 * coef_i[ni - 3][j][k].z[iDim] +
+                         9.0 * coef_i[ni - 4][j][k].z[iDim] - coef_i[ni - 5][j][k].z[iDim]);
+                }
+            }
+        }
+        // j=1/2,3/2,5/2;nj-3/2,nj-5/2,nj-7/2
+        for (int k = 0; k < nk; ++k)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // j=1/2
+                    coef_j[i][0][k].x[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_j[i][1][k].x[iDim] - 35.0 * coef_j[i][2][k].x[iDim] +
+                                               21.0 * coef_j[i][3][k].x[iDim] - 5.0 * coef_j[i][4][k].x[iDim]);
+                    coef_j[i][0][k].y[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_j[i][1][k].y[iDim] - 35.0 * coef_j[i][2][k].y[iDim] +
+                                               21.0 * coef_j[i][3][k].y[iDim] - 5.0 * coef_j[i][4][k].y[iDim]);
+                    coef_j[i][0][k].z[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_j[i][1][k].z[iDim] - 35.0 * coef_j[i][2][k].z[iDim] +
+                                               21.0 * coef_j[i][3][k].z[iDim] - 5.0 * coef_j[i][4][k].z[iDim]);
+                    // j=3/2
+                    coef_j[i][1][k].x[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_j[i][1][k].x[iDim] + 15.0 * coef_j[i][2][k].x[iDim] -
+                                               5.0 * coef_j[i][3][k].x[iDim] + coef_j[i][4][k].x[iDim]);
+                    coef_j[i][1][k].y[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_j[i][1][k].y[iDim] + 15.0 * coef_j[i][2][k].y[iDim] -
+                                               5.0 * coef_j[i][3][k].y[iDim] + coef_j[i][4][k].y[iDim]);
+                    coef_j[i][1][k].z[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_j[i][1][k].z[iDim] + 15.0 * coef_j[i][2][k].z[iDim] -
+                                               5.0 * coef_j[i][3][k].z[iDim] + coef_j[i][4][k].z[iDim]);
+                    // j=5/2
+                    coef_j[i][2][k].x[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_j[i][1][k].x[iDim] + 9.0 * coef_j[i][2][k].x[iDim] +
+                                               9.0 * coef_j[i][3][k].x[iDim] - coef_j[i][4][k].x[iDim]);
+                    coef_j[i][2][k].y[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_j[i][1][k].y[iDim] + 9.0 * coef_j[i][2][k].y[iDim] +
+                                               9.0 * coef_j[i][3][k].y[iDim] - coef_j[i][4][k].y[iDim]);
+                    coef_j[i][2][k].z[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_j[i][1][k].z[iDim] + 9.0 * coef_j[i][2][k].z[iDim] +
+                                               9.0 * coef_j[i][3][k].z[iDim] - coef_j[i][4][k].z[iDim]);
+                    // j=nj-3/2
+                    coef_j[i][nj - 3][k].x[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_j[i][nj - 2][k].x[iDim] - 35.0 * coef_j[i][nj - 3][k].x[iDim] +
+                         21.0 * coef_j[i][nj - 4][k].x[iDim] - 5.0 * coef_j[i][nj - 5][k].x[iDim]);
+                    coef_j[i][nj - 3][k].y[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_j[i][nj - 2][k].y[iDim] - 35.0 * coef_j[i][nj - 3][k].y[iDim] +
+                         21.0 * coef_j[i][nj - 4][k].y[iDim] - 5.0 * coef_j[i][nj - 5][k].y[iDim]);
+                    coef_j[i][nj - 3][k].z[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_j[i][nj - 2][k].z[iDim] - 35.0 * coef_j[i][nj - 3][k].z[iDim] +
+                         21.0 * coef_j[i][nj - 4][k].z[iDim] - 5.0 * coef_j[i][nj - 5][k].z[iDim]);
+                    // j=nj-5/2
+                    coef_j[i][nj - 4][k].x[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_j[i][nj - 2][k].x[iDim] + 15.0 * coef_j[i][nj - 3][k].x[iDim] -
+                         5.0 * coef_j[i][nj - 4][k].x[iDim] + coef_j[i][nj - 5][k].x[iDim]);
+                    coef_j[i][nj - 4][k].y[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_j[i][nj - 2][k].y[iDim] + 15.0 * coef_j[i][nj - 3][k].y[iDim] -
+                         5.0 * coef_j[i][nj - 4][k].y[iDim] + coef_j[i][nj - 5][k].y[iDim]);
+                    coef_j[i][nj - 4][k].z[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_j[i][nj - 2][k].z[iDim] + 15.0 * coef_j[i][nj - 3][k].z[iDim] -
+                         5.0 * coef_j[i][nj - 4][k].z[iDim] + coef_j[i][nj - 5][k].z[iDim]);
+                    // j=nj-7/2
+                    coef_j[i][nj - 5][k].x[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_j[i][nj - 2][k].x[iDim] + 9.0 * coef_j[i][nj - 3][k].x[iDim] +
+                         9.0 * coef_j[i][nj - 4][k].x[iDim] - coef_j[i][nj - 5][k].x[iDim]);
+                    coef_j[i][nj - 5][k].y[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_j[i][nj - 2][k].y[iDim] + 9.0 * coef_j[i][nj - 3][k].y[iDim] +
+                         9.0 * coef_j[i][nj - 4][k].y[iDim] - coef_j[i][nj - 5][k].y[iDim]);
+                    coef_j[i][nj - 5][k].z[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_j[i][nj - 2][k].z[iDim] + 9.0 * coef_j[i][nj - 3][k].z[iDim] +
+                         9.0 * coef_j[i][nj - 4][k].z[iDim] - coef_j[i][nj - 5][k].z[iDim]);
+                }
+            }
+        }
+        // k=1/2,3/2,5/2;nk-3/2,nk-5/2,nk-7/2
+        for (int j = 0; j < nj; ++j)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // k=1/2
+                    coef_k[i][j][0].x[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_k[i][j][1].x[iDim] - 35.0 * coef_k[i][j][2].x[iDim] +
+                                               21.0 * coef_k[i][j][3].x[iDim] - 5.0 * coef_k[i][j][4].x[iDim]);
+                    coef_k[i][j][0].y[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_k[i][j][1].y[iDim] - 35.0 * coef_k[i][j][2].y[iDim] +
+                                               21.0 * coef_k[i][j][3].y[iDim] - 5.0 * coef_k[i][j][4].y[iDim]);
+                    coef_k[i][j][0].z[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_k[i][j][1].z[iDim] - 35.0 * coef_k[i][j][2].z[iDim] +
+                                               21.0 * coef_k[i][j][3].z[iDim] - 5.0 * coef_k[i][j][4].z[iDim]);
+                    // k=3/2
+                    coef_k[i][j][1].x[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_k[i][j][1].x[iDim] + 15.0 * coef_k[i][j][2].x[iDim] -
+                                               5.0 * coef_k[i][j][3].x[iDim] + coef_k[i][j][4].x[iDim]);
+                    coef_k[i][j][1].y[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_k[i][j][1].y[iDim] + 15.0 * coef_k[i][j][2].y[iDim] -
+                                               5.0 * coef_k[i][j][3].y[iDim] + coef_k[i][j][4].y[iDim]);
+                    coef_k[i][j][1].z[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_k[i][j][1].z[iDim] + 15.0 * coef_k[i][j][2].z[iDim] -
+                                               5.0 * coef_k[i][j][3].z[iDim] + coef_k[i][j][4].z[iDim]);
+                    // k=5/2
+                    coef_k[i][j][2].x[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_k[i][j][1].x[iDim] + 9.0 * coef_k[i][j][2].x[iDim] +
+                                               9.0 * coef_k[i][j][3].x[iDim] - coef_k[i][j][4].x[iDim]);
+                    coef_k[i][j][2].y[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_k[i][j][1].y[iDim] + 9.0 * coef_k[i][j][2].y[iDim] +
+                                               9.0 * coef_k[i][j][3].y[iDim] - coef_k[i][j][4].y[iDim]);
+                    coef_k[i][j][2].z[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_k[i][j][1].z[iDim] + 9.0 * coef_k[i][j][2].z[iDim] +
+                                               9.0 * coef_k[i][j][3].z[iDim] - coef_k[i][j][4].z[iDim]);
+                    // k=nk-3/2
+                    coef_k[i][j][nk - 3].x[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_k[i][j][nk - 2].x[iDim] - 35.0 * coef_k[i][j][nk - 3].x[iDim] +
+                         21.0 * coef_k[i][j][nk - 4].x[iDim] - 5.0 * coef_k[i][j][nk - 5].x[iDim]);
+                    coef_k[i][j][nk - 3].y[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_k[i][j][nk - 2].y[iDim] - 35.0 * coef_k[i][j][nk - 3].y[iDim] +
+                         21.0 * coef_k[i][j][nk - 4].y[iDim] - 5.0 * coef_k[i][j][nk - 5].y[iDim]);
+                    coef_k[i][j][nk - 3].z[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_k[i][j][nk - 2].z[iDim] - 35.0 * coef_k[i][j][nk - 3].z[iDim] +
+                         21.0 * coef_k[i][j][nk - 4].z[iDim] - 5.0 * coef_k[i][j][nk - 5].z[iDim]);
+                    // k=nk-5/2
+                    coef_k[i][j][nk - 4].x[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_k[i][j][nk - 2].x[iDim] + 15.0 * coef_k[i][j][nk - 3].x[iDim] -
+                         5.0 * coef_k[i][j][nk - 4].x[iDim] + coef_k[i][j][nk - 5].x[iDim]);
+                    coef_k[i][j][nk - 4].y[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_k[i][j][nk - 2].y[iDim] + 15.0 * coef_k[i][j][nk - 3].y[iDim] -
+                         5.0 * coef_k[i][j][nk - 4].y[iDim] + coef_k[i][j][nk - 5].y[iDim]);
+                    coef_k[i][j][nk - 4].z[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_k[i][j][nk - 2].z[iDim] + 15.0 * coef_k[i][j][nk - 3].z[iDim] -
+                         5.0 * coef_k[i][j][nk - 4].z[iDim] + coef_k[i][j][nk - 5].z[iDim]);
+                    // k=nk-7/2
+                    coef_k[i][j][nk - 5].x[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_k[i][j][nk - 2].x[iDim] + 9.0 * coef_k[i][j][nk - 3].x[iDim] +
+                         9.0 * coef_k[i][j][nk - 4].x[iDim] - coef_k[i][j][nk - 5].x[iDim]);
+                    coef_k[i][j][nk - 5].y[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_k[i][j][nk - 2].y[iDim] + 9.0 * coef_k[i][j][nk - 3].y[iDim] +
+                         9.0 * coef_k[i][j][nk - 4].y[iDim] - coef_k[i][j][nk - 5].y[iDim]);
+                    coef_k[i][j][nk - 5].z[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_k[i][j][nk - 2].z[iDim] + 9.0 * coef_k[i][j][nk - 3].z[iDim] +
+                         9.0 * coef_k[i][j][nk - 4].z[iDim] - coef_k[i][j][nk - 5].z[iDim]);
+                }
+            }
+        }
+        // 第五步：根据半点坐标和半点逆变换度量系数使用守恒形式计算整点度量系数（CMM2)
+        double temp[6][6];
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    // i direction
+                    auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
+                    auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
+                    auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        temp[0][iTemp] =
+                            coef_i[i - 3 + iTemp][j][k].coord[1] * coef_i[i - 3 + iTemp][j][k].z[2]; // y*z_zeta
+                        temp[1][iTemp] =
+                            coef_i[i - 3 + iTemp][j][k].coord[2] * coef_i[i - 3 + iTemp][j][k].x[2]; // z*x_zeta
+                        temp[2][iTemp] =
+                            coef_i[i - 3 + iTemp][j][k].coord[0] * coef_i[i - 3 + iTemp][j][k].y[2];              // x*y_zeta
+                        temp[3][iTemp] = coef_i[i - 3 + iTemp][j][k].coord[1] * coef_i[i - 3 + iTemp][j][k].z[1]; // y*z_eta
+                        temp[4][iTemp] = coef_i[i - 3 + iTemp][j][k].coord[2] * coef_i[i - 3 + iTemp][j][k].x[1]; // z*x_eta
+                        temp[5][iTemp] = coef_i[i - 3 + iTemp][j][k].coord[0] * coef_i[i - 3 + iTemp][j][k].y[1]; // x*y_eta
+                    }
+                    coef_eta[0] = -NodeDifferece6th(temp[0]);
+                    coef_eta[1] = -NodeDifferece6th(temp[1]);
+                    coef_eta[2] = -NodeDifferece6th(temp[2]);
+                    coef_zeta[0] = NodeDifferece6th(temp[3]);
+                    coef_zeta[1] = NodeDifferece6th(temp[4]);
+                    coef_zeta[2] = NodeDifferece6th(temp[5]);
+                    // j direction
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        temp[0][iTemp] =
+                            coef_j[i][j - 3 + iTemp][k].coord[1] * coef_j[i][j - 3 + iTemp][k].z[2]; // y*z_zeta
+                        temp[1][iTemp] =
+                            coef_j[i][j - 3 + iTemp][k].coord[2] * coef_j[i][j - 3 + iTemp][k].x[2]; // z*x_zeta
+                        temp[2][iTemp] =
+                            coef_j[i][j - 3 + iTemp][k].coord[0] * coef_j[i][j - 3 + iTemp][k].y[2];              // x*y_zeta
+                        temp[3][iTemp] = coef_j[i][j - 3 + iTemp][k].coord[1] * coef_j[i][j - 3 + iTemp][k].z[0]; // y*z_xi
+                        temp[4][iTemp] = coef_j[i][j - 3 + iTemp][k].coord[2] * coef_j[i][j - 3 + iTemp][k].x[0]; // z*x_xi
+                        temp[5][iTemp] = coef_j[i][j - 3 + iTemp][k].coord[0] * coef_j[i][j - 3 + iTemp][k].y[0]; // x*y_xi
+                    }
+                    coef_xi[0] = NodeDifferece6th(temp[0]);
+                    coef_xi[1] = NodeDifferece6th(temp[1]);
+                    coef_xi[2] = NodeDifferece6th(temp[2]);
+                    coef_zeta[0] -= NodeDifferece6th(temp[3]);
+                    coef_zeta[1] -= NodeDifferece6th(temp[4]);
+                    coef_zeta[2] -= NodeDifferece6th(temp[5]);
+                    // k direction
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        temp[0][iTemp] = coef_k[i][j][k - 3 + iTemp].coord[1] * coef_k[i][j][k - 3 + iTemp].z[1]; // y*z_eta
+                        temp[1][iTemp] = coef_k[i][j][k - 3 + iTemp].coord[2] * coef_k[i][j][k - 3 + iTemp].x[1]; // z*x_eta
+                        temp[2][iTemp] = coef_k[i][j][k - 3 + iTemp].coord[0] * coef_k[i][j][k - 3 + iTemp].y[1]; // x*y_eta
+                        temp[3][iTemp] = coef_k[i][j][k - 3 + iTemp].coord[1] * coef_k[i][j][k - 3 + iTemp].z[0]; // y*z_xi
+                        temp[4][iTemp] = coef_k[i][j][k - 3 + iTemp].coord[2] * coef_k[i][j][k - 3 + iTemp].x[0]; // z*x_xi
+                        temp[5][iTemp] = coef_k[i][j][k - 3 + iTemp].coord[0] * coef_k[i][j][k - 3 + iTemp].y[0]; // x*y_xi
+                    }
+                    coef_xi[0] -= NodeDifferece6th(temp[0]);
+                    coef_xi[1] -= NodeDifferece6th(temp[1]);
+                    coef_xi[2] -= NodeDifferece6th(temp[2]);
+                    coef_eta[0] += NodeDifferece6th(temp[3]);
+                    coef_eta[1] += NodeDifferece6th(temp[4]);
+                    coef_eta[2] += NodeDifferece6th(temp[5]);
+                }
+            }
+        }
     }
     void NSSolverStruct::CalcMetricsSCMM()
     {
+        auto para = GetPara();
+        auto flux_diff_scheme = para->GetFluxDifferenceScheme();
+        if (flux_diff_scheme == FluxDifferenceScheme::SecondOrder)
+        {
+            CalcMetricsSCMM_2nd();
+        }
+        else if (flux_diff_scheme == FluxDifferenceScheme::SixthOrder)
+        {
+            CalcMetricsSCMM_6th();
+        }
+        else
+        {
+            Log::warn("FluxDifferenceScheme is not defined, use SecondOrder as default");
+            CalcMetricsSCMM_2nd();
+        }
+    }
+    void NSSolverStruct::CalcMetricsSCMM_2nd()
+    {
+        auto grid = GetGrid();
+        auto node = grid->GetNode();
+        auto node_metrics = GetNodeMetrics();
+        auto idx_proxy = GetIdxProxy();
+        int ni = grid->GetNi();
+        int nj = grid->GetNj();
+        int nk = grid->GetNk();
+        int idx_temp[3];
+        // 用于度量系数计算的临时变量
+        struct Coef
+        {
+            double x[4]; // x_xi,x_eta,x_zeta,x_t
+            double y[4]; // y_xi,y_eta,y_zeta,y_t
+            double z[4]; // z_xi,z_eta,z_zeta,z_t
+            double t[4];
+            double xi[4];
+            double eta[4];
+            double zeta[4];
+            double tau[4];
+            double coord[3]; // 坐标
+        };
+        // i+1/2,j+1/2,k+1/2系数
+        std::vector<std::vector<std::vector<Coef>>> coef_i(
+            ni, std::vector<std::vector<Coef>>(nj, std::vector<Coef>(nk, Coef())));
+        std::vector<std::vector<std::vector<Coef>>> coef_j(
+            ni, std::vector<std::vector<Coef>>(nj, std::vector<Coef>(nk, Coef())));
+        std::vector<std::vector<std::vector<Coef>>> coef_k(
+            ni, std::vector<std::vector<Coef>>(nj, std::vector<Coef>(nk, Coef())));
+        //(i,j,k)处的系数
+        std::vector<std::vector<std::vector<Coef>>> coef(ni,
+                                                         std::vector<std::vector<Coef>>(nj, std::vector<Coef>(nk, Coef())));
+        // 第一步：计算半点坐标
+        for (int k = 0; k < nk - 1; ++k)
+        {
+            for (int j = 0; j < nj - 1; ++j)
+            {
+                for (int i = 0; i < ni - 1; ++i)
+                {
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        coef_i[i][j][k].coord[iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i + 1, j, k)[iDim]);
+                        coef_j[i][j][k].coord[iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j + 1, k)[iDim]);
+                        coef_k[i][j][k].coord[iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j, k + 1)[iDim]);
+                    }
+                }
+            }
+        }
+        // 第二步：根据半点坐标计算整点逆变换度量系数
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        // i direction
+                        coef[i][j][k].x[iDim] = coef_i[i][j][k].coord[iDim] - coef_j[i - 1][j][k].coord[iDim];
+                        // j direction
+                        coef[i][j][k].y[iDim] = coef_j[i][j][k].coord[iDim] - coef_i[i][j - 1][k].coord[iDim];
+                        // k direction
+                        coef[i][j][k].z[iDim] = coef_k[i][j][k].coord[iDim] - coef_i[i][j][k - 1].coord[iDim];
+                    }
+                    coef[i][j][k].x[3] = 0.0;
+                    coef[i][j][k].y[3] = 0.0;
+                    coef[i][j][k].z[3] = 0.0;
+                    if (grid->GetDim() == 2)
+                    {
+                        coef[i][j][k].z[0] = 0.0;
+                        coef[i][j][k].z[1] = 0.0;
+                        coef[i][j][k].z[2] = 1.0;
+                    }
+                }
+            }
+        }
+        // 第三步：根据整点逆变换度量系数计算半点逆变换度量系数
+        for (int k = 1; k < nk - 2; ++k)
+        {
+            for (int j = 1; j < nj - 2; ++j)
+            {
+                for (int i = 1; i < ni - 2; ++i)
+                {
+                    for (int iDim = 0; iDim < 3; iDim++)
+                    {
+                        // i+1/2
+                        coef_i[i][j][k].x[iDim] = 0.5 * (coef[i][j][k].x[iDim] + coef[i + 1][j][k].x[iDim]);
+                        coef_i[i][j][k].y[iDim] = 0.5 * (coef[i][j][k].y[iDim] + coef[i + 1][j][k].y[iDim]);
+                        coef_i[i][j][k].z[iDim] = 0.5 * (coef[i][j][k].z[iDim] + coef[i + 1][j][k].z[iDim]);
+                        // j+1/2
+                        coef_j[i][j][k].x[iDim] = 0.5 * (coef[i][j][k].x[iDim] + coef[i][j + 1][k].x[iDim]);
+                        coef_j[i][j][k].y[iDim] = 0.5 * (coef[i][j][k].y[iDim] + coef[i][j + 1][k].y[iDim]);
+                        coef_j[i][j][k].z[iDim] = 0.5 * (coef[i][j][k].z[iDim] + coef[i][j + 1][k].z[iDim]);
+                        // k+1/2
+                        coef_k[i][j][k].x[iDim] = 0.5 * (coef[i][j][k].x[iDim] + coef[i][j][k + 1].x[iDim]);
+                        coef_k[i][j][k].y[iDim] = 0.5 * (coef[i][j][k].y[iDim] + coef[i][j][k + 1].y[iDim]);
+                        coef_k[i][j][k].z[iDim] = 0.5 * (coef[i][j][k].z[iDim] + coef[i][j][k + 1].z[iDim]);
+                    }
+                }
+            }
+        }
+        // 第四步：计算边界半点的逆变换度量系数（二阶偏置插值）
+        // i=1/2；(ni-1)-1/2
+        for (int k = 0; k < nk; ++k)
+        {
+            for (int j = 0; j < nj; ++j)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    coef_i[0][j][k].x[iDim] = 0.5 * (3.0 * coef[1][j][k].x[iDim] - 1.0 * coef[2][j][k].x[iDim]);
+                    coef_i[0][j][k].y[iDim] = 0.5 * (3.0 * coef[1][j][k].y[iDim] - 1.0 * coef[2][j][k].y[iDim]);
+                    coef_i[0][j][k].z[iDim] = 0.5 * (3.0 * coef[1][j][k].z[iDim] - 1.0 * coef[2][j][k].z[iDim]);
+                    coef_i[ni - 2][j][k].x[iDim] =
+                        0.5 * (3.0 * coef[ni - 2][j][k].x[iDim] - 1.0 * coef[ni - 3][j][k].x[iDim]);
+                    coef_i[ni - 2][j][k].y[iDim] =
+                        0.5 * (3.0 * coef[ni - 2][j][k].y[iDim] - 1.0 * coef[ni - 3][j][k].y[iDim]);
+                    coef_i[ni - 2][j][k].z[iDim] =
+                        0.5 * (3.0 * coef[ni - 2][j][k].z[iDim] - 1.0 * coef[ni - 3][j][k].z[iDim]);
+                }
+            }
+        }
+        // j=1/2；(nj-1)-1/2
+        for (int k = 0; k < nk; ++k)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    coef_j[i][0][k].x[iDim] = 0.5 * (3.0 * coef[i][1][k].x[iDim] - 1.0 * coef[i][2][k].x[iDim]);
+                    coef_j[i][0][k].y[iDim] = 0.5 * (3.0 * coef[i][1][k].y[iDim] - 1.0 * coef[i][2][k].y[iDim]);
+                    coef_j[i][0][k].z[iDim] = 0.5 * (3.0 * coef[i][1][k].z[iDim] - 1.0 * coef[i][2][k].z[iDim]);
+                    coef_j[i][nj - 2][k].x[iDim] =
+                        0.5 * (3.0 * coef[i][nj - 2][k].x[iDim] - 1.0 * coef[i][nj - 3][k].x[iDim]);
+                    coef_j[i][nj - 2][k].y[iDim] =
+                        0.5 * (3.0 * coef[i][nj - 2][k].y[iDim] - 1.0 * coef[i][nj - 3][k].y[iDim]);
+                    coef_j[i][nj - 2][k].z[iDim] =
+                        0.5 * (3.0 * coef[i][nj - 2][k].z[iDim] - 1.0 * coef[i][nj - 3][k].z[iDim]);
+                }
+            }
+        }
+        // k=1/2；(nk-1)-1/2
+        for (int j = 0; j < nj; ++j)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    coef_k[i][j][0].x[iDim] = 0.5 * (3.0 * coef[i][j][1].x[iDim] - 1.0 * coef[i][j][2].x[iDim]);
+                    coef_k[i][j][0].y[iDim] = 0.5 * (3.0 * coef[i][j][1].y[iDim] - 1.0 * coef[i][j][2].y[iDim]);
+                    coef_k[i][j][0].z[iDim] = 0.5 * (3.0 * coef[i][j][1].z[iDim] - 1.0 * coef[i][j][2].z[iDim]);
+                    coef_k[i][j][nk - 2].x[iDim] =
+                        0.5 * (3.0 * coef[i][j][nk - 2].x[iDim] - 1.0 * coef[i][j][nk - 3].x[iDim]);
+                    coef_k[i][j][nk - 2].y[iDim] =
+                        0.5 * (3.0 * coef[i][j][nk - 2].y[iDim] - 1.0 * coef[i][j][nk - 3].y[iDim]);
+                    coef_k[i][j][nk - 2].z[iDim] =
+                        0.5 * (3.0 * coef[i][j][nk - 2].z[iDim] - 1.0 * coef[i][j][nk - 3].z[iDim]);
+                }
+            }
+        }
+
+        // 第五步：根据半点坐标和半点逆变换度量系数使用守恒形式计算整点度量系数（CMM2）
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    // i direction
+                    auto coef_xi = node_metrics->GetXi(idx_proxy->GetIdx(i, j, k));
+                    coef_xi[0] = 0.5 * (coef_j[i][j][k].z[2] * coef_j[i][j][k].coord[1] -
+                                        coef_j[i][j - 1][k].z[2] * coef_j[i][j - 1][k].coord[1]) +
+                                 (coef_k[i][j][k].z[1] * coef_k[i][j][k].coord[1] -
+                                  coef_k[i][j][k - 1].z[1] * coef_k[i][j][k - 1].coord[1]) +
+                                 0.5 * (coef_j[i][j][k].z[2] * coef_j[i][j][k].coord[1] -
+                                        coef_j[i][j - 1][k].z[2] * coef_j[i][j - 1][k].coord[1]) +
+                                 (coef_k[i][j][k].z[1] * coef_k[i][j][k].coord[1] -
+                                  coef_k[i][j][k - 1].z[1] * coef_k[i][j][k - 1].coord[1]);
+                    coef_xi[1] = 0.5 * (coef_j[i][j][k].x[2] * coef_j[i][j][k].coord[2] -
+                                        coef_j[i][j - 1][k].x[2] * coef_j[i][j - 1][k].coord[2]) +
+                                 (coef_k[i][j][k].x[1] * coef_k[i][j][k].coord[2] -
+                                  coef_k[i][j][k - 1].x[1] * coef_k[i][j][k - 1].coord[2]) +
+                                 0.5 * (coef_j[i][j][k].x[2] * coef_j[i][j][k].coord[2] -
+                                        coef_j[i][j - 1][k].x[2] * coef_j[i][j - 1][k].coord[2]) +
+                                 (coef_k[i][j][k].x[1] * coef_k[i][j][k].coord[2] -
+                                  coef_k[i][j][k - 1].x[1] * coef_k[i][j][k - 1].coord[2]);
+                    coef_xi[2] = 0.5 * (coef_j[i][j][k].y[2] * coef_j[i][j][k].coord[0] -
+                                        coef_j[i][j - 1][k].y[2] * coef_j[i][j - 1][k].coord[0]) +
+                                 (coef_k[i][j][k].y[1] * coef_k[i][j][k].coord[0] -
+                                  coef_k[i][j][k - 1].y[1] * coef_k[i][j][k - 1].coord[0]) +
+                                 0.5 * (coef_j[i][j][k].y[2] * coef_j[i][j][k].coord[0] -
+                                        coef_j[i][j - 1][k].y[2] * coef_j[i][j - 1][k].coord[0]) +
+                                 (coef_k[i][j][k].y[1] * coef_k[i][j][k].coord[0] -
+                                  coef_k[i][j][k - 1].y[1] * coef_k[i][j][k - 1].coord[0]);
+                    // j direction
+                    auto coef_eta = node_metrics->GetEta(idx_proxy->GetIdx(i, j, k));
+                    coef_eta[0] = 0.5 * (coef_i[i][j][k].z[2] * coef_i[i][j][k].coord[1] -
+                                         coef_i[i - 1][j][k].z[2] * coef_i[i - 1][j][k].coord[1]) +
+                                  (coef_k[i][j][k].z[0] * coef_k[i][j][k].coord[1] -
+                                   coef_k[i][j][k - 1].z[0] * coef_k[i][j][k - 1].coord[1]) +
+                                  0.5 * (coef_i[i][j][k].z[2] * coef_i[i][j][k].coord[1] -
+                                         coef_i[i - 1][j][k].z[2] * coef_i[i - 1][j][k].coord[1]) +
+                                  (coef_k[i][j][k].z[0] * coef_k[i][j][k].coord[1] -
+                                   coef_k[i][j][k - 1].z[0] * coef_k[i][j][k - 1].coord[1]);
+                    coef_eta[1] = 0.5 * (coef_i[i][j][k].x[2] * coef_i[i][j][k].coord[2] -
+                                         coef_i[i - 1][j][k].x[2] * coef_i[i - 1][j][k].coord[2]) +
+                                  (coef_k[i][j][k].x[0] * coef_k[i][j][k].coord[2] -
+                                   coef_k[i][j][k - 1].x[0] * coef_k[i][j][k - 1].coord[2]) +
+                                  0.5 * (coef_i[i][j][k].x[2] * coef_i[i][j][k].coord[2] -
+                                         coef_i[i - 1][j][k].x[2] * coef_i[i - 1][j][k].coord[2]) +
+                                  (coef_k[i][j][k].x[0] * coef_k[i][j][k].coord[2] -
+                                   coef_k[i][j][k - 1].x[0] * coef_k[i][j][k - 1].coord[2]);
+                    coef_eta[2] = 0.5 * (coef_i[i][j][k].y[2] * coef_i[i][j][k].coord[0] -
+                                         coef_i[i - 1][j][k].y[2] * coef_i[i - 1][j][k].coord[0]) +
+                                  (coef_k[i][j][k].y[0] * coef_k[i][j][k].coord[0] -
+                                   coef_k[i][j][k - 1].y[0] * coef_k[i][j][k - 1].coord[0]) +
+                                  0.5 * (coef_i[i][j][k].y[2] * coef_i[i][j][k].coord[0] -
+                                         coef_i[i - 1][j][k].y[2] * coef_i[i - 1][j][k].coord[0]) +
+                                  (coef_k[i][j][k].y[0] * coef_k[i][j][k].coord[0] -
+                                   coef_k[i][j][k - 1].y[0] * coef_k[i][j][k - 1].coord[0]);
+                    // k direction
+                    auto coef_zeta = node_metrics->GetZeta(idx_proxy->GetIdx(i, j, k));
+                    coef_zeta[0] = 0.5 * (coef_i[i][j][k].y[1] * coef_i[i][j][k].coord[2] -
+                                          coef_i[i - 1][j][k].y[1] * coef_i[i - 1][j][k].coord[2]) +
+                                   (coef_j[i][j][k].y[0] * coef_j[i][j][k].coord[2] -
+                                    coef_j[i][j - 1][k].y[0] * coef_j[i][j - 1][k].coord[2]) +
+                                   0.5 * (coef_i[i][j][k].y[1] * coef_i[i][j][k].coord[2] -
+                                          coef_i[i - 1][j][k].y[1] * coef_i[i - 1][j][k].coord[2]) +
+                                   (coef_j[i][j][k].y[0] * coef_j[i][j][k].coord[2] -
+                                    coef_j[i][j - 1][k].y[0] * coef_j[i][j - 1][k].coord[2]);
+                    coef_zeta[1] = 0.5 * (coef_i[i][j][k].x[1] * coef_i[i][j][k].coord[0] -
+                                          coef_i[i - 1][j][k].x[1] * coef_i[i - 1][j][k].coord[0]) +
+                                   (coef_j[i][j][k].x[0] * coef_j[i][j][k].coord[0] -
+                                    coef_j[i][j - 1][k].x[0] * coef_j[i][j - 1][k].coord[0]) +
+                                   0.5 * (coef_i[i][j][k].x[1] * coef_i[i][j][k].coord[0] -
+                                          coef_i[i - 1][j][k].x[1] * coef_i[i - 1][j][k].coord[0]) +
+                                   (coef_j[i][j][k].x[0] * coef_j[i][j][k].coord[0] -
+                                    coef_j[i][j - 1][k].x[0] * coef_j[i][j - 1][k].coord[0]);
+                    coef_zeta[2] = 0.5 * (coef_i[i][j][k].eta[1] * coef_i[i][j][k].coord[1] -
+                                          coef_i[i - 1][j][k].eta[1] * coef_i[i - 1][j][k].coord[1]) +
+                                   (coef_j[i][j][k].eta[0] * coef_j[i][j][k].coord[1] -
+                                    coef_j[i][j - 1][k].eta[0] * coef_j[i][j - 1][k].coord[1]) +
+                                   0.5 * (coef_i[i][j][k].eta[1] * coef_i[i][j][k].coord[1] -
+                                          coef_i[i - 1][j][k].eta[1] * coef_i[i - 1][j][k].coord[1]) +
+                                   (coef_j[i][j][k].eta[0] * coef_j[i][j][k].coord[1] -
+                                    coef_j[i][j - 1][k].eta[0] * coef_j[i][j - 1][k].coord[1]);
+                }
+            }
+        }
+    }
+    void NSSolverStruct::CalcMetricsSCMM_6th()
+    {
+        auto grid = GetGrid();
+        auto node = grid->GetNode();
+        auto node_metrics = GetNodeMetrics();
+        auto idx_proxy = GetIdxProxy();
+        int ni = grid->GetNi();
+        int nj = grid->GetNj();
+        int nk = grid->GetNk();
+        int idx_temp[3];
+        // 用于度量系数计算的临时变量
+        struct Coef
+        {
+            double x[4]; // x_xi,x_eta,x_zeta,x_t
+            double y[4]; // y_xi,y_eta,y_zeta,y_t
+            double z[4]; // z_xi,z_eta,z_zeta,z_t
+            double t[4];
+            double xi[4];
+            double eta[4];
+            double zeta[4];
+            double tau[4];
+            double coord[3]; // 坐标
+        };
+        // i+1/2,j+1/2,k+1/2系数
+        std::vector<std::vector<std::vector<Coef>>> coef_i(
+            ni, std::vector<std::vector<Coef>>(nj, std::vector<Coef>(nk, Coef())));
+        std::vector<std::vector<std::vector<Coef>>> coef_j(
+            ni, std::vector<std::vector<Coef>>(nj, std::vector<Coef>(nk, Coef())));
+        std::vector<std::vector<std::vector<Coef>>> coef_k(
+            ni, std::vector<std::vector<Coef>>(nj, std::vector<Coef>(nk, Coef())));
+        //(i,j,k)处的系数
+        std::vector<std::vector<std::vector<Coef>>> coef(ni,
+                                                         std::vector<std::vector<Coef>>(nj, std::vector<Coef>(nk, Coef())));
+        // 第一步：计算半点坐标
+        for (int k = 0; k < nk - 1; ++k)
+        {
+            for (int j = 0; j < nj - 1; ++j)
+            {
+                for (int i = 0; i < ni - 1; ++i)
+                {
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        coef_i[i][j][k].coord[iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i + 1, j, k)[iDim]);
+                        coef_j[i][j][k].coord[iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j + 1, k)[iDim]);
+                        coef_k[i][j][k].coord[iDim] =
+                            0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j, k + 1)[iDim]);
+                    }
+                }
+            }
+        }
+        // 第二步：根据半点坐标计算整点逆变换度量系数
+        for (int k = 3; k < nk - 4; ++k)
+        {
+            for (int j = 3; j < nj - 4; ++j)
+            {
+                for (int i = 3; i < ni - 4; ++i)
+                {
+                    for (int iDim = 0; iDim < 3; ++iDim)
+                    {
+                        // i direction
+                        coef[i][j][k].x[iDim] =
+                            75.0 / 64.0 * (coef_i[i][j][k].coord[iDim] - coef_j[i - 1][j][k].coord[iDim]) -
+                            25.0 / 64.0 * (coef_i[i + 1][j][k].coord[iDim] - coef_j[i - 2][j][k].coord[iDim]) +
+                            3.0 / 640.0 * (coef_i[i + 2][j][k].coord[iDim] - coef_j[i - 3][j][k].coord[iDim]);
+                        // j direction
+                        coef[i][j][k].y[iDim] =
+                            75.0 / 64.0 * (coef_j[i][j][k].coord[iDim] - coef_i[i][j - 1][k].coord[iDim]) -
+                            25.0 / 64.0 * (coef_j[i][j + 1][k].coord[iDim] - coef_i[i][j - 2][k].coord[iDim]) +
+                            3.0 / 640.0 * (coef_j[i][j + 2][k].coord[iDim] - coef_i[i][j - 3][k].coord[iDim]);
+                        // k direction
+                        coef[i][j][k].z[iDim] =
+                            75.0 / 64.0 * (coef_k[i][j][k].coord[iDim] - coef_i[i][j][k - 1].coord[iDim]) -
+                            25.0 / 64.0 * (coef_k[i][j][k + 1].coord[iDim] - coef_i[i][j][k - 2].coord[iDim]) +
+                            3.0 / 640.0 * (coef_k[i][j][k + 2].coord[iDim] - coef_i[i][j][k - 3].coord[iDim]);
+                    }
+                    coef[i][j][k].x[3] = 0.0;
+                    coef[i][j][k].y[3] = 0.0;
+                    coef[i][j][k].z[3] = 0.0;
+                    if (grid->GetDim() == 2)
+                    {
+                        coef[i][j][k].z[0] = 0.0;
+                        coef[i][j][k].z[1] = 0.0;
+                        coef[i][j][k].z[2] = 1.0;
+                    }
+                }
+            }
+        }
+        // 计算边界整点的度量系数
+        // i=1,2;ni-3,ni-2
+        for (int k = 0; k < nk; ++k)
+        {
+            for (int j = 0; j < nj; ++j)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // i direction
+                    coef[1][j][k].x[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef_i[0][j][k].x[iDim] - 17.0 * coef_i[1][j][k].x[iDim] -
+                                             9.0 * coef_i[2][j][k].x[iDim] + 5.0 * coef_i[3][j][k].x[iDim]);
+                    coef[2][j][k].x[iDim] = -27.0 / 24.0 * (coef_i[2][j][k].x[iDim] - coef_i[1][j][k].x[iDim]) -
+                                            1.0 / 24.0 * (coef_i[3][j][k].x[iDim] - coef_i[0][j][k].x[iDim]);
+                    coef[ni - 3][j][k].x[iDim] =
+                        27.0 / 24.0 * (coef_i[ni - 3][j][k].x[iDim] - coef_i[ni - 4][j][k].x[iDim]) +
+                        1.0 / 24.0 * (coef_i[ni - 2][j][k].x[iDim] - coef_i[ni - 5][j][k].x[iDim]);
+                    coef[ni - 2][j][k].x[iDim] =
+                        1.0 / 24.0 *
+                        (22.0 * coef_i[ni - 1][j][k].x[iDim] - 17.0 * coef_i[ni - 2][j][k].x[iDim] -
+                         9.0 * coef_i[ni - 3][j][k].x[iDim] + 5.0 * coef_i[ni - 4][j][k].x[iDim]);
+                    // j direction
+                    coef[1][j][k].y[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef[0][j][k].y[iDim] - 17.0 * coef[1][j][k].y[iDim] -
+                                             9.0 * coef[2][j][k].y[iDim] + 5.0 * coef[3][j][k].y[iDim]);
+                    coef[2][j][k].y[iDim] = -27.0 / 24.0 * (coef[2][j][k].y[iDim] - coef[1][j][k].y[iDim]) -
+                                            1.0 / 24.0 * (coef[3][j][k].y[iDim] - coef[0][j][k].y[iDim]);
+                    coef[ni - 3][j][k].y[iDim] = 27.0 / 24.0 * (coef[ni - 3][j][k].y[iDim] - coef[ni - 4][j][k].y[iDim]) +
+                                                 1.0 / 24.0 * (coef[ni - 2][j][k].y[iDim] - coef[ni - 5][j][k].y[iDim]);
+                    coef[ni - 2][j][k].y[iDim] = 1.0 / 24.0 *
+                                                 (22.0 * coef[ni - 1][j][k].y[iDim] - 17.0 * coef[ni - 2][j][k].y[iDim] -
+                                                  9.0 * coef[ni - 3][j][k].y[iDim] + 5.0 * coef[ni - 4][j][k].y[iDim]);
+                    // k direction
+                    coef[1][j][k].z[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef[0][j][k].z[iDim] - 17.0 * coef[1][j][k].z[iDim] -
+                                             9.0 * coef[2][j][k].z[iDim] + 5.0 * coef[3][j][k].z[iDim]);
+                    coef[2][j][k].z[iDim] = -27.0 / 24.0 * (coef[2][j][k].z[iDim] - coef[1][j][k].z[iDim]) -
+                                            1.0 / 24.0 * (coef[3][j][k].z[iDim] - coef[0][j][k].z[iDim]);
+                    coef[ni - 3][j][k].z[iDim] = 27.0 / 24.0 * (coef[ni - 3][j][k].z[iDim] - coef[ni - 4][j][k].z[iDim]) +
+                                                 1.0 / 24.0 * (coef[ni - 2][j][k].z[iDim] - coef[ni - 5][j][k].z[iDim]);
+                    coef[ni - 2][j][k].z[iDim] = 1.0 / 24.0 *
+                                                 (22.0 * coef[ni - 1][j][k].z[iDim] - 17.0 * coef[ni - 2][j][k].z[iDim] -
+                                                  9.0 * coef[ni - 3][j][k].z[iDim] + 5.0 * coef[ni - 4][j][k].z[iDim]);
+                }
+                coef[1][j][k].x[3] = coef[1][j][k].y[3] = coef[1][j][k].z[3] = 0.0;
+                coef[2][j][k].x[3] = coef[2][j][k].y[3] = coef[2][j][k].z[3] = 0.0;
+                coef[ni - 3][j][k].x[3] = coef[ni - 3][j][k].y[3] = coef[ni - 3][j][k].z[3] = 0.0;
+                coef[ni - 2][j][k].x[3] = coef[ni - 2][j][k].y[3] = coef[ni - 2][j][k].z[3] = 0.0;
+
+                if (grid->GetDim() == 2)
+                {
+                    coef[1][j][k].z[0] = 0.0;
+                    coef[1][j][k].z[1] = 0.0;
+                    coef[1][j][k].z[2] = 1.0;
+                    coef[2][j][k].z[0] = 0.0;
+                    coef[2][j][k].z[1] = 0.0;
+                    coef[2][j][k].z[2] = 1.0;
+                    coef[ni - 3][j][k].z[0] = 0.0;
+                    coef[ni - 3][j][k].z[1] = 0.0;
+                    coef[ni - 3][j][k].z[2] = 1.0;
+                    coef[ni - 2][j][k].z[0] = 0.0;
+                    coef[ni - 2][j][k].z[1] = 0.0;
+                    coef[ni - 2][j][k].z[2] = 1.0;
+                }
+            }
+        }
+        // j=1,2;nj-3,nj-2
+        for (int k = 0; k < nk; ++k)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // i direction
+                    coef[i][1][k].x[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef_i[i][0][k].x[iDim] - 17.0 * coef_i[i][1][k].x[iDim] -
+                                             9.0 * coef_i[i][2][k].x[iDim] + 5.0 * coef_i[i][3][k].x[iDim]);
+                    coef[i][2][k].x[iDim] = -27.0 / 24.0 * (coef_i[i][2][k].x[iDim] - coef_i[i][1][k].x[iDim]) -
+                                            1.0 / 24.0 * (coef_i[i][3][k].x[iDim] - coef_i[i][0][k].x[iDim]);
+                    coef[i][nj - 3][k].x[iDim] =
+                        27.0 / 24.0 * (coef_i[i][nj - 3][k].x[iDim] - coef_i[i][nj - 4][k].x[iDim]) +
+                        1.0 / 24.0 * (coef_i[i][nj - 2][k].x[iDim] - coef_i[i][nj - 5][k].x[iDim]);
+                    coef[i][nj - 2][k].x[iDim] =
+                        1.0 / 24.0 *
+                        (22.0 * coef_i[i][nj - 1][k].x[iDim] - 17.0 * coef_i[i][nj - 2][k].x[iDim] -
+                         9.0 * coef_i[i][nj - 3][k].x[iDim] + 5.0 * coef_i[i][nj - 4][k].x[iDim]);
+                    // j direction
+                    coef[i][1][k].y[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef[i][0][k].y[iDim] - 17.0 * coef[i][1][k].y[iDim] -
+                                             9.0 * coef[i][2][k].y[iDim] + 5.0 * coef[i][3][k].y[iDim]);
+                    coef[i][2][k].y[iDim] = -27.0 / 24.0 * (coef[i][2][k].y[iDim] - coef[i][1][k].y[iDim]) -
+                                            1.0 / 24.0 * (coef[i][3][k].y[iDim] - coef[i][0][k].y[iDim]);
+                    coef[i][nj - 3][k].y[iDim] = 27.0 / 24.0 * (coef[i][nj - 3][k].y[iDim] - coef[i][nj - 4][k].y[iDim]) +
+                                                 1.0 / 24.0 * (coef[i][nj - 2][k].y[iDim] - coef[i][nj - 5][k].y[iDim]);
+                    coef[i][nj - 2][k].y[iDim] = 1.0 / 24.0 *
+                                                 (22.0 * coef[i][nj - 1][k].y[iDim] - 17.0 * coef[i][nj - 2][k].y[iDim] -
+                                                  9.0 * coef[i][nj - 3][k].y[iDim] + 5.0 * coef[i][nj - 4][k].y[iDim]);
+                    // k direction
+                    coef[i][1][k].z[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef[i][0][k].z[iDim] - 17.0 * coef[i][1][k].z[iDim] -
+                                             9.0 * coef[i][2][k].z[iDim] + 5.0 * coef[i][3][k].z[iDim]);
+                    coef[i][2][k].z[iDim] = -27.0 / 24.0 * (coef[i][2][k].z[iDim] - coef[i][1][k].z[iDim]) -
+                                            1.0 / 24.0 * (coef[i][3][k].z[iDim] - coef[i][0][k].z[iDim]);
+                    coef[i][nj - 3][k].z[iDim] = 27.0 / 24.0 * (coef[i][nj - 3][k].z[iDim] - coef[i][nj - 4][k].z[iDim]) +
+                                                 1.0 / 24.0 * (coef[i][nj - 2][k].z[iDim] - coef[i][nj - 5][k].z[iDim]);
+                    coef[i][nj - 2][k].z[iDim] = 1.0 / 24.0 *
+                                                 (22.0 * coef[i][nj - 1][k].z[iDim] - 17.0 * coef[i][nj - 2][k].z[iDim] -
+                                                  9.0 * coef[i][nj - 3][k].z[iDim] + 5.0 * coef[i][nj - 4][k].z[iDim]);
+                }
+                coef[i][1][k].x[3] = coef[i][1][k].y[3] = coef[i][1][k].z[3] = 0.0;
+                coef[i][2][k].x[3] = coef[i][2][k].y[3] = coef[i][2][k].z[3] = 0.0;
+                coef[i][nj - 3][k].x[3] = coef[i][nj - 3][k].y[3] = coef[i][nj - 3][k].z[3] = 0.0;
+                coef[i][nj - 2][k].x[3] = coef[i][nj - 2][k].y[3] = coef[i][nj - 2][k].z[3] = 0.0;
+            }
+        }
+        // k=1,2;nk-3,nk-2
+        for (int j = 0; j < nj; ++j)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // i direction
+                    coef[i][j][1].x[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef_i[i][j][0].x[iDim] - 17.0 * coef_i[i][j][1].x[iDim] -
+                                             9.0 * coef_i[i][j][2].x[iDim] + 5.0 * coef_i[i][j][3].x[iDim]);
+                    coef[i][j][2].x[iDim] = -27.0 / 24.0 * (coef_i[i][j][2].x[iDim] - coef_i[i][j][1].x[iDim]) -
+                                            1.0 / 24.0 * (coef_i[i][j][3].x[iDim] - coef_i[i][j][0].x[iDim]);
+                    coef[i][j][nk - 3].x[iDim] =
+                        27.0 / 24.0 * (coef_i[i][j][nk - 3].x[iDim] - coef_i[i][j][nk - 4].x[iDim]) +
+                        1.0 / 24.0 * (coef_i[i][j][nk - 2].x[iDim] - coef_i[i][j][nk - 5].x[iDim]);
+                    coef[i][j][nk - 2].x[iDim] =
+                        1.0 / 24.0 *
+                        (22.0 * coef_i[i][j][nk - 1].x[iDim] - 17.0 * coef_i[i][j][nk - 2].x[iDim] -
+                         9.0 * coef_i[i][j][nk - 3].x[iDim] + 5.0 * coef_i[i][j][nk - 4].x[iDim]);
+                    // j direction
+                    coef[i][j][1].y[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef[i][j][0].y[iDim] - 17.0 * coef[i][j][1].y[iDim] -
+                                             9.0 * coef[i][j][2].y[iDim] + 5.0 * coef[i][j][3].y[iDim]);
+                    coef[i][j][2].y[iDim] = -27.0 / 24.0 * (coef[i][j][2].y[iDim] - coef[i][j][1].y[iDim]) -
+                                            1.0 / 24.0 * (coef[i][j][3].y[iDim] - coef[i][j][0].y[iDim]);
+                    coef[i][j][nk - 3].y[iDim] = 27.0 / 24.0 * (coef[i][j][nk - 3].y[iDim] - coef[i][j][nk - 4].y[iDim]) +
+                                                 1.0 / 24.0 * (coef[i][j][nk - 2].y[iDim] - coef[i][j][nk - 5].y[iDim]);
+                    coef[i][j][nk - 2].y[iDim] = 1.0 / 24.0 *
+                                                 (22.0 * coef[i][j][nk - 1].y[iDim] - 17.0 * coef[i][j][nk - 2].y[iDim] -
+                                                  9.0 * coef[i][j][nk - 3].y[iDim] + 5.0 * coef[i][j][nk - 4].y[iDim]);
+                    // k direction
+                    coef[i][j][1].z[iDim] = -1.0 / 24.0 *
+                                            (22.0 * coef[i][j][0].z[iDim] - 17.0 * coef[i][j][1].z[iDim] -
+                                             9.0 * coef[i][j][2].z[iDim] + 5.0 * coef[i][j][3].z[iDim]);
+                    coef[i][j][2].z[iDim] = -27.0 / 24.0 * (coef[i][j][2].z[iDim] - coef[i][j][1].z[iDim]) -
+                                            1.0 / 24.0 * (coef[i][j][3].z[iDim] - coef[i][j][0].z[iDim]);
+                    coef[i][j][nk - 3].z[iDim] = 27.0 / 24.0 * (coef[i][j][nk - 3].z[iDim] - coef[i][j][nk - 4].z[iDim]) +
+                                                 1.0 / 24.0 * (coef[i][j][nk - 2].z[iDim] - coef[i][j][nk - 5].z[iDim]);
+                    coef[i][j][nk - 2].z[iDim] = 1.0 / 24.0 *
+                                                 (22.0 * coef[i][j][nk - 1].z[iDim] - 17.0 * coef[i][j][nk - 2].z[iDim] -
+                                                  9.0 * coef[i][j][nk - 3].z[iDim] + 5.0 * coef[i][j][nk - 4].z[iDim]);
+                }
+                coef[i][j][1].x[3] = coef[i][j][1].y[3] = coef[i][j][1].z[3] = 0.0;
+                coef[i][j][2].x[3] = coef[i][j][2].y[3] = coef[i][j][2].z[3] = 0.0;
+                coef[i][j][nk - 3].x[3] = coef[i][j][nk - 3].y[3] = coef[i][j][nk - 3].z[3] = 0.0;
+                coef[i][j][nk - 2].x[3] = coef[i][j][nk - 2].y[3] = coef[i][j][nk - 2].z[3] = 0.0;
+            }
+        }
+        // 第三步：根据整点逆变换度量系数计算半点逆变换度量系数
+        for (int k = 3; k < nk - 4; ++k)
+        {
+            for (int j = 3; j < nj - 4; ++j)
+            {
+                for (int i = 3; i < ni - 4; ++i)
+                {
+                    for (int iDim = 0; iDim < 3; iDim++)
+                    {
+                        // i+1/2
+                        coef_i[i][j][k].x[iDim] = 75.0 / 128.0 * (coef[i][j][k].x[iDim] + coef[i + 1][j][k].x[iDim]) -
+                                                  25.0 / 256.0 * (coef[i - 1][j][k].x[iDim] + coef[i + 2][j][k].x[iDim]) +
+                                                  3.0 / 256.0 * (coef[i - 2][j][k].x[iDim] + coef[i + 3][j][k].x[iDim]);
+                        coef_i[i][j][k].y[iDim] = 75.0 / 128.0 * (coef[i][j][k].y[iDim] + coef[i + 1][j][k].y[iDim]) -
+                                                  25.0 / 256.0 * (coef[i - 1][j][k].y[iDim] + coef[i + 2][j][k].y[iDim]) +
+                                                  3.0 / 256.0 * (coef[i - 2][j][k].y[iDim] + coef[i + 3][j][k].y[iDim]);
+                        coef_i[i][j][k].z[iDim] = 75.0 / 128.0 * (coef[i][j][k].z[iDim] + coef[i + 1][j][k].z[iDim]) -
+                                                  25.0 / 256.0 * (coef[i - 1][j][k].z[iDim] + coef[i + 2][j][k].z[iDim]) +
+                                                  3.0 / 256.0 * (coef[i - 2][j][k].z[iDim] + coef[i + 3][j][k].z[iDim]);
+                        // j+1/2
+                        coef_j[i][j][k].x[iDim] = 75.0 / 128.0 * (coef[i][j][k].x[iDim] + coef[i][j + 1][k].x[iDim]) -
+                                                  25.0 / 256.0 * (coef[i][j - 1][k].x[iDim] + coef[i][j + 2][k].x[iDim]) +
+                                                  3.0 / 256.0 * (coef[i][j - 2][k].x[iDim] + coef[i][j + 3][k].x[iDim]);
+                        coef_j[i][j][k].y[iDim] = 75.0 / 128.0 * (coef[i][j][k].y[iDim] + coef[i][j + 1][k].y[iDim]) -
+                                                  25.0 / 256.0 * (coef[i][j - 1][k].y[iDim] + coef[i][j + 2][k].y[iDim]) +
+                                                  3.0 / 256.0 * (coef[i][j - 2][k].y[iDim] + coef[i][j + 3][k].y[iDim]);
+                        coef_j[i][j][k].z[iDim] = 75.0 / 128.0 * (coef[i][j][k].z[iDim] + coef[i][j + 1][k].z[iDim]) -
+                                                  25.0 / 256.0 * (coef[i][j - 1][k].z[iDim] + coef[i][j + 2][k].z[iDim]) +
+                                                  3.0 / 256.0 * (coef[i][j - 2][k].z[iDim] + coef[i][j + 3][k].z[iDim]);
+                        // k+1/2
+                        coef_k[i][j][k].x[iDim] = 75.0 / 128.0 * (coef[i][j][k].x[iDim] + coef[i][j][k + 1].x[iDim]) -
+                                                  25.0 / 256.0 * (coef[i][j][k - 1].x[iDim] + coef[i][j][k + 2].x[iDim]) +
+                                                  3.0 / 256.0 * (coef[i][j][k - 2].x[iDim] + coef[i][j][k + 3].x[iDim]);
+                        coef_k[i][j][k].y[iDim] = 75.0 / 128.0 * (coef[i][j][k].y[iDim] + coef[i][j][k + 1].y[iDim]) -
+                                                  25.0 / 256.0 * (coef[i][j][k - 1].y[iDim] + coef[i][j][k + 2].y[iDim]) +
+                                                  3.0 / 256.0 * (coef[i][j][k - 2].y[iDim] + coef[i][j][k + 3].y[iDim]);
+                        coef_k[i][j][k].z[iDim] = 75.0 / 128.0 * (coef[i][j][k].z[iDim] + coef[i][j][k + 1].z[iDim]) -
+                                                  25.0 / 256.0 * (coef[i][j][k - 1].z[iDim] + coef[i][j][k + 2].z[iDim]) +
+                                                  3.0 / 256.0 * (coef[i][j][k - 2].z[iDim] + coef[i][j][k + 3].z[iDim]);
+                    }
+                }
+            }
+        }
+        // 第四步：计算边界半点的逆变换度量系数(二阶偏置插值)
+        // i=1/2,3/2,5/2;ni-3/2,ni-5/2,ni-7/2
+        for (int k = 0; k < nk; ++k)
+        {
+            for (int j = 0; j < nj; ++j)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // i=1/2
+                    coef_i[0][j][k].x[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_i[1][j][k].x[iDim] - 35.0 * coef_i[2][j][k].x[iDim] +
+                                               21.0 * coef_i[3][j][k].x[iDim] - 5.0 * coef_i[4][j][k].x[iDim]);
+                    coef_i[0][j][k].y[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_i[1][j][k].y[iDim] - 35.0 * coef_i[2][j][k].y[iDim] +
+                                               21.0 * coef_i[3][j][k].y[iDim] - 5.0 * coef_i[4][j][k].y[iDim]);
+                    coef_i[0][j][k].z[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_i[1][j][k].z[iDim] - 35.0 * coef_i[2][j][k].z[iDim] +
+                                               21.0 * coef_i[3][j][k].z[iDim] - 5.0 * coef_i[4][j][k].z[iDim]);
+                    // i=3/2
+                    coef_i[1][j][k].x[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_i[1][j][k].x[iDim] + 15.0 * coef_i[2][j][k].x[iDim] -
+                                               5.0 * coef_i[3][j][k].x[iDim] + coef_i[4][j][k].x[iDim]);
+                    coef_i[1][j][k].y[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_i[1][j][k].y[iDim] + 15.0 * coef_i[2][j][k].y[iDim] -
+                                               5.0 * coef_i[3][j][k].y[iDim] + coef_i[4][j][k].y[iDim]);
+                    coef_i[1][j][k].z[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_i[1][j][k].z[iDim] + 15.0 * coef_i[2][j][k].z[iDim] -
+                                               5.0 * coef_i[3][j][k].z[iDim] + coef_i[4][j][k].z[iDim]);
+                    // i=5/2
+                    coef_i[2][j][k].x[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_i[1][j][k].x[iDim] - 9.0 * coef_i[2][j][k].x[iDim] +
+                                               9.0 * coef_i[3][j][k].x[iDim] - coef_i[4][j][k].x[iDim]);
+                    coef_i[2][j][k].y[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_i[1][j][k].y[iDim] - 9.0 * coef_i[2][j][k].y[iDim] +
+                                               9.0 * coef_i[3][j][k].y[iDim] - coef_i[4][j][k].y[iDim]);
+                    coef_i[2][j][k].z[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_i[1][j][k].z[iDim] - 9.0 * coef_i[2][j][k].z[iDim] +
+                                               9.0 * coef_i[3][j][k].z[iDim] - coef_i[4][j][k].z[iDim]);
+                    // i=ni-3/2
+                    coef_i[ni - 3][j][k].x[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_i[ni - 2][j][k].x[iDim] - 35.0 * coef_i[ni - 3][j][k].x[iDim] +
+                         21.0 * coef_i[ni - 4][j][k].x[iDim] - 5.0 * coef_i[ni - 5][j][k].x[iDim]);
+                    coef_i[ni - 3][j][k].y[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_i[ni - 2][j][k].y[iDim] - 35.0 * coef_i[ni - 3][j][k].y[iDim] +
+                         21.0 * coef_i[ni - 4][j][k].y[iDim] - 5.0 * coef_i[ni - 5][j][k].y[iDim]);
+                    coef_i[ni - 3][j][k].z[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_i[ni - 2][j][k].z[iDim] - 35.0 * coef_i[ni - 3][j][k].z[iDim] +
+                         21.0 * coef_i[ni - 4][j][k].z[iDim] - 5.0 * coef_i[ni - 5][j][k].z[iDim]);
+                    // i=ni-5/2
+                    coef_i[ni - 4][j][k].x[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_i[ni - 2][j][k].x[iDim] + 15.0 * coef_i[ni - 3][j][k].x[iDim] -
+                         5.0 * coef_i[ni - 4][j][k].x[iDim] + coef_i[ni - 5][j][k].x[iDim]);
+                    coef_i[ni - 4][j][k].y[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_i[ni - 2][j][k].y[iDim] + 15.0 * coef_i[ni - 3][j][k].y[iDim] -
+                         5.0 * coef_i[ni - 4][j][k].y[iDim] + coef_i[ni - 5][j][k].y[iDim]);
+                    coef_i[ni - 4][j][k].z[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_i[ni - 2][j][k].z[iDim] + 15.0 * coef_i[ni - 3][j][k].z[iDim] -
+                         5.0 * coef_i[ni - 4][j][k].z[iDim] + coef_i[ni - 5][j][k].z[iDim]);
+                    // i=ni-7/2
+                    coef_i[ni - 5][j][k].x[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_i[ni - 2][j][k].x[iDim] - 9.0 * coef_i[ni - 3][j][k].x[iDim] +
+                         9.0 * coef_i[ni - 4][j][k].x[iDim] - coef_i[ni - 5][j][k].x[iDim]);
+                    coef_i[ni - 5][j][k].y[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_i[ni - 2][j][k].y[iDim] - 9.0 * coef_i[ni - 3][j][k].y[iDim] +
+                         9.0 * coef_i[ni - 4][j][k].y[iDim] - coef_i[ni - 5][j][k].y[iDim]);
+                    coef_i[ni - 5][j][k].z[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_i[ni - 2][j][k].z[iDim] - 9.0 * coef_i[ni - 3][j][k].z[iDim] +
+                         9.0 * coef_i[ni - 4][j][k].z[iDim] - coef_i[ni - 5][j][k].z[iDim]);
+                }
+            }
+        }
+        // j=1/2,3/2,5/2;nj-3/2,nj-5/2,nj-7/2
+        for (int k = 0; k < nk; ++k)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // j=1/2
+                    coef_j[i][0][k].x[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_j[i][1][k].x[iDim] - 35.0 * coef_j[i][2][k].x[iDim] +
+                                               21.0 * coef_j[i][3][k].x[iDim] - 5.0 * coef_j[i][4][k].x[iDim]);
+                    coef_j[i][0][k].y[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_j[i][1][k].y[iDim] - 35.0 * coef_j[i][2][k].y[iDim] +
+                                               21.0 * coef_j[i][3][k].y[iDim] - 5.0 * coef_j[i][4][k].y[iDim]);
+                    coef_j[i][0][k].z[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_j[i][1][k].z[iDim] - 35.0 * coef_j[i][2][k].z[iDim] +
+                                               21.0 * coef_j[i][3][k].z[iDim] - 5.0 * coef_j[i][4][k].z[iDim]);
+                    // j=3/2
+                    coef_j[i][1][k].x[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_j[i][1][k].x[iDim] + 15.0 * coef_j[i][2][k].x[iDim] -
+                                               5.0 * coef_j[i][3][k].x[iDim] + coef_j[i][4][k].x[iDim]);
+                    coef_j[i][1][k].y[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_j[i][1][k].y[iDim] + 15.0 * coef_j[i][2][k].y[iDim] -
+                                               5.0 * coef_j[i][3][k].y[iDim] + coef_j[i][4][k].y[iDim]);
+                    coef_j[i][1][k].z[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_j[i][1][k].z[iDim] + 15.0 * coef_j[i][2][k].z[iDim] -
+                                               5.0 * coef_j[i][3][k].z[iDim] + coef_j[i][4][k].z[iDim]);
+                    // j=5/2
+                    coef_j[i][2][k].x[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_j[i][1][k].x[iDim] + 9.0 * coef_j[i][2][k].x[iDim] +
+                                               9.0 * coef_j[i][3][k].x[iDim] - coef_j[i][4][k].x[iDim]);
+                    coef_j[i][2][k].y[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_j[i][1][k].y[iDim] + 9.0 * coef_j[i][2][k].y[iDim] +
+                                               9.0 * coef_j[i][3][k].y[iDim] - coef_j[i][4][k].y[iDim]);
+                    coef_j[i][2][k].z[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_j[i][1][k].z[iDim] + 9.0 * coef_j[i][2][k].z[iDim] +
+                                               9.0 * coef_j[i][3][k].z[iDim] - coef_j[i][4][k].z[iDim]);
+                    // j=nj-3/2
+                    coef_j[i][nj - 3][k].x[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_j[i][nj - 2][k].x[iDim] - 35.0 * coef_j[i][nj - 3][k].x[iDim] +
+                         21.0 * coef_j[i][nj - 4][k].x[iDim] - 5.0 * coef_j[i][nj - 5][k].x[iDim]);
+                    coef_j[i][nj - 3][k].y[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_j[i][nj - 2][k].y[iDim] - 35.0 * coef_j[i][nj - 3][k].y[iDim] +
+                         21.0 * coef_j[i][nj - 4][k].y[iDim] - 5.0 * coef_j[i][nj - 5][k].y[iDim]);
+                    coef_j[i][nj - 3][k].z[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_j[i][nj - 2][k].z[iDim] - 35.0 * coef_j[i][nj - 3][k].z[iDim] +
+                         21.0 * coef_j[i][nj - 4][k].z[iDim] - 5.0 * coef_j[i][nj - 5][k].z[iDim]);
+                    // j=nj-5/2
+                    coef_j[i][nj - 4][k].x[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_j[i][nj - 2][k].x[iDim] + 15.0 * coef_j[i][nj - 3][k].x[iDim] -
+                         5.0 * coef_j[i][nj - 4][k].x[iDim] + coef_j[i][nj - 5][k].x[iDim]);
+                    coef_j[i][nj - 4][k].y[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_j[i][nj - 2][k].y[iDim] + 15.0 * coef_j[i][nj - 3][k].y[iDim] -
+                         5.0 * coef_j[i][nj - 4][k].y[iDim] + coef_j[i][nj - 5][k].y[iDim]);
+                    coef_j[i][nj - 4][k].z[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_j[i][nj - 2][k].z[iDim] + 15.0 * coef_j[i][nj - 3][k].z[iDim] -
+                         5.0 * coef_j[i][nj - 4][k].z[iDim] + coef_j[i][nj - 5][k].z[iDim]);
+                    // j=nj-7/2
+                    coef_j[i][nj - 5][k].x[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_j[i][nj - 2][k].x[iDim] + 9.0 * coef_j[i][nj - 3][k].x[iDim] +
+                         9.0 * coef_j[i][nj - 4][k].x[iDim] - coef_j[i][nj - 5][k].x[iDim]);
+                    coef_j[i][nj - 5][k].y[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_j[i][nj - 2][k].y[iDim] + 9.0 * coef_j[i][nj - 3][k].y[iDim] +
+                         9.0 * coef_j[i][nj - 4][k].y[iDim] - coef_j[i][nj - 5][k].y[iDim]);
+                    coef_j[i][nj - 5][k].z[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_j[i][nj - 2][k].z[iDim] + 9.0 * coef_j[i][nj - 3][k].z[iDim] +
+                         9.0 * coef_j[i][nj - 4][k].z[iDim] - coef_j[i][nj - 5][k].z[iDim]);
+                }
+            }
+        }
+        // k=1/2,3/2,5/2;nk-3/2,nk-5/2,nk-7/2
+        for (int j = 0; j < nj; ++j)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                for (int iDim = 0; iDim < 3; ++iDim)
+                {
+                    // k=1/2
+                    coef_k[i][j][0].x[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_k[i][j][1].x[iDim] - 35.0 * coef_k[i][j][2].x[iDim] +
+                                               21.0 * coef_k[i][j][3].x[iDim] - 5.0 * coef_k[i][j][4].x[iDim]);
+                    coef_k[i][j][0].y[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_k[i][j][1].y[iDim] - 35.0 * coef_k[i][j][2].y[iDim] +
+                                               21.0 * coef_k[i][j][3].y[iDim] - 5.0 * coef_k[i][j][4].y[iDim]);
+                    coef_k[i][j][0].z[iDim] = 1.0 / 16.0 *
+                                              (35.0 * coef_k[i][j][1].z[iDim] - 35.0 * coef_k[i][j][2].z[iDim] +
+                                               21.0 * coef_k[i][j][3].z[iDim] - 5.0 * coef_k[i][j][4].z[iDim]);
+                    // k=3/2
+                    coef_k[i][j][1].x[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_k[i][j][1].x[iDim] + 15.0 * coef_k[i][j][2].x[iDim] -
+                                               5.0 * coef_k[i][j][3].x[iDim] + coef_k[i][j][4].x[iDim]);
+                    coef_k[i][j][1].y[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_k[i][j][1].y[iDim] + 15.0 * coef_k[i][j][2].y[iDim] -
+                                               5.0 * coef_k[i][j][3].y[iDim] + coef_k[i][j][4].y[iDim]);
+                    coef_k[i][j][1].z[iDim] = 1.0 / 16.0 *
+                                              (5.0 * coef_k[i][j][1].z[iDim] + 15.0 * coef_k[i][j][2].z[iDim] -
+                                               5.0 * coef_k[i][j][3].z[iDim] + coef_k[i][j][4].z[iDim]);
+                    // k=5/2
+                    coef_k[i][j][2].x[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_k[i][j][1].x[iDim] + 9.0 * coef_k[i][j][2].x[iDim] +
+                                               9.0 * coef_k[i][j][3].x[iDim] - coef_k[i][j][4].x[iDim]);
+                    coef_k[i][j][2].y[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_k[i][j][1].y[iDim] + 9.0 * coef_k[i][j][2].y[iDim] +
+                                               9.0 * coef_k[i][j][3].y[iDim] - coef_k[i][j][4].y[iDim]);
+                    coef_k[i][j][2].z[iDim] = 1.0 / 16.0 *
+                                              (-1.0 * coef_k[i][j][1].z[iDim] + 9.0 * coef_k[i][j][2].z[iDim] +
+                                               9.0 * coef_k[i][j][3].z[iDim] - coef_k[i][j][4].z[iDim]);
+                    // k=nk-3/2
+                    coef_k[i][j][nk - 3].x[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_k[i][j][nk - 2].x[iDim] - 35.0 * coef_k[i][j][nk - 3].x[iDim] +
+                         21.0 * coef_k[i][j][nk - 4].x[iDim] - 5.0 * coef_k[i][j][nk - 5].x[iDim]);
+                    coef_k[i][j][nk - 3].y[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_k[i][j][nk - 2].y[iDim] - 35.0 * coef_k[i][j][nk - 3].y[iDim] +
+                         21.0 * coef_k[i][j][nk - 4].y[iDim] - 5.0 * coef_k[i][j][nk - 5].y[iDim]);
+                    coef_k[i][j][nk - 3].z[iDim] =
+                        1.0 / 16.0 *
+                        (35.0 * coef_k[i][j][nk - 2].z[iDim] - 35.0 * coef_k[i][j][nk - 3].z[iDim] +
+                         21.0 * coef_k[i][j][nk - 4].z[iDim] - 5.0 * coef_k[i][j][nk - 5].z[iDim]);
+                    // k=nk-5/2
+                    coef_k[i][j][nk - 4].x[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_k[i][j][nk - 2].x[iDim] + 15.0 * coef_k[i][j][nk - 3].x[iDim] -
+                         5.0 * coef_k[i][j][nk - 4].x[iDim] + coef_k[i][j][nk - 5].x[iDim]);
+                    coef_k[i][j][nk - 4].y[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_k[i][j][nk - 2].y[iDim] + 15.0 * coef_k[i][j][nk - 3].y[iDim] -
+                         5.0 * coef_k[i][j][nk - 4].y[iDim] + coef_k[i][j][nk - 5].y[iDim]);
+                    coef_k[i][j][nk - 4].z[iDim] =
+                        1.0 / 16.0 *
+                        (5.0 * coef_k[i][j][nk - 2].z[iDim] + 15.0 * coef_k[i][j][nk - 3].z[iDim] -
+                         5.0 * coef_k[i][j][nk - 4].z[iDim] + coef_k[i][j][nk - 5].z[iDim]);
+                    // k=nk-7/2
+                    coef_k[i][j][nk - 5].x[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_k[i][j][nk - 2].x[iDim] + 9.0 * coef_k[i][j][nk - 3].x[iDim] +
+                         9.0 * coef_k[i][j][nk - 4].x[iDim] - coef_k[i][j][nk - 5].x[iDim]);
+                    coef_k[i][j][nk - 5].y[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_k[i][j][nk - 2].y[iDim] + 9.0 * coef_k[i][j][nk - 3].y[iDim] +
+                         9.0 * coef_k[i][j][nk - 4].y[iDim] - coef_k[i][j][nk - 5].y[iDim]);
+                    coef_k[i][j][nk - 5].z[iDim] =
+                        1.0 / 16.0 *
+                        (-1.0 * coef_k[i][j][nk - 2].z[iDim] + 9.0 * coef_k[i][j][nk - 3].z[iDim] +
+                         9.0 * coef_k[i][j][nk - 4].z[iDim] - coef_k[i][j][nk - 5].z[iDim]);
+                }
+            }
+        }
+        // 第五步：根据半点坐标和半点逆变换度量系数使用守恒形式计算整点度量系数（SCMM)
+        double temp[6][6];
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    auto coef_xi = node_metrics->GetXi(idx_proxy->GetIdx(i, j, k));
+                    auto coef_eta = node_metrics->GetEta(idx_proxy->GetIdx(i, j, k));
+                    auto coef_zeta = node_metrics->GetZeta(idx_proxy->GetIdx(i, j, k));
+                    // i direction,CMM1
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        temp[0][iTemp] =
+                            coef_i[i - 3 + iTemp][j][k].y[2] * coef_i[i - 3 + iTemp][j][k].coord[2]; // y_zeta*z
+                        temp[1][iTemp] =
+                            coef_i[i - 3 + iTemp][j][k].z[2] * coef_i[i - 3 + iTemp][j][k].coord[0]; // z_zeta*x
+                        temp[2][iTemp] =
+                            coef_i[i - 3 + iTemp][j][k].x[2] * coef_i[i - 3 + iTemp][j][k].coord[1];              // x_zeta*y
+                        temp[3][iTemp] = coef_i[i - 3 + iTemp][j][k].y[1] * coef_i[i - 3 + iTemp][j][k].coord[2]; // y_eta*z
+                        temp[4][iTemp] = coef_i[i - 3 + iTemp][j][k].z[1] * coef_i[i - 3 + iTemp][j][k].coord[0]; // z_eta*x
+                        temp[5][iTemp] = coef_i[i - 3 + iTemp][j][k].x[1] * coef_i[i - 3 + iTemp][j][k].coord[1]; // x_eta*y
+                    }
+                    coef_eta[0] = 0.5 * NodeDifferece6th(temp[0]);
+                    coef_eta[1] = 0.5 * NodeDifferece6th(temp[1]);
+                    coef_eta[2] = 0.5 * NodeDifferece6th(temp[2]);
+                    coef_zeta[0] = -0.5 * NodeDifferece6th(temp[3]);
+                    coef_zeta[1] = -0.5 * NodeDifferece6th(temp[4]);
+                    coef_zeta[2] = -0.5 * NodeDifferece6th(temp[5]);
+                    // j direction,CMM2
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        temp[0][iTemp] +=
+                            coef_i[i - 3 + iTemp][j][k].coord[1] * coef_i[i - 3 + iTemp][j][k].z[2]; // y*z_zeta
+                        temp[1][iTemp] +=
+                            coef_i[i - 3 + iTemp][j][k].coord[2] * coef_i[i - 3 + iTemp][j][k].x[2]; // z*x_zeta
+                        temp[2][iTemp] +=
+                            coef_i[i - 3 + iTemp][j][k].coord[0] * coef_i[i - 3 + iTemp][j][k].y[2]; // x*y_zeta
+                        temp[3][iTemp] +=
+                            coef_i[i - 3 + iTemp][j][k].coord[1] * coef_i[i - 3 + iTemp][j][k].z[1]; // y*z_eta
+                        temp[4][iTemp] +=
+                            coef_i[i - 3 + iTemp][j][k].coord[2] * coef_i[i - 3 + iTemp][j][k].x[1]; // z*x_eta
+                        temp[5][iTemp] +=
+                            coef_i[i - 3 + iTemp][j][k].coord[0] * coef_i[i - 3 + iTemp][j][k].y[1]; // x*y_eta
+                    }
+                    coef_eta[0] += -0.5 * NodeDifferece6th(temp[0]);
+                    coef_eta[1] += -0.5 * NodeDifferece6th(temp[1]);
+                    coef_eta[2] += -0.5 * NodeDifferece6th(temp[2]);
+                    coef_zeta[0] = 0.5 * NodeDifferece6th(temp[3]);
+                    coef_zeta[1] = 0.5 * NodeDifferece6th(temp[4]);
+                    coef_zeta[2] = 0.5 * NodeDifferece6th(temp[5]);
+                    // j direction,CMM1
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        temp[0][iTemp] =
+                            coef_j[i][j - 3 + iTemp][k].y[2] * coef_j[i][j - 3 + iTemp][k].coord[2]; // y_zeta*z
+                        temp[1][iTemp] =
+                            coef_j[i][j - 3 + iTemp][k].z[2] * coef_j[i][j - 3 + iTemp][k].coord[0]; // z_zeta*x
+                        temp[2][iTemp] =
+                            coef_j[i][j - 3 + iTemp][k].x[2] * coef_j[i][j - 3 + iTemp][k].coord[1];              // x_zeta*y
+                        temp[3][iTemp] = coef_j[i][j - 3 + iTemp][k].y[0] * coef_j[i][j - 3 + iTemp][k].coord[2]; // y_xi*z
+                        temp[4][iTemp] = coef_j[i][j - 3 + iTemp][k].z[0] * coef_j[i][j - 3 + iTemp][k].coord[0]; // z_xi*x
+                        temp[5][iTemp] = coef_j[i][j - 3 + iTemp][k].x[0] * coef_j[i][j - 3 + iTemp][k].coord[1]; // x_xi*y
+                    }
+                    coef_xi[0] = -0.5 * NodeDifferece6th(temp[0]);
+                    coef_xi[1] = -0.5 * NodeDifferece6th(temp[1]);
+                    coef_xi[2] = -0.5 * NodeDifferece6th(temp[2]);
+                    coef_zeta[0] += 0.5 * NodeDifferece6th(temp[3]);
+                    coef_zeta[1] += 0.5 * NodeDifferece6th(temp[4]);
+                    coef_zeta[2] += 0.5 * NodeDifferece6th(temp[5]);
+                    // j direction,CMM2
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        temp[0][iTemp] =
+                            coef_j[i][j - 3 + iTemp][k].coord[1] * coef_j[i][j - 3 + iTemp][k].z[2]; // y*z_zeta
+                        temp[1][iTemp] =
+                            coef_j[i][j - 3 + iTemp][k].coord[2] * coef_j[i][j - 3 + iTemp][k].x[2]; // z*x_zeta
+                        temp[2][iTemp] =
+                            coef_j[i][j - 3 + iTemp][k].coord[0] * coef_j[i][j - 3 + iTemp][k].y[2];              // x*y_zeta
+                        temp[3][iTemp] = coef_j[i][j - 3 + iTemp][k].coord[1] * coef_j[i][j - 3 + iTemp][k].z[0]; // y*z_xi
+                        temp[4][iTemp] = coef_j[i][j - 3 + iTemp][k].coord[2] * coef_j[i][j - 3 + iTemp][k].x[0]; // z*x_xi
+                        temp[5][iTemp] = coef_j[i][j - 3 + iTemp][k].coord[0] * coef_j[i][j - 3 + iTemp][k].y[0]; // x*y_xi
+                    }
+                    coef_xi[0] += 0.5 * NodeDifferece6th(temp[0]);
+                    coef_xi[1] += 0.5 * NodeDifferece6th(temp[1]);
+                    coef_xi[2] += 0.5 * NodeDifferece6th(temp[2]);
+                    coef_zeta[0] -= 0.5 * NodeDifferece6th(temp[3]);
+                    coef_zeta[1] -= 0.5 * NodeDifferece6th(temp[4]);
+                    coef_zeta[2] -= 0.5 * NodeDifferece6th(temp[5]);
+
+                    // k direction,CMM1
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        temp[0][iTemp] = coef_k[i][j][k - 3 + iTemp].y[1] * coef_k[i][j][k - 3 + iTemp].coord[2]; // y_eta*z
+                        temp[1][iTemp] = coef_k[i][j][k - 3 + iTemp].z[1] * coef_k[i][j][k - 3 + iTemp].coord[0]; // z_eta*x
+                        temp[2][iTemp] = coef_k[i][j][k - 3 + iTemp].x[1] * coef_k[i][j][k - 3 + iTemp].coord[1]; // x_eta*y
+                        temp[3][iTemp] = coef_k[i][j][k - 3 + iTemp].y[0] * coef_k[i][j][k - 3 + iTemp].coord[2]; // y_xi*z
+                        temp[4][iTemp] = coef_k[i][j][k - 3 + iTemp].z[0] * coef_k[i][j][k - 3 + iTemp].coord[0]; // z_xi*x
+                        temp[5][iTemp] = coef_k[i][j][k - 3 + iTemp].x[0] * coef_k[i][j][k - 3 + iTemp].coord[1]; // x_xi*y
+                    }
+                    coef_xi[0] += 0.5 * NodeDifferece6th(temp[0]);
+                    coef_xi[1] += 0.5 * NodeDifferece6th(temp[1]);
+                    coef_xi[2] += 0.5 * NodeDifferece6th(temp[2]);
+                    coef_eta[0] -= 0.5 * NodeDifferece6th(temp[3]);
+                    coef_eta[1] -= 0.5 * NodeDifferece6th(temp[4]);
+                    coef_eta[2] -= 0.5 * NodeDifferece6th(temp[5]);
+                    // k direction,CMM2
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        temp[0][iTemp] = coef_k[i][j][k - 3 + iTemp].coord[1] * coef_k[i][j][k - 3 + iTemp].z[1]; // y*z_eta
+                        temp[1][iTemp] = coef_k[i][j][k - 3 + iTemp].coord[2] * coef_k[i][j][k - 3 + iTemp].x[1]; // z*x_eta
+                        temp[2][iTemp] = coef_k[i][j][k - 3 + iTemp].coord[0] * coef_k[i][j][k - 3 + iTemp].y[1]; // x*y_eta
+                        temp[3][iTemp] = coef_k[i][j][k - 3 + iTemp].coord[1] * coef_k[i][j][k - 3 + iTemp].z[0]; // y*z_xi
+                        temp[4][iTemp] = coef_k[i][j][k - 3 + iTemp].coord[2] * coef_k[i][j][k - 3 + iTemp].x[0]; // z*x_xi
+                        temp[5][iTemp] = coef_k[i][j][k - 3 + iTemp].coord[0] * coef_k[i][j][k - 3 + iTemp].y[0]; // x*y_xi
+                    }
+                    coef_xi[0] -= 0.5 * NodeDifferece6th(temp[0]);
+                    coef_xi[1] -= 0.5 * NodeDifferece6th(temp[1]);
+                    coef_xi[2] -= 0.5 * NodeDifferece6th(temp[2]);
+                    coef_eta[0] += 0.5 * NodeDifferece6th(temp[3]);
+                    coef_eta[1] += 0.5 * NodeDifferece6th(temp[4]);
+                    coef_eta[2] += 0.5 * NodeDifferece6th(temp[5]);
+                }
+            }
+        }
     }
     void NSSolverStruct::CalcMetricsFSCMM()
     {
+        // TODO
     }
     void NSSolverStruct::Preprocess()
     {
@@ -254,14 +3449,19 @@ namespace  zaran
                     double norm_xi = sqrt(xi[0] * xi[0] + xi[1] * xi[1] + xi[2] * xi[2]);
                     double norm_eta = sqrt(eta[0] * eta[0] + eta[1] * eta[1] + eta[2] * eta[2]);
                     double norm_zeta = sqrt(zeta[0] * zeta[0] + zeta[1] * zeta[1] + zeta[2] * zeta[2]);
-                    double u_xi = data_manager->GetVelocity(0, idx) * xi[0] + data_manager->GetVelocity(1, idx) * xi[1] + data_manager->GetVelocity(2, idx) * xi[2];
-                    double u_eta = data_manager->GetVelocity(0, idx) * eta[0] + data_manager->GetVelocity(1, idx) * eta[1] + data_manager->GetVelocity(2, idx) * eta[2];
-                    double u_zeta = data_manager->GetVelocity(0, idx) * zeta[0] + data_manager->GetVelocity(1, idx) * zeta[1] + data_manager->GetVelocity(2, idx) * zeta[2];
-                    double lamda = abs(u_xi) + abs(u_eta) + c * (norm_xi + norm_eta );
-                    if(grid->GetDim() == 3)
+                    double u_xi = data_manager->GetVelocity(0, idx) * xi[0] + data_manager->GetVelocity(1, idx) * xi[1] +
+                                  data_manager->GetVelocity(2, idx) * xi[2];
+                    double u_eta = data_manager->GetVelocity(0, idx) * eta[0] + data_manager->GetVelocity(1, idx) * eta[1] +
+                                   data_manager->GetVelocity(2, idx) * eta[2];
+                    double u_zeta = data_manager->GetVelocity(0, idx) * zeta[0] +
+                                    data_manager->GetVelocity(1, idx) * zeta[1] +
+                                    data_manager->GetVelocity(2, idx) * zeta[2];
+                    double lamda = abs(u_xi) + abs(u_eta) + c * (norm_xi + norm_eta);
+                    if (grid->GetDim() == 3)
                     {
                         lamda += abs(u_zeta) + c * norm_zeta;
                     }
+                    lamda = lamda * jacobi;
                     data_manager->SetTimeStep(idx, cfl / lamda);
                     if (data_manager->GetTimeStep(idx) < min_dt)
                     {
@@ -272,7 +3472,7 @@ namespace  zaran
         }
         GlobalData::Update("dt", min_dt);
     }
-    void NSSolverStruct::ReduceTimeStep(double& dt)
+    void NSSolverStruct::ReduceTimeStep(double &dt)
     {
         auto grid = GetGrid();
         auto data_manager = GetDataManager();
@@ -298,30 +3498,31 @@ namespace  zaran
         auto data_manager = GetDataManager();
         int is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
-        const DArray& rk_coef = para->GetRKCoef();
+        const DArray &rk_coef = para->GetRKCoef();
         int rkStage = rk_coef.size();
         double dt, jacobi;
         for (int iStage = 0; iStage < rkStage; ++iStage)
         {
             CalcResidual();
-            for (int i = is;i <= ie;++i)
+            for (int i = is; i <= ie; ++i)
             {
-                for (int j = js;j <= je;++j)
+                for (int j = js; j <= je; ++j)
                 {
-                    for (int k = ks;k <= ke;++k)
+                    for (int k = ks; k <= ke; ++k)
                     {
                         int idx = m_idx_proxy->GetIdx(i, j, k);
                         dt = data_manager->GetTimeStep(idx);
                         jacobi = m_node_metrics->GetJacobian(idx);
                         for (int iVal = 0; iVal < 5; ++iVal)
                         {
-                            data_manager->SetCons(iVal, idx, data_manager->GetCons(iVal, idx) + dt * rk_coef[iStage] * data_manager->GetResidual(iVal, idx) * jacobi);
+                            data_manager->SetCons(iVal, idx,
+                                                  data_manager->GetCons(iVal, idx) +
+                                                      dt * rk_coef[iStage] * data_manager->GetResidual(iVal, idx) * jacobi);
                         }
                     }
                 }
             }
         }
-
     }
     void NSSolverStruct::Prim2Cons()
     {
@@ -351,7 +3552,6 @@ namespace  zaran
                 }
             }
         }
-
     }
     void NSSolverStruct::Cons2Prim()
     {
@@ -404,18 +3604,7 @@ namespace  zaran
             }
         }
     }
-    void NSSolverStruct::CalcMidNodePrim()
-    {
-        int interplot_type = 0;
-        if (interplot_type == 0)
-        {
-            CalcMidNodePrimMUSCL();
-        }
-        else if (interplot_type == 1)
-        {
-            CalcMidNodePrimWCNS5();
-        }
-    }
+
     void NSSolverStruct::CalcMidNode1st()
     {
         auto grid = GetGrid();
@@ -425,11 +3614,11 @@ namespace  zaran
         auto nk = m_idx_proxy->GetNk();
         double value[5];
         double value_left[5], value_right[5];
-        for (int k = 0; k < nk; ++k)
+        for (int k = 1; k < nk - 1; ++k)
         {
-            for (int j = 0; j < nj; ++j)
+            for (int j = 1; j < nj - 1; ++j)
             {
-                for (int i = 0; i < ni; ++i)
+                for (int i = 1; i < ni - 1; ++i)
                 {
                     int idx = m_idx_proxy->GetIdx(i, j, k);
                     int idx_left = m_idx_proxy->GetIdx(i - 1, j, k);
@@ -547,18 +3736,19 @@ namespace  zaran
         auto ni = m_idx_proxy->GetNi();
         auto nj = m_idx_proxy->GetNj();
         auto nk = m_idx_proxy->GetNk();
-        //MUSCL整点变量(i-2,i-1,i,i+1,i+2)的值
+        // MUSCL整点变量(i-2,i-1,i,i+1,i+2)的值
         double value_temp[5];
         int idx_temp[5];
         int is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
         double left_value, right_value;
-        ///@note 从ks-1开始，到ke结束，因为对第一个计算点ks进行通量差分时，需要使用ks-1/2处的值
-        for (int k = ks;k <= ke;++k)
+        ///@note
+        /// 从ks-1开始，到ke结束，因为对第一个计算点ks进行通量差分时，需要使用ks-1/2处的值
+        for (int k = ks; k <= ke; ++k)
         {
-            for (int j = js;j <= je;++j)
+            for (int j = js; j <= je; ++j)
             {
-                for (int i = is;i <= ie;++i)
+                for (int i = is; i <= ie; ++i)
                 {
                     idx_temp[0] = m_idx_proxy->GetIdx(i - 2, j, k);
                     idx_temp[1] = m_idx_proxy->GetIdx(i - 1, j, k);
@@ -626,12 +3816,12 @@ namespace  zaran
         int idx_temp[5];
         double left_value, right_value;
         int i, j, k;
-        for (k = ks;k <= ke;++k)
+        for (k = ks; k <= ke; ++k)
         {
-            for (j = js;j <= je;++j)
+            for (j = js; j <= je; ++j)
             {
-                //i=is-1处的值
-                //不存在i-2处的值且不参与计算,用i-1处的值代替，不影响计算结果
+                // i=is-1处的值
+                // 不存在i-2处的值且不参与计算,用i-1处的值代替，不影响计算结果
                 idx_temp[0] = m_idx_proxy->GetIdx(is - 2, j, k);
                 idx_temp[1] = m_idx_proxy->GetIdx(is - 2, j, k);
                 idx_temp[2] = m_idx_proxy->GetIdx(is - 1, j, k);
@@ -650,12 +3840,12 @@ namespace  zaran
             }
         }
 
-        for (k = ks;k <= ke;++k)
+        for (k = ks; k <= ke; ++k)
         {
-            for (i = is;i <= ie;++i)
+            for (i = is; i <= ie; ++i)
             {
-                //j=js-1处的值，(js-1/2)右值会用到，但(js-1/2)左值在计算中不会使用
-                //不存在j-2处的值,用j-1处的值代替，不影响计算结果
+                // j=js-1处的值，(js-1/2)右值会用到，但(js-1/2)左值在计算中不会使用
+                // 不存在j-2处的值,用j-1处的值代替，不影响计算结果
                 idx_temp[0] = m_idx_proxy->GetIdx(i, js - 2, k);
                 idx_temp[1] = m_idx_proxy->GetIdx(i, js - 2, k);
                 idx_temp[2] = m_idx_proxy->GetIdx(i, js - 1, k);
@@ -676,12 +3866,12 @@ namespace  zaran
 
         if (grid->GetDim() == 3)
         {
-            for (j = js;j <= je;++j)
+            for (j = js; j <= je; ++j)
             {
-                for (i = is;i <= ie;++i)
+                for (i = is; i <= ie; ++i)
                 {
-                    //k=ks-1处的值，(ks-1/2)右值会用到，但(ks-1/2)左值在计算中不会使用
-                    //不存在k-2处的值,用k-1处的值代替，不影响计算结果
+                    // k=ks-1处的值，(ks-1/2)右值会用到，但(ks-1/2)左值在计算中不会使用
+                    // 不存在k-2处的值,用k-1处的值代替，不影响计算结果
                     idx_temp[0] = m_idx_proxy->GetIdx(i, j, ks - 2);
                     idx_temp[1] = m_idx_proxy->GetIdx(i, j, ks - 2);
                     idx_temp[2] = m_idx_proxy->GetIdx(i, j, ks - 1);
@@ -710,18 +3900,19 @@ namespace  zaran
         auto ni = m_idx_proxy->GetNi();
         auto nj = m_idx_proxy->GetNj();
         auto nk = m_idx_proxy->GetNk();
-        //WCNS整点变量(i-2,i-1,i,i+1,i+2)的值
+        // WCNS整点变量(i-2,i-1,i,i+1,i+2)的值
         double value_temp[5];
         int idx_temp[5];
         int is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
         double left_value, right_value;
-        ///@note 从ks-1开始，到ke结束，因为对第一个计算点ks进行通量差分时，需要使用ks-1/2处的值
-        for (int k = ks - 1;k <= ke + 1;++k)
+        ///@note
+        /// 从ks-1开始，到ke结束，因为对第一个计算点ks进行通量差分时，需要使用ks-1/2处的值
+        for (int k = ks - 1; k <= ke + 1; ++k)
         {
-            for (int j = js - 1;j <= je + 1;++j)
+            for (int j = js - 1; j <= je + 1; ++j)
             {
-                for (int i = is - 1;i <= ie + 1;++i)
+                for (int i = is - 1; i <= ie + 1; ++i)
                 {
                     idx_temp[0] = m_idx_proxy->GetIdx(i - 2, j, k);
                     idx_temp[1] = m_idx_proxy->GetIdx(i - 1, j, k);
@@ -788,13 +3979,13 @@ namespace  zaran
         double value_left[4], value_right[4];
         int is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
-        //左侧的模板点(0,1,2,3),右侧的模板点(N-4,N-3,N-2,N-1)
+        // 左侧的模板点(0,1,2,3),右侧的模板点(N-4,N-3,N-2,N-1)
         int idx_temp_left[4], idx_temp_right[4];
         double left_value, right_value;
         int i, j, k;
-        for (k = ks;k <= ke;++k)
+        for (k = ks; k <= ke; ++k)
         {
-            for (j = js;j <= je;++j)
+            for (j = js; j <= je; ++j)
             {
                 idx_temp_left[0] = m_idx_proxy->GetIdx(0, j, k);
                 idx_temp_left[1] = m_idx_proxy->GetIdx(1, j, k);
@@ -814,24 +4005,28 @@ namespace  zaran
                     value_right[1] = data_manager->GetPrim(iVal, idx_temp_right[1]);
                     value_right[2] = data_manager->GetPrim(iVal, idx_temp_right[2]);
                     value_right[3] = data_manager->GetPrim(iVal, idx_temp_right[3]);
-                    left_value = right_value = (5 * value_left[0] + 15 * value_left[1] - 5 * value_left[2] + value_left[3]) / 16;
+                    left_value = right_value =
+                        (5 * value_left[0] + 15 * value_left[1] - 5 * value_left[2] + value_left[3]) / 16;
                     data_manager->SetMidNodePrim(iVal, 0, idx_temp_left[0], left_value, right_value);
-                    left_value = right_value = (-value_left[0] + 9 * value_left[1] + 9 * value_left[2] - value_left[3]) / 16;
+                    left_value = right_value =
+                        (-value_left[0] + 9 * value_left[1] + 9 * value_left[2] - value_left[3]) / 16;
                     data_manager->SetMidNodePrim(iVal, 0, idx_temp_left[1], left_value, right_value);
-                    left_value = right_value = (5 * value_right[0] + 15 * value_right[1] - 5 * value_right[2] + value_right[3]) / 16;
+                    left_value = right_value =
+                        (5 * value_right[0] + 15 * value_right[1] - 5 * value_right[2] + value_right[3]) / 16;
                     data_manager->SetMidNodePrim(iVal, 0, idx_temp_right[1], left_value, right_value);
-                    left_value = right_value = (-value_right[0] + 9 * value_right[1] + 9 * value_right[2] - value_right[3]) / 16;
+                    left_value = right_value =
+                        (-value_right[0] + 9 * value_right[1] + 9 * value_right[2] - value_right[3]) / 16;
                     data_manager->SetMidNodePrim(iVal, 0, idx_temp_right[2], left_value, right_value);
                 }
             }
         }
 
-        for (k = ks;k <= ke;++k)
+        for (k = ks; k <= ke; ++k)
         {
-            for (i = is;i <= ie;++i)
+            for (i = is; i <= ie; ++i)
             {
-                //j=js-1处的值，(js-1/2)右值会用到，但(js-1/2)左值在计算中不会使用
-                //不存在j-2处的值,用j-1处的值代替，不影响计算结果
+                // j=js-1处的值，(js-1/2)右值会用到，但(js-1/2)左值在计算中不会使用
+                // 不存在j-2处的值,用j-1处的值代替，不影响计算结果
                 idx_temp_left[0] = m_idx_proxy->GetIdx(i, 0, k);
                 idx_temp_left[1] = m_idx_proxy->GetIdx(i, 1, k);
                 idx_temp_left[2] = m_idx_proxy->GetIdx(i, 2, k);
@@ -850,27 +4045,30 @@ namespace  zaran
                     value_right[1] = data_manager->GetPrim(iVal, idx_temp_right[1]);
                     value_right[2] = data_manager->GetPrim(iVal, idx_temp_right[2]);
                     value_right[3] = data_manager->GetPrim(iVal, idx_temp_right[3]);
-                    left_value = right_value = (5 * value_left[0] + 15 * value_left[1] - 5 * value_left[2] + value_left[3]) / 16;
+                    left_value = right_value =
+                        (5 * value_left[0] + 15 * value_left[1] - 5 * value_left[2] + value_left[3]) / 16;
                     data_manager->SetMidNodePrim(iVal, 1, idx_temp_left[0], left_value, right_value);
-                    left_value = right_value = (-value_left[0] + 9 * value_left[1] + 9 * value_left[2] - value_left[3]) / 16;
+                    left_value = right_value =
+                        (-value_left[0] + 9 * value_left[1] + 9 * value_left[2] - value_left[3]) / 16;
                     data_manager->SetMidNodePrim(iVal, 1, idx_temp_left[1], left_value, right_value);
-                    left_value = right_value = (5 * value_right[0] + 15 * value_right[1] - 5 * value_right[2] + value_right[3]) / 16;
+                    left_value = right_value =
+                        (5 * value_right[0] + 15 * value_right[1] - 5 * value_right[2] + value_right[3]) / 16;
                     data_manager->SetMidNodePrim(iVal, 1, idx_temp_right[1], left_value, right_value);
-                    left_value = right_value = (-value_right[0] + 9 * value_right[1] + 9 * value_right[2] - value_right[3]) / 16;
+                    left_value = right_value =
+                        (-value_right[0] + 9 * value_right[1] + 9 * value_right[2] - value_right[3]) / 16;
                     data_manager->SetMidNodePrim(iVal, 1, idx_temp_right[2], left_value, right_value);
-
                 }
             }
         }
 
         if (grid->GetDim() == 3)
         {
-            for (j = js;j <= je;++j)
+            for (j = js; j <= je; ++j)
             {
-                for (i = is;i <= ie;++i)
+                for (i = is; i <= ie; ++i)
                 {
-                    //k=ks-1处的值，(ks-1/2)右值会用到，但(ks-1/2)左值在计算中不会使用
-                    //不存在k-2处的值,用k-1处的值代替，不影响计算结果
+                    // k=ks-1处的值，(ks-1/2)右值会用到，但(ks-1/2)左值在计算中不会使用
+                    // 不存在k-2处的值,用k-1处的值代替，不影响计算结果
                     idx_temp_left[0] = m_idx_proxy->GetIdx(i, j, 0);
                     idx_temp_left[1] = m_idx_proxy->GetIdx(i, j, 1);
                     idx_temp_left[2] = m_idx_proxy->GetIdx(i, j, 2);
@@ -889,13 +4087,17 @@ namespace  zaran
                         value_right[1] = data_manager->GetPrim(iVal, idx_temp_right[1]);
                         value_right[2] = data_manager->GetPrim(iVal, idx_temp_right[2]);
                         value_right[3] = data_manager->GetPrim(iVal, idx_temp_right[3]);
-                        left_value = right_value = (5 * value_left[0] + 15 * value_left[1] - 5 * value_left[2] + value_left[3]) / 16;
+                        left_value = right_value =
+                            (5 * value_left[0] + 15 * value_left[1] - 5 * value_left[2] + value_left[3]) / 16;
                         data_manager->SetMidNodePrim(iVal, 2, idx_temp_left[0], left_value, right_value);
-                        left_value = right_value = (-value_left[0] + 9 * value_left[1] + 9 * value_left[2] - value_left[3]) / 16;
+                        left_value = right_value =
+                            (-value_left[0] + 9 * value_left[1] + 9 * value_left[2] - value_left[3]) / 16;
                         data_manager->SetMidNodePrim(iVal, 2, idx_temp_left[1], left_value, right_value);
-                        left_value = right_value = (5 * value_right[0] + 15 * value_right[1] - 5 * value_right[2] + value_right[3]) / 16;
+                        left_value = right_value =
+                            (5 * value_right[0] + 15 * value_right[1] - 5 * value_right[2] + value_right[3]) / 16;
                         data_manager->SetMidNodePrim(iVal, 2, idx_temp_right[1], left_value, right_value);
-                        left_value = right_value = (-value_right[0] + 9 * value_right[1] + 9 * value_right[2] - value_right[3]) / 16;
+                        left_value = right_value =
+                            (-value_right[0] + 9 * value_right[1] + 9 * value_right[2] - value_right[3]) / 16;
                         data_manager->SetMidNodePrim(iVal, 2, idx_temp_right[2], left_value, right_value);
                     }
                 }
@@ -903,26 +4105,29 @@ namespace  zaran
         }
     }
 
-    void NSSolverStruct::MidNodeGrad(int idx_left, int idx_right, double* coord_vec, double* value_left, double* value_right)
+    void NSSolverStruct::MidNodeGrad(int idx_left, int idx_right, double *coord_vec, double *value_left,
+                                     double *value_right)
     {
         int equ_num = GetPara()->GetEquNum();
         auto data_manager = GetDataManager();
         for (int iVal = 0; iVal < equ_num; ++iVal)
         {
-            value_left[iVal] = data_manager->GetPrim(iVal, idx_left) + 0.5 * data_manager->GetLimiter(iVal, idx_left) *
-                (coord_vec[0] * data_manager->GetPrimGrad(iVal, 0, idx_left) +
-                    coord_vec[1] * data_manager->GetPrimGrad(iVal, 1, idx_left) +
-                    coord_vec[2] * data_manager->GetPrimGrad(iVal, 2, idx_left));
-            value_right[iVal] = data_manager->GetPrim(iVal, idx_right) - 0.5 * data_manager->GetLimiter(iVal, idx_right) *
-                (coord_vec[0] * data_manager->GetPrimGrad(iVal, 0, idx_right) +
-                    coord_vec[1] * data_manager->GetPrimGrad(iVal, 1, idx_right) +
-                    coord_vec[2] * data_manager->GetPrimGrad(iVal, 2, idx_right));
+            value_left[iVal] =
+                data_manager->GetPrim(iVal, idx_left) + 0.5 * data_manager->GetLimiter(iVal, idx_left) *
+                                                            (coord_vec[0] * data_manager->GetPrimGrad(iVal, 0, idx_left) +
+                                                             coord_vec[1] * data_manager->GetPrimGrad(iVal, 1, idx_left) +
+                                                             coord_vec[2] * data_manager->GetPrimGrad(iVal, 2, idx_left));
+            value_right[iVal] =
+                data_manager->GetPrim(iVal, idx_right) - 0.5 * data_manager->GetLimiter(iVal, idx_right) *
+                                                             (coord_vec[0] * data_manager->GetPrimGrad(iVal, 0, idx_right) +
+                                                              coord_vec[1] * data_manager->GetPrimGrad(iVal, 1, idx_right) +
+                                                              coord_vec[2] * data_manager->GetPrimGrad(iVal, 2, idx_right));
         }
     }
-    void NSSolverStruct::MidNode1st(int index_left, int index_right, double* value_rec_left, double* value_rec_right)
+    void NSSolverStruct::MidNode1st(int index_left, int index_right, double *value_rec_left, double *value_rec_right)
     {
         int equ_num = GetPara()->GetEquNum();
-        auto  grid = GetGrid();
+        auto grid = GetGrid();
         auto data_manager = GetDataManager();
         for (int iVal = 0; iVal < equ_num; ++iVal)
         {
@@ -931,7 +4136,7 @@ namespace  zaran
         }
     }
 
-    void NSSolverStruct::MidNodeMUSCL(const double* value, double& value_left, double& value_right)
+    void NSSolverStruct::MidNodeMUSCL(const double *value, double &value_left, double &value_right)
     {
         auto para = GetPara();
         auto data_manager = GetDataManager();
@@ -947,13 +4152,15 @@ namespace  zaran
         if (isnan(value_left) || isnan(value_right))
         {
             Log::error("MUSCL interpolation failed!");
-            Log::error("value[0] = {}, value[1] = {}, value[2] = {}, value[3] = {}, value[4] = {}", value[0], value[1], value[2], value[3], value[4]);
+            Log::error("value[0] = {}, value[1] = {}, value[2] = {}, value[3] = {}, "
+                       "value[4] = {}",
+                       value[0], value[1], value[2], value[3], value[4]);
             exit(0);
         }
     }
 
-    //参考《计算空气动力学》pp.84
-    void NSSolverStruct::MidNodeWCNS5(const double* value, double& value_left, double& value_right)
+    // 参考《计算空气动力学》pp.84
+    void NSSolverStruct::MidNodeWCNS5(const double *value, double &value_left, double &value_right)
     {
         double h = 0.025;
         double f_left, f_right;
@@ -976,7 +4183,7 @@ namespace  zaran
         s[1] = (value[1] - 2.0 * value[2] + value[3]) / h / h;
         s[2] = (value[2] - 2.0 * value[3] + value[4]) / h / h;
         double IS[3];
-        for (int i = 0;i < 3;++i)
+        for (int i = 0; i < 3; ++i)
         {
             IS[i] = pow(f[i] * h, 2) + pow(s[i] * h * h, 2);
         }
@@ -986,13 +4193,13 @@ namespace  zaran
             beta_left[i] = c_left[i] / pow(IS[i] + eps, 2);
             beta_right[i] = c_right[i] / pow(IS[i] + eps, 2);
         }
-        for (int i = 0;i < 3;++i)
+        for (int i = 0; i < 3; ++i)
         {
             omega_left[i] = beta_left[i] / (beta_left[0] + beta_left[1] + beta_left[2]);
             omega_right[i] = beta_right[i] / (beta_right[0] + beta_right[1] + beta_right[2]);
         }
         f_left = f_right = s_left = s_right = 0.0;
-        for (int i = 0;i < 3;++i)
+        for (int i = 0; i < 3; ++i)
         {
             f_left += omega_left[i] * f[i];
             s_left += omega_left[i] * s[i];
@@ -1002,379 +4209,75 @@ namespace  zaran
         value_left = value[2] + 0.5 * h * f_left + 0.125 * h * h * s_left;
         value_right = value[2] - 0.5 * h * f_right + 0.125 * h * h * s_right;
     }
-    void NSSolverStruct::FluxDifferenceMUSCL()
-    {
-        auto grid = GetGrid();
-        auto para = GetPara();
-        auto data_manager = GetDataManager();
-        auto gas = GetGas();
-        auto equ_num = para->GetEquNum();
-        int is, ie, js, je, ks, ke;
-        grid->GetRange(is, ie, js, je, ks, ke);
-        RiemannSolverPara riemann_para[6];
-        for (int i = 0; i < 6; ++i)
-        {
-            riemann_para[i].gamma_left = riemann_para[i].gamma_right = gas->GetGamma();
-        }
-        //当前节点的编号
-        int idx;
-        //差分模板的编号
-        int idx_temp[5];
-        //差分模板的值
-        double value[5];
-        double res_tmp[5];
-        for (int i = is;i <= ie;++i)
-        {
-            for (int j = js;j <= je;++j)
-            {
-                for (int k = ks;k <= ke;++k)
-                {
-                    for (int iVal = 0;iVal < equ_num;++iVal)
-                    {
-                        res_tmp[iVal] = data_manager->GetResidual(iVal, m_idx_proxy->GetIdx(i, j, k));
-                    }
-                    // i direction
-                    idx = m_idx_proxy->GetIdx(i, j, k);
-                    double jacobi = m_node_metrics->GetJacobian(idx);
-                    riemann_para[0].norm(0) = m_node_metrics->GetXi(idx)[0];
-                    riemann_para[0].norm(1) = m_node_metrics->GetXi(idx)[1];
-                    riemann_para[0].norm(2) = m_node_metrics->GetXi(idx)[2];
-                    riemann_para[0].nt = m_node_metrics->GetXi(idx)[3];
-                    riemann_para[1].norm(0) = m_node_metrics->GetXi(idx)[0];
-                    riemann_para[1].norm(1) = m_node_metrics->GetXi(idx)[1];
-                    riemann_para[1].norm(2) = m_node_metrics->GetXi(idx)[2];
-                    riemann_para[1].nt = m_node_metrics->GetXi(idx)[3];
-                    for (int iVal = 0; iVal < equ_num; ++iVal)
-                    {
-                        riemann_para[0].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 0, m_idx_proxy->GetIdx(i, j, k));
-                        riemann_para[0].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 0, m_idx_proxy->GetIdx(i, j, k));
-                        riemann_para[1].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 0, m_idx_proxy->GetIdx(i - 1, j, k));
-                        riemann_para[1].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 0, m_idx_proxy->GetIdx(i - 1, j, k));
-                    }
-                    m_riemann_solver->Solver(riemann_para[0]);
-                    m_riemann_solver->Solver(riemann_para[1]);
-                    for (int iVal = 0;iVal < equ_num;++iVal)
-                    {
-                        res_tmp[iVal] -= (riemann_para[0].flux[iVal] - riemann_para[1].flux[iVal]) / jacobi;
-                    }
-                    // j direction
-                    riemann_para[2].norm(0) = m_node_metrics->GetEta(idx)[0];
-                    riemann_para[2].norm(1) = m_node_metrics->GetEta(idx)[1];
-                    riemann_para[2].norm(2) = m_node_metrics->GetEta(idx)[2];
-                    riemann_para[2].nt = m_node_metrics->GetEta(idx)[3];
-                    riemann_para[3].norm(0) = m_node_metrics->GetEta(idx)[0];
-                    riemann_para[3].norm(1) = m_node_metrics->GetEta(idx)[1];
-                    riemann_para[3].norm(2) = m_node_metrics->GetEta(idx)[2];
-                    riemann_para[3].nt = m_node_metrics->GetEta(idx)[3];
-                    for (int iVal = 0; iVal < equ_num; ++iVal)
-                    {
-                        riemann_para[2].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 1, m_idx_proxy->GetIdx(i, j, k));
-                        riemann_para[2].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 1, m_idx_proxy->GetIdx(i, j, k));
-                        riemann_para[3].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 1, m_idx_proxy->GetIdx(i, j - 1, k));
-                        riemann_para[3].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 1, m_idx_proxy->GetIdx(i, j - 1, k));
-                    }
-                    m_riemann_solver->Solver(riemann_para[2]);
-                    m_riemann_solver->Solver(riemann_para[3]);
-                    for (int iVal = 0; iVal < equ_num; ++iVal)
-                    {
-                        res_tmp[iVal] -= (riemann_para[2].flux[iVal] - riemann_para[3].flux[iVal]) / jacobi;
-                    }
 
-                    if (grid->GetDim() == 3)
-                    {
-                        // k direction
-                        riemann_para[4].norm(0) = m_node_metrics->GetZeta(idx)[0];
-                        riemann_para[4].norm(1) = m_node_metrics->GetZeta(idx)[1];
-                        riemann_para[4].norm(2) = m_node_metrics->GetZeta(idx)[2];
-                        riemann_para[4].nt = m_node_metrics->GetZeta(idx)[3];
-                        riemann_para[5].norm(0) = m_node_metrics->GetZeta(idx)[0];
-                        riemann_para[5].norm(1) = m_node_metrics->GetZeta(idx)[1];
-                        riemann_para[5].norm(2) = m_node_metrics->GetZeta(idx)[2];
-                        riemann_para[5].nt = m_node_metrics->GetZeta(idx)[3];
-                        idx_temp[0] = m_idx_proxy->GetIdx(i, j, k - 2);
-                        idx_temp[1] = m_idx_proxy->GetIdx(i, j, k - 1);
-                        idx_temp[2] = m_idx_proxy->GetIdx(i, j, k);
-                        idx_temp[3] = m_idx_proxy->GetIdx(i, j, k + 1);
-                        idx_temp[4] = m_idx_proxy->GetIdx(i, j, k + 2);
-                        for (int iVal = 0; iVal < equ_num; ++iVal)
-                        {
-                            riemann_para[4].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 2, m_idx_proxy->GetIdx(i, j, k));
-                            riemann_para[4].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 2, m_idx_proxy->GetIdx(i, j, k));
-                            riemann_para[5].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 2, m_idx_proxy->GetIdx(i, j, k - 1));
-                            riemann_para[5].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 2, m_idx_proxy->GetIdx(i, j, k - 1));
-                        }
-                        m_riemann_solver->Solver(riemann_para[4]);
-                        m_riemann_solver->Solver(riemann_para[5]);
-                        for (int iVal = 0; iVal < equ_num; ++iVal)
-                        {
-                            res_tmp[iVal] -= (riemann_para[4].flux[iVal] - riemann_para[5].flux[iVal]) / jacobi;
-                        }
-                    }
-                    for (int iVar = 0; iVar < equ_num; ++iVar)
-                    {
-                        data_manager->SetResidual(iVar, idx, res_tmp[iVar]);
-                    }
-                }
-            }
-        }
-    }
-    void NSSolverStruct::FluxDifferenceWCNS5()
+    void NSSolverStruct::CalcInviscidResidual()
     {
-        auto grid = GetGrid();
         auto para = GetPara();
-        auto node = grid->GetNode();
-        auto data_manager = GetDataManager();
-        auto gas = GetGas();
-        auto equ_num = para->GetEquNum();
-        int is, ie, js, je, ks, ke;
-        grid->GetRange(is, ie, js, je, ks, ke);
-        RiemannSolverPara riemann_para[6];
-        for (int i = 0; i < 6; ++i)
+        auto inter_scheme = para->GetInterSchme();
+        if (inter_scheme == InterSchme::FirstOrder)
         {
-            riemann_para[i].gamma_left = riemann_para[i].gamma_right = gas->GetGamma();
+            CalcInviscidResidual1st();
         }
-        //当前节点的编号
-        int idx;
-        //差分模板的编号
-        int idx_temp[5];
-        //差分模板的值
-        double value[5];
-        double res_tmp[5];
-        for (int i = is;i <= ie;++i)
+        else if (inter_scheme == InterSchme::MUSCL)
         {
-            for (int j = js;j <= je;++j)
-            {
-                for (int k = ks;k <= ke;++k)
-                {
-                    for (int iVal = 0; iVal < equ_num; ++iVal)
-                    {
-                        res_tmp[iVal] = data_manager->GetResidual(iVal, m_idx_proxy->GetIdx(i, j, k));
-                    }
-                    // i direction
-                    idx = m_idx_proxy->GetIdx(i, j, k);
-                    double jacobi = m_node_metrics->GetJacobian(idx);
-                    for (int i = 0;i < 6;++i)
-                    {
-                        riemann_para[i].norm(0) = m_node_metrics->GetXi(idx)[0];
-                        riemann_para[i].norm(1) = m_node_metrics->GetXi(idx)[1];
-                        riemann_para[i].norm(2) = m_node_metrics->GetXi(idx)[2];
-                        riemann_para[i].nt = m_node_metrics->GetXi(idx)[3];
-                    }
-                    // Log::info("(i,j,k) = ({},{},{}), Coord: ({},{},{})", i, j, k, node->GetCoord(i, j, k)[0], node->GetCoord(i, j, k)[1], node->GetCoord(i, j, k)[2]);
-                    for (int iVal = 0; iVal < equ_num; ++iVal)
-                    {
-                        riemann_para[0].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 0, m_idx_proxy->GetIdx(i - 3, j, k));
-                        riemann_para[0].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 0, m_idx_proxy->GetIdx(i - 3, j, k));
-                        riemann_para[1].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 0, m_idx_proxy->GetIdx(i - 2, j, k));
-                        riemann_para[1].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 0, m_idx_proxy->GetIdx(i - 2, j, k));
-                        riemann_para[2].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 0, m_idx_proxy->GetIdx(i - 1, j, k));
-                        riemann_para[2].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 0, m_idx_proxy->GetIdx(i - 1, j, k));
-                        riemann_para[3].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 0, m_idx_proxy->GetIdx(i, j, k));
-                        riemann_para[3].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 0, m_idx_proxy->GetIdx(i, j, k));
-                        riemann_para[4].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 0, m_idx_proxy->GetIdx(i + 1, j, k));
-                        riemann_para[4].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 0, m_idx_proxy->GetIdx(i + 1, j, k));
-                        riemann_para[5].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 0, m_idx_proxy->GetIdx(i + 2, j, k));
-                        riemann_para[5].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 0, m_idx_proxy->GetIdx(i + 2, j, k));
-                    }
-                    for (int i = 0; i < 6; ++i)
-                    {
-                        m_riemann_solver->Solver(riemann_para[i]);
-                    }
-                    for (int iVar = 0; iVar < equ_num; ++iVar)
-                    {
-                        res_tmp[iVar] -= 75.0 / 64.0 * (riemann_para[3].flux[iVar] - riemann_para[2].flux[iVar]) - 25.0 / 384.0 * (riemann_para[4].flux[iVar] - riemann_para[1].flux[iVar]) + 3.0 / 640.0 * (riemann_para[5].flux[iVar] - riemann_para[0].flux[iVar]);
-                    }
-
-                    // j direction
-                    for (int i = 0;i < 6;++i)
-                    {
-                        riemann_para[i].norm(0) = m_node_metrics->GetEta(idx)[0];
-                        riemann_para[i].norm(1) = m_node_metrics->GetEta(idx)[1];
-                        riemann_para[i].norm(2) = m_node_metrics->GetEta(idx)[2];
-                        riemann_para[i].nt = m_node_metrics->GetEta(idx)[3];
-                    }
-                    for (int iVal = 0; iVal < equ_num; ++iVal)
-                    {
-                        riemann_para[0].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 1, m_idx_proxy->GetIdx(i, j - 3, k));
-                        riemann_para[0].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 1, m_idx_proxy->GetIdx(i, j - 3, k));
-                        riemann_para[1].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 1, m_idx_proxy->GetIdx(i, j - 2, k));
-                        riemann_para[1].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 1, m_idx_proxy->GetIdx(i, j - 2, k));
-                        riemann_para[2].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 1, m_idx_proxy->GetIdx(i, j - 1, k));
-                        riemann_para[2].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 1, m_idx_proxy->GetIdx(i, j - 1, k));
-                        riemann_para[3].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 1, m_idx_proxy->GetIdx(i, j, k));
-                        riemann_para[3].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 1, m_idx_proxy->GetIdx(i, j, k));
-                        riemann_para[4].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 1, m_idx_proxy->GetIdx(i, j + 1, k));
-                        riemann_para[4].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 1, m_idx_proxy->GetIdx(i, j + 1, k));
-                        riemann_para[5].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 1, m_idx_proxy->GetIdx(i, j + 2, k));
-                        riemann_para[5].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 1, m_idx_proxy->GetIdx(i, j + 2, k));
-                    }
-                    for (int i = 0; i < 6; ++i)
-                    {
-                        m_riemann_solver->Solver(riemann_para[i]);
-                    }
-                    for (int iVar = 0; iVar < equ_num; ++iVar)
-                    {
-                        res_tmp[iVar] -= 75.0 / 64.0 * (riemann_para[3].flux[iVar] - riemann_para[2].flux[iVar]) - 25.0 / 384.0 * (riemann_para[4].flux[iVar] - riemann_para[1].flux[iVar]) + 3.0 / 640.0 * (riemann_para[5].flux[iVar] - riemann_para[0].flux[iVar]);
-                    }
-                    // k direction
-                    if (grid->GetDim() == 3)
-                    {
-                        for (int i = 0;i < 6;++i)
-                        {
-                            riemann_para[i].norm(0) = m_node_metrics->GetZeta(idx)[0];
-                            riemann_para[i].norm(1) = m_node_metrics->GetZeta(idx)[1];
-                            riemann_para[i].norm(2) = m_node_metrics->GetZeta(idx)[2];
-                            riemann_para[i].nt = m_node_metrics->GetZeta(idx)[3];
-                        }
-                        for (int iVal = 0; iVal < equ_num; ++iVal)
-                        {
-                            riemann_para[0].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 2, m_idx_proxy->GetIdx(i, j, k - 3));
-                            riemann_para[0].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 2, m_idx_proxy->GetIdx(i, j, k - 3));
-                            riemann_para[1].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 2, m_idx_proxy->GetIdx(i, j, k - 2));
-                            riemann_para[1].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 2, m_idx_proxy->GetIdx(i, j, k - 2));
-                            riemann_para[2].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 2, m_idx_proxy->GetIdx(i, j, k - 1));
-                            riemann_para[2].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 2, m_idx_proxy->GetIdx(i, j, k - 1));
-                            riemann_para[3].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 2, m_idx_proxy->GetIdx(i, j, k));
-                            riemann_para[3].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 2, m_idx_proxy->GetIdx(i, j, k));
-                            riemann_para[4].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 2, m_idx_proxy->GetIdx(i, j, k + 1));
-                            riemann_para[4].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 2, m_idx_proxy->GetIdx(i, j, k + 1));
-                            riemann_para[5].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 2, m_idx_proxy->GetIdx(i, j, k + 2));
-                            riemann_para[5].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 2, m_idx_proxy->GetIdx(i, j, k + 2));
-                        }
-                        for (int i = 0; i < 6; ++i)
-                        {
-                            m_riemann_solver->Solver(riemann_para[i]);
-                        }
-                        for (int iVar = 0; iVar < equ_num; ++iVar)
-                        {
-                            res_tmp[iVar] -= 75.0 / 64.0 * (riemann_para[3].flux[iVar] - riemann_para[2].flux[iVar]) - 25.0 / 384.0 * (riemann_para[4].flux[iVar] - riemann_para[1].flux[iVar]) + 3.0 / 640.0 * (riemann_para[5].flux[iVar] - riemann_para[0].flux[iVar]);
-                        }
-                    }
-                    for (int iVar = 0; iVar < equ_num; ++iVar)
-                    {
-                        data_manager->SetResidual(iVar, idx, res_tmp[iVar] / jacobi);
-                    }
-                }
-            }
+            CalcInviscidResidualMUSCL();
+        }
+        else if (inter_scheme == InterSchme::WCNS5)
+        {
+            CalcInviscidResidualWCNS5();
+        }
+        else
+        {
+            Log::error("Interpolation scheme not found!");
+            CalcInviscidResidual1st();
         }
     }
-    void NSSolverStruct::ConvectiveResidual()
-    {
-        // ConvectiveResidualMUSCL();
-        ConvectiveResidualWCNS5();
-        return;
-        auto grid = GetGrid();
-        auto para = GetPara();
-        auto data_manager = GetDataManager();
-        auto gas = GetGas();
-        auto equ_num = para->GetEquNum();
-        int is, ie, js, je, ks, ke;
-        grid->GetRange(is, ie, js, je, ks, ke);
-        RiemannSolverPara riemann_para[6];
-        for (int i = 0; i < 6; ++i)
-        {
-            riemann_para[i].gamma_left = riemann_para[i].gamma_right = gas->GetGamma();
-        }
-        int idx;
-        for (int i = is;i <= ie;++i)
-        {
-            for (int j = js;j <= je;++j)
-            {
-                for (int k = ks;k <= ke;++k)
-                {
-                    idx = m_idx_proxy->GetIdx(i, j, k);
-                    double jacobi = m_node_metrics->GetJacobian(idx);
-                    // i direction
-                    riemann_para[0].norm(0) = m_node_metrics->GetXi(idx)[0];
-                    riemann_para[0].norm(1) = m_node_metrics->GetXi(idx)[1];
-                    riemann_para[0].norm(2) = m_node_metrics->GetXi(idx)[2];
-                    riemann_para[0].nt = m_node_metrics->GetXi(idx)[3];
-                    riemann_para[1].norm(0) = m_node_metrics->GetXi(idx)[0];
-                    riemann_para[1].norm(1) = m_node_metrics->GetXi(idx)[1];
-                    riemann_para[1].norm(2) = m_node_metrics->GetXi(idx)[2];
-                    riemann_para[1].nt = m_node_metrics->GetXi(idx)[3];
-                    MidNode1st(idx, m_idx_proxy->GetIdx(i + 1, j, k), &riemann_para[0].prim_left(0), &riemann_para[0].prim_right(0));
-                    MidNode1st(m_idx_proxy->GetIdx(i - 1, j, k), idx, &riemann_para[1].prim_left(0), &riemann_para[1].prim_right(0));
-                    // j direction
-                    riemann_para[2].norm(0) = m_node_metrics->GetEta(idx)[0];
-                    riemann_para[2].norm(1) = m_node_metrics->GetEta(idx)[1];
-                    riemann_para[2].norm(2) = m_node_metrics->GetEta(idx)[2];
-                    riemann_para[2].nt = m_node_metrics->GetEta(idx)[3];
-                    riemann_para[3].norm(0) = m_node_metrics->GetEta(idx)[0];
-                    riemann_para[3].norm(1) = m_node_metrics->GetEta(idx)[1];
-                    riemann_para[3].norm(2) = m_node_metrics->GetEta(idx)[2];
-                    riemann_para[3].nt = m_node_metrics->GetEta(idx)[3];
-                    MidNode1st(idx, m_idx_proxy->GetIdx(i, j + 1, k), &riemann_para[2].prim_left(0), &riemann_para[2].prim_right(0));
-                    MidNode1st(m_idx_proxy->GetIdx(i, j - 1, k), idx, &riemann_para[3].prim_left(0), &riemann_para[3].prim_right(0));
-                    // k direction
-                    riemann_para[4].norm(0) = m_node_metrics->GetZeta(idx)[0];
-                    riemann_para[4].norm(1) = m_node_metrics->GetZeta(idx)[1];
-                    riemann_para[4].norm(2) = m_node_metrics->GetZeta(idx)[2];
-                    riemann_para[4].nt = m_node_metrics->GetZeta(idx)[3];
-                    riemann_para[5].norm(0) = m_node_metrics->GetZeta(idx)[0];
-                    riemann_para[5].norm(1) = m_node_metrics->GetZeta(idx)[1];
-                    riemann_para[5].norm(2) = m_node_metrics->GetZeta(idx)[2];
-                    riemann_para[5].nt = m_node_metrics->GetZeta(idx)[3];
-                    MidNode1st(idx, m_idx_proxy->GetIdx(i, j, k + 1), &riemann_para[4].prim_left(0), &riemann_para[4].prim_right(0));
-                    MidNode1st(m_idx_proxy->GetIdx(i, j, k - 1), idx, &riemann_para[5].prim_left(0), &riemann_para[5].prim_right(0));
-                    for (int i = 0; i < 6; ++i)
-                    {
-                        m_riemann_solver->Solver(riemann_para[i]);
-                    }
-                    for (int iVar = 0; iVar < equ_num; ++iVar)
-                    {
-                        double flux = (riemann_para[0].flux[iVar] - riemann_para[1].flux[iVar] + riemann_para[2].flux[iVar] - riemann_para[3].flux[iVar] + riemann_para[4].flux[iVar] - riemann_para[5].flux[iVar]) / jacobi;
-                        data_manager->SetResidual(iVar, idx, data_manager->GetResidual(iVar, idx) - flux);
-                    }
-                }
-            }
-        }
-    }
-    void NSSolverStruct::ConvectiveResidual1st()
+    void NSSolverStruct::CalcInviscidResidual1st()
     {
         CalcMidNode1st();
+        CalcMidGhostNodePrimMUSCL();
+        FluxDifference2nd();
     }
-    void NSSolverStruct::ConvectiveResidualGrad()
+    void NSSolverStruct::CalcInviscidResidualGrad()
     {
-
     }
-    void NSSolverStruct::ConvectiveResidualMUSCL()
+    void NSSolverStruct::CalcInviscidResidualMUSCL()
     {
         CalcMidNodePrimMUSCL();
         CalcMidGhostNodePrimMUSCL();
-        FluxDifferenceMUSCL();
+        FluxDifference2nd();
     }
-    void NSSolverStruct::ConvectiveResidualWCNS5()
+    void NSSolverStruct::CalcInviscidResidualWCNS5()
     {
         CalcMidNodePrimWCNS5();
         CalcMidGhostNodePrimWCNS5();
-        FluxDifferenceWCNS5();
+        FluxDifference6th();
     }
-    void NSSolverStruct::ViscousResidual()
+    void NSSolverStruct::CalcViscousResidual()
     {
-        //todo
+        // todo
     }
     void NSSolverStruct::CalcViscousFlux()
     {
-        //todo
+        // todo
     }
     void NSSolverStruct::CalcViscousFluxGrad()
     {
-        //todo
+        // todo
     }
     void NSSolverStruct::SourceResidual()
     {
-        //todo
+        // todo
     }
     void NSSolverStruct::BoundaryCondition()
     {
         auto grid = GetGrid();
         auto data_manager = GetDataManager();
         auto bound_map = grid->GetBoundMap();
-        for (auto& boundary : bound_map->GetBoundaryMap())
+        for (auto &boundary : bound_map->GetBoundaryMap())
         {
-            auto& bound_name = boundary.first;
-            auto& bound = boundary.second;
+            auto &bound_name = boundary.first;
+            auto &bound = boundary.second;
             if (bound_name == "hole")
                 continue;
             if (bound_name == "riemann")
@@ -1416,7 +4319,7 @@ namespace  zaran
             }
         }
     }
-    void NSSolverStruct::InletBC(BoundStruct& bound)
+    void NSSolverStruct::InletBC(BoundStruct &bound)
     {
         auto grid = GetGrid();
         auto data_manager = GetDataManager();
@@ -1439,7 +4342,7 @@ namespace  zaran
         GetGas()->Prim2Cons(prim_far, cons_far);
         int i_ghost, j_ghost, k_ghost;
         int idx_ghost;
-        for (int iGhost = 1;iGhost <= ghost_size;++iGhost)
+        for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
         {
             i_ghost = i_bound + iGhost * bound_direction[0];
             j_ghost = j_bound + iGhost * bound_direction[1];
@@ -1452,7 +4355,7 @@ namespace  zaran
             }
         }
     }
-    void NSSolverStruct::OutletBC(BoundStruct& bound)
+    void NSSolverStruct::OutletBC(BoundStruct &bound)
     {
         auto grid = GetGrid();
         auto data_manager = GetDataManager();
@@ -1461,7 +4364,7 @@ namespace  zaran
         bound.GetIdxBound(i_bound, j_bound, k_bound);
         int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
         int i_ghost, j_ghost, k_ghost;
-        for (int iGhost = 1;iGhost <= ghost_size;++iGhost)
+        for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
         {
             i_ghost = i_bound + iGhost * bound.GetDirection()[0];
             j_ghost = j_bound + iGhost * bound.GetDirection()[1];
@@ -1474,7 +4377,7 @@ namespace  zaran
             }
         }
     }
-    void NSSolverStruct::WallBC(BoundStruct& bound)
+    void NSSolverStruct::WallBC(BoundStruct &bound)
     {
         auto grid = GetGrid();
         auto data_manager = GetDataManager();
@@ -1484,7 +4387,7 @@ namespace  zaran
         int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
         int i_ref, j_ref, k_ref;
         int i_ghost, j_ghost, k_ghost;
-        for (int iGhost = 1;iGhost <= ghost_size;++iGhost)
+        for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
         {
             i_ghost = i_bound + iGhost * bound.GetDirection()[0];
             j_ghost = j_bound + iGhost * bound.GetDirection()[1];
@@ -1501,32 +4404,116 @@ namespace  zaran
             }
         }
     }
-    void NSSolverStruct::RiemannBC(BoundStruct& bound)
+    void NSSolverStruct::RiemannBC(BoundStruct &bound)
     {
-
     }
-    void NSSolverStruct::SymmetryBC(BoundStruct& bound)
+    void NSSolverStruct::SymmetryBC(BoundStruct &bound)
     {
-
     }
     void NSSolverStruct::CheckPrimtive()
     {
-
     }
     void NSSolverStruct::CheckResidual()
     {
-
     }
     void NSSolverStruct::FixPrimtive()
     {
-
     }
-    void NSSolverStruct::BackupField(std::string& back_folder)
+    void NSSolverStruct::BackupField(std::string &back_folder)
     {
-
     }
-    GridStruct* NSSolverStruct::GetGrid()
+    GridStruct *NSSolverStruct::GetGrid()
     {
-        return static_cast<GridStruct*>(FlowSolver::GetGrid());
+        return static_cast<GridStruct *>(FlowSolver::GetGrid());
     }
+
+    Metrics *NSSolverStruct::GetMidMetricsI()
+    {
+        return m_metrics_half_i;
+    }
+
+    Metrics *NSSolverStruct::GetMidMetricsJ()
+    {
+        return m_metrics_half_j;
+    }
+
+    Metrics *NSSolverStruct::GetMidMetricsK()
+    {
+        return m_metrics_half_k;
+    }
+
+    double NSSolverStruct::NodeDifferece2nd(double *mid_data)
+    {
+        return 0.5 * (mid_data[1] - mid_data[0]);
+    }
+
+    double NSSolverStruct::NodeDifferece4th(double *mid_data)
+    {
+        return 27.0 / 24.0 * (mid_data[2] - mid_data[1]) - 1.0 / 24.0 * (mid_data[3] - mid_data[0]);
+    }
+
+    double NSSolverStruct::NodeDifferece4thLeft(double *mid_data)
+    {
+        return 1.0 / 24.0 *
+               (22.0 * mid_data[0] - 17.0 * mid_data[1] - 9.0 * mid_data[2] + 5.0 * mid_data[3] - 1.0 * mid_data[4]);
+    }
+
+    double NSSolverStruct::NodeDifferece4thRight(double *mid_data)
+    {
+        return -1.0 / 24.0 *
+               (22.0 * mid_data[0] - 17.0 * mid_data[1] - 9.0 * mid_data[2] + 5.0 * mid_data[3] - 1.0 * mid_data[4]);
+    }
+
+    double NSSolverStruct::NodeDifferece6th(double *mid_data)
+    {
+        return 75.0 / 64.0 * (mid_data[3] - mid_data[2]) - 25.0 / 384.0 * (mid_data[4] - mid_data[1]) +
+               3.0 / 640.0 * (mid_data[5] - mid_data[0]);
+    }
+
+    double NSSolverStruct::MidNodeInter2nd(double *node_data)
+    {
+        return 0.5 * (node_data[0] + node_data[1]);
+    }
+
+    double NSSolverStruct::MidNodeInter2ndLeft(double *node_data)
+    {
+        return 1.5 * node_data[0] - 0.5 * node_data[1];
+    }
+
+    double NSSolverStruct::MidNodeInter2ndRight(double *node_data)
+    {
+        return -0.5 * node_data[0] + 1.5 * node_data[1];
+    }
+
+    double NSSolverStruct::MidNodeInter4th(double *node_data)
+    {
+        return 1.0 / 16.0 * (-1.0 * node_data[0] + 9.0 * node_data[1] + 9.0 * node_data[2] - 1.0 * node_data[3]);
+    }
+
+    double NSSolverStruct::MidNodeInter4thLeft1(double *node_data)
+    {
+        return 1.0 / 16.0 * (-5.0 * node_data[0] + 21.0 * node_data[1] - 35.0 * node_data[2] + 35.0 * node_data[3]);
+    }
+
+    double NSSolverStruct::MidNodeInter4thLeft2(double *node_data)
+    {
+        return 1.0 / 16.0 * (1.0 * node_data[0] - 5.0 * node_data[1] + 15.0 * node_data[2] + 5.0 * node_data[3]);
+    }
+
+    double NSSolverStruct::MidNodeInter4thRight1(double *node_data)
+    {
+        return 1.0 / 16.0 * (35.0 * node_data[0] - 35.0 * node_data[1] + 21.0 * node_data[2] - 5.0 * node_data[3]);
+    }
+
+    double NSSolverStruct::MidNodeInter4thRight2(double *node_data)
+    {
+        return 1.0 / 16.0 * (5.0 * node_data[0] + 15.0 * node_data[1] - 5.0 * node_data[2] + 1.0 * node_data[3]);
+    }
+
+    double NSSolverStruct::MidNodeInter6th(double *node_data)
+    {
+        return 75.0 / 128.0 * (node_data[2] + node_data[3]) - 25.0 / 256.0 * (node_data[1] + node_data[4]) +
+               3.0 / 256.0 * (node_data[0] + node_data[5]);
+    }
+
 } // namespace  zaran

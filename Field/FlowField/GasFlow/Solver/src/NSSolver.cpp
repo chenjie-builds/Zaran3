@@ -2,17 +2,18 @@
 #include "File.h"
 #include <corecrt_math.h>
 #include <fstream>
+#include "Log.h"
+#include "PerfectGas.h"
+#include "RiemannSolverFactory.h"
 namespace zaran
 {
 
+	NSSolver::NSSolver(int index, string name, FlowSolverPara *para, GridBase *grid, DataManagerNS *data_manager)
+		: FlowSolver(index, name, para, grid, data_manager)
+	{
+	}
 
-    NSSolver::NSSolver(int index, string name, FlowSolverPara* para, GridBase* grid, DataManagerNS* data_manager)
-	:FlowSolver(index, name, para, grid, data_manager)
-    {
-
-    }
-
-NSSolver::~NSSolver()
+	NSSolver::~NSSolver()
 	{
 		delete[] m_riemann_solver;
 		delete[] m_gas;
@@ -22,7 +23,7 @@ NSSolver::~NSSolver()
 	{
 		InitSolver();
 		InitField();
-		CalcMetrics();
+		CalcCoordTransCoef();
 	}
 	void NSSolver::InitField()
 	{
@@ -49,10 +50,10 @@ NSSolver::~NSSolver()
 		Prim2Cons();
 		Log::info("Flow Field Initialize Finished!");
 	}
-    DataManagerNS* NSSolver::GetDataManager()
-    {
-        return static_cast<DataManagerNS*>(FieldSolver::GetDataManager());
-    }
+	DataManagerNS *NSSolver::GetDataManager()
+	{
+		return static_cast<DataManagerNS *>(FieldSolver::GetDataManager());
+	}
 	void NSSolver::InitSolver()
 	{
 		Log::info("Initialize NS Solver!");
@@ -113,8 +114,8 @@ NSSolver::~NSSolver()
 	void NSSolver::CalcResidual()
 	{
 		ZeroResidual();
-		ConvectiveResidual();
-		ViscousResidual();
+		CalcInviscidResidual();
+		CalcViscousResidual();
 		SourceResidual();
 	}
 

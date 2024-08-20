@@ -2,9 +2,9 @@
 #include "GridFactory.h"
 #include"FNGridFactory.h"
 #include"GridStructFactory.h"
-#include"NSSolverFNFDM.h"
 #include "NSFieldFN.h"
 #include "NSFieldStruct.h"
+#include "Log.h"
 namespace zaran
 {
     FieldManager* FieldBuilder::Create()
@@ -42,8 +42,9 @@ namespace zaran
             Log::warn("Unsupported Solver Type! Please Check!");
             system("pause");
         }
+        field->Allocate();
         global_field->AddField(field);
-        delete[] grid_factory;
+        delete grid_factory;
         return global_field;
     }
 

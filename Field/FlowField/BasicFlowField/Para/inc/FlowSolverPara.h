@@ -59,9 +59,9 @@ namespace zaran
 		const double& GetInflowPressure()const;
 		const double& GetInflowTemperature()const;
 		const InitFieldType& GetInitFieldType()const;
-		const int& GetIsViscous()const;
-		const int& GetCurrentStep()const;
-		const double& GetCflNumber()const;
+		 int GetIsViscous()const;
+		 int GetCurrentStep()const;
+		 double GetCflNumber()const;
 		void ReduceCflNumber();
 		const DArray& GetRKCoef()const;
 		const GradScheme& GetGradScheme()const;

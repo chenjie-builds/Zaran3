@@ -19,7 +19,7 @@ namespace zaran
 	{
 	public:
 		StarCDGrid();
-		void ReadGridFromStraCD(string& filename);
+		void ReadGridFromStraCD( const string& filename);
 	public:
 		// get the dimension of grid
 		Dimension GetDimension()const { return dim_; }
@@ -102,10 +102,10 @@ namespace zaran
 			int boundType_;
 		};
 	private:
-		void read_inp(string& filename);
-		void read_vrt(string& filename);
-		void read_cel(string& filename);
-		void read_bnd(string& filename);
+		void read_inp(const string& filename);
+		void read_vrt(const string& filename);
+		void read_cel(const string& filename);
+		void read_bnd(const string& filename);
 
 	private:
 		Dimension dim_;

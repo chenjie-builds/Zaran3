@@ -33,7 +33,7 @@ namespace zaran
 		void SetType(GridType type = GridType::Unkown) { m_type = type; };
 	public:
 		const string& GetName()const { return m_name; }
-		const size_t& GetIndex()const { return m_index; }
+		const int& GetIndex()const { return m_index; }
 		const int& GetDim()const { return m_dim; }
 		const GridType& GetType()const { return m_type; }
 	private:

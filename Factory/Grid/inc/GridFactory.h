@@ -23,5 +23,6 @@ class GridFactory
 {
   public:
     virtual GridBase* CreateGrid() = 0;
+    virtual ~GridFactory() {}
 };
 } // namespace zaran

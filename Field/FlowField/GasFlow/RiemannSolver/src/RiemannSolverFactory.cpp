@@ -4,7 +4,7 @@
 #include "Roe.h"
 #include "HLLC.h"
 #include "StegerWarming.h"
-#include "log.h"
+#include "Log.h"
 using namespace zaran;
 
 

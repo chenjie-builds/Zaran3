@@ -1,7 +1,7 @@
 #include "BoundMapFN.h"
 #include "Log.h"
 using namespace zaran;
-void BoundMapFN::AddBoundary(const std::string& name, BoundFN& bound)
+void BoundMapFN::AddBoundary(const std::string& name, BoundFN&& bound)
 {
 	auto it = m_bound_map.find(name);
 	if (it == m_bound_map.end())

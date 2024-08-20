@@ -34,6 +34,7 @@ namespace zaran
 		Field(GridBase* grid, FieldType fieldType = FieldType::Unset);
 		virtual~Field();
 	public:
+		virtual void Allocate();
 		void SetIdx(int idx) { m_idx = idx; }
 		int GetIdx() { return m_idx; }
 		virtual GridBase* GetGrid() { return m_grid; }
@@ -43,7 +44,10 @@ namespace zaran
 		virtual DataManager* GetDataManager() { return m_data_manager; }
 		FieldType GetFieldType() { return m_fieldType; }
 	protected:
-		virtual void Allocate();
+		virtual void AllocateFieldData();
+		virtual void AllocateSolver() = 0;
+		virtual void AllocateSolverPara() = 0;
+		virtual void AllocateDataManager() = 0;
 	protected:
 		/// @brief 本场在全场数组中的索引
 		int m_idx;

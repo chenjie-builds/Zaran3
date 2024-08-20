@@ -4,157 +4,51 @@ namespace zaran
 {
     Metrics::Metrics(int node_num)
     {
-        m_metric = new double[node_num * (4 * 4 + 1)];
+        m_metric = new double[node_num * m_metric_num];
     }
 
     Metrics::~Metrics()
     {
         delete[] m_metric;
     }
-
-    // void NodeMetric::CalcMetric()
-    // {
-    //     auto node = m_grid->GetNode();
-    //     int node_num = node->GetNodeNum();
-    //     const double* xRight, * xLeft, * yRight, * yLeft, * zRight, * zLeft;
-    //     xRight = xLeft = yRight = yLeft = zRight = zLeft = nullptr;
-    //     max_jacobian = -LARGE_NUMBER;
-    //     min_jacobian = LARGE_NUMBER;
-    //     for (int iNode = 0;iNode < node_num;++iNode)
-    //     {
-    //         if (node->GetType(iNode) != NodeType::inner)
-    //         {
-    //             continue;
-    //         }
-    //         auto neighbors = node->GetNeighborNode(iNode);
-    //         xLeft = node->GetCoord(neighbors[0]);
-    //         xRight = node->GetCoord(neighbors[1]);
-    //         yLeft = node->GetCoord(neighbors[2]);
-    //         yRight = node->GetCoord(neighbors[3]);
-    //         if (m_grid->GetDimension() == 3)
-    //         {
-    //             zLeft = node->GetCoord(neighbors[4]);
-    //             zRight = node->GetCoord(neighbors[5]);
-    //         }
-    //         CalcMetric(m_metric + iNode * m_metric_num, xRight, xLeft, yRight, yLeft, zRight, zLeft);
-    //         if (GetJacobian(iNode) > max_jacobian)
-    //         {
-    //             max_jacobian = GetJacobian(iNode);
-    //             max_jacobian_node = iNode;
-    //         }
-    //         if (GetJacobian(iNode) < min_jacobian)
-    //         {
-    //             min_jacobian = GetJacobian(iNode);
-    //             min_jacobian_node = iNode;
-    //         }
-    //     }
-    // }
-
-    // void NodeMetric::CheckJacobian()
-    // {
-    //     auto node = m_grid->GetNode();
-    //     int node_num = node->GetNodeNum();
-    //     for (int iNode = 0;iNode < node_num;++iNode)
-    //     {
-    //         if (node->GetType(iNode) != NodeType::inner)
-    //         {
-    //             continue;
-    //         }
-    //         if (ErrorJacobi(GetJacobian(iNode)))
-    //         {
-    //             m_exist_error_jacobi = true;
-    //             return;
-    //         }
-    //     }
-    // }
-    // void NodeMetric::FixJacobian()
-    // {
-    //     if (!m_exist_error_jacobi)
-    //         return;
-    //     auto node = m_grid->GetNode();
-    //     int node_num = node->GetNodeNum();
-    //     const double* xRight, * xLeft, * yRight, * yLeft, * zRight, * zLeft;
-    //     xRight = xLeft = yRight = yLeft = zRight = zLeft = nullptr;
-    //     std::vector<int> temp_neibor;
-    //     for (int iNode = 0;iNode < node_num;++iNode)
-    //     {
-    //         if (node->GetType(iNode) != NodeType::inner)
-    //         {
-    //             continue;
-    //         }
-    //         auto neighbors = node->GetNeighborNode(iNode);
-    //         int neighbor_num = node->GetNeighborNodeNum(iNode);
-    //         temp_neibor.resize(neighbor_num);
-    //         for (int i = 0;i < neighbor_num;++i)
-    //         {
-    //             temp_neibor[i] = neighbors[i];
-    //         }
-    //         // 如果雅可比行列式为0或者无穷大, 可能是因为坐标轴平行
-    //         if (abs(GetJacobian(iNode) < SMALL_NUMBER) || isnan(GetJacobian(iNode)) || isinf(GetJacobian(iNode)))
-    //         {
-    //             std::swap(temp_neibor[3], temp_neibor[4]);
-    //             xLeft = node->GetCoord(neighbors[0]);
-    //             xRight = node->GetCoord(neighbors[1]);
-    //             yLeft = node->GetCoord(neighbors[2]);
-    //             yRight = node->GetCoord(neighbors[3]);
-    //             if (m_grid->GetDimension() == 3)
-    //             {
-    //                 zLeft = node->GetCoord(neighbors[4]);
-    //                 zRight = node->GetCoord(neighbors[5]);
-    //             }
-    //             CalcMetric(m_metric + iNode * m_metric_num, xRight, xLeft, yRight, yLeft, zRight, zLeft);
-    //             node->SetNeighborNode(iNode, neighbor_num, temp_neibor.data());
-    //         }
-    //         //如果雅可比行列式为负, 交换K方向的两个邻居节点
-    //         if (GetJacobian(iNode) < 0)
-    //         {
-    //             std::swap(temp_neibor[4], temp_neibor[5]);
-    //             xLeft = node->GetCoord(neighbors[0]);
-    //             xRight = node->GetCoord(neighbors[1]);
-    //             yLeft = node->GetCoord(neighbors[2]);
-    //             yRight = node->GetCoord(neighbors[3]);
-    //             if (m_grid->GetDimension() == 3)
-    //             {
-    //                 zLeft = node->GetCoord(neighbors[4]);
-    //                 zRight = node->GetCoord(neighbors[5]);
-    //             }
-    //             CalcMetric(m_metric + iNode * m_metric_num, xRight, xLeft, yRight, yLeft, zRight, zLeft);
-    //             node->SetNeighborNode(iNode, neighbor_num, temp_neibor.data());
-    //         }
-    //         // 如果修正后的雅可比行列式仍然为错误, 则报错
-    //         if (ErrorJacobi(GetJacobian(iNode)))
-    //         {
-    //             Log::error("NodeMetric::FixJacobian: fix jacobian error failed");
-    //             Log::error("NodeMetric::FixJacobian: node id = {}, Coordinate = ({},{},{}), jacobian = {}", iNode, node->GetCoord(iNode)[0], node->GetCoord(iNode)[1], node->GetCoord(iNode)[2], GetJacobian(iNode));
-    //             Log::error("Exit...");
-    //             exit(1);
-    //         }
-    //     }
-    //     // 修复完成
-    //     m_exist_error_jacobi = false;
-    // }
-    const double* Metrics::GetXi(int iNode) const
+    double* Metrics::GetX(int iNode)
     {
-        return m_metric + iNode * 17;
+        return m_metric + iNode * m_metric_num;
+    }
+    double* Metrics::GetY(int iNode)
+    {
+        return m_metric + iNode * m_metric_num + 4;
+    }
+    double* Metrics::GetZ(int iNode)
+    {
+        return m_metric + iNode * m_metric_num + 8;
+    }
+    double* Metrics::GetT(int iNode)
+    {
+        return m_metric + iNode * m_metric_num + 12;
+    }
+    double* Metrics::GetXi(int iNode)
+    {
+        return m_metric + iNode * m_metric_num + 16;
     }
 
-    const double* Metrics::GetEta(int iNode) const
+    double* Metrics::GetEta(int iNode)
     {
-        return m_metric + iNode * 17 + 4;
+        return m_metric + iNode * m_metric_num + 20;
     }
 
-    const double* Metrics::GetZeta(int iNode) const
+    double* Metrics::GetZeta(int iNode)
     {
-        return m_metric + iNode * 17 + 8;
+        return m_metric + iNode * m_metric_num + 24;
     }
 
-    const double* Metrics::GetMetricTau(int iNode) const
+    double* Metrics::GetTau(int iNode)
     {
-        return m_metric + iNode * 17 + 12;
+        return m_metric + iNode * m_metric_num + 28;
     }
-    double Metrics::GetJacobian(int iNode) const
+    double& Metrics::GetJacobian(int iNode)
     {
-        return m_metric[iNode * 17 + 16];
+        return m_metric[iNode * m_metric_num + 32];
     }
 
 

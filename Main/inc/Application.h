@@ -30,7 +30,7 @@ namespace zaran
 	public:
 		Application() :
 			globalDataFileName_("zaran.ini"),
-			minSupportCtrlFileVersion_("V3.3.4")
+			minSupportCtrlFileVersion_("V3.3.5")
 		{
 			GlobalData::Init();
 		}

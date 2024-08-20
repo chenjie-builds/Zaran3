@@ -9,26 +9,24 @@ namespace zaran
     public:
         Metrics(int node_num);
         ~Metrics();
-        //计算度量
-        // void CalcMetric();
-        //检查Jacobian是否存在错误
-        // void CheckJacobian();
-        //对存在错误的Jacobian进行修正
-        // void FixJacobian();
+        double* GetX(int iNode);
+        double* GetY(int iNode);
+        double* GetZ(int iNode);
+        double* GetT(int iNode);
         //获取Xi 方向度量
-        const  double* GetXi(int iNode)const;
+        double* GetXi(int iNode);
         //获取Eta 方向度量
-        const double* GetEta(int iNode)const;
+        double* GetEta(int iNode);
         //获取Zeta 方向度量
-        const double* GetZeta(int iNode)const;
+        double* GetZeta(int iNode);
         //获取Tau度量
-        const double* GetMetricTau(int iNode)const;
+        double* GetTau(int iNode);
         //获取Jacobian
-        double GetJacobian(int iNode)const;
-    public :
+        double& GetJacobian(int iNode);
+    public:
         void CalcMetric(int iNode, const double* xRight, const double* xLeft, const double* yRight, const double* yLeft, const double* zRight = nullptr, const double* zLeft = nullptr);
     private:
-        const int m_metric_num = 17;
+        const int m_metric_num = 33;
         double* m_metric;
     };
 }

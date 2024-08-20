@@ -27,5 +27,6 @@ namespace zaran
 	{
 	public:
 		virtual void Solver(RiemannSolverPara& para) = 0;
+		virtual ~RiemannSolver() {}
 	};
 }

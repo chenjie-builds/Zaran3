@@ -1,4 +1,4 @@
-#include "solverpara.h"
+#include "SolverPara.h"
 using namespace zaran;
 SolverPara::SolverPara()
 {

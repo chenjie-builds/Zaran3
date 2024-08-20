@@ -24,16 +24,16 @@ public:
 	double CalcSoundSpeed(const double& T)override;  //根据温度计算声速
 	double CalcSoundSpeed(const double& density, const double& pressure) override;
 	double CalcTemperature(const double& density, const double& p)override;  //根据状态方程计算温度
-	double CalcMul(const double& T);   //根据温度，利用southerland公式计算层流粘性系数μl
-	double CalcMut(const double& T);   //根据温度，计算湍流粘性系数μt
-	double CalcMu(const double& T);    //根据温度求解粘性系数μ
-	double CalcKl(const double& T);    //根据温度，求出层流传热系数
-	double CalcKt(const double& T);    //根据温度，求出湍流传热系数
-	double CalcK(const double& T);     //根据温度，求出传热系数
-	double CalcEnergy(const double& T, const double& velocity);//根据温度和速度求出总内能
-	double CalcEnergy(const double& density, const double& pressure, const double& velocity);//根据密度压力和速度求出总内能
+	double CalcMul(const double& T)override;   //根据温度，利用southerland公式计算层流粘性系数μl
+	double CalcMut(const double& T)override;   //根据温度，计算湍流粘性系数μt
+	double CalcMu(const double& T)override;    //根据温度求解粘性系数μ
+	double CalcKl(const double& T)override;    //根据温度，求出层流传热系数
+	double CalcKt(const double& T)override;    //根据温度，求出湍流传热系数
+	double CalcK(const double& T)override;     //根据温度，求出传热系数
+	double CalcEnergy(const double& T, const double& velocity)override;//根据温度和速度求出总内能
+	double CalcEnergy(const double& density, const double& pressure, const double& velocity)override;//根据密度压力和速度求出总内能
 	//根据密度和温度求出压力
-	double CalcPressure(const double& density, const double& T)const;
+	double CalcPressure(const double& density, const double& T)const override;
 	void Prim2Cons(const double* prim, double* cons)override;
 	void Cons2Prim(const double* cons, double* prim)override;
 private:

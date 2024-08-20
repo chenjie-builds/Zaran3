@@ -12,11 +12,7 @@
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE"
-            ],
-            "cStandard": "c17",
-            "cppStandard": "c++17",
-            "intelliSenseMode":"${default}",
-            "configurationProvider": "ms-vscode.cmake-tools"
+            ]
         }
     ],
     

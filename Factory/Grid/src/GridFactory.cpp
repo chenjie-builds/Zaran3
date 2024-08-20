@@ -1,6 +1,6 @@
 #include "GridFactory.h"
 #include "GridStruct.h"
-#include "log.h"
+#include "Log.h"
 
 namespace zaran
 {

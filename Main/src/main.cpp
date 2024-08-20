@@ -1,15 +1,14 @@
-#include"Application.h"
+#include "Application.h"
 #include "Log.h"
-#include"BasicType.h"
-#include"Test.h"
-#include<iostream>
+#include "BasicType.h"
+#include <iostream>
 int main()
 {
 	using namespace zaran;
 	Logger::Start();
-	Application* app = new Application();
+	Application *app = new Application();
 	app->Run();
-	delete[] app;
-	Log::info("¼ÆËã½áÊø£¡°´ÈÎÒâ¼üÍË³ö¡­¡­");
+	delete app;
+	Log::info("è®¡ç®—ç»“æŸï¼æŒ‰ä»»æ„é”®é€€å‡ºâ€¦â€¦");
 	std::cin.get();
 }

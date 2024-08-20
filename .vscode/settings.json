@@ -94,10 +94,10 @@
         "xutility": "cpp",
         "*.txx": "cpp"
     },
-    // "C_Cpp.intelliSenseEngineFallback": "disabled",
-    // "cmake.generator": "Ninja",
-    // "cmake.configureSettings": {
-    //     "CMAKE_MAKE_PROGRAM": "ninja.exe",
-    // },
+    "C_Cpp.intelliSenseEngineFallback": "disabled",
+    "cmake.generator": "Ninja",
+    "cmake.configureSettings": {
+        "CMAKE_MAKE_PROGRAM": "ninja.exe",
+    },
     
 }

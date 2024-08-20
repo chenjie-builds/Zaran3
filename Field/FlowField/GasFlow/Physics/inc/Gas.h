@@ -24,6 +24,7 @@ class Gas
 {
 public:
 	Gas(const double& Mw = 0.028964, const double& gamma = 1.4, const Dimensionless& refValue = Dimensionless());
+	virtual ~Gas(){}
 	virtual double GetRm()const = 0;
 	virtual double GetMw() const = 0;
 	virtual double GetGamma() const = 0;

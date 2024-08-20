@@ -10,10 +10,6 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include "BasicType.h"
-#include "solver.h"
-#include "flowsolver.h"
-#include "NSSolver.h"
 #include "GlobalField.h"
 namespace zaran
 {

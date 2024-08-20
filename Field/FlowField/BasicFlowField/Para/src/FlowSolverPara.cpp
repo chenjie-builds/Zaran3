@@ -1,6 +1,6 @@
-#include"flowsolverpara.h"
+#include"FlowSolverPara.h"
 #include "GlobalData.h"
-#include "log.h"
+#include "Log.h"
 #include "PerfectGas.h"
 #include<iostream>
 using namespace zaran;
@@ -183,18 +183,18 @@ const InitFieldType& FlowSolverPara::GetInitFieldType() const
 	return m_init_field_type;
 }
 
-const int& FlowSolverPara::GetIsViscous() const
+ int FlowSolverPara::GetIsViscous() const
 {
 	return m_is_viscous;
 }
 
-const int& zaran::FlowSolverPara::GetCurrentStep() const
+ int zaran::FlowSolverPara::GetCurrentStep() const
 {
 	return m_current_step;
 }
 
 
-const double& zaran::FlowSolverPara::GetCflNumber() const
+ double zaran::FlowSolverPara::GetCflNumber() const
 {
 	return m_cfl->GetCFL(m_current_step);
 

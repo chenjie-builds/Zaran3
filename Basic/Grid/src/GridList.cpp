@@ -1,5 +1,5 @@
 #include "GridList.h"
-#include "log.h"
+#include "Log.h"
 using namespace zaran;
 GridList::GridList(std::vector<Ptr<GridBase>>& gridList)
 {

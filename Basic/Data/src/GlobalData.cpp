@@ -1,5 +1,5 @@
 #include "GlobalData.h"
-#include "log.h"
+#include "Log.h"
 #include <fstream>
 using namespace zaran;
 GlobalData& GlobalData::Init()

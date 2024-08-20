@@ -11,7 +11,7 @@
 //==============================================================================||
 #pragma once
 #include "FieldSolver.h"
-#include "flowsolverpara.h"
+#include "FlowSolverPara.h"
 #include"FieldDataManager.h"
 namespace zaran
 {

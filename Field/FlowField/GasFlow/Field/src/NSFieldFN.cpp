@@ -5,11 +5,7 @@ namespace zaran
     NSFieldFNFDM::NSFieldFNFDM(GridBase* grid)
         : FieldNS(grid, FieldType::NS_FlexibleNode)
     {
-        m_data_manager = new DataManagerNS(GetFieldData(), GetGrid()->GetTotalNodeNum());
-        m_data_manager->CreateData();
-        m_data_manager->RegisterData();
-        m_solver = new NSSolverFNFDM(1, "NS_FNFDM", GetSolverPara(), GetGrid(), GetDataManager());
-        m_res_info = new ResInfo(GetSolverPara()->GetEquNum());
+
     }
 
     NSFieldFNFDM::~NSFieldFNFDM()
@@ -21,6 +17,7 @@ namespace zaran
     {
         return static_cast<GridFN*>(Field::GetGrid());
     }
+
 
     NSSolverFNFDM* NSFieldFNFDM::GetSolver()
     {
@@ -65,23 +62,23 @@ namespace zaran
             m_res_info->SetInfNormCoord(iEqu, norm_inf_coord);
         }
     }
-    void NSFieldFNFDM::Allocate()
+
+    void NSFieldFNFDM::AllocateSolver()
     {
-        FieldNS::Allocate();
+        if (m_solver != nullptr)
+        {
+            delete m_solver;
+        }
+        m_solver = new NSSolverFNFDM(1, "NS_FNFDM", GetSolverPara(), GetGrid(), GetDataManager());
+    }
+    void NSFieldFNFDM::AllocateDataManager()
+    {
         if (m_data_manager != nullptr)
         {
             delete m_data_manager;
         }
         m_data_manager = new DataManagerNS(GetFieldData(), GetGrid()->GetTotalNodeNum());
-        if (m_solver != nullptr)
-        {
-            delete m_solver;
-        }
-        m_solver = new NSSolverFNFDM(1, "NS_FNFDM", GetSolverPara(), GetGrid(),  GetDataManager());
-        if (m_res_info != nullptr)
-        {
-            delete m_res_info;
-        }
-        m_res_info = new ResInfo(GetSolverPara()->GetEquNum());
+        m_data_manager->CreateData();
+        m_data_manager->RegisterData();
     }
 }

@@ -3,6 +3,7 @@
 #include"GridStruct.h"
 #include"NSSolverStruct.h"
 #include"DataManagerNS.h"
+#include"FlowSolverStructPara.h"
 namespace zaran
 {
     class NSFieldStruct :public FieldNS
@@ -10,12 +11,20 @@ namespace zaran
     public:
         NSFieldStruct(GridBase* grid);
         ~NSFieldStruct();
+        void Allocate() override;
+    public:
         GridStruct* GetGrid() override;
+        FlowSolverStructPara* GetSolverPara() override;
         NSSolverStruct* GetSolver() override;
         DataManagerNSStruct* GetDataManager() override;
         void CalcResidual() override;
     protected:
-        void Allocate() override;
+        void AllocateResInfo() override;
+        void AllocateSolver() override;
+        void AllocateDataManager() override;
+        void AllocateIdxProxy();
+        void AllocateSolverPara()override;
+
         StructIdxProxy* m_idx_proxy;
     };
 }
