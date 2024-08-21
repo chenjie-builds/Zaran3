@@ -1,6 +1,7 @@
 #include "GridStructFactory.h"
 #include "Log.h"
 #include <fstream>
+#include "MathBasic.h"
 namespace zaran
 {
     GridStructFactory::GridStructFactory()
@@ -9,39 +10,38 @@ namespace zaran
         // m_bnd_file_name = GlobalData::GetString("BoundFile");
         m_node_file_name = "mesh.dat";
         m_bnd_file_name = "mesh.inp";
-
     }
 
-    GridStruct* GridStructFactory::CreateGrid()
+    GridStruct *GridStructFactory::CreateGrid()
     {
         // 镜像节点层数默认为3，后面可以从配置文件中读取
         m_ghost_size = 3;
         ReadNodeFile();
         ReadBoundFile();
-        GridStruct* grid = new GridStruct("Structured", 1, m_dim);
+        GridStruct *grid = new GridStruct("Structured", 1, m_dim);
         ConvertToGrid(grid);
         SetBoundInfo(grid);
         return grid;
     }
 
-    void GridStructFactory::ConvertToGrid(GridStruct* grid)
+    void GridStructFactory::ConvertToGrid(GridStruct *grid)
     {
         grid->Allocate(m_ni, m_nj, m_nk, m_ghost_size);
         auto node = grid->GetNode();
         int is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
-        for (int idx_k = ks;idx_k <= ke;++idx_k)
+        for (int idx_k = ks; idx_k <= ke; ++idx_k)
         {
-            for (int idx_j = js;idx_j <= je;++idx_j)
+            for (int idx_j = js; idx_j <= je; ++idx_j)
             {
-                for (int idx_i = is;idx_i <= ie;++idx_i)
+                for (int idx_i = is; idx_i <= ie; ++idx_i)
                 {
                     node->SetCoord(idx_i, idx_j, idx_k, m_node_coord[idx_i - m_ghost_size][idx_j - m_ghost_size][idx_k - m_ghost_size].coord);
                 }
             }
         }
-        //Set Ghost Node Coord
-        const double* ref_coord;
+        // Set Ghost Node Coord
+        const double *ref_coord;
         int ref_idx_i, ref_idx_j, ref_idx_k;
         int di, dj, dk;
         double coord[3];
@@ -49,7 +49,7 @@ namespace zaran
         ni = grid->GetNi();
         nj = grid->GetNj();
         nk = grid->GetNk();
-        for (int idx_k = 0;idx_k < nk;++idx_k)
+        for (int idx_k = 0; idx_k < nk; ++idx_k)
         {
             if (idx_k < m_ghost_size)
             {
@@ -71,7 +71,7 @@ namespace zaran
                 ref_idx_k = m_ghost_size;
                 dk = 0;
             }
-            for (int idx_j = 0;idx_j < nj;++idx_j)
+            for (int idx_j = 0; idx_j < nj; ++idx_j)
             {
                 if (idx_j < m_ghost_size)
                 {
@@ -88,7 +88,7 @@ namespace zaran
                     ref_idx_j = idx_j;
                     dj = 0;
                 }
-                for (int idx_i = 0;idx_i < ni;++idx_i)
+                for (int idx_i = 0; idx_i < ni; ++idx_i)
                 {
                     if (idx_i < m_ghost_size)
                     {
@@ -122,6 +122,7 @@ namespace zaran
 
     void GridStructFactory::ReadNodeFile()
     {
+        // std::ofstream fout("mesh_rand_xy.dat");
         std::ifstream node_file(m_node_file_name);
         if (!node_file.is_open())
         {
@@ -131,6 +132,8 @@ namespace zaran
         int block_num;
         node_file >> block_num;
         node_file >> m_ni >> m_nj >> m_nk;
+        // fout << block_num << std::endl;
+        // fout << m_ni << " " << m_nj << " " << m_nk << std::endl;
         // 设置网格的维度
         if (m_nk == 1)
         {
@@ -149,37 +152,49 @@ namespace zaran
                 m_node_coord[idx_i][idx_j].resize(m_nk);
             }
         }
-        for (int idx_k = 0;idx_k < m_nk;++idx_k)
+        for (int idx_k = 0; idx_k < m_nk; ++idx_k)
         {
-            for (int idx_j = 0;idx_j < m_nj;++idx_j)
+            for (int idx_j = 0; idx_j < m_nj; ++idx_j)
             {
-                for (int idx_i = 0;idx_i < m_ni;++idx_i)
+                for (int idx_i = 0; idx_i < m_ni; ++idx_i)
                 {
                     node_file >> m_node_coord[idx_i][idx_j][idx_k].coord[0];
+                    // if (idx_k == 0)
+                    // {
+                    //     m_node_coord[idx_i][idx_j][idx_k].coord[0] += 0.10 * GetRand(-0.02, 0.02);
+                    // }
+                    // fout << m_node_coord[idx_i][idx_j][0].coord[0] << std::endl;
                 }
             }
         }
-        for (int idx_k = 0;idx_k < m_nk;++idx_k)
+        for (int idx_k = 0; idx_k < m_nk; ++idx_k)
         {
-            for (int idx_j = 0;idx_j < m_nj;++idx_j)
+            for (int idx_j = 0; idx_j < m_nj; ++idx_j)
             {
-                for (int idx_i = 0;idx_i < m_ni;++idx_i)
+                for (int idx_i = 0; idx_i < m_ni; ++idx_i)
                 {
                     node_file >> m_node_coord[idx_i][idx_j][idx_k].coord[1];
+                    // if (idx_k == 0)
+                    // {
+                        // m_node_coord[idx_i][idx_j][idx_k].coord[1] += 0.10 * GetRand(-0.02, 0.02);
+                    // }
+                    // fout << m_node_coord[idx_i][idx_j][0].coord[1] << std::endl;
                 }
             }
         }
-        for (int idx_k = 0;idx_k < m_nk;++idx_k)
+        for (int idx_k = 0; idx_k < m_nk; ++idx_k)
         {
-            for (int idx_j = 0;idx_j < m_nj;++idx_j)
+            for (int idx_j = 0; idx_j < m_nj; ++idx_j)
             {
-                for (int idx_i = 0;idx_i < m_ni;++idx_i)
+                for (int idx_i = 0; idx_i < m_ni; ++idx_i)
                 {
                     node_file >> m_node_coord[idx_i][idx_j][idx_k].coord[2];
+                    // fout << m_node_coord[idx_i][idx_j][idx_k].coord[2] << std::endl;
                 }
             }
         }
         node_file.close();
+        // fout.close();
     }
     void GridStructFactory::ReadBoundFile()
     {
@@ -192,7 +207,7 @@ namespace zaran
         }
         int block_num;
         bnd_file >> block_num;
-        for (int idx_block = 0;idx_block < block_num;++idx_block)
+        for (int idx_block = 0; idx_block < block_num; ++idx_block)
         {
             int block_idx;
             bnd_file >> block_idx;
@@ -206,7 +221,7 @@ namespace zaran
             bnd_file >> block_name;
             int bound_num;
             bnd_file >> bound_num;
-            for (int idx_bound = 0;idx_bound < bound_num;++idx_bound)
+            for (int idx_bound = 0; idx_bound < bound_num; ++idx_bound)
             {
                 BoundInfo bound_info;
                 bound_info.block_indx = block_idx;
@@ -232,21 +247,21 @@ namespace zaran
             }
         }
     }
-    void GridStructFactory::SetBoundInfo(GridStruct* grid)
+    void GridStructFactory::SetBoundInfo(GridStruct *grid)
     {
-        std::map<int, string> gridgen_bound = { {0,"none"},{1,"interblock_connection"},{2,"wall"},{3,"symmetry"},{4,"farfield"},{5,"inlet"},{6,"outlet"} };
+        std::map<int, string> gridgen_bound = {{0, "none"}, {1, "interblock_connection"}, {2, "wall"}, {3, "symmetry"}, {4, "farfield"}, {5, "inlet"}, {6, "outlet"}};
         auto bound_map = grid->GetBoundMap();
         auto node = grid->GetNode();
         int i_bound, j_bound, k_bound;
         double bound_norm[3];
         int face_direction[3];
-        for (auto& bound_info : m_bound_info)
+        for (auto &bound_info : m_bound_info)
         {
-            for (int idx_k = bound_info.k_start;idx_k <= bound_info.k_end;++idx_k)
+            for (int idx_k = bound_info.k_start; idx_k <= bound_info.k_end; ++idx_k)
             {
-                for (int idx_j = bound_info.j_start;idx_j <= bound_info.j_end;++idx_j)
+                for (int idx_j = bound_info.j_start; idx_j <= bound_info.j_end; ++idx_j)
                 {
-                    for (int idx_i = bound_info.i_start;idx_i <= bound_info.i_end;++idx_i)
+                    for (int idx_i = bound_info.i_start; idx_i <= bound_info.i_end; ++idx_i)
                     {
                         i_bound = idx_i + m_ghost_size;
                         j_bound = idx_j + m_ghost_size;
@@ -282,7 +297,7 @@ namespace zaran
                         bound_norm[1] = bound_node_coord[1] - ref_node_coord[1];
                         bound_norm[2] = bound_node_coord[2] - ref_node_coord[2];
                         double normal = sqrt(bound_norm[0] * bound_norm[0] + bound_norm[1] * bound_norm[1] + bound_norm[2] * bound_norm[2]);
-                        for (int i = 0;i < 3;++i)
+                        for (int i = 0; i < 3; ++i)
                         {
                             bound_norm[i] /= normal;
                         }

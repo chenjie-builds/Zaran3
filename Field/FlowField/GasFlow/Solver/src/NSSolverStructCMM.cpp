@@ -277,21 +277,21 @@ namespace zaran
                 for (int iDim = 0; iDim < 3; ++iDim)
                 {
                     // i=1/2，3/2，5/2
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
                         inter_temp[iTemp] = coef->GetXi(Idx(1 + iTemp, j, k))[iDim];
                     }
                     coef_mid[0]->GetXi(Idx(0, j, k))[iDim] = MidNodeInter4thRight1(inter_temp);
                     coef_mid[0]->GetXi(Idx(1, j, k))[iDim] = MidNodeInter4thRight2(inter_temp);
                     coef_mid[0]->GetXi(Idx(2, j, k))[iDim] = MidNodeInter4th(inter_temp);
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
                         inter_temp[iTemp] = coef->GetEta(Idx(1 + iTemp, j, k))[iDim];
                     }
                     coef_mid[0]->GetEta(Idx(0, j, k))[iDim] = MidNodeInter4thRight1(inter_temp);
                     coef_mid[0]->GetEta(Idx(1, j, k))[iDim] = MidNodeInter4thRight2(inter_temp);
                     coef_mid[0]->GetEta(Idx(2, j, k))[iDim] = MidNodeInter4th(inter_temp);
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
                         inter_temp[iTemp] = coef->GetZeta(Idx(1 + iTemp, j, k))[iDim];
                     }
@@ -299,23 +299,23 @@ namespace zaran
                     coef_mid[0]->GetZeta(Idx(1, j, k))[iDim] = MidNodeInter4thRight2(inter_temp);
                     coef_mid[0]->GetZeta(Idx(2, j, k))[iDim] = MidNodeInter4th(inter_temp);
                     // i=ni-3/2,ni-5/2,ni-7/2
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
-                        inter_temp[iTemp] = coef->GetXi(Idx(ni - 2 - iTemp, j, k))[iDim];
+                        inter_temp[iTemp] = coef->GetXi(Idx(ni - 5 + iTemp, j, k))[iDim];
                     }
                     coef_mid[0]->GetXi(Idx(ni - 2, j, k))[iDim] = MidNodeInter4thLeft1(inter_temp);
                     coef_mid[0]->GetXi(Idx(ni - 3, j, k))[iDim] = MidNodeInter4thLeft2(inter_temp);
                     coef_mid[0]->GetXi(Idx(ni - 4, j, k))[iDim] = MidNodeInter4th(inter_temp);
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
-                        inter_temp[iTemp] = coef->GetEta(Idx(ni - 2 - iTemp, j, k))[iDim];
+                        inter_temp[iTemp] = coef->GetEta(Idx(ni - 5 + iTemp, j, k))[iDim];
                     }
                     coef_mid[0]->GetEta(Idx(ni - 2, j, k))[iDim] = MidNodeInter4thLeft1(inter_temp);
                     coef_mid[0]->GetEta(Idx(ni - 3, j, k))[iDim] = MidNodeInter4thLeft2(inter_temp);
                     coef_mid[0]->GetEta(Idx(ni - 4, j, k))[iDim] = MidNodeInter4th(inter_temp);
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
-                        inter_temp[iTemp] = coef->GetZeta(Idx(ni - 2 - iTemp, j, k))[iDim];
+                        inter_temp[iTemp] = coef->GetZeta(Idx(ni - 5 + iTemp, j, k))[iDim];
                     }
                     coef_mid[0]->GetZeta(Idx(ni - 2, j, k))[iDim] = MidNodeInter4thLeft1(inter_temp);
                     coef_mid[0]->GetZeta(Idx(ni - 3, j, k))[iDim] = MidNodeInter4thLeft2(inter_temp);
@@ -331,21 +331,21 @@ namespace zaran
                 for (int iDim = 0; iDim < 3; ++iDim)
                 {
                     // j=1/2，3/2，5/2
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
                         inter_temp[iTemp] = coef->GetXi(Idx(i, 1 + iTemp, k))[iDim];
                     }
                     coef_mid[1]->GetXi(Idx(i, 0, k))[iDim] = MidNodeInter4thRight1(inter_temp);
                     coef_mid[1]->GetXi(Idx(i, 1, k))[iDim] = MidNodeInter4thRight2(inter_temp);
                     coef_mid[1]->GetXi(Idx(i, 2, k))[iDim] = MidNodeInter4th(inter_temp);
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
                         inter_temp[iTemp] = coef->GetEta(Idx(i, 1 + iTemp, k))[iDim];
                     }
                     coef_mid[1]->GetEta(Idx(i, 0, k))[iDim] = MidNodeInter4thRight1(inter_temp);
                     coef_mid[1]->GetEta(Idx(i, 1, k))[iDim] = MidNodeInter4thRight2(inter_temp);
                     coef_mid[1]->GetEta(Idx(i, 2, k))[iDim] = MidNodeInter4th(inter_temp);
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
                         inter_temp[iTemp] = coef->GetZeta(Idx(i, 1 + iTemp, k))[iDim];
                     }
@@ -353,23 +353,23 @@ namespace zaran
                     coef_mid[1]->GetZeta(Idx(i, 1, k))[iDim] = MidNodeInter4thRight2(inter_temp);
                     coef_mid[1]->GetZeta(Idx(i, 2, k))[iDim] = MidNodeInter4th(inter_temp);
                     // j=nj-3/2,nj-5/2,nj-7/2
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
                         inter_temp[iTemp] = coef->GetXi(Idx(i, nj - 2 - iTemp, k))[iDim];
                     }
                     coef_mid[1]->GetXi(Idx(i, nj - 2, k))[iDim] = MidNodeInter4thLeft1(inter_temp);
                     coef_mid[1]->GetXi(Idx(i, nj - 3, k))[iDim] = MidNodeInter4thLeft2(inter_temp);
                     coef_mid[1]->GetXi(Idx(i, nj - 4, k))[iDim] = MidNodeInter4th(inter_temp);
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
-                        inter_temp[iTemp] = coef->GetEta(Idx(i, nj - 2 - iTemp, k))[iDim];
+                        inter_temp[iTemp] = coef->GetEta(Idx(i, nj - 5 + iTemp, k))[iDim];
                     }
                     coef_mid[1]->GetEta(Idx(i, nj - 2, k))[iDim] = MidNodeInter4thLeft1(inter_temp);
                     coef_mid[1]->GetEta(Idx(i, nj - 3, k))[iDim] = MidNodeInter4thLeft2(inter_temp);
                     coef_mid[1]->GetEta(Idx(i, nj - 4, k))[iDim] = MidNodeInter4th(inter_temp);
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
-                        inter_temp[iTemp] = coef->GetZeta(Idx(i, nj - 2 - iTemp, k))[iDim];
+                        inter_temp[iTemp] = coef->GetZeta(Idx(i, nj - 5 + iTemp, k))[iDim];
                     }
                     coef_mid[1]->GetZeta(Idx(i, nj - 2, k))[iDim] = MidNodeInter4thLeft1(inter_temp);
                     coef_mid[1]->GetZeta(Idx(i, nj - 3, k))[iDim] = MidNodeInter4thLeft2(inter_temp);
@@ -385,21 +385,21 @@ namespace zaran
                 for (int iDim = 0; iDim < 3; ++iDim)
                 {
                     // k=1/2，3/2，5/2
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
                         inter_temp[iTemp] = coef->GetXi(Idx(i, j, 1 + iTemp))[iDim];
                     }
                     coef_mid[2]->GetXi(Idx(i, j, 0))[iDim] = MidNodeInter4thRight1(inter_temp);
                     coef_mid[2]->GetXi(Idx(i, j, 1))[iDim] = MidNodeInter4thRight2(inter_temp);
                     coef_mid[2]->GetXi(Idx(i, j, 2))[iDim] = MidNodeInter4th(inter_temp);
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
                         inter_temp[iTemp] = coef->GetEta(Idx(i, j, 1 + iTemp))[iDim];
                     }
                     coef_mid[2]->GetEta(Idx(i, j, 0))[iDim] = MidNodeInter4thRight1(inter_temp);
                     coef_mid[2]->GetEta(Idx(i, j, 1))[iDim] = MidNodeInter4thRight2(inter_temp);
                     coef_mid[2]->GetEta(Idx(i, j, 2))[iDim] = MidNodeInter4th(inter_temp);
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
                         inter_temp[iTemp] = coef->GetZeta(Idx(i, j, 1 + iTemp))[iDim];
                     }
@@ -407,23 +407,23 @@ namespace zaran
                     coef_mid[2]->GetZeta(Idx(i, j, 1))[iDim] = MidNodeInter4thRight2(inter_temp);
                     coef_mid[2]->GetZeta(Idx(i, j, 2))[iDim] = MidNodeInter4th(inter_temp);
                     // k=nk-3/2,nk-5/2,nk-7/2
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
-                        inter_temp[iTemp] = coef->GetXi(Idx(i, j, nk - 2 - iTemp))[iDim];
+                        inter_temp[iTemp] = coef->GetXi(Idx(i, j, nk - 5 + iTemp))[iDim];
                     }
                     coef_mid[2]->GetXi(Idx(i, j, nk - 2))[iDim] = MidNodeInter4thLeft1(inter_temp);
                     coef_mid[2]->GetXi(Idx(i, j, nk - 3))[iDim] = MidNodeInter4thLeft2(inter_temp);
                     coef_mid[2]->GetXi(Idx(i, j, nk - 4))[iDim] = MidNodeInter4th(inter_temp);
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
-                        inter_temp[iTemp] = coef->GetEta(Idx(i, j, nk - 2 - iTemp))[iDim];
+                        inter_temp[iTemp] = coef->GetEta(Idx(i, j, nk - 5 + iTemp))[iDim];
                     }
                     coef_mid[2]->GetEta(Idx(i, j, nk - 2))[iDim] = MidNodeInter4thLeft1(inter_temp);
                     coef_mid[2]->GetEta(Idx(i, j, nk - 3))[iDim] = MidNodeInter4thLeft2(inter_temp);
                     coef_mid[2]->GetEta(Idx(i, j, nk - 4))[iDim] = MidNodeInter4th(inter_temp);
-                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    for (int iTemp = 0; iTemp < 4; iTemp++)
                     {
-                        inter_temp[iTemp] = coef->GetZeta(Idx(i, j, nk - 2 - iTemp))[iDim];
+                        inter_temp[iTemp] = coef->GetZeta(Idx(i, j, nk - 5 + iTemp))[iDim];
                     }
                     coef_mid[2]->GetZeta(Idx(i, j, nk - 2))[iDim] = MidNodeInter4thLeft1(inter_temp);
                     coef_mid[2]->GetZeta(Idx(i, j, nk - 3))[iDim] = MidNodeInter4thLeft2(inter_temp);
