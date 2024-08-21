@@ -82,48 +82,84 @@ namespace zaran
         }
         // 边界半点：根据整点度量系数计算半点度量系数
         // i=1/2，i=(ni-1)-1/2
-        for (int k = 0; k < nk; ++k)
+        for (int k = 1; k < nk - 1; ++k)
         {
-            for (int j = 0; j < nj; ++j)
+            for (int j = 1; j < nj - 1; ++j)
             {
-                auto coef_xi_left = coef_mid[0]->GetXi(idx_proxy->GetIdx(0, j, k));       // xi[1/2]
-                auto coef_xi_right = coef_mid[0]->GetXi(idx_proxy->GetIdx(ni - 2, j, k)); // xi[(ni-1)-1/2]
+                auto coef_xi_left = coef_mid[0]->GetXi(idx_proxy->GetIdx(0, j, k));           // xi[1/2]
+                auto coef_eta_left = coef_mid[0]->GetEta(idx_proxy->GetIdx(0, j, k));         // eta[1/2]
+                auto coef_zeta_left = coef_mid[0]->GetZeta(idx_proxy->GetIdx(0, j, k));       // zeta[1/2]
+                auto coef_xi_right = coef_mid[0]->GetXi(idx_proxy->GetIdx(ni - 2, j, k));     // xi[(ni-1)-1/2]
+                auto coef_eta_right = coef_mid[0]->GetEta(idx_proxy->GetIdx(ni - 2, j, k));   // eta[(ni-1)-1/2]
+                auto coef_zeta_right = coef_mid[0]->GetZeta(idx_proxy->GetIdx(ni - 2, j, k)); // zeta[(ni-1)-1/2]
                 for (int iDim = 0; iDim < 3; ++iDim)
                 {
                     coef_xi_left[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy->GetIdx(1, j, k))[iDim] -
                                                 coef->GetXi(idx_proxy->GetIdx(2, j, k))[iDim]);
+                    coef_eta_left[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy->GetIdx(1, j, k))[iDim] -
+                                                 coef->GetEta(idx_proxy->GetIdx(2, j, k))[iDim]);
+                    coef_zeta_left[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy->GetIdx(1, j, k))[iDim] -
+                                                  coef->GetZeta(idx_proxy->GetIdx(2, j, k))[iDim]);
                     coef_xi_right[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy->GetIdx(ni - 2, j, k))[iDim] -
                                                  coef->GetXi(idx_proxy->GetIdx(ni - 3, j, k))[iDim]);
+                    coef_eta_right[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy->GetIdx(ni - 2, j, k))[iDim] -
+                                                  coef->GetEta(idx_proxy->GetIdx(ni - 3, j, k))[iDim]);
+                    coef_zeta_right[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy->GetIdx(ni - 2, j, k))[iDim] -
+                                                   coef->GetZeta(idx_proxy->GetIdx(ni - 3, j, k))[iDim]);
                 }
             }
         }
         // j=1/2,j=(nj-1)-1/2
-        for (int k = 0; k < nk; ++k)
+        for (int k = 1; k < nk - 1; ++k)
         {
-            for (int i = 0; i < ni; ++i)
+            for (int i = 1; i < ni - 1; ++i)
             {
-                auto coef_eta_left = coef_mid[1]->GetEta(idx_proxy->GetIdx(i, 0, k));       // eta[1/2]
-                auto coef_eta_right = coef_mid[1]->GetEta(idx_proxy->GetIdx(i, nj - 2, k)); // eta[(nj-1)-1/2]
+                auto coef_xi_left = coef_mid[1]->GetXi(idx_proxy->GetIdx(i, 0, k));           // xi[1/2]
+                auto coef_eta_left = coef_mid[1]->GetEta(idx_proxy->GetIdx(i, 0, k));         // eta[1/2]
+                auto coef_zeta_left = coef_mid[1]->GetZeta(idx_proxy->GetIdx(i, 0, k));       // zeta[1/2]
+                auto coef_xi_right = coef_mid[1]->GetXi(idx_proxy->GetIdx(i, nj - 2, k));     // xi[(nj-1)-1/2]
+                auto coef_eta_right = coef_mid[1]->GetEta(idx_proxy->GetIdx(i, nj - 2, k));   // eta[(nj-1)-1/2]
+                auto coef_zeta_right = coef_mid[1]->GetZeta(idx_proxy->GetIdx(i, nj - 2, k)); // zeta[(nj-1)-1/2]
                 for (int iDim = 0; iDim < 3; ++iDim)
                 {
+                    coef_xi_left[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy->GetIdx(i, 1, k))[iDim] -
+                                                coef->GetXi(idx_proxy->GetIdx(i, 2, k))[iDim]);
                     coef_eta_left[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy->GetIdx(i, 1, k))[iDim] -
                                                  coef->GetEta(idx_proxy->GetIdx(i, 2, k))[iDim]);
+                    coef_zeta_left[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy->GetIdx(i, 1, k))[iDim] -
+                                                  coef->GetZeta(idx_proxy->GetIdx(i, 2, k))[iDim]);
+                    coef_xi_right[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy->GetIdx(i, nj - 2, k))[iDim] -
+                                                 coef->GetXi(idx_proxy->GetIdx(i, nj - 3, k))[iDim]);
                     coef_eta_right[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy->GetIdx(i, nj - 2, k))[iDim] -
                                                   coef->GetEta(idx_proxy->GetIdx(i, nj - 3, k))[iDim]);
+                    coef_zeta_right[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy->GetIdx(i, nj - 2, k))[iDim] -
+                                                   coef->GetZeta(idx_proxy->GetIdx(i, nj - 3, k))[iDim]);
                 }
             }
         }
         // k=1/2,k=(nk-1)-1/2
-        for (int j = 0; j < nj; ++j)
+        for (int j = 1; j < nj - 1; ++j)
         {
-            for (int i = 0; i < ni; ++i)
+            for (int i = 1; i < ni - 1; ++i)
             {
+                auto coef_xi_left = coef_mid[2]->GetXi(idx_proxy->GetIdx(i, j, 0));           // xi[1/2]
+                auto coef_eta_left = coef_mid[2]->GetEta(idx_proxy->GetIdx(i, j, 0));         // eta[1/2]
                 auto coef_zeta_left = coef_mid[2]->GetZeta(idx_proxy->GetIdx(i, j, 0));       // zeta[1/2]
+                auto coef_xi_right = coef_mid[2]->GetXi(idx_proxy->GetIdx(i, j, nk - 2));     // xi[(nk-1)-1/2]
+                auto coef_eta_right = coef_mid[2]->GetEta(idx_proxy->GetIdx(i, j, nk - 2));   // eta[(nk-1)-1/2]
                 auto coef_zeta_right = coef_mid[2]->GetZeta(idx_proxy->GetIdx(i, j, nk - 2)); // zeta[(nk-1)-1/2]
                 for (int iDim = 0; iDim < 3; ++iDim)
                 {
+                    coef_xi_left[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy->GetIdx(i, j, 1))[iDim] -
+                                                coef->GetXi(idx_proxy->GetIdx(i, j, 2))[iDim]);
+                    coef_eta_left[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy->GetIdx(i, j, 1))[iDim] -
+                                                 coef->GetEta(idx_proxy->GetIdx(i, j, 2))[iDim]);
                     coef_zeta_left[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy->GetIdx(i, j, 1))[iDim] -
                                                   coef->GetZeta(idx_proxy->GetIdx(i, j, 2))[iDim]);
+                    coef_xi_right[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy->GetIdx(i, j, nk - 2))[iDim] -
+                                                 coef->GetXi(idx_proxy->GetIdx(i, j, nk - 3))[iDim]);
+                    coef_eta_right[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy->GetIdx(i, j, nk - 2))[iDim] -
+                                                  coef->GetEta(idx_proxy->GetIdx(i, j, nk - 3))[iDim]);
                     coef_zeta_right[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy->GetIdx(i, j, nk - 2))[iDim] -
                                                    coef->GetZeta(idx_proxy->GetIdx(i, j, nk - 3))[iDim]);
                 }

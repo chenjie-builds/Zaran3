@@ -658,7 +658,34 @@ namespace zaran
         // i+1/2,j+1/2,k+1/2处的坐标
         std::vector<std::vector<double>> coord_i(ni * nj * nk, std::vector<double>(3)),
             coord_j(ni * nj * nk, std::vector<double>(3)), coord_k(ni * nj * nk, std::vector<double>(3));
-
+        // 计算之前，先把度量系数赋值为0
+        for (int i = 0; i < ni; ++i)
+        {
+            for (int j = 0; j < nj; ++j)
+            {
+                for (int k = 0; k < nk; ++k)
+                {
+                    for (int iDim = 0; iDim < 4; ++iDim)
+                    {
+                        coef->GetX(Idx(i, j, k))[iDim] = 0.0;
+                        coef->GetY(Idx(i, j, k))[iDim] = 0.0;
+                        coef->GetZ(Idx(i, j, k))[iDim] = 0.0;
+                        coef->GetXi(Idx(i, j, k))[iDim] = 0.0;
+                        coef->GetEta(Idx(i, j, k))[iDim] = 0.0;
+                        coef->GetZeta(Idx(i, j, k))[iDim] = 0.0;
+                        for (int jDim = 0; jDim < 3; ++jDim)
+                        {
+                            coef_mid[jDim]->GetX(Idx(i, j, k))[iDim] = 0.0;
+                            coef_mid[jDim]->GetY(Idx(i, j, k))[iDim] = 0.0;
+                            coef_mid[jDim]->GetZ(Idx(i, j, k))[iDim] = 0.0;
+                            coef_mid[jDim]->GetXi(Idx(i, j, k))[iDim] = 0.0;
+                            coef_mid[jDim]->GetEta(Idx(i, j, k))[iDim] = 0.0;
+                            coef_mid[jDim]->GetZeta(Idx(i, j, k))[iDim] = 0.0;
+                        }
+                    }
+                }
+            }
+        }
         // 第一步：计算半点坐标
         for (int k = 0; k < nk - 1; ++k)
         {
@@ -738,9 +765,9 @@ namespace zaran
         }
         // 第四步：计算边界半点的逆变换度量系数(二阶偏置插值)
         // i=1/2；(ni-1)-1/2
-        for (int k = 0; k < nk; ++k)
+        for (int k = 1; k < nk - 1; ++k)
         {
-            for (int j = 0; j < nj; ++j)
+            for (int j = 1; j < nj - 1; ++j)
             {
                 auto idx = Idx(0, j, k);
                 idx_temp[0] = Idx(1, j, k);
@@ -769,9 +796,9 @@ namespace zaran
             }
         }
         // j=1/2；(nj-1)-1/2
-        for (int k = 0; k < nk; ++k)
+        for (int k = 1; k < nk - 1; ++k)
         {
-            for (int i = 0; i < ni; ++i)
+            for (int i = 1; i < ni - 1; ++i)
             {
                 auto idx = Idx(i, 0, k);
                 idx_temp[0] = Idx(i, 1, k);
@@ -800,9 +827,9 @@ namespace zaran
             }
         }
         // k=1/2；(nk-1)-1/2
-        for (int j = 0; j < nj; ++j)
+        for (int j = 1; j < nj - 1; ++j)
         {
-            for (int i = 0; i < ni; ++i)
+            for (int i = 1; i < ni - 1; ++i)
             {
                 auto idx = Idx(i, j, 0);
                 idx_temp[0] = Idx(i, j, 1);
@@ -832,7 +859,7 @@ namespace zaran
         }
 
         // 第五步：根据半点坐标和半点逆变换度量系数使用守恒形式计算整点度量系数（CMM1)
-        int idx_diff[3][2];
+        double temp[6][2];
         // 获取下标的lamda函数
         for (int k = 1; k < nk - 1; ++k)
         {
@@ -842,47 +869,56 @@ namespace zaran
                 {
                     // i direction
                     auto coef_xi = coef->GetXi(Idx(i, j, k));
-                    coef_xi[0] = (coef_mid[2]->GetY(Idx(i, j, k))[1] * coord_k[Idx(i, j, k)][2] -
-                                  coef_mid[2]->GetY(Idx(i, j, k - 1))[1] * coord_k[Idx(i, j, k - 1)][2]) +
-                                 (coef_mid[1]->GetY(Idx(i, j, k))[2] * coord_j[Idx(i, j, k)][2] -
-                                  coef_mid[1]->GetY(Idx(i, j - 1, k))[2] * coord_j[Idx(i, j - 1, k)][2]);
-                    coef_xi[1] = (coef_mid[2]->GetZ(Idx(i, j, k))[1] * coord_k[Idx(i, j, k)][0] -
-                                  coef_mid[2]->GetZ(Idx(i, j, k - 1))[1] * coord_k[Idx(i, j, k - 1)][0]) +
-                                 (coef_mid[1]->GetZ(Idx(i, j, k))[2] * coord_j[Idx(i, j, k)][0] -
-                                  coef_mid[1]->GetZ(Idx(i, j - 1, k))[2] * coord_j[Idx(i, j - 1, k)][0]);
-                    coef_xi[2] = (coef_mid[2]->GetX(Idx(i, j, k))[1] * coord_k[Idx(i, j, k)][1] -
-                                  coef_mid[2]->GetX(Idx(i, j, k - 1))[1] * coord_k[Idx(i, j, k - 1)][1]) +
-                                 (coef_mid[1]->GetX(Idx(i, j, k))[2] * coord_j[Idx(i, j, k)][1] -
-                                  coef_mid[1]->GetX(Idx(i, j - 1, k))[2] * coord_j[Idx(i, j - 1, k)][1]);
-
-                    // j direction
                     auto coef_eta = coef->GetEta(Idx(i, j, k));
-                    coef_eta[0] = (coef_mid[0]->GetY(Idx(i, j, k))[2] * coord_i[Idx(i, j, k)][2] -
-                                   coef_mid[0]->GetY(Idx(i - 1, j, k))[2] * coord_i[Idx(i - 1, j, k)][2]) +
-                                  (coef_mid[2]->GetY(Idx(i, j, k))[0] * coord_k[Idx(i, j, k)][2] -
-                                   coef_mid[2]->GetY(Idx(i, j, k - 1))[0] * coord_k[Idx(i, j, k - 1)][2]);
-                    coef_eta[1] = (coef_mid[0]->GetZ(Idx(i, j, k))[2] * coord_i[Idx(i, j, k)][0] -
-                                   coef_mid[0]->GetZ(Idx(i - 1, j, k))[2] * coord_i[Idx(i - 1, j, k)][0]) +
-                                  (coef_mid[2]->GetZ(Idx(i, j, k))[0] * coord_k[Idx(i, j, k)][0] -
-                                   coef_mid[2]->GetZ(Idx(i, j, k - 1))[0] * coord_k[Idx(i, j, k - 1)][0]);
-                    coef_eta[2] = (coef_mid[0]->GetX(Idx(i, j, k))[2] * coord_i[Idx(i, j, k)][1] -
-                                   coef_mid[0]->GetX(Idx(i - 1, j, k))[2] * coord_i[Idx(i - 1, j, k)][1]) +
-                                  (coef_mid[2]->GetX(Idx(i, j, k))[0] * coord_k[Idx(i, j, k)][1] -
-                                   coef_mid[2]->GetX(Idx(i, j, k - 1))[0] * coord_k[Idx(i, j, k - 1)][1]);
-                    // k direction
                     auto coef_zeta = coef->GetZeta(Idx(i, j, k));
-                    coef_zeta[0] = (coef_mid[1]->GetY(Idx(i, j, k))[0] * coord_j[Idx(i, j, k)][2] -
-                                    coef_mid[1]->GetY(Idx(i, j - 1, k))[0] * coord_j[Idx(i, j - 1, k)][2]) +
-                                   (coef_mid[0]->GetY(Idx(i, j, k))[1] * coord_i[Idx(i, j, k)][2] -
-                                    coef_mid[0]->GetY(Idx(i - 1, j, k))[1] * coord_i[Idx(i - 1, j, k)][2]);
-                    coef_zeta[1] = (coef_mid[1]->GetZ(Idx(i, j, k))[0] * coord_j[Idx(i, j, k)][0] -
-                                    coef_mid[1]->GetZ(Idx(i, j - 1, k))[0] * coord_j[Idx(i, j - 1, k)][0]) +
-                                   (coef_mid[0]->GetZ(Idx(i, j, k))[1] * coord_i[Idx(i, j, k)][0] -
-                                    coef_mid[0]->GetZ(Idx(i - 1, j, k))[1] * coord_i[Idx(i - 1, j, k)][0]);
-                    coef_zeta[2] = (coef_mid[1]->GetX(Idx(i, j, k))[0] * coord_j[Idx(i, j, k)][1] -
-                                    coef_mid[1]->GetX(Idx(i, j - 1, k))[0] * coord_j[Idx(i, j - 1, k)][1]) +
-                                   (coef_mid[0]->GetX(Idx(i, j, k))[1] * coord_i[Idx(i, j, k)][1] -
-                                    coef_mid[0]->GetX(Idx(i - 1, j, k))[1] * coord_i[Idx(i - 1, j, k)][1]);
+                    for (int iTemp = 0; iTemp < 2; iTemp++)
+                    {
+                        int idx = Idx(i - 1 + iTemp, j, k);
+                        temp[0][iTemp] = coef_mid[0]->GetY(idx)[2] * coord_i[idx][2]; // y_zeta*z
+                        temp[1][iTemp] = coef_mid[0]->GetZ(idx)[2] * coord_i[idx][0]; // z_zeta*x
+                        temp[2][iTemp] = coef_mid[0]->GetX(idx)[2] * coord_i[idx][1]; // x_zeta*y
+                        temp[3][iTemp] = coef_mid[0]->GetY(idx)[1] * coord_i[idx][2]; // y_eta*z
+                        temp[4][iTemp] = coef_mid[0]->GetZ(idx)[1] * coord_i[idx][0]; // z_eta*x
+                        temp[5][iTemp] = coef_mid[0]->GetX(idx)[1] * coord_i[idx][1]; // x_eta*y
+                    }
+                    coef_eta[0] += temp[0][1] - temp[0][0];
+                    coef_eta[1] += temp[1][1] - temp[1][0];
+                    coef_eta[2] += temp[2][1] - temp[2][0];
+                    coef_zeta[0] -= temp[3][1] - temp[3][0];
+                    coef_zeta[1] -= temp[4][1] - temp[4][0];
+                    coef_zeta[2] -= temp[5][1] - temp[5][0];
+                    for (int iTemp = 0; iTemp < 2; iTemp++)
+                    {
+                        int idx = Idx(i, j - 1 + iTemp, k);
+                        temp[0][iTemp] = coef_mid[1]->GetY(idx)[2] * coord_j[idx][2]; // y_zeta*z
+                        temp[1][iTemp] = coef_mid[1]->GetZ(idx)[2] * coord_j[idx][0]; // z_zeta*x
+                        temp[2][iTemp] = coef_mid[1]->GetX(idx)[2] * coord_j[idx][1]; // x_zeta*y
+                        temp[3][iTemp] = coef_mid[1]->GetY(idx)[0] * coord_j[idx][2]; // y_xi*z
+                        temp[4][iTemp] = coef_mid[1]->GetZ(idx)[0] * coord_j[idx][0]; // z_xi*x
+                        temp[5][iTemp] = coef_mid[1]->GetX(idx)[0] * coord_j[idx][1]; // x_xi*y
+                    }
+                    coef_xi[0] -= temp[0][1] - temp[0][0];
+                    coef_xi[1] -= temp[1][1] - temp[1][0];
+                    coef_xi[2] -= temp[2][1] - temp[2][0];
+                    coef_zeta[0] += temp[3][1] - temp[3][0];
+                    coef_zeta[1] += temp[4][1] - temp[4][0];
+                    coef_zeta[2] += temp[5][1] - temp[5][0];
+                    for (int iTemp = 0; iTemp < 2; iTemp++)
+                    {
+                        int idx = Idx(i, j, k - 1 + iTemp);
+                        temp[0][iTemp] = coef_mid[2]->GetY(idx)[1] * coord_k[idx][2]; // y_eta*z
+                        temp[1][iTemp] = coef_mid[2]->GetZ(idx)[1] * coord_k[idx][0]; // z_eta*x
+                        temp[2][iTemp] = coef_mid[2]->GetX(idx)[1] * coord_k[idx][1]; // x_eta*y
+                        temp[3][iTemp] = coef_mid[2]->GetY(idx)[0] * coord_k[idx][2]; // y_xi*z
+                        temp[4][iTemp] = coef_mid[2]->GetZ(idx)[0] * coord_k[idx][0]; // z_xi*x
+                        temp[5][iTemp] = coef_mid[2]->GetX(idx)[0] * coord_k[idx][1]; // x_xi*y
+                    }
+                    coef_xi[0] += temp[0][1] - temp[0][0];
+                    coef_xi[1] += temp[1][1] - temp[1][0];
+                    coef_xi[2] += temp[2][1] - temp[2][0];
+                    coef_eta[0] -= temp[3][1] - temp[3][0];
+                    coef_eta[1] -= temp[4][1] - temp[4][0];
+                    coef_eta[2] -= temp[5][1] - temp[5][0];
                     if (grid->GetDim() == 2)
                     {
                         coef_zeta[0] = 0.0;
