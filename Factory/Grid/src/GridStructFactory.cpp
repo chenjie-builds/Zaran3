@@ -159,11 +159,11 @@ namespace zaran
                 for (int idx_i = 0; idx_i < m_ni; ++idx_i)
                 {
                     node_file >> m_node_coord[idx_i][idx_j][idx_k].coord[0];
-                    // if (idx_k == 0)
+                    // if (abs(0.3 - m_node_coord[idx_i][idx_j][idx_k].coord[0]) > 0.06)
                     // {
-                    //     m_node_coord[idx_i][idx_j][idx_k].coord[0] += 0.10 * GetRand(-0.02, 0.02);
+                    //     m_node_coord[idx_i][idx_j][idx_k].coord[0] += 0.20 * GetRand(-0.02, 0.02);
                     // }
-                    // fout << m_node_coord[idx_i][idx_j][0].coord[0] << std::endl;
+                    // fout << m_node_coord[idx_i][idx_j][idx_k].coord[0] << std::endl;
                 }
             }
         }
@@ -174,11 +174,8 @@ namespace zaran
                 for (int idx_i = 0; idx_i < m_ni; ++idx_i)
                 {
                     node_file >> m_node_coord[idx_i][idx_j][idx_k].coord[1];
-                    // if (idx_k == 0)
-                    // {
-                        // m_node_coord[idx_i][idx_j][idx_k].coord[1] += 0.10 * GetRand(-0.02, 0.02);
-                    // }
-                    // fout << m_node_coord[idx_i][idx_j][0].coord[1] << std::endl;
+                    // m_node_coord[idx_i][idx_j][idx_k].coord[1] += 0.20 * GetRand(-0.02, 0.02);
+                    // fout << m_node_coord[idx_i][idx_j][idx_k].coord[1] << std::endl;
                 }
             }
         }
@@ -189,6 +186,7 @@ namespace zaran
                 for (int idx_i = 0; idx_i < m_ni; ++idx_i)
                 {
                     node_file >> m_node_coord[idx_i][idx_j][idx_k].coord[2];
+                    // m_node_coord[idx_i][idx_j][idx_k].coord[2] += 0.20 * GetRand(-0.02, 0.02);
                     // fout << m_node_coord[idx_i][idx_j][idx_k].coord[2] << std::endl;
                 }
             }

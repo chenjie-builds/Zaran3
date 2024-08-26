@@ -6,31 +6,31 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	GridList.h															||
-//*	@brief	Íø¸ñÊı×é£¬´æ´¢ËùÓĞµÄ¼ÆËãÍø¸ñ											||
+//*	@brief	ç½‘æ ¼æ•°ç»„ï¼Œå­˜å‚¨æ‰€æœ‰çš„è®¡ç®—ç½‘æ ¼											||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
 #include "GridBase.h"
 namespace zaran
 {
-	//Íø¸ñµÄ¼¯ºÏ£¬ËùÓĞµÄÍø¸ñ¾ù´æÔÚ´Ë´¦
+	//ç½‘æ ¼çš„é›†åˆï¼Œæ‰€æœ‰çš„ç½‘æ ¼å‡å­˜åœ¨æ­¤å¤„
 	class GridList
 	{
 	public:
 		GridList() {}
 		GridList(Array<Ptr<GridBase>>& gridList);
 		~GridList();
-		//ÏòÍø¸ñ¼¯ºÏÖĞÌí¼ÓÒ»¸öÍø¸ñ
+		//å‘ç½‘æ ¼é›†åˆä¸­æ·»åŠ ä¸€ä¸ªç½‘æ ¼
 		void AddGrid(Ptr<GridBase> grid);
-		//¼ì²éÍø¸ñµÄindexÊÇ·ñºÍÍø¸ñ¼¯ºÏÖĞÆ¥Åä
+		//æ£€æŸ¥ç½‘æ ¼çš„indexæ˜¯å¦å’Œç½‘æ ¼é›†åˆä¸­åŒ¹é…
 		void CheckGrid();
-		//·µ»ØÒ»¸öÍø¸ñ
+		//è¿”å›ä¸€ä¸ªç½‘æ ¼
 		Ptr<GridBase>& GetGrid(const int index);
-		//·µ»ØÍø¸ñµÄ¸öÊı
+		//è¿”å›ç½‘æ ¼çš„ä¸ªæ•°
 		int GetGridNumber() { return gridList_.size(); }
-		// ·µ»ØÍø¸ñÊı×é
+		// è¿”å›ç½‘æ ¼æ•°ç»„
 		Array<Ptr<GridBase>>& GetGrid();
-		// ÖØÉèÍø¸ñ¸öÊı
+		// é‡è®¾ç½‘æ ¼ä¸ªæ•°
 		void Resize(int gridNum);
 	private:
 		Array<Ptr<GridBase>> gridList_;

@@ -12,7 +12,7 @@ Dimensionless::Dimensionless()
 	m_density = 1.0;
 	m_temperature = 2.488917144919069e+003;
 	m_Rm = m_gamma * GAS_CONSTANT / m_Mw;
-	m_velocity = sqrt(m_gamma * GAS_CONSTANT / m_Mw * m_temperature);//µ±µØÉùËÙ
+	m_velocity = sqrt(m_gamma * GAS_CONSTANT / m_Mw * m_temperature);//å½“åœ°å£°é€Ÿ
 	m_pressure = m_density * m_velocity * m_velocity;
 	m_time = m_length / m_velocity;
 	m_mass = m_density * m_length * m_length * m_length;
@@ -31,7 +31,7 @@ void Dimensionless::SetRefValue(const double& refDensity, const double& refGamma
 	m_length = refLength;
 	m_density = refDensity;
 	m_temperature = refTemp;
-	m_velocity = sqrt(m_gamma * GAS_CONSTANT / m_Mw * m_temperature);//µ±µØÉùËÙ
+	m_velocity = sqrt(m_gamma * GAS_CONSTANT / m_Mw * m_temperature);//å½“åœ°å£°é€Ÿ
 	m_Rm = m_velocity * m_velocity / m_temperature;
 	m_pressure = m_density * m_velocity * m_velocity;
 	m_time = m_length / m_velocity;

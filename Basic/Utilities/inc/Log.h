@@ -6,15 +6,15 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	Log.h																||
-//*	@brief	Ê¹ÓÃspdlog½øĞĞÈÕÖ¾¼ÇÂ¼												||
+//*	@brief	ä½¿ç”¨spdlogè¿›è¡Œæ—¥å¿—è®°å½•												||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
-//¶Ôspdlog½øĞĞ³õÊ¼»¯
-//TODO ¶Ôspdlog¿â¸üÊìÏ¤ºó£º ÉèÖÃÊä³öÎ»ÖÃ£¬logµÈ¼¶×Ô¶¨Òå
+//å¯¹spdlogè¿›è¡Œåˆå§‹åŒ–
+//TODO å¯¹spdlogåº“æ›´ç†Ÿæ‚‰åï¼š è®¾ç½®è¾“å‡ºä½ç½®ï¼Œlogç­‰çº§è‡ªå®šä¹‰
 namespace Log = spdlog;
 class Logger
 {

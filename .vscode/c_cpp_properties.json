@@ -5,13 +5,13 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${vcpkgRoot}/x64-windows/include",
-                "${vcpkgRoot}/x86-windows/include",
-                "${workspaceFolder}/Basic/Common/inc"
+                "${vcpkgRoot}/x86-windows/include"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
-                "_UNICODE"
+                "_UNICODE",
+                "UTF-8"
             ]
         }
     ],

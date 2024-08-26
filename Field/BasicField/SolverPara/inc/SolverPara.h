@@ -6,14 +6,14 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	SolverPara.h														||
-//*	@brief	Çó½âÆ÷²ÎÊı»ùÀà														||
+//*	@brief	æ±‚è§£å™¨å‚æ•°åŸºç±»														||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
 namespace zaran
 {
 	/*
-	Çó½âÆ÷¶ÔÓ¦µÄ²ÎÊıÀà
+	æ±‚è§£å™¨å¯¹åº”çš„å‚æ•°ç±»
 	*/
 	class SolverPara
 	{

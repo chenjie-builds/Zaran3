@@ -18,7 +18,7 @@ Logger::Logger()
 	logger.set_level(Log::level::trace);
 	logger.info("Start Logger, Log file path: ./{}", file_sink->filename());
 	Log::set_default_logger(std::make_shared<Log::logger>(logger));
-	Log::flush_every(std::chrono::milliseconds(100));//每隔0.1s刷新一次log文件
+	Log::flush_every(std::chrono::milliseconds(100));//姣忛殧0.1s鍒锋柊涓�娆og鏂囦欢
 }
 
 Logger::~Logger()

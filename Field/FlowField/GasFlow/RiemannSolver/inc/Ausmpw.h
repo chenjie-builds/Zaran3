@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	Ausmpw.h															||
-//*	@brief	AUSM+ ÀèÂüÇó½âÆ÷														||
+//*	@brief	AUSM+ Ã€Ã¨Ã‚Ã¼Ã‡Ã³Â½Ã¢Ã†Ã·														||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once

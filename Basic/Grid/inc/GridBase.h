@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	GridBase.h															||
-//*	@brief	网格基类																||
+//*	@brief	缃戞牸鍩虹被																||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
@@ -37,9 +37,9 @@ namespace zaran
 		const int& GetDim()const { return m_dim; }
 		const GridType& GetType()const { return m_type; }
 	private:
-		string m_name;//网格名称
-		int m_index;//网格索引
-		int m_dim;//网格维度
-		GridType m_type;//网格类型
+		string m_name;//缃戞牸鍚嶇О
+		int m_index;//缃戞牸绱㈠紩
+		int m_dim;//缃戞牸缁村害
+		GridType m_type;//缃戞牸绫诲瀷
 	};
 }

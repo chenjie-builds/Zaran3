@@ -6,17 +6,17 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	File.h																||
-//*	@brief	ÎÄ¼şÏà¹Ø²Ù×÷															||
+//*	@brief	æ–‡ä»¶ç›¸å…³æ“ä½œ															||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #include"BasicType.h"
-//ÅĞ¶ÏÎÄ¼ş´æÔÚ
+//åˆ¤æ–­æ–‡ä»¶å­˜åœ¨
 bool IsFileExist(const std::string& fileName);
-//ÅĞ¶ÏÎÄ¼ş¼ĞÊÇ·ñ´æÔÚ
+//åˆ¤æ–­æ–‡ä»¶å¤¹æ˜¯å¦å­˜åœ¨
 bool IsFolderExist(const std::string& folderName);
-//´´½¨ÎÄ¼ş¼Ğ
+//åˆ›å»ºæ–‡ä»¶å¤¹
 bool CreateFolder(const std::string& folderName);
-//¸´ÖÆÎÄ¼ş
+//å¤åˆ¶æ–‡ä»¶
 bool CopyFile(const std::string& src_file, const std::string& dest_file);
-//É¾³ıÎÄ¼ş
+//åˆ é™¤æ–‡ä»¶
 bool DeleteFile(const std::string& fileName);

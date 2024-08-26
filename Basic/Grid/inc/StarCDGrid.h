@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	StarCDGrid.h														||
-//*	@brief	StarCD Íø¸ñÀà, ÓÃÓÚ¶ÁÈ¡starCD ÎÄ¼ş¸ñÊ½								||
+//*	@brief	StarCD ç½‘æ ¼ç±», ç”¨äºè¯»å–starCD æ–‡ä»¶æ ¼å¼								||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
@@ -116,7 +116,7 @@ namespace zaran
 
 		Array<Element> element_;
 		Array<BoundFace> boundFace_;
-		Array<DVector3D> coord_;//½Úµã×ø±êÊı×é
+		Array<DVector3D> coord_;//èŠ‚ç‚¹åæ ‡æ•°ç»„
 		IArray blockIndex_;
 	};
 }

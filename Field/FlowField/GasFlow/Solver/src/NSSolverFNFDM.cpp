@@ -549,14 +549,14 @@ namespace zaran
 		int equ_num = GetPara()->GetEquNum();
 		double max_limit = para->GetMaxLimit();
 		double eps = 1e-6;
-		double venkatCoeff = 1.0e-5;
+		double venkatCoeff = 5.0;
 		for (int iVal = 0; iVal < equ_num; ++iVal)
 		{
 #pragma omp parallel for private(eps)
 			for (int iNode = 0; iNode < node_num; ++iNode)
 			{
-				if (node->GetType(iNode) != NodeType::inner && node->GetType(iNode) != NodeType::hole)
-					continue;
+				// if (node->GetType(iNode) != NodeType::inner && node->GetType(iNode) != NodeType::hole)
+				// 	continue;
 				auto currentNodeCoord = node->GetCoord(iNode);
 				auto neighborNode = node->GetNeighborNode(iNode);
 				int nNeighbor = node->GetNeighborNodeNum(iNode);
@@ -568,8 +568,8 @@ namespace zaran
 					maxVal = Max(maxVal, data_manager->GetPrim(iVal, neighborNode[iNeighbor]));
 					minVal = Min(minVal, data_manager->GetPrim(iVal, neighborNode[iNeighbor]));
 				}
-				eps = venkatCoeff * (maxVal - minVal);
-				eps = eps * eps + SMALL_NUMBER;
+				auto jacobi = m_node_metric->GetJacobian(iNode);
+				eps = pow(venkatCoeff, 3) / jacobi;
 				// eps = venkatCoeff * (maxVal - minVal) + SMALL_NUMBER;
 				double delta_max = maxVal - current_val;
 				double delta_min = minVal - current_val;

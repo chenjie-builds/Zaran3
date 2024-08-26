@@ -87,9 +87,9 @@ namespace zaran
 			{
 				sum += m_neighor_node_num[i];
 			}
-			//重新分配内存
+			//閲嶆柊鍒嗛厤鍐呭瓨
 			int* temp = new int[sum];
-			//拷贝数据 0-->iNode
+			//鎷疯礉鏁版嵁 0-->iNode
 			for (int i = 0; i < iNode; i++)
 			{
 				for (int j = 0; j < m_neighor_node_num[i]; j++)
@@ -97,12 +97,12 @@ namespace zaran
 					temp[m_neighor_node_index[i] + j] = m_neighor_node[m_neighor_node_index[i] + j];
 				}
 			}
-			//拷贝数据 iNode
+			//鎷疯礉鏁版嵁 iNode
 			for (int i = 0; i < neighbor_num; i++)
 			{
 				temp[m_neighor_node_index[iNode] + i] = neighbor_cloud[i];
 			}
-			//拷贝数据 iNode+1-->node_num
+			//鎷疯礉鏁版嵁 iNode+1-->node_num
 			for (int i = iNode + 1; i < GetNodeNum(); i++)
 			{
 				for (int j = 0; j < m_neighor_node_num[i]; j++)

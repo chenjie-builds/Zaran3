@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	FieldData.h															||
-//*	@brief	³¡Êı¾İÀà																||
+//*	@brief	åœºæ•°æ®ç±»																||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
@@ -30,14 +30,14 @@ namespace zaran
 		void GetData(const string& name, int*& data);
 		void GetDataSize(const string& name, int& num);
 	private:
-		/// @brief ÓÃÓÚ¼ÇÂ¼Êı¾İÃû³ÆºÍÊı¾İµÄ¶ÔÓ¦¹ØÏµ
+		/// @brief ç”¨äºè®°å½•æ•°æ®åç§°å’Œæ•°æ®çš„å¯¹åº”å…³ç³»
 		map<string, int>m_name_id;
-		/// @brief ÓÃÓÚ¼ÇÂ¼Êı¾İÀàĞÍ
+		/// @brief ç”¨äºè®°å½•æ•°æ®ç±»å‹
 		std::vector<FieldDataType> m_data_type;
-		/// @brief ÓÃÓÚ¼ÇÂ¼Êı¾İ¸öÊı
+		/// @brief ç”¨äºè®°å½•æ•°æ®ä¸ªæ•°
 		std::vector<int> m_data_num;
-		/// @brief ÓÃÓÚ¼ÇÂ¼Êı¾İ
-		/// @note µÚÒ»Î¬ÊÇÊı¾İË÷Òı£¬µÚ¶şÎ¬ÊÇÊı¾İ
+		/// @brief ç”¨äºè®°å½•æ•°æ®
+		/// @note ç¬¬ä¸€ç»´æ˜¯æ•°æ®ç´¢å¼•ï¼Œç¬¬äºŒç»´æ˜¯æ•°æ®
 		std::vector<void*> m_data;
 	};
 }

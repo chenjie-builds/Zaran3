@@ -6,14 +6,14 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	LastSquare.h														||
-//*	@brief	×îĞ¡¶ş³Ë·¨Çó½â														||
+//*	@brief	æœ€å°äºŒä¹˜æ³•æ±‚è§£														||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
 #include"BasicType.h"
 namespace zaran
 {
-	//@brief Ê¹ÓÃ×îĞ¡¶ş³Ë·¨Çó½âAx=b
+	//@brief ä½¿ç”¨æœ€å°äºŒä¹˜æ³•æ±‚è§£Ax=b
 	class LastSquare
 	{
 	public:
@@ -25,7 +25,7 @@ namespace zaran
 		DVector x_;
 		int solver_type_;
 	private:
-		//¼¸ÖÖ×îĞ¡¶ş³Ë·½·¨ https://blog.csdn.net/weixin_46581517/article/details/105178304
+		//å‡ ç§æœ€å°äºŒä¹˜æ–¹æ³• https://blog.csdn.net/weixin_46581517/article/details/105178304
 		void SolverNormalMatrix();
 		void SolverSVD();
 		void SolverColPivHouseholderQR();

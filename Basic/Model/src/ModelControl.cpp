@@ -20,7 +20,7 @@ void ModelControl::Input()
 	Array<DVector3D>vertex;
 
 	std::ifstream fin(m_filename);
-	//ÓÃÓÚÔúÈ¾ÑÝÊ¾
+	//ç”¨äºŽæ‰ŽæŸ“æ¼”ç¤º
 	//string tmpstr;
 	//while (!fin.eof())
 	//{
@@ -41,7 +41,7 @@ void ModelControl::Input()
 	//}
 	//delta = 0.001;
 	//return;
-	//Ô­Ê¼Éè¶¨µÄ²»Í¬ÍâÐÎ¶ÁÈ¡
+	//åŽŸå§‹è®¾å®šçš„ä¸åŒå¤–å½¢è¯»å–
 	fin >> modelNum_;
 	modelVec_.resize(modelNum_);
 	Log::info("Model Num= {}", modelNum_);

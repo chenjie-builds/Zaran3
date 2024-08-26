@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	PointCloudModel.h													||
-//*	@brief	µãÔÆÄ£ĞÍÀà															||
+//*	@brief	ç‚¹äº‘æ¨¡å‹ç±»															||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
@@ -18,7 +18,7 @@
 #include <vtkPoints.h>
 #include <vtkKdTreePointLocator.h>
 /*
-µãÔÆÀà£¬Ä£ĞÍÊÇÓÉµãÔÆ×é³É
+ç‚¹äº‘ç±»ï¼Œæ¨¡å‹æ˜¯ç”±ç‚¹äº‘ç»„æˆ
 */
 namespace zaran
 {
@@ -31,8 +31,8 @@ namespace zaran
 		PointCloudModel(const Array<DVector3D>& point_list);
 		bool InModel(const DVector3D& pt)const  override;
 		DVector3D GetClosestPoint(const DVector3D& pt)const override;
-		void GenModelPoint(const double delta) override;//Éú³ÉÄ£ĞÍÀëÉ¢µãÊı×é
-		double NearestDistance(const DVector3D& pt)const override;//Çó³öptÀëÄ£ĞÍ×î½üµÄµã
+		void GenModelPoint(const double delta) override;//ç”Ÿæˆæ¨¡å‹ç¦»æ•£ç‚¹æ•°ç»„
+		double NearestDistance(const DVector3D& pt)const override;//æ±‚å‡ºptç¦»æ¨¡å‹æœ€è¿‘çš„ç‚¹
 
 	};
 }

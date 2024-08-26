@@ -13,7 +13,7 @@ StarCDGrid::StarCDGrid()
     face2Num_ = face3Num_ = face4Num_ = 0;
     element_.resize(0);
     boundFace_.resize(0);
-    coord_.resize(0); // 节点坐标数组
+    coord_.resize(0); // 鑺傜偣鍧愭爣鏁扮粍
 }
 void StarCDGrid::ReadGridFromStraCD(const string& filename)
 {

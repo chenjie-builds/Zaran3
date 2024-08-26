@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	StegerWarming.h														||
-//*	@brief	StegerWarming ÀèÂüÇó½âÆ÷				||
+//*	@brief	StegerWarming Ã€Ã¨Ã‚Ã¼Ã‡Ã³Â½Ã¢Ã†Ã·				||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once

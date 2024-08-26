@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	KDtree.h															||
-//*	@brief	kdÊ÷Êı¾İ½á¹¹, ºóĞø¿ÉÄÜĞèÒª¸ù¾İÏà¹ØĞèÇó½øĞĞĞŞ¸Ä							||
+//*	@brief	kdæ ‘æ•°æ®ç»“æ„, åç»­å¯èƒ½éœ€è¦æ ¹æ®ç›¸å…³éœ€æ±‚è¿›è¡Œä¿®æ”¹							||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
@@ -65,7 +65,7 @@ inline double Dist2(const coord_vec&, const coord_vec&);
 inline double Dist2(const KDNodePtr&, const KDNodePtr&);
 
 // euclidean distance
-// Á½¸öµãÖ®¼äµÄ¾àÀë
+// ä¸¤ä¸ªç‚¹ä¹‹é—´çš„è·ç¦»
 inline double Dist(const coord_vec&, const coord_vec&);
 inline double Dist(const KDNodePtr&, const KDNodePtr&);
 

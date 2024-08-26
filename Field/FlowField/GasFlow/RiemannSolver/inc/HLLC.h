@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	HLLC.h																||
-//*	@brief	HLLC ÀèÂüÇó½âÆ÷														||
+//*	@brief	HLLC Ã€Ã¨Ã‚Ã¼Ã‡Ã³Â½Ã¢Ã†Ã·														||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once

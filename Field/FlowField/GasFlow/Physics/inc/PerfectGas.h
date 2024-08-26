@@ -6,12 +6,12 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	PerfectGas.h														||
-//*	@brief	ÍêÈ«ÆøÌåÀà					||
+//*	@brief	å®Œå…¨æ°”ä½“ç±»					||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
 #include"Gas.h"
-//ÀíÏëÆøÌåÀà
+//ç†æƒ³æ°”ä½“ç±»
 class PerfectGas : public Gas
 {
 public:
@@ -21,29 +21,29 @@ public:
 	double GetRm() const override { return m_Rm; }
 	double GetCp() const override { return m_cp; }
 	double GetCv() const override { return m_cp / m_gamma; }
-	double CalcSoundSpeed(const double& T)override;  //¸ù¾İÎÂ¶È¼ÆËãÉùËÙ
+	double CalcSoundSpeed(const double& T)override;  //æ ¹æ®æ¸©åº¦è®¡ç®—å£°é€Ÿ
 	double CalcSoundSpeed(const double& density, const double& pressure) override;
-	double CalcTemperature(const double& density, const double& p)override;  //¸ù¾İ×´Ì¬·½³Ì¼ÆËãÎÂ¶È
-	double CalcMul(const double& T)override;   //¸ù¾İÎÂ¶È£¬ÀûÓÃsoutherland¹«Ê½¼ÆËã²ãÁ÷Õ³ĞÔÏµÊı¦Ìl
-	double CalcMut(const double& T)override;   //¸ù¾İÎÂ¶È£¬¼ÆËãÍÄÁ÷Õ³ĞÔÏµÊı¦Ìt
-	double CalcMu(const double& T)override;    //¸ù¾İÎÂ¶ÈÇó½âÕ³ĞÔÏµÊı¦Ì
-	double CalcKl(const double& T)override;    //¸ù¾İÎÂ¶È£¬Çó³ö²ãÁ÷´«ÈÈÏµÊı
-	double CalcKt(const double& T)override;    //¸ù¾İÎÂ¶È£¬Çó³öÍÄÁ÷´«ÈÈÏµÊı
-	double CalcK(const double& T)override;     //¸ù¾İÎÂ¶È£¬Çó³ö´«ÈÈÏµÊı
-	double CalcEnergy(const double& T, const double& velocity)override;//¸ù¾İÎÂ¶ÈºÍËÙ¶ÈÇó³ö×ÜÄÚÄÜ
-	double CalcEnergy(const double& density, const double& pressure, const double& velocity)override;//¸ù¾İÃÜ¶ÈÑ¹Á¦ºÍËÙ¶ÈÇó³ö×ÜÄÚÄÜ
-	//¸ù¾İÃÜ¶ÈºÍÎÂ¶ÈÇó³öÑ¹Á¦
+	double CalcTemperature(const double& density, const double& p)override;  //æ ¹æ®çŠ¶æ€æ–¹ç¨‹è®¡ç®—æ¸©åº¦
+	double CalcMul(const double& T)override;   //æ ¹æ®æ¸©åº¦ï¼Œåˆ©ç”¨southerlandå…¬å¼è®¡ç®—å±‚æµç²˜æ€§ç³»æ•°Î¼l
+	double CalcMut(const double& T)override;   //æ ¹æ®æ¸©åº¦ï¼Œè®¡ç®—æ¹æµç²˜æ€§ç³»æ•°Î¼t
+	double CalcMu(const double& T)override;    //æ ¹æ®æ¸©åº¦æ±‚è§£ç²˜æ€§ç³»æ•°Î¼
+	double CalcKl(const double& T)override;    //æ ¹æ®æ¸©åº¦ï¼Œæ±‚å‡ºå±‚æµä¼ çƒ­ç³»æ•°
+	double CalcKt(const double& T)override;    //æ ¹æ®æ¸©åº¦ï¼Œæ±‚å‡ºæ¹æµä¼ çƒ­ç³»æ•°
+	double CalcK(const double& T)override;     //æ ¹æ®æ¸©åº¦ï¼Œæ±‚å‡ºä¼ çƒ­ç³»æ•°
+	double CalcEnergy(const double& T, const double& velocity)override;//æ ¹æ®æ¸©åº¦å’Œé€Ÿåº¦æ±‚å‡ºæ€»å†…èƒ½
+	double CalcEnergy(const double& density, const double& pressure, const double& velocity)override;//æ ¹æ®å¯†åº¦å‹åŠ›å’Œé€Ÿåº¦æ±‚å‡ºæ€»å†…èƒ½
+	//æ ¹æ®å¯†åº¦å’Œæ¸©åº¦æ±‚å‡ºå‹åŠ›
 	double CalcPressure(const double& density, const double& T)const override;
 	void Prim2Cons(const double* prim, double* cons)override;
 	void Cons2Prim(const double* cons, double* prim)override;
 private:
-	double m_gamma;	//±ÈÈÈ±È 
-	double m_Mw;     //Ä¦¶ûÖÊÁ¿ kg/mol
-	double m_Rm;	//ÎŞÁ¿¸ÙÆøÌå³£Êı
-	double m_T0;	//ÎŞÁ¿¸ÙSoutherland¹«Ê½ÖĞµÄÎÂ¶ÈT0
-	double m_Ts;	//ÎŞÁ¿¸ÙSoutherland¹«Ê½ÖĞµÄ³£ÊıTs
-	double m_mu0;	//ÎŞÁ¿¸ÙSoutherland¹«Ê½ÖĞµÄÕ³ĞÔÏµÊıMu0
-	double m_Prl;	//²ãÁ÷PrandtlÊı
-	double m_Prt;	//ÍÄÁ÷PrandtlÊı
-	double m_cp;	//¶¨Ñ¹±ÈÈÈ
+	double m_gamma;	//æ¯”çƒ­æ¯” 
+	double m_Mw;     //æ‘©å°”è´¨é‡ kg/mol
+	double m_Rm;	//æ— é‡çº²æ°”ä½“å¸¸æ•°
+	double m_T0;	//æ— é‡çº²Southerlandå…¬å¼ä¸­çš„æ¸©åº¦T0
+	double m_Ts;	//æ— é‡çº²Southerlandå…¬å¼ä¸­çš„å¸¸æ•°Ts
+	double m_mu0;	//æ— é‡çº²Southerlandå…¬å¼ä¸­çš„ç²˜æ€§ç³»æ•°Mu0
+	double m_Prl;	//å±‚æµPrandtlæ•°
+	double m_Prt;	//æ¹æµPrandtlæ•°
+	double m_cp;	//å®šå‹æ¯”çƒ­
 };

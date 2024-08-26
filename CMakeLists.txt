@@ -1,4 +1,4 @@
-﻿# CMakeList.txt: 顶层 CMake 项目文件，在此处执行全局配置
+# CMakeList.txt: 顶层 CMake 项目文件，在此处执行全局配置
 # 并包含子项目。
 #
 cmake_minimum_required( VERSION 3.21 )
@@ -8,8 +8,8 @@ set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 # 项目名称
 project( Zaran LANGUAGES CXX )
 set( PROJECT_VERSION_MAJOR 3 )
-set( PROJECT_VERSION_MINOR 3 )
-set( PROJECT_VERSION_PATCH 9 )
+set( PROJECT_VERSION_MINOR 4 )
+set( PROJECT_VERSION_PATCH 0 )
 set( PROJECT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} )
 set( EXECUTABLE_NAME ${PROJECT_NAME}${PROJECT_VERSION} )
 set( CMAKE_CXX_STANDARD 17 )
@@ -75,4 +75,4 @@ target_link_libraries( ${EXECUTABLE_NAME} PRIVATE Eigen3::Eigen ${VTK_LIBRARIES}
 
 set( CMAKE_NINJA_FORCE_RESPONSE_FILE "ON" CACHE BOOL "Force Ninja to use response files." )
 message( STATUS "CXX_COMPILER_ID:" ${CMAKE_CXX_COMPILER_ID} )
-target_compile_options( ${EXECUTABLE_NAME} PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj /openmp::llvm> $<$<CXX_COMPILER_ID:GNU>:-mbig-obj> $<$<CXX_COMPILER_ID:Clang>:-fopenmp> )
+target_compile_options( ${EXECUTABLE_NAME} PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj /MP /W0 /utf-8 /openmp:llvm> $<$<CXX_COMPILER_ID:GNU>:-mbig-obj> $<$<CXX_COMPILER_ID:Clang>:-fopenmp> )

@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	STL.h																||
-//*	@brief	STL Ä£ĞÍ																||
+//*	@brief	STL æ¨¡å‹																||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 
@@ -28,20 +28,20 @@ namespace zaran
 	public:
 		PolyDataModel() :m_tolerance(1e-6) {		}
 		void SetPolyData(vtkSmartPointer<vtkPolyData>& polyData, double tolerance);
-		virtual bool InModel(const DVector3D& pt)const override;//ÅĞ¶ÏµãptÊÇ·ñÔÚ
-		virtual void GenModelPoint(const double delta) override {};//Éú³ÉÄ£ĞÍÀëÉ¢µãÊı×é
-		virtual DVector3D GetClosestPoint(const DVector3D& pt)const override;//Çó³öµãptÔÚÄ£ĞÍÀëÉ¢µãÊı×éÖĞ×î½üµÄµã
+		virtual bool InModel(const DVector3D& pt)const override;//åˆ¤æ–­ç‚¹ptæ˜¯å¦åœ¨
+		virtual void GenModelPoint(const double delta) override {};//ç”Ÿæˆæ¨¡å‹ç¦»æ•£ç‚¹æ•°ç»„
+		virtual DVector3D GetClosestPoint(const DVector3D& pt)const override;//æ±‚å‡ºç‚¹ptåœ¨æ¨¡å‹ç¦»æ•£ç‚¹æ•°ç»„ä¸­æœ€è¿‘çš„ç‚¹
 		virtual double NearestDistance(const DVector3D& pt)const override;
-		//ÅĞ¶ÏÊÇ·ñÎª·â±ÕÄ£ĞÍ
+		//åˆ¤æ–­æ˜¯å¦ä¸ºå°é—­æ¨¡å‹
 		bool IsClosed();
-		//ÉèÖÃÈİÈÌ¶È
+		//è®¾ç½®å®¹å¿åº¦
 		void SetTolerance(double tol);
 		void ShowModel();
 		vtkSmartPointer<vtkPolyData>& GetPolyData() { return m_polyData; }
 	private:
-		//ÈİÈÌ¶È
+		//å®¹å¿åº¦
 		double m_tolerance;
-		//OBBÊ÷
+		//OBBæ ‘
 		vtkSmartPointer<vtkOBBTree> m_cell_locator;
 		//polyData
 		vtkSmartPointer<vtkPolyData> m_polyData;

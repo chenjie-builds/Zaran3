@@ -14,8 +14,8 @@ zaran::GradWLSQ::GradWLSQ(GridFN* grid) :m_grid(grid)
     m_omega = new double** [node_num];
     for (int iNode = 0;iNode < node_num;iNode++)
     {
-        if (node->GetType(iNode) != NodeType::inner)
-            continue;
+        // if (node->GetType(iNode) != NodeType::inner)
+        //     continue;
         r11 = r12 = r13 = r22 = r23 = r23_a = r23_b = r33 = 0.0;
         beta = 0.0;
         auto neighbors = node->GetNeighborNode(iNode);
@@ -94,8 +94,8 @@ void GradWLSQ::CalcGradient(GridFN* grid, const double* data, double* grad_x, do
 #pragma omp parallel for
     for (int iNode = 0;iNode < node_num;iNode++)
     {
-        if (node->GetType(iNode) != NodeType::inner)
-            continue;
+        // if (node->GetType(iNode) != NodeType::inner)
+        //     continue;
         auto neighbors = node->GetNeighborNode(iNode);
         int neighbor_num = node->GetNeighborNodeNum(iNode);
         grad_x[iNode] = grad_y[iNode] = grad_z[iNode] = 0.0;

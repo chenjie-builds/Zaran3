@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	RefValue.h															||
-//*	@brief	²Î¿¼Á¿Àà																||
+//*	@brief	å‚è€ƒé‡ç±»																||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
@@ -16,7 +16,7 @@ public:
 	Dimensionless();
 	Dimensionless(const double& refDensity, const double& refGamma, const double& refMw, const double& refLength, const double& refTemp);
 	void SetRefValue(const double& refDensity, const double& refGamma, const double& refMw, const double& refLength, const double& refTemp);
-	// »ñÈ¡ÎŞÁ¿¸ÙµÄ²ÎÊı£¨ÎŞÁ¿¸Ù£©
+	// è·å–æ— é‡çº²çš„å‚æ•°ï¼ˆæ— é‡çº²ï¼‰
 	double GetMwDL(double Mw) const { return Mw / m_Mw; }
 	double GetDensityDL(double density) const { return density / m_density; }
 	double GetTempDL(double temp) const { return temp / m_temperature; }
@@ -25,7 +25,7 @@ public:
 	double GetPressureDL(double pressure) const { return pressure / m_pressure; }
 	double GetTimeDL(double time) const { return time / m_time; }
 	double GetMassDL(double mass) const { return mass / m_mass; }
-	// »ñÈ¡ÕæÊµµÄ²ÎÊı£¨ÓĞÁ¿¸Ù£©
+	// è·å–çœŸå®çš„å‚æ•°ï¼ˆæœ‰é‡çº²ï¼‰
 	double GetMwReal(double MwDL) const { return MwDL * m_Mw; }
 	double GetDensityReal(double densityDL) const { return densityDL * m_density; }
 	double GetTempReal(double tempDL) const { return tempDL * m_temperature; }
@@ -36,7 +36,7 @@ public:
 	double GetMassReal(double massDL) const { return massDL * m_mass; }
 	double GetForceReal(double forceDL) const { return forceDL * GetRefForce(); }
 
-	//  »ñÈ¡²Î¿¼Á¿£¨ÓĞÁ¿¸Ù£©
+	//  è·å–å‚è€ƒé‡ï¼ˆæœ‰é‡çº²ï¼‰
 	double GetRefGamma()const { return m_gamma; }
 	double GetRefMw() const { return m_Mw; }
 	double GetRefLength()const { return m_length; }
@@ -52,15 +52,15 @@ public:
 	double GetRefVolume() const { return m_length * m_length * m_length; }
 	double GetRefForce() const { return m_density * m_length * m_length * m_velocity * m_velocity; }
 private:
-	double m_gamma;		//²Î¿¼ÆøÌåµÄ±ÈÈÈ±È
-	double m_Mw;			//²Î¿¼ÆøÌåµÄ·Ö×ÓÁ¿(kg/mol)
-	double m_length;		//²Î¿¼³¤¶È(m)
-	double m_density;	//²Î¿¼ÃÜ¶È(kg/m^3)
-	double m_temperature;		//²Î¿¼ÎÂ¶È(K)
-	double m_Rm;			//ÆøÌå³£ÊıµÄ²Î¿¼Öµ(J/kg/K,K*m^2/s^2)
-	double m_velocity;	//²Î¿¼ËÙ¶È(m/s)
-	double m_pressure;	//²Î¿¼Ñ¹Á¦(Pa)
-	double m_time;		//²Î¿¼Ê±¼ä(s)
-	double m_mass;		//²Î¿¼ÖÊÁ¿(kg)
-	double m_Re;			//À×ÅµÊı(²Î¿¼À´Á÷ÉùËÙ)
+	double m_gamma;		//å‚è€ƒæ°”ä½“çš„æ¯”çƒ­æ¯”
+	double m_Mw;			//å‚è€ƒæ°”ä½“çš„åˆ†å­é‡(kg/mol)
+	double m_length;		//å‚è€ƒé•¿åº¦(m)
+	double m_density;	//å‚è€ƒå¯†åº¦(kg/m^3)
+	double m_temperature;		//å‚è€ƒæ¸©åº¦(K)
+	double m_Rm;			//æ°”ä½“å¸¸æ•°çš„å‚è€ƒå€¼(J/kg/K,K*m^2/s^2)
+	double m_velocity;	//å‚è€ƒé€Ÿåº¦(m/s)
+	double m_pressure;	//å‚è€ƒå‹åŠ›(Pa)
+	double m_time;		//å‚è€ƒæ—¶é—´(s)
+	double m_mass;		//å‚è€ƒè´¨é‡(kg)
+	double m_Re;			//é›·è¯ºæ•°(å‚è€ƒæ¥æµå£°é€Ÿ)
 };

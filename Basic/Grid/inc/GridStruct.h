@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	Grid_Struct_3D.h													||
-//*	@brief	ÈıÎ¬½á¹¹Íø¸ñÀà£¬¸ù¾İ½á¹¹Íø¸ñÊı¾İ½á¹¹ÌØµã´æ´¢ĞÅÏ¢						||
+//*	@brief	ä¸‰ç»´ç»“æ„ç½‘æ ¼ç±»ï¼Œæ ¹æ®ç»“æ„ç½‘æ ¼æ•°æ®ç»“æ„ç‰¹ç‚¹å­˜å‚¨ä¿¡æ¯						||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
@@ -22,11 +22,11 @@ namespace zaran
 	public:
 		GridStruct(const string& name, int index, int dim);
 		virtual ~GridStruct();
-		/// @brief ¿ª±ÙÄÚ´æ¿Õ¼ä
-		/// @param ni i·½ÏòÉÏµÄ½Úµã×ÜÊı
-		/// @param nj j·½ÏòÉÏµÄ½Úµã×ÜÊı 
-		/// @param nk k·½ÏòÉÏµÄ½Úµã×ÜÊı
-		/// @param ghost_size ghost½Úµã²ãÊı
+		/// @brief å¼€è¾Ÿå†…å­˜ç©ºé—´
+		/// @param ni iæ–¹å‘ä¸Šçš„èŠ‚ç‚¹æ€»æ•°
+		/// @param nj jæ–¹å‘ä¸Šçš„èŠ‚ç‚¹æ€»æ•° 
+		/// @param nk kæ–¹å‘ä¸Šçš„èŠ‚ç‚¹æ€»æ•°
+		/// @param ghost_size ghostèŠ‚ç‚¹å±‚æ•°
 		void Allocate(int ni, int nj, int nk, int ghost_size);
 	public:
 		int GetNi();
@@ -40,24 +40,24 @@ namespace zaran
 		BoundMapStruct* GetBoundMap() { return m_bound_map; }
 		int GetGhostSize() { return m_ghost_size; }
 	public:
-		/// @brief ·µ»ØÓÃÓÚ¼ÆËãµÄ½Úµã·¶Î§,²»°üº¬ghost½Úµã
-		/// @param iStart i·½ÏòÉÏµÄÆğÊ¼Ë÷Òı
-		/// @param iEnd i·½ÏòÉÏµÄ½áÊøË÷Òı
-		/// @param jStart j·½ÏòÉÏµÄÆğÊ¼Ë÷Òı
-		/// @param jEnd j·½ÏòÉÏµÄ½áÊøË÷Òı
-		/// @param kStart k·½ÏòÉÏµÄÆğÊ¼Ë÷Òı
-		/// @param kEnd k·½ÏòÉÏµÄ½áÊøË÷Òı
+		/// @brief è¿”å›ç”¨äºè®¡ç®—çš„èŠ‚ç‚¹èŒƒå›´,ä¸åŒ…å«ghostèŠ‚ç‚¹
+		/// @param iStart iæ–¹å‘ä¸Šçš„èµ·å§‹ç´¢å¼•
+		/// @param iEnd iæ–¹å‘ä¸Šçš„ç»“æŸç´¢å¼•
+		/// @param jStart jæ–¹å‘ä¸Šçš„èµ·å§‹ç´¢å¼•
+		/// @param jEnd jæ–¹å‘ä¸Šçš„ç»“æŸç´¢å¼•
+		/// @param kStart kæ–¹å‘ä¸Šçš„èµ·å§‹ç´¢å¼•
+		/// @param kEnd kæ–¹å‘ä¸Šçš„ç»“æŸç´¢å¼•
 		void GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd);
 	private:
-		/// @brief ghost½Úµã²ãÊı
+		/// @brief ghostèŠ‚ç‚¹å±‚æ•°
 		int m_ghost_size;
-		/// @brief ½á¹¹Íø¸ñ½Úµã
+		/// @brief ç»“æ„ç½‘æ ¼èŠ‚ç‚¹
 		NodeStruct* m_node;
-		/// @brief 	½á¹¹Íø¸ñÃæ
+		/// @brief 	ç»“æ„ç½‘æ ¼é¢
 		FaceStruct* m_face;
-		/// @brief 	½á¹¹Íø¸ñµ¥Ôª
+		/// @brief 	ç»“æ„ç½‘æ ¼å•å…ƒ
 		CellStruct* m_cell;
-		/// @brief 	±ß½çÌõ¼ş
+		/// @brief 	è¾¹ç•Œæ¡ä»¶
 		BoundMapStruct* m_bound_map;
 	};
 }

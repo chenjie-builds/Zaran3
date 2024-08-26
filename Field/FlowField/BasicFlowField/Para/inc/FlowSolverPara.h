@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	FlowSolverPara.h													||
-//*	@brief	Á÷³¡Çó½âÆ÷²ÎÊıÀà,¶¨ÒåÁËÁ÷³¡Çó½âÆ÷Õı³£½øĞĞµÄÒ»Ğ©²ÎÊı	 					||
+//*	@brief	æµåœºæ±‚è§£å™¨å‚æ•°ç±»,å®šä¹‰äº†æµåœºæ±‚è§£å™¨æ­£å¸¸è¿›è¡Œçš„ä¸€äº›å‚æ•°	 					||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
@@ -19,26 +19,26 @@
 #include"CFL.h"
 namespace zaran
 {
-	//Ìİ¶ÈÇó½â·½·¨
+	//æ¢¯åº¦æ±‚è§£æ–¹æ³•
 	enum class GradScheme
 	{
-		ufdm,//·Ç½á¹¹ÓĞÏŞ²î·Ö·¨
-		wls,//×îĞ¡¶ş³Ë·¨
-		noGrad//²»¼ÆËãÌİ¶È
+		ufdm,//éç»“æ„æœ‰é™å·®åˆ†æ³•
+		wls,//æœ€å°äºŒä¹˜æ³•
+		noGrad//ä¸è®¡ç®—æ¢¯åº¦
 	};
-	//Á÷³¡³õÊ¼»¯·½Ê½
+	//æµåœºåˆå§‹åŒ–æ–¹å¼
 	enum class InitFieldType
 	{
-		FarFlow,//Ô¶³¡
-		FarFlowNoVelocity,//Ô¶³¡ÎŞËÙ¶È
-		Backup//±¸·İÎÄ¼ş
+		FarFlow,//è¿œåœº
+		FarFlowNoVelocity,//è¿œåœºæ— é€Ÿåº¦
+		Backup//å¤‡ä»½æ–‡ä»¶
 	};
 	class FlowSolverPara :public SolverPara
 	{
 	public:
 		FlowSolverPara();
 		virtual ~FlowSolverPara();
-		// ¸ù¾İGlobalData³õÊ¼»¯
+		// æ ¹æ®GlobalDataåˆå§‹åŒ–
 		void Init() override;
 		void InitCflNumber();
 		void InitLimiter();
@@ -74,7 +74,7 @@ namespace zaran
 	private:
 		int m_equ_num;
 		Gas* m_gas;
-		// ÎŞÁ¿¸Ù²ÎÊı
+		// æ— é‡çº²å‚æ•°
 		Dimensionless m_dimensionless;
 		double m_inflow_density;
 		double m_inflow_velocity_x;
@@ -82,22 +82,22 @@ namespace zaran
 		double m_inflow_velocity_z;
 		double m_inflow_pressure;
 		double m_inflow_temperature;
-		// Á÷³¡³õÊ¼»¯·½Ê½
+		// æµåœºåˆå§‹åŒ–æ–¹å¼
 		InitFieldType m_init_field_type;
-		// µ±Ç°²½Êı
+		// å½“å‰æ­¥æ•°
 		int m_current_step;
-		// ÊÇ·ñÎªÕ³ĞÔ
+		// æ˜¯å¦ä¸ºç²˜æ€§
 		int m_is_viscous;
 		CFL* m_cfl;
-		// RK²½Êı
+		// RKæ­¥æ•°
 		DArray m_rk_coef;
-		// Ìİ¶È·½·¨
+		// æ¢¯åº¦æ–¹æ³•
 		GradScheme m_grad_scheme;
-		// ÏŞÖÆÆ÷
+		// é™åˆ¶å™¨
 		LimiterType n_limiter_type;
-		// ×î´óÏŞÖÆÆ÷ÏµÊı£¬ÓÃÓÚ¿ØÖÆ¾«¶È£¬0.0-1.0
+		// æœ€å¤§é™åˆ¶å™¨ç³»æ•°ï¼Œç”¨äºæ§åˆ¶ç²¾åº¦ï¼Œ0.0-1.0
 		double m_max_limit;
-		// ±¸·İÁ÷³¡ÎÄ¼şÃû£¬ÓÃÓÚĞøËã
+		// å¤‡ä»½æµåœºæ–‡ä»¶åï¼Œç”¨äºç»­ç®—
 		std::string m_backup_field_file_name;
 		RiemannSolverType m_riemann_solver_type;
 	};

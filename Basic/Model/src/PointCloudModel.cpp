@@ -29,7 +29,7 @@ PointCloudModel::PointCloudModel(const std::vector<DVector3D>& point_list)
 
 bool PointCloudModel::InModel(const DVector3D& pt)const
 {
-	//µãÔÆÄ£ĞÍ£¬ËùÓĞÊäÈëµÄµã¶¼ÔÚÍâ²¿
+	//ç‚¹äº‘æ¨¡å‹ï¼Œæ‰€æœ‰è¾“å…¥çš„ç‚¹éƒ½åœ¨å¤–éƒ¨
 	return false;
 }
 

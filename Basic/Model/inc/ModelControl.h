@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	ModelControl.h														||
-//*	@brief	Ä£ĞÍ¿ØÖÆÀà£º ÊäÈë¿ØÖÆÄ£ĞÍµÄ²ÎÊı£¬²¢¶ÔÄ£ĞÍ½øĞĞĞŞ¸Ä						||
+//*	@brief	æ¨¡å‹æ§åˆ¶ç±»ï¼š è¾“å…¥æ§åˆ¶æ¨¡å‹çš„å‚æ•°ï¼Œå¹¶å¯¹æ¨¡å‹è¿›è¡Œä¿®æ”¹						||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
@@ -19,10 +19,10 @@ namespace zaran
 	class ModelControl
 	{
 	private:
-		int modelNum_;//Ä£ĞÍ¸öÊı
-		Array<Model*>modelVec_;//Ä£ĞÍÊı×é
-		double delta;//Ä£ĞÍÉú³ÉÉ¢µãµÄ¼ä¾à
-		string m_filename;//Ä£ĞÍ¿ØÖÆÎÄ¼şµÄÎÄ¼şÃû
+		int modelNum_;//æ¨¡å‹ä¸ªæ•°
+		Array<Model*>modelVec_;//æ¨¡å‹æ•°ç»„
+		double delta;//æ¨¡å‹ç”Ÿæˆæ•£ç‚¹çš„é—´è·
+		string m_filename;//æ¨¡å‹æ§åˆ¶æ–‡ä»¶çš„æ–‡ä»¶å
 	public:
 		ModelControl() {};
 		ModelControl(string filename);

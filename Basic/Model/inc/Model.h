@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	Model.h																||
-//*	@brief	Ä£ĞÍ»ùÀà, ÃèÊö¼¸ºÎÍâĞÎ												||
+//*	@brief	æ¨¡å‹åŸºç±», æè¿°å‡ ä½•å¤–å½¢												||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
@@ -16,9 +16,9 @@ namespace zaran
 	class Model
 	{
 	public:
-		virtual bool InModel(const DVector3D& pt)const = 0;//ÅĞ¶ÏµãptÊÇ·ñÔÚ
-		virtual void GenModelPoint(const double delta) = 0;//Éú³ÉÄ£ĞÍÀëÉ¢µãÊı×é
-		virtual DVector3D GetClosestPoint(const DVector3D& pt)const = 0;//Çó³öµãptÔÚÄ£ĞÍÀëÉ¢µãÊı×éÖĞ×î½üµÄµã
+		virtual bool InModel(const DVector3D& pt)const = 0;//åˆ¤æ–­ç‚¹ptæ˜¯å¦åœ¨
+		virtual void GenModelPoint(const double delta) = 0;//ç”Ÿæˆæ¨¡å‹ç¦»æ•£ç‚¹æ•°ç»„
+		virtual DVector3D GetClosestPoint(const DVector3D& pt)const = 0;//æ±‚å‡ºç‚¹ptåœ¨æ¨¡å‹ç¦»æ•£ç‚¹æ•°ç»„ä¸­æœ€è¿‘çš„ç‚¹
 		virtual double NearestDistance(const DVector3D& pt)const = 0;
 		void SetBoxMin(const DVector3D& box_min);
 		void SetBoxMax(const DVector3D& box_max);

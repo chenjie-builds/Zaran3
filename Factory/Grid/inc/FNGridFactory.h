@@ -36,6 +36,8 @@ namespace zaran
     void CheckNode();
     void CheckUnkownNode();
     void AddSelfToNeighbor();
+    //将内部节点的邻居节点加入到边界节点的邻居节点中
+    void AddInnerNeighborToBound();
     void ConvertToGrid(GridFN*& grid);
   private:
     struct BoundNode

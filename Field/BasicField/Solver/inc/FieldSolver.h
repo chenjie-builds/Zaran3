@@ -6,7 +6,7 @@
 //*	This file is part of ZaRan.													||
 //*																				||
 //*	@file	FieldSolver.h														||
-//*	@brief	Á÷³¡Çó½âÆ÷															||
+//*	@brief	æµåœºæ±‚è§£å™¨															||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 
@@ -20,24 +20,24 @@ namespace zaran
 		NS_Struct,
 		NS_FNFDM,
 	};
-	/// @brief ³¡Çó½âÆ÷»ùÀà
+	/// @brief åœºæ±‚è§£å™¨åŸºç±»
 	class FieldSolver :public Solver
 	{
 	public:
 		FieldSolver(int index, string name, SolverPara* para, GridBase* grid, DataManager* data_manager) ;
 		virtual ~FieldSolver();
 	public:
-		// ³õÊ¼»¯Á÷³¡Êı¾İ
+		// åˆå§‹åŒ–æµåœºæ•°æ®
 		virtual void InitField() = 0;
-		// ±ß½ç´¦Àí
+		// è¾¹ç•Œå¤„ç†
 		virtual void BoundaryCondition() = 0;
-		// ¸üĞÂ³¡Êı¾İ, ¸ù¾İµü´úÖĞ¼ä½á¹û¸üĞÂ³¡Êı¾İ
+		// æ›´æ–°åœºæ•°æ®, æ ¹æ®è¿­ä»£ä¸­é—´ç»“æœæ›´æ–°åœºæ•°æ®
 		virtual void UpdateField() = 0;
-		// ±¸·İ³¡Êı¾İ
+		// å¤‡ä»½åœºæ•°æ®
 		virtual void BackupField(std::string& back_folder) = 0;
 		virtual DataManager* GetDataManager() { return m_data_manager; }
 	private:
-		// ³¡Êı¾İ
+		// åœºæ•°æ®
 		DataManager* m_data_manager;
 	};
 }

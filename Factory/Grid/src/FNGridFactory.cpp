@@ -13,11 +13,11 @@
 namespace zaran
 {
 
-    FNGridFactorySYSU::FNGridFactorySYSU(const string& node_file_name, const string& ele_file_name, const string& bnd_file_name) :m_node_file_name(node_file_name), m_ele_file_name(ele_file_name), m_bnd_file_name(bnd_file_name)
+    FNGridFactorySYSU::FNGridFactorySYSU(const string &node_file_name, const string &ele_file_name, const string &bnd_file_name) : m_node_file_name(node_file_name), m_ele_file_name(ele_file_name), m_bnd_file_name(bnd_file_name)
     {
     }
 
-    GridFN* FNGridFactorySYSU::CreateGrid()
+    GridFN *FNGridFactorySYSU::CreateGrid()
     {
         ReadNodeFile();
         ReadCellFile();
@@ -27,7 +27,8 @@ namespace zaran
         CheckNode();
         CheckUnkownNode();
         AddSelfToNeighbor();
-        GridFN* grid = new GridFN("FNFDM", 0, 3);
+        AddInnerNeighborToBound();
+        GridFN *grid = new GridFN("FNFDM", 0, 3);
         ConvertToGrid(grid);
         return grid;
     }
@@ -62,7 +63,7 @@ namespace zaran
             fin >> innerNodeIndex;
             innerNodeIndex -= 1;
             int neighbor_num = 6;
-            auto& neighbor_index = m_node_neibor[innerNodeIndex];
+            auto &neighbor_index = m_node_neibor[innerNodeIndex];
             neighbor_index.resize(neighbor_num);
             for (int j = 0; j < neighbor_num; j++)
             {
@@ -82,7 +83,7 @@ namespace zaran
         Log::info("x- boundary node num:{}", nBound);
         for (size_t i = 0; i < nBound; i++)
         {
-            auto& bound_node = m_bound_node[i];
+            auto &bound_node = m_bound_node[i];
             fin >> bound_node.bound_index >> bound_node.ref_index >> tempIndex1;
             bound_node.bound_index -= 1;
             bound_node.ref_index -= 1;
@@ -106,7 +107,7 @@ namespace zaran
         Log::info("x+ boundary node num:{}", nBound);
         for (size_t i = 0; i < nBound; i++)
         {
-            auto& bound_node = m_bound_node[i + total_bound_node_num - nBound];
+            auto &bound_node = m_bound_node[i + total_bound_node_num - nBound];
             fin >> bound_node.bound_index >> bound_node.ref_index >> tempIndex1;
             bound_node.bound_index -= 1;
             bound_node.ref_index -= 1;
@@ -130,7 +131,7 @@ namespace zaran
         Log::info("y- boundary node num:{}", nBound);
         for (size_t i = 0; i < nBound; i++)
         {
-            auto& bound_node = m_bound_node[i + total_bound_node_num - nBound];
+            auto &bound_node = m_bound_node[i + total_bound_node_num - nBound];
             fin >> bound_node.bound_index >> bound_node.ref_index >> tempIndex1;
             bound_node.bound_index -= 1;
             bound_node.ref_index -= 1;
@@ -154,7 +155,7 @@ namespace zaran
         Log::info("y+ boundary node num:{}", nBound);
         for (size_t i = 0; i < nBound; i++)
         {
-            auto& bound_node = m_bound_node[i + total_bound_node_num - nBound];
+            auto &bound_node = m_bound_node[i + total_bound_node_num - nBound];
             fin >> bound_node.bound_index >> bound_node.ref_index >> tempIndex1;
             bound_node.bound_index -= 1;
             bound_node.ref_index -= 1;
@@ -178,7 +179,7 @@ namespace zaran
         Log::info("z- boundary node num:{}", nBound);
         for (size_t i = 0; i < nBound; i++)
         {
-            auto& bound_node = m_bound_node[i + total_bound_node_num - nBound];
+            auto &bound_node = m_bound_node[i + total_bound_node_num - nBound];
             fin >> bound_node.bound_index >> bound_node.ref_index >> tempIndex1;
             bound_node.bound_index -= 1;
             bound_node.ref_index -= 1;
@@ -202,7 +203,7 @@ namespace zaran
         Log::info("z+ boundary node num:{}", nBound);
         for (size_t i = 0; i < nBound; i++)
         {
-            auto& bound_node = m_bound_node[i + total_bound_node_num - nBound];
+            auto &bound_node = m_bound_node[i + total_bound_node_num - nBound];
             fin >> bound_node.bound_index >> bound_node.ref_index >> tempIndex1;
             bound_node.bound_index -= 1;
             bound_node.ref_index -= 1;
@@ -226,7 +227,7 @@ namespace zaran
         Log::info("wall boundary node num:{}", nBound);
         for (size_t i = 0; i < nBound; i++)
         {
-            auto& bound_node = m_bound_node[i + total_bound_node_num - nBound];
+            auto &bound_node = m_bound_node[i + total_bound_node_num - nBound];
             fin >> bound_node.bound_index >> bound_node.ref_index >> tempIndex1;
             bound_node.bound_index -= 1;
             bound_node.ref_index -= 1;
@@ -260,8 +261,8 @@ namespace zaran
             node_pair_map.clear();
             if (m_node_type[iNode] != NodeType::inner)
                 continue;
-            auto& node_coord = m_node_coord[iNode];
-            auto& neighbor = m_node_neibor[iNode];
+            auto &node_coord = m_node_coord[iNode];
+            auto &neighbor = m_node_neibor[iNode];
             // 删除邻居节点中与当地节点距离小于小量的节�?
             for (int i = 0; i < neighbor.size(); ++i)
             {
@@ -356,7 +357,7 @@ namespace zaran
             }
             // 根据角度排序后的邻居节点
             neighbor.clear();
-            for (auto& i : node_angle_map)
+            for (auto &i : node_angle_map)
             {
                 neighbor.push_back(i.second);
             }
@@ -368,19 +369,21 @@ namespace zaran
             }
             node_pair_map.clear();
             // 获取下一个点的lamda表达�?
-            auto get_next_node = [&](int iNode, IArray neiborNode) -> int {
+            auto get_next_node = [&](int iNode, IArray neiborNode) -> int
+            {
                 if (iNode == neiborNode.size() - 1)
                     return 0;
                 else
                     return iNode + 1;
-                };
+            };
             // 获取上一个点的lamda表达�?
-            auto get_last_node = [&](int iNode, IArray neiborNode) -> int {
+            auto get_last_node = [&](int iNode, IArray neiborNode) -> int
+            {
                 if (iNode == 0)
                     return neiborNode.size() - 1;
                 else
                     return iNode - 1;
-                };
+            };
 
             for (int i = 0; i < neighbor.size(); ++i)
             {
@@ -403,7 +406,7 @@ namespace zaran
             while (neighbor.size() > 4)
             {
 
-                auto& temp_pair = node_pair_map.begin()->second;
+                auto &temp_pair = node_pair_map.begin()->second;
                 int remove_node, remove_index;
                 node_pair temp;
                 if (node_dis_map[temp_pair.node1] > node_dis_map[temp_pair.node2])
@@ -486,10 +489,10 @@ namespace zaran
             if (m_node_type[iNode] != NodeType::inner)
                 continue;
             neibor_set.clear();
-            auto& nodeNeibor = m_node_neibor[iNode];
+            auto &nodeNeibor = m_node_neibor[iNode];
             neibor_num_before = nodeNeibor.size();
             double max_distance = 0;
-            for (auto& iNeibor : nodeNeibor)
+            for (auto &iNeibor : nodeNeibor)
             {
                 max_distance =
                     Max(max_distance, DistanceOfTwoPoints(m_node_coord[iNode].data(), m_node_coord[iNeibor].data()));
@@ -514,10 +517,10 @@ namespace zaran
                 neibor_set.insert(result->GetId(i));
             }
             neibor_set.erase(iNode);
-            nodeNeibor.resize(6);//差分模板不改变
-            for (auto& i : neibor_set)
+            nodeNeibor.resize(6); // 差分模板不改变
+            for (auto &i : neibor_set)
             {
-                //如果nodeNeibor中没有该节点，添加该节点
+                // 如果nodeNeibor中没有该节点，添加该节点
                 if (std::find(nodeNeibor.begin(), nodeNeibor.end(), i) == nodeNeibor.end())
                     nodeNeibor.push_back(i);
             }
@@ -589,16 +592,16 @@ namespace zaran
         int min_angle_index;
         int min_angle_neibor_index1, min_angle_neibor_index2;
         int node_num = m_node_coord.size();
-        //各个方向的最小夹角, i,j,k方向
+        // 各个方向的最小夹角, i,j,k方向
         double min_angle_i = LARGE_NUMBER, min_angle_j = LARGE_NUMBER, min_angle_k = LARGE_NUMBER;
-        //各个方向最小夹角的节点索引
+        // 各个方向最小夹角的节点索引
         int min_angle_index_i, min_angle_index_j, min_angle_index_k;
         for (size_t iNode = 0; iNode < node_num; iNode++)
         {
             if (m_node_type[iNode] != NodeType::inner)
                 continue;
             int neighbor_num = m_node_neibor[iNode].size();
-            auto& neighbor_index = m_node_neibor[iNode];
+            auto &neighbor_index = m_node_neibor[iNode];
             Array<DVector3D> vec(3);
             for (int i = 0; i < 3; i++)
             {
@@ -699,7 +702,6 @@ namespace zaran
                             min_angle_index_k = iNode;
                         }
                     }
-
                 }
             }
             if (temp_min_angle < min_angle)
@@ -712,22 +714,22 @@ namespace zaran
         }
         Log::info("Min axis Angle: {}, Node index: {}", min_angle, min_angle_index);
         Log::info("-------- Coord: {}, {}, {}", m_node_coord[min_angle_index][0], m_node_coord[min_angle_index][1],
-            m_node_coord[min_angle_index][2]);
+                  m_node_coord[min_angle_index][2]);
         Log::info("-------- Neighbor: {}, {}, {}, {}, {}, {}", m_node_neibor[min_angle_index][0],
-            m_node_neibor[min_angle_index][1], m_node_neibor[min_angle_index][2], m_node_neibor[min_angle_index][3],
-            m_node_neibor[min_angle_index][4], m_node_neibor[min_angle_index][5]);
+                  m_node_neibor[min_angle_index][1], m_node_neibor[min_angle_index][2], m_node_neibor[min_angle_index][3],
+                  m_node_neibor[min_angle_index][4], m_node_neibor[min_angle_index][5]);
         Log::info("-------- Axis Node 1: {}, Node 2: {}", min_angle_neibor_index1, min_angle_neibor_index2);
         Log::info("Min angle i: {}, Node index: {}", min_angle_i, min_angle_index_i);
         Log::info("-------- Coord: {}, {}, {}", m_node_coord[min_angle_index_i][0], m_node_coord[min_angle_index_i][1],
-            m_node_coord[min_angle_index_i][2]);
+                  m_node_coord[min_angle_index_i][2]);
         Log::info("-------- Neighbor: {}, {}, {}, {}, {}, {}", m_node_neibor[min_angle_index_i][0], m_node_neibor[min_angle_index_i][1], m_node_neibor[min_angle_index_i][2], m_node_neibor[min_angle_index_i][3], m_node_neibor[min_angle_index_i][4], m_node_neibor[min_angle_index_i][5]);
         Log::info("Min angle j: {}, Node index: {}", min_angle_j, min_angle_index_j);
         Log::info("-------- Coord: {}, {}, {}", m_node_coord[min_angle_index_j][0], m_node_coord[min_angle_index_j][1],
-            m_node_coord[min_angle_index_j][2]);
+                  m_node_coord[min_angle_index_j][2]);
         Log::info("-------- Neighbor: {}, {}, {}, {}, {}, {}", m_node_neibor[min_angle_index_j][0], m_node_neibor[min_angle_index_j][1], m_node_neibor[min_angle_index_j][2], m_node_neibor[min_angle_index_j][3], m_node_neibor[min_angle_index_j][4], m_node_neibor[min_angle_index_j][5]);
         Log::info("Min angle k: {}, Node index: {}", min_angle_k, min_angle_index_k);
         Log::info("-------- Coord: {}, {}, {}", m_node_coord[min_angle_index_k][0], m_node_coord[min_angle_index_k][1],
-            m_node_coord[min_angle_index_k][2]);
+                  m_node_coord[min_angle_index_k][2]);
         Log::info("-------- Neighbor: {}, {}, {}, {}, {}, {}", m_node_neibor[min_angle_index_k][0], m_node_neibor[min_angle_index_k][1], m_node_neibor[min_angle_index_k][2], m_node_neibor[min_angle_index_k][3], m_node_neibor[min_angle_index_k][4], m_node_neibor[min_angle_index_k][5]);
     }
     void FNGridFactorySYSU::CheckUnkownNode()
@@ -750,10 +752,10 @@ namespace zaran
             if (m_node_type[iNode] != NodeType::inner)
                 continue;
             bool find_current = false;
-            auto& current_neighbor = m_node_neibor[iNode];
+            auto &current_neighbor = m_node_neibor[iNode];
             for (int iNeibor = 0; iNeibor < current_neighbor.size(); iNeibor++)
             {
-                auto& neighbors_neighbor = m_node_neibor[current_neighbor[iNeibor]];
+                auto &neighbors_neighbor = m_node_neibor[current_neighbor[iNeibor]];
                 if (std::find(neighbors_neighbor.begin(), neighbors_neighbor.end(), iNode) == neighbors_neighbor.end())
                 {
                     neighbors_neighbor.push_back(iNode);
@@ -762,7 +764,22 @@ namespace zaran
         }
         Log::info("Add self to neibor node's neibor node done");
     }
-    void FNGridFactorySYSU::ConvertToGrid(GridFN*& grid)
+    void FNGridFactorySYSU::AddInnerNeighborToBound()
+    {
+        for (iBound = 0; iBound < m_bound_node.size(); iBound++)
+        {
+            auto &bound_node = m_bound_node[iBound];
+            auto bound_index = bound_node.bound_index;
+            auto ref_index = bound_node.ref_index;
+            auto bound_neibor = m_node_neibor[bound_index];
+            auto ref_neibor = m_node_neibor[ref_index];
+            bound_neibor = ref_neibor;
+            bound_neibor.push_back(ref_index);
+            bound_neibor.erase(std::find(bound_neibor.begin(), bound_neibor.end(), bound_index));
+        }
+        Log::info("Add inner node's neibor node to bound done");
+    }
+    void FNGridFactorySYSU::ConvertToGrid(GridFN *&grid)
     {
         int node_num = m_node_coord.size();
         std::vector<int> neighbor_node_num(node_num);
@@ -774,7 +791,7 @@ namespace zaran
             neighbor_face_num[iNode] = 0;
             neighbor_cell_num[iNode] = 0;
         }
-        NodeFN* node = new  NodeFN(node_num, neighbor_node_num.data(), neighbor_face_num.data(), neighbor_cell_num.data());
+        NodeFN *node = new NodeFN(node_num, neighbor_node_num.data(), neighbor_face_num.data(), neighbor_cell_num.data());
         for (int iNode = 0; iNode < m_node_coord.size(); iNode++)
         {
             node->SetCoord(iNode, m_node_coord[iNode].data());
@@ -784,7 +801,7 @@ namespace zaran
             node->SetNeighborCell(iNode, neighbor_cell_num[iNode], nullptr);
         }
         grid->SetNode(node);
-        CellFN* cell = new CellFN(m_cell_node.size());
+        CellFN *cell = new CellFN(m_cell_node.size());
         cell->SetNode(m_cell_node);
         std::vector<std::vector<int>> cell_node_face(m_cell_node.size());
         cell->SetFace(cell_node_face);
@@ -807,7 +824,7 @@ namespace zaran
         }
         grid->SetCell(cell);
 
-        FaceFN* face = new FaceFN();
+        FaceFN *face = new FaceFN();
 
         std::vector<int> face_node_num(m_bound_face.size());
         for (int iFace = 0; iFace < m_bound_face.size(); iFace++)
@@ -823,7 +840,7 @@ namespace zaran
         }
         grid->SetFace(face);
 
-        BoundMapFN* boundary_map = new BoundMapFN();
+        BoundMapFN *boundary_map = new BoundMapFN();
         for (int iFace = 0; iFace < m_bound_node.size(); iFace++)
         {
             boundary_map->AddBoundary(m_bound_node[iFace].type, BoundFN(m_bound_node[iFace].bound_index, m_bound_node[iFace].ref_index, 0, m_bound_node[iFace].normal));
@@ -869,7 +886,7 @@ namespace zaran
         m_bound_face.resize(bound_face_num);
         for (int iBound = 0; iBound < bound_face_num; iBound++)
         {
-            auto& bound_face = m_bound_face[iBound];
+            auto &bound_face = m_bound_face[iBound];
             int boundNodeNum = 4;
             bound_face.face_node.resize(boundNodeNum);
             for (int i = 0; i < boundNodeNum; i++)
@@ -886,13 +903,13 @@ namespace zaran
         double v1[3], v2[3];
         for (int iBound = 0; iBound < bound_face_num; iBound++)
         {
-            auto& bound_face = m_bound_face[iBound];
+            auto &bound_face = m_bound_face[iBound];
             bound_face.normal.resize(3);
             if (bound_face.face_node.size() == 3)
             {
                 bound_face.area =
                     TriangleArea(m_node_coord[bound_face.face_node[0]].data(), m_node_coord[bound_face.face_node[1]].data(),
-                        m_node_coord[bound_face.face_node[2]].data());
+                                 m_node_coord[bound_face.face_node[2]].data());
                 for (int i = 0; i < 3; i++)
                 {
                     v1[i] = m_node_coord[bound_face.face_node[1]][i] - m_node_coord[bound_face.face_node[0]][i];
@@ -912,7 +929,7 @@ namespace zaran
             }
             CrossProduct(v1, v2, bound_face.normal.data());
             double norm = sqrt(bound_face.normal[0] * bound_face.normal[0] + bound_face.normal[1] * bound_face.normal[1] +
-                bound_face.normal[2] * bound_face.normal[2]);
+                               bound_face.normal[2] * bound_face.normal[2]);
             for (int i = 0; i < 3; i++)
             {
                 bound_face.normal[i] /= norm;

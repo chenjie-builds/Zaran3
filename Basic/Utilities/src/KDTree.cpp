@@ -107,7 +107,7 @@ KDNodePtr KDTree::MakeTree(const pointIndexArr::iterator & begin, const pointInd
 	}
 	size_t dim = begin->first.size();
 	
-	//¸ù¾ÝlevelÅÅÐò
+	//Â¸Ã¹Â¾ÃlevelÃ…Ã…ÃÃ²
 	if (length > 1)
 	{
 		SortOnIdx(begin, end, level);
