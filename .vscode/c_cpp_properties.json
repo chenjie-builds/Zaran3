@@ -10,8 +10,7 @@
             "defines": [
                 "_DEBUG",
                 "UNICODE",
-                "_UNICODE",
-                "UTF-8"
+                "_UNICODE"
             ]
         }
     ],

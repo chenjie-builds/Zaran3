@@ -95,7 +95,7 @@
         "*.txx": "cpp",
         "dense": "cpp"
     },
-    "C_Cpp.intelliSenseEngineFallback": "disabled",
+    "C_Cpp.intelliSenseEngineFallback": "enabled",
     "cmake.generator": "Ninja",
     "cmake.configureSettings": {
         "CMAKE_MAKE_PROGRAM": "ninja.exe",

@@ -150,12 +150,12 @@ namespace zaran
     void NSSolverStruct::CalcMetricsOriginal()
     {
         auto para = GetPara();
-        auto flux_diff_scheme = para->GetFluxDifferenceScheme();
-        if (flux_diff_scheme == FluxDifferenceScheme::SecondOrder)
+        auto flux_diff_scheme = para->GetDifferenceScheme();
+        if (flux_diff_scheme == DifferenceScheme::SecondOrder)
         {
             CalcMetricsOriginal_2nd();
         }
-        else if (flux_diff_scheme == FluxDifferenceScheme::SixthOrder)
+        else if (flux_diff_scheme == DifferenceScheme::SixthOrder)
         {
             CalcMetricsOriginal_6th();
         }
@@ -686,20 +686,20 @@ namespace zaran
     void NSSolverStruct::CalcMetrics()
     {
         auto para = GetPara();
-        auto metrics_type = para->GetMetricsType();
-        if (metrics_type == MetricsType::Originnal)
+        auto metrics_type = para->GetMetricsScheme();
+        if (metrics_type == MetricsScheme::S1)
         {
             CalcMetricsOriginal();
         }
-        else if (metrics_type == MetricsType::CMM1)
+        else if (metrics_type == MetricsScheme::S1)
         {
             CalcMetricsCMM1();
         }
-        else if (metrics_type == MetricsType::CMM2)
+        else if (metrics_type == MetricsScheme::S2)
         {
             CalcMetricsCMM2();
         }
-        else if (metrics_type == MetricsType::SCMM)
+        else if (metrics_type == MetricsScheme::S3)
         {
             CalcMetricsSCMM();
         }
@@ -711,8 +711,25 @@ namespace zaran
     }
     void NSSolverStruct::CalcJacobian()
     {
-        // 先试试V1
-        CalcJacobianV1();
+        auto para = GetPara();
+        auto jacobian_scheme = para->GetJacobianScheme();
+        if (jacobian_scheme == JacobianScheme::V1)
+        {
+            CalcJacobianV1();
+        }
+        else if (jacobian_scheme == JacobianScheme::V2)
+        {
+            CalcJacobianV2();
+        }
+        else if (jacobian_scheme == JacobianScheme::V3)
+        {
+            CalcJacobianV3();
+        }
+        else
+        {
+            Log::warn("JacobianScheme is not defined, use V1 as default");
+            CalcJacobianV1();
+        }
     }
     void NSSolverStruct::CalcJacobianV1()
     {
@@ -744,28 +761,458 @@ namespace zaran
     }
     void NSSolverStruct::CalcJacobianV2()
     {
+        auto grid = GetGrid();
+        auto node = grid->GetNode();
+        int ni = grid->GetNi();
+        int nj = grid->GetNj();
+        int nk = grid->GetNk();
+        auto idx_proxy = GetIdxProxy();
+        auto node_metrics = GetNodeMetrics();
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    auto idx = idx_proxy->GetIdx(i, j, k);
+                    auto &jacobian = node_metrics->GetJacobian(idx);
+                    auto coef_x = node_metrics->GetX(idx);
+                    auto coef_y = node_metrics->GetY(idx);
+                    auto coef_z = node_metrics->GetZ(idx);
+                    auto coef_xi = node_metrics->GetXi(idx);
+                    auto coef_eta = node_metrics->GetEta(idx);
+                    auto coef_zeta = node_metrics->GetZeta(idx);
+                    jacobian = coef_x[0] * coef_xi[0] + coef_y[0] * coef_xi[1] + coef_z[0] * coef_xi[2] +
+                               coef_x[1] * coef_eta[0] + coef_y[1] * coef_eta[1] + coef_z[1] * coef_eta[2] +
+                               coef_x[2] * coef_zeta[0] + coef_y[2] * coef_zeta[1] + coef_z[2] * coef_zeta[2];
+                    jacobian = jacobian / 3.0;
+                    jacobian = 1.0 / jacobian;
+                }
+            }
+        }
     }
-    void NSSolverStruct::CalcJacobianV2_2nd()
-    {
-    }
+
     void NSSolverStruct::CalcJacobianV3()
     {
-
+        auto para = GetPara();
+        auto flux_diff_scheme = para->GetDifferenceScheme();
+        if (flux_diff_scheme == DifferenceScheme::SecondOrder)
+        {
+            CalcJacobianV3_2nd();
+        }
+        else if (flux_diff_scheme == DifferenceScheme::SixthOrder)
+        {
+            CalcJacobianV3_6th();
+        }
+        else
+        {
+            Log::warn("FluxDifferenceScheme is not defined, use SecondOrder as default");
+            CalcJacobianV3_2nd();
+        }
     }
     void NSSolverStruct::CalcJacobianV3_2nd()
     {
-        
-
+        auto grid = GetGrid();
+        auto node = grid->GetNode();
+        auto coef = GetNodeMetrics();
+        auto idx_proxy = GetIdxProxy();
+        auto Idx = [&](int i, int j, int k)
+        {
+            return idx_proxy->GetIdx(i, j, k);
+        };
+        int ni = grid->GetNi();
+        int nj = grid->GetNj();
+        int nk = grid->GetNk();
+        double inter_temp[2];
+        // i+1/2,j+1/2,k+1/2处的临时变量
+        std::vector<double> temp_i(ni * nj * nk, 0.0), temp_j(ni * nj * nk, 0.0), temp_k(ni * nj * nk, 0.0);
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    int idx0 = Idx(i, j, k);
+                    int idx1 = Idx(i + 1, j, k);
+                    auto coord0 = node->GetCoord(i, j, k);
+                    auto coord1 = node->GetCoord(i + 1, j, k);
+                    inter_temp[0] = coord0[0] * coef->GetXi(idx0)[0] + coord0[1] * coef->GetXi(idx0)[1] + coord0[2] * coef->GetXi(idx0)[2];
+                    inter_temp[1] = coord1[0] * coef->GetXi(idx1)[0] + coord1[1] * coef->GetXi(idx1)[1] + coord1[2] * coef->GetXi(idx1)[2];
+                    temp_i[idx0] = 0.5 * (inter_temp[0] + inter_temp[1]);
+                    idx0 = Idx(i, j, k);
+                    idx1 = Idx(i, j + 1, k);
+                    coord0 = node->GetCoord(i, j, k);
+                    coord1 = node->GetCoord(i, j + 1, k);
+                    inter_temp[0] = coord0[0] * coef->GetEta(idx0)[0] + coord0[1] * coef->GetEta(idx0)[1] + coord0[2] * coef->GetEta(idx0)[2];
+                    inter_temp[1] = coord1[0] * coef->GetEta(idx1)[0] + coord1[1] * coef->GetEta(idx1)[1] + coord1[2] * coef->GetEta(idx1)[2];
+                    temp_j[idx0] = 0.5 * (inter_temp[0] + inter_temp[1]);
+                    idx0 = Idx(i, j, k);
+                    idx1 = Idx(i, j, k + 1);
+                    coord0 = node->GetCoord(i, j, k);
+                    coord1 = node->GetCoord(i, j, k + 1);
+                    inter_temp[0] = coord0[0] * coef->GetZeta(idx0)[0] + coord0[1] * coef->GetZeta(idx0)[1] + coord0[2] * coef->GetZeta(idx0)[2];
+                    inter_temp[1] = coord1[0] * coef->GetZeta(idx1)[0] + coord1[1] * coef->GetZeta(idx1)[1] + coord1[2] * coef->GetZeta(idx1)[2];
+                    temp_k[idx0] = 0.5 * (inter_temp[0] + inter_temp[1]);
+                }
+            }
+        }
+        // i=1/2,(ni-1)-1/2
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                int idx0 = Idx(1, j, k);
+                int idx1 = Idx(2, j, k);
+                auto coord0 = node->GetCoord(1, j, k);
+                auto coord1 = node->GetCoord(2, j, k);
+                inter_temp[0] = coord0[0] * coef->GetXi(idx0)[0] + coord0[1] * coef->GetXi(idx0)[1] + coord0[2] * coef->GetXi(idx0)[2];
+                inter_temp[1] = coord1[0] * coef->GetXi(idx1)[0] + coord1[1] * coef->GetXi(idx1)[1] + coord1[2] * coef->GetXi(idx1)[2];
+                temp_i[idx0] = 0.5 * (3.0 * inter_temp[0] - 1.0 * inter_temp[1]);
+                idx0 = Idx(ni - 2, j, k);
+                idx1 = Idx(ni - 3, j, k);
+                coord0 = node->GetCoord(ni - 2, j, k);
+                coord1 = node->GetCoord(ni - 3, j, k);
+                inter_temp[0] = coord0[0] * coef->GetXi(idx0)[0] + coord0[1] * coef->GetXi(idx0)[1] + coord0[2] * coef->GetXi(idx0)[2];
+                inter_temp[1] = coord1[0] * coef->GetXi(idx1)[0] + coord1[1] * coef->GetXi(idx1)[1] + coord1[2] * coef->GetXi(idx1)[2];
+                temp_i[idx0] = 0.5 * (3.0 * inter_temp[0] - 1.0 * inter_temp[1]);
+            }
+        }
+        // j=1/2,(nj-1)-1/2
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int i = 1; i < ni - 1; ++i)
+            {
+                int idx0 = Idx(i, 1, k);
+                int idx1 = Idx(i, 2, k);
+                auto coord0 = node->GetCoord(i, 1, k);
+                auto coord1 = node->GetCoord(i, 2, k);
+                inter_temp[0] = coord0[0] * coef->GetEta(idx0)[0] + coord0[1] * coef->GetEta(idx0)[1] + coord0[2] * coef->GetEta(idx0)[2];
+                inter_temp[1] = coord1[0] * coef->GetEta(idx1)[0] + coord1[1] * coef->GetEta(idx1)[1] + coord1[2] * coef->GetEta(idx1)[2];
+                temp_j[idx0] = 0.5 * (3.0 * inter_temp[0] - 1.0 * inter_temp[1]);
+                idx0 = Idx(i, nj - 2, k);
+                idx1 = Idx(i, nj - 3, k);
+                coord0 = node->GetCoord(i, nj - 2, k);
+                coord1 = node->GetCoord(i, nj - 3, k);
+                inter_temp[0] = coord0[0] * coef->GetEta(idx0)[0] + coord0[1] * coef->GetEta(idx0)[1] + coord0[2] * coef->GetEta(idx0)[2];
+                inter_temp[1] = coord1[0] * coef->GetEta(idx1)[0] + coord1[1] * coef->GetEta(idx1)[1] + coord1[2] * coef->GetEta(idx1)[2];
+                temp_j[idx0] = 0.5 * (3.0 * inter_temp[0] - 1.0 * inter_temp[1]);
+            }
+        }
+        // k=1/2,(nk-1)-1/2
+        for (int j = 1; j < nj - 1; ++j)
+        {
+            for (int i = 1; i < ni - 1; ++i)
+            {
+                int idx0 = Idx(i, j, 1);
+                int idx1 = Idx(i, j, 2);
+                auto coord0 = node->GetCoord(i, j, 1);
+                auto coord1 = node->GetCoord(i, j, 2);
+                inter_temp[0] = coord0[0] * coef->GetZeta(idx0)[0] + coord0[1] * coef->GetZeta(idx0)[1] + coord0[2] * coef->GetZeta(idx0)[2];
+                inter_temp[1] = coord1[0] * coef->GetZeta(idx1)[0] + coord1[1] * coef->GetZeta(idx1)[1] + coord1[2] * coef->GetZeta(idx1)[2];
+                temp_k[idx0] = 0.5 * (3.0 * inter_temp[0] - 1.0 * inter_temp[1]);
+                idx0 = Idx(i, j, nk - 2);
+                idx1 = Idx(i, j, nk - 3);
+                coord0 = node->GetCoord(i, j, nk - 2);
+                coord1 = node->GetCoord(i, j, nk - 3);
+                inter_temp[0] = coord0[0] * coef->GetZeta(idx0)[0] + coord0[1] * coef->GetZeta(idx0)[1] + coord0[2] * coef->GetZeta(idx0)[2];
+                inter_temp[1] = coord1[0] * coef->GetZeta(idx1)[0] + coord1[1] * coef->GetZeta(idx1)[1] + coord1[2] * coef->GetZeta(idx1)[2];
+                temp_k[idx0] = 0.5 * (3.0 * inter_temp[0] - 1.0 * inter_temp[1]);
+            }
+        }
+        // 计算整点的Jacobian
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    int idx = Idx(i, j, k);
+                    auto &jacobian = coef->GetJacobian(idx);
+                    jacobian = temp_i[Idx(i, j, k)] - temp_i[Idx(i - 1, j, k)] +
+                               temp_j[Idx(i, j, k)] - temp_j[Idx(i, j - 1, k)] +
+                               temp_k[Idx(i, j, k)] - temp_k[Idx(i, j, k - 1)];
+                    jacobian = jacobian / 3.0;
+                    jacobian = 1.0 / jacobian;
+                }
+            }
+        }
+    }
+    void NSSolverStruct::CalcJacobianV3_6th()
+    {
+        auto grid = GetGrid();
+        auto node = grid->GetNode();
+        auto coef = GetNodeMetrics();
+        auto idx_proxy = GetIdxProxy();
+        auto Idx = [&](int i, int j, int k)
+        {
+            return idx_proxy->GetIdx(i, j, k);
+        };
+        int ni = grid->GetNi();
+        int nj = grid->GetNj();
+        int nk = grid->GetNk();
+        double inter_temp[6];
+        // i+1/2,j+1/2,k+1/2处的临时变量
+        std::vector<double> temp_i(ni * nj * nk, 0.0), temp_j(ni * nj * nk, 0.0), temp_k(ni * nj * nk, 0.0);
+        // i+1/2
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 3; i < ni - 4; ++i)
+                {
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        inter_temp[iTemp] = node->GetCoord(i + iTemp - 2, j, k)[0] * coef->GetXi(Idx(i + iTemp - 2, j, k))[0] +
+                                            node->GetCoord(i + iTemp - 2, j, k)[1] * coef->GetXi(Idx(i + iTemp - 2, j, k))[1] +
+                                            node->GetCoord(i + iTemp - 2, j, k)[2] * coef->GetXi(Idx(i + iTemp - 2, j, k))[2];
+                    }
+                    temp_i[Idx(i, j, k)] = MidNodeInter6th(inter_temp);
+                }
+            }
+        }
+        // i=1/2,3/2,5/2;ni-3/2,ni-5/2,ni-7/2
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int iTemp = 0; iTemp < 4; iTemp++)
+                {
+                    inter_temp[iTemp] = node->GetCoord(1 + iTemp, j, k)[0] * coef->GetXi(Idx(1 + iTemp, j, k))[0] +
+                                        node->GetCoord(1 + iTemp, j, k)[1] * coef->GetXi(Idx(1 + iTemp, j, k))[1] +
+                                        node->GetCoord(1 + iTemp, j, k)[2] * coef->GetXi(Idx(1 + iTemp, j, k))[2];
+                }
+                temp_i[Idx(0, j, k)] = MidNodeInter4thRight1(inter_temp);
+                temp_i[Idx(1, j, k)] = MidNodeInter4thRight2(inter_temp);
+                temp_i[Idx(2, j, k)] = MidNodeInter4th(inter_temp);
+                for (int iTemp = 0; iTemp < 4; iTemp++)
+                {
+                    inter_temp[iTemp] = node->GetCoord(ni - 5 + iTemp, j, k)[0] * coef->GetXi(Idx(ni - 5 + iTemp, j, k))[0] +
+                                        node->GetCoord(ni - 5 + iTemp, j, k)[1] * coef->GetXi(Idx(ni - 5 + iTemp, j, k))[1] +
+                                        node->GetCoord(ni - 5 + iTemp, j, k)[2] * coef->GetXi(Idx(ni - 5 + iTemp, j, k))[2];
+                }
+                temp_i[Idx(ni - 2, j, k)] = MidNodeInter4thLeft1(inter_temp);
+                temp_i[Idx(ni - 3, j, k)] = MidNodeInter4thLeft2(inter_temp);
+                temp_i[Idx(ni - 4, j, k)] = MidNodeInter4th(inter_temp);
+            }
+        }
+        // j+1/2
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 3; j < nj - 4; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        inter_temp[iTemp] = node->GetCoord(i, j + iTemp - 2, k)[0] * coef->GetEta(Idx(i, j + iTemp - 2, k))[0] +
+                                            node->GetCoord(i, j + iTemp - 2, k)[1] * coef->GetEta(Idx(i, j + iTemp - 2, k))[1] +
+                                            node->GetCoord(i, j + iTemp - 2, k)[2] * coef->GetEta(Idx(i, j + iTemp - 2, k))[2];
+                    }
+                    temp_j[Idx(i, j, k)] = MidNodeInter6th(inter_temp);
+                }
+            }
+        }
+        // j=1/2,3/2,5/2;nj-3/2,nj-5/2,nj-7/2
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int i = 1; i < ni - 1; ++i)
+            {
+                for (int iTemp = 0; iTemp < 4; iTemp++)
+                {
+                    inter_temp[iTemp] = node->GetCoord(i, 1 + iTemp, k)[0] * coef->GetEta(Idx(i, 1 + iTemp, k))[0] +
+                                        node->GetCoord(i, 1 + iTemp, k)[1] * coef->GetEta(Idx(i, 1 + iTemp, k))[1] +
+                                        node->GetCoord(i, 1 + iTemp, k)[2] * coef->GetEta(Idx(i, 1 + iTemp, k))[2];
+                }
+                temp_j[Idx(i, 0, k)] = MidNodeInter4thRight1(inter_temp);
+                temp_j[Idx(i, 1, k)] = MidNodeInter4thRight2(inter_temp);
+                temp_j[Idx(i, 2, k)] = MidNodeInter4th(inter_temp);
+                for (int iTemp = 0; iTemp < 4; iTemp++)
+                {
+                    inter_temp[iTemp] = node->GetCoord(i, nj - 5 + iTemp, k)[0] * coef->GetEta(Idx(i, nj - 5 + iTemp, k))[0] +
+                                        node->GetCoord(i, nj - 5 + iTemp, k)[1] * coef->GetEta(Idx(i, nj - 5 + iTemp, k))[1] +
+                                        node->GetCoord(i, nj - 5 + iTemp, k)[2] * coef->GetEta(Idx(i, nj - 5 + iTemp, k))[2];
+                }
+                temp_j[Idx(i, nj - 2, k)] = MidNodeInter4thLeft1(inter_temp);
+                temp_j[Idx(i, nj - 3, k)] = MidNodeInter4thLeft2(inter_temp);
+                temp_j[Idx(i, nj - 4, k)] = MidNodeInter4th(inter_temp);
+            }
+        }
+        // k+1/2
+        for (int j = 1; j < nj - 1; ++j)
+        {
+            for (int i = 1; i < ni - 1; ++i)
+            {
+                for (int iTemp = 0; iTemp < 6; iTemp++)
+                {
+                    inter_temp[iTemp] = node->GetCoord(i, j, 1 + iTemp - 2)[0] * coef->GetZeta(Idx(i, j, 1 + iTemp - 2))[0] +
+                                        node->GetCoord(i, j, 1 + iTemp - 2)[1] * coef->GetZeta(Idx(i, j, 1 + iTemp - 2))[1] +
+                                        node->GetCoord(i, j, 1 + iTemp - 2)[2] * coef->GetZeta(Idx(i, j, 1 + iTemp - 2))[2];
+                }
+                temp_k[Idx(i, j, 0)] = MidNodeInter6th(inter_temp);
+            }
+        }
+        // k=1/2,3/2,5/2;nk-3/2,nk-5/2,nk-7/2
+        for (int j = 1; j < nj - 1; ++j)
+        {
+            for (int i = 1; i < ni - 1; ++i)
+            {
+                for (int iTemp = 0; iTemp < 4; iTemp++)
+                {
+                    inter_temp[iTemp] = node->GetCoord(i, j, 1 + iTemp)[0] * coef->GetZeta(Idx(i, j, 1 + iTemp))[0] +
+                                        node->GetCoord(i, j, 1 + iTemp)[1] * coef->GetZeta(Idx(i, j, 1 + iTemp))[1] +
+                                        node->GetCoord(i, j, 1 + iTemp)[2] * coef->GetZeta(Idx(i, j, 1 + iTemp))[2];
+                }
+                temp_k[Idx(i, j, 0)] = MidNodeInter4thRight1(inter_temp);
+                temp_k[Idx(i, j, 1)] = MidNodeInter4thRight2(inter_temp);
+                temp_k[Idx(i, j, 2)] = MidNodeInter4th(inter_temp);
+                for (int iTemp = 0; iTemp < 4; iTemp++)
+                {
+                    inter_temp[iTemp] = node->GetCoord(i, j, nk - 5 + iTemp)[0] * coef->GetZeta(Idx(i, j, nk - 5 + iTemp))[0] +
+                                        node->GetCoord(i, j, nk - 5 + iTemp)[1] * coef->GetZeta(Idx(i, j, nk - 5 + iTemp))[1] +
+                                        node->GetCoord(i, j, nk - 5 + iTemp)[2] * coef->GetZeta(Idx(i, j, nk - 5 + iTemp))[2];
+                }
+                temp_k[Idx(i, j, nk - 2)] = MidNodeInter4thLeft1(inter_temp);
+                temp_k[Idx(i, j, nk - 3)] = MidNodeInter4thLeft2(inter_temp);
+                temp_k[Idx(i, j, nk - 4)] = MidNodeInter4th(inter_temp);
+            }
+        }
+        // 计算整点的Jacobian
+        // 全部置零
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    coef->GetJacobian(Idx(i, j, k)) = 0.0;
+                }
+            }
+        }
+        double diff_temp[6];
+        // i direction
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 3; i < ni - 3; ++i)
+                {
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        diff_temp[iTemp] = temp_i[Idx(i + iTemp - 3, j, k)];
+                    }
+                    coef->GetJacobian(Idx(i, j, k)) += NodeDifferece6th(diff_temp);
+                }
+            }
+        }
+        // j direction
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int i = 1; i < ni - 1; ++i)
+            {
+                for (int j = 3; j < nj - 3; ++j)
+                {
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        diff_temp[iTemp] = temp_j[Idx(i, j + iTemp - 3, k)];
+                    }
+                    coef->GetJacobian(Idx(i, j, k)) += NodeDifferece6th(diff_temp);
+                }
+            }
+        }
+        // k direction
+        for (int j = 1; j < nj - 1; ++j)
+        {
+            for (int i = 1; i < ni - 1; ++i)
+            {
+                for (int k = 3; k < nk - 3; ++k)
+                {
+                    for (int iTemp = 0; iTemp < 6; iTemp++)
+                    {
+                        diff_temp[iTemp] = temp_k[Idx(i, j, k + iTemp - 3)];
+                    }
+                    coef->GetJacobian(Idx(i, j, k)) += NodeDifferece6th(diff_temp);
+                }
+            }
+        }
+        // 计算边界整点的Jacobian
+        // i=1,2,ni-3,ni-2
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int iTemp = 0; iTemp < 6; iTemp++)
+                {
+                    diff_temp[iTemp] = temp_i[Idx(0 + iTemp, j, k)];
+                }
+                coef->GetJacobian(Idx(1, j, k)) += NodeDifferece4thRight(diff_temp);
+                coef->GetJacobian(Idx(2, j, k)) += NodeDifferece4th(diff_temp);
+                for (int iTemp = 0; iTemp < 6; iTemp++)
+                {
+                    diff_temp[iTemp] = temp_i[Idx(ni - 2 - iTemp, j, k)];
+                }
+                coef->GetJacobian(Idx(ni - 2, j, k)) += NodeDifferece4thLeft(diff_temp);
+                coef->GetJacobian(Idx(ni - 3, j, k)) += -NodeDifferece4th(diff_temp);
+            }
+        }
+        // j=1,2,nj-3,nj-2
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int i = 1; i < ni - 1; ++i)
+            {
+                for (int iTemp = 0; iTemp < 6; iTemp++)
+                {
+                    diff_temp[iTemp] = temp_j[Idx(i, 0 + iTemp, k)];
+                }
+                coef->GetJacobian(Idx(i, 1, k)) += NodeDifferece4thRight(diff_temp);
+                coef->GetJacobian(Idx(i, 2, k)) += NodeDifferece4th(diff_temp);
+                for (int iTemp = 0; iTemp < 6; iTemp++)
+                {
+                    diff_temp[iTemp] = temp_j[Idx(i, nj - 2 - iTemp, k)];
+                }
+                coef->GetJacobian(Idx(i, nj - 2, k)) += NodeDifferece4thLeft(diff_temp);
+                coef->GetJacobian(Idx(i, nj - 3, k)) += -NodeDifferece4th(diff_temp);
+            }
+        }
+        // k=1,2,nk-3,nk-2
+        for (int j = 1; j < nj - 1; ++j)
+        {
+            for (int i = 1; i < ni - 1; ++i)
+            {
+                for (int iTemp = 0; iTemp < 6; iTemp++)
+                {
+                    diff_temp[iTemp] = temp_k[Idx(i, j, 0 + iTemp)];
+                }
+                coef->GetJacobian(Idx(i, j, 1)) += NodeDifferece4thRight(diff_temp);
+                coef->GetJacobian(Idx(i, j, 2)) += NodeDifferece4th(diff_temp);
+                for (int iTemp = 0; iTemp < 6; iTemp++)
+                {
+                    diff_temp[iTemp] = temp_k[Idx(i, j, nk - 2 - iTemp)];
+                }
+                coef->GetJacobian(Idx(i, j, nk - 2)) += NodeDifferece4thLeft(diff_temp);
+                coef->GetJacobian(Idx(i, j, nk - 3)) += -NodeDifferece4th(diff_temp);
+            }
+        }
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    coef->GetJacobian(Idx(i, j, k)) = coef->GetJacobian(Idx(i, j, k)) / 3.0;
+                    coef->GetJacobian(Idx(i, j, k)) = 1.0 / coef->GetJacobian(Idx(i, j, k));
+                }
+            }
+        }
     }
     void NSSolverStruct::CalcMetricsCMM1()
     {
         auto para = GetPara();
-        auto flux_diff_scheme = para->GetFluxDifferenceScheme();
-        if (flux_diff_scheme == FluxDifferenceScheme::SecondOrder)
+        auto flux_diff_scheme = para->GetDifferenceScheme();
+        if (flux_diff_scheme == DifferenceScheme::SecondOrder)
         {
             CalcMetricsCMM1_2nd();
         }
-        else if (flux_diff_scheme == FluxDifferenceScheme::SixthOrder)
+        else if (flux_diff_scheme == DifferenceScheme::SixthOrder)
         {
             CalcMetricsCMM1_6th();
         }
@@ -2206,12 +2653,12 @@ namespace zaran
     void NSSolverStruct::CalcMetricsCMM2()
     {
         auto para = GetPara();
-        auto flux_diff_scheme = para->GetFluxDifferenceScheme();
-        if (flux_diff_scheme == FluxDifferenceScheme::SecondOrder)
+        auto flux_diff_scheme = para->GetDifferenceScheme();
+        if (flux_diff_scheme == DifferenceScheme::SecondOrder)
         {
             CalcMetricsCMM2_2nd();
         }
-        else if (flux_diff_scheme == FluxDifferenceScheme::SixthOrder)
+        else if (flux_diff_scheme == DifferenceScheme::SixthOrder)
         {
             CalcMetricsCMM2_6th();
         }
@@ -2579,7 +3026,7 @@ namespace zaran
                 }
             }
         }
-           // 第一步：计算半点坐标
+        // 第一步：计算半点坐标
         // i+1/2
         for (int k = 1; k < nk - 1; ++k)
         {
@@ -3604,12 +4051,12 @@ namespace zaran
     void NSSolverStruct::CalcMetricsSCMM()
     {
         auto para = GetPara();
-        auto flux_diff_scheme = para->GetFluxDifferenceScheme();
-        if (flux_diff_scheme == FluxDifferenceScheme::SecondOrder)
+        auto flux_diff_scheme = para->GetDifferenceScheme();
+        if (flux_diff_scheme == DifferenceScheme::SecondOrder)
         {
             CalcMetricsSCMM_2nd();
         }
-        else if (flux_diff_scheme == FluxDifferenceScheme::SixthOrder)
+        else if (flux_diff_scheme == DifferenceScheme::SixthOrder)
         {
             CalcMetricsSCMM_6th();
         }
@@ -4098,7 +4545,7 @@ namespace zaran
                 }
             }
         }
-           // 第一步：计算半点坐标
+        // 第一步：计算半点坐标
         // i+1/2
         for (int k = 1; k < nk - 1; ++k)
         {
@@ -6261,15 +6708,15 @@ namespace zaran
     {
         auto para = GetPara();
         auto inter_scheme = para->GetInterSchme();
-        if (inter_scheme == InterSchme::FirstOrder)
+        if (inter_scheme == InterpolationScheme::FirstOrder)
         {
             CalcInviscidResidual1st();
         }
-        else if (inter_scheme == InterSchme::MUSCL)
+        else if (inter_scheme == InterpolationScheme::MUSCL)
         {
             CalcInviscidResidualMUSCL();
         }
-        else if (inter_scheme == InterSchme::WCNS5)
+        else if (inter_scheme == InterpolationScheme::WCNS5)
         {
             CalcInviscidResidualWCNS5();
         }

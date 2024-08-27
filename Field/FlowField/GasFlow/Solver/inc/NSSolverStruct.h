@@ -48,8 +48,6 @@ namespace zaran
     void CalcJacobian();
     void CalcJacobianV1();
     void CalcJacobianV2();
-    void CalcJacobianV2_2nd();
-    void CalcJacobianV2_6th();
     void CalcJacobianV3();
     void CalcJacobianV3_2nd();
     void CalcJacobianV3_6th();

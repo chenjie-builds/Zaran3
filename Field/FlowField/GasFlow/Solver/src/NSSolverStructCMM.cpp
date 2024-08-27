@@ -21,12 +21,12 @@ namespace zaran
     void NSSolverStructCMM::CalcMidNodeMetrics()
     {
         auto para = GetPara();
-        auto flux_diff_scheme = para->GetFluxDifferenceScheme();
-        if (flux_diff_scheme == FluxDifferenceScheme::SecondOrder)
+        auto flux_diff_scheme = para->GetDifferenceScheme();
+        if (flux_diff_scheme == DifferenceScheme::SecondOrder)
         {
             CalcMidNodeMetrics2nd();
         }
-        else if (flux_diff_scheme == FluxDifferenceScheme::SixthOrder)
+        else if (flux_diff_scheme == DifferenceScheme::SixthOrder)
         {
             CalcMidNodeMetrics6th();
         }

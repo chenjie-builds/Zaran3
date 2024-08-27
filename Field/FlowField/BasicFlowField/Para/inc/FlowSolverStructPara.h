@@ -2,30 +2,52 @@
 #include "FlowSolverPara.h"
 namespace zaran
 {
-    enum class MetricsScheme
+    //半点度量计算方法
+    enum class MidMetricsScheme
     {
         DEER,
         CMM,
     };
-    enum class MetricsType
+    //度量计算方法
+    //S0:原始格式
+    //S1:守恒形式1
+    //S2:守恒形式2
+    //S3:SCMM格式
+    enum class MetricsScheme
     {
-        Originnal,
-        CMM1,
-        CMM2,
-        SCMM,
+        S0,
+        S1,
+        S2,
+        S3,
     };
-    enum class FluxDifferenceScheme
+    //通量差分格式
+    //SecondOrder:二阶格式
+    //SixthOrder:六阶格式
+    enum class DifferenceScheme
     {
         SecondOrder,
         SixthOrder,
     };
-    enum class InterSchme
+    //插值格式
+    //FirstOrder:一阶插值
+    //MUSCL: MUSCL插值
+    //WCNS5:WCNS5插值
+    enum class InterpolationScheme
     {
         FirstOrder,
         MUSCL,
         WCNS5,
     };
-
+    //Jacobi计算格式
+    //V1:原始格式
+    //V2:守恒形式1
+    //V3:守恒形式2
+    enum class JacobianScheme
+    {
+        V1,
+        V2,
+        V3,
+    };
 
     class FlowSolverStructPara :public FlowSolverPara
     {
@@ -33,25 +55,22 @@ namespace zaran
         FlowSolverStructPara();
         virtual ~FlowSolverStructPara();
         void Init() override;
-        void InitMetricsScheme();
+        void InitMidMetricsScheme();
         void InitMetricsType();
         void InitFluxDifferenceOrder();
         void InitInterSchme();
+        void InitJacobianScheme();
     public:
-        void SetMetricsScheme(MetricsScheme& metrics_scheme);
-        void SetMetricsType(MetricsType& metrics_type);
-        void SetFluxDifferenceScheme(FluxDifferenceScheme& flux_difference_scheme);
-        void SetInterSchme(InterSchme& inter_schme);
-    public:
+        const MidMetricsScheme& GetMidMetricsScheme()const;
         const MetricsScheme& GetMetricsScheme()const;
-        const MetricsType& GetMetricsType()const;
-        const FluxDifferenceScheme& GetFluxDifferenceScheme()const;
-        const InterSchme& GetInterSchme()const;
+        const DifferenceScheme& GetDifferenceScheme()const;
+        const InterpolationScheme& GetInterSchme()const;
+        const JacobianScheme& GetJacobianScheme()const;
     private:
+        MidMetricsScheme m_mid_metrics_scheme;
         MetricsScheme m_metrics_scheme;
-        MetricsType m_metrics_type;
-        FluxDifferenceScheme m_flux_difference_order;
-        InterSchme m_inter_schme;
-
+        DifferenceScheme m_difference_scheme;
+        InterpolationScheme m_inter_schme;
+        JacobianScheme m_jacobian_scheme;
     };
 }

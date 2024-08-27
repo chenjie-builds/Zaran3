@@ -198,7 +198,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		int node_num = grid->GetTotalNodeNum();
-#pragma omp parallel for
+		// #pragma omp parallel for
 		for (int iNode = 0; iNode < node_num; ++iNode)
 		{
 			double cons[5];
@@ -549,7 +549,7 @@ namespace zaran
 		int equ_num = GetPara()->GetEquNum();
 		double max_limit = para->GetMaxLimit();
 		double eps = 1e-6;
-		double venkatCoeff = 5.0;
+		double venkatCoeff = 1e-5;
 		for (int iVal = 0; iVal < equ_num; ++iVal)
 		{
 #pragma omp parallel for private(eps)
@@ -568,9 +568,16 @@ namespace zaran
 					maxVal = Max(maxVal, data_manager->GetPrim(iVal, neighborNode[iNeighbor]));
 					minVal = Min(minVal, data_manager->GetPrim(iVal, neighborNode[iNeighbor]));
 				}
-				auto jacobi = m_node_metric->GetJacobian(iNode);
-				eps = pow(venkatCoeff, 3) / jacobi;
-				// eps = venkatCoeff * (maxVal - minVal) + SMALL_NUMBER;
+				// if (node->GetType(iNode) == NodeType::inner)
+				// {
+				// 	auto jacobi = m_node_metric->GetJacobian(iNode);
+				// 	eps = pow(venkatCoeff, 3) / jacobi;
+				// }
+				// else
+				// {
+				eps = venkatCoeff * (maxVal - minVal) + SMALL_NUMBER;
+				// eps = eps * eps;
+				// }
 				double delta_max = maxVal - current_val;
 				double delta_min = minVal - current_val;
 				double limite_coef = LARGE_NUMBER;
@@ -781,8 +788,6 @@ namespace zaran
 							m_node_metric->GetJacobian(node->GetNeighborNode(node->GetNeighborNode(iNode)[iNeighbor])[jNeighbor]);
 					}
 				}
-				Log::error("exit");
-				exit(0);
 			}
 		}
 		if (nonphysical_node_num > 0)
@@ -919,6 +924,7 @@ namespace zaran
 			double u_eta = data_manager->GetVelocity(0, idx) * eta[0] + data_manager->GetVelocity(1, idx) * eta[1] + data_manager->GetVelocity(2, idx) * eta[2];
 			double u_zeta = data_manager->GetVelocity(0, idx) * zeta[0] + data_manager->GetVelocity(1, idx) * zeta[1] + data_manager->GetVelocity(2, idx) * zeta[2];
 			double lamda = abs(u_xi) + abs(u_eta) + abs(u_zeta) + c * (norm_xi + norm_eta + norm_zeta);
+			lamda = lamda * jacobi;
 			data_manager->SetTimeStep(idx, cfl / lamda);
 			if (min_dt > data_manager->GetTimeStep(idx))
 			{
@@ -1037,7 +1043,7 @@ namespace zaran
 			}
 			for (int iVar = 0; iVar < equ_num; ++iVar)
 			{
-				double flux = (riemann_para[0].flux[iVar] - riemann_para[1].flux[iVar] + riemann_para[2].flux[iVar] - riemann_para[3].flux[iVar] + riemann_para[4].flux[iVar] - riemann_para[5].flux[iVar]) / jacobi;
+				double flux = riemann_para[0].flux[iVar] - riemann_para[1].flux[iVar] + riemann_para[2].flux[iVar] - riemann_para[3].flux[iVar] + riemann_para[4].flux[iVar] - riemann_para[5].flux[iVar];
 				data_manager->SetResidual(iVar, idx, data_manager->GetResidual(iVar, idx) - flux);
 			}
 		}

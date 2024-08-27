@@ -23,11 +23,12 @@ namespace zaran
         ReadCellFile();
         ReadBoundFile();
         // SortNeiborNode();
-        ExtendNeighborNode();
+        // ExtendNeighborNode();
         CheckNode();
         CheckUnkownNode();
+        SetBoundNeighbor();
         AddSelfToNeighbor();
-        AddInnerNeighborToBound();
+        CheckNeighborNum();
         GridFN *grid = new GridFN("FNFDM", 0, 3);
         ConvertToGrid(grid);
         return grid;
@@ -458,8 +459,8 @@ namespace zaran
 
     void FNGridFactorySYSU::ExtendNeighborNode()
     {
-        // 构建节点KD�?
-        // 初始化vtk�?
+        // 构建节点KD?
+        // 初始化vtk?
         vtkNew<vtkPoints> points;
         for (int i = 0; i < m_node_coord.size(); ++i)
         {
@@ -479,8 +480,7 @@ namespace zaran
         int point_num = kdTree->GetDataSet()->GetNumberOfPoints();
         int neibor_num_before = 0;
         int neibor_num_after = 0;
-        int min_neibor_num = 1E5;
-        int max_neibor_num = 0;
+
         int node_num = m_node_coord.size();
         // 扩展内部节点邻居节点，用于计算梯度
         std::set<int> neibor_set;
@@ -525,12 +525,9 @@ namespace zaran
                     nodeNeibor.push_back(i);
             }
             neibor_num_after = nodeNeibor.size();
-            min_neibor_num = Min(min_neibor_num, neibor_num_after);
-            max_neibor_num = Max(max_neibor_num, neibor_num_after);
             if (neibor_num_after < neibor_num_before)
                 Log::info("node:{} neibor num before:{} neibor num after:{}", iNode, neibor_num_before, neibor_num_after);
         }
-        Log::info("min neibor num:{} max neibor num:{}", min_neibor_num, max_neibor_num);
     }
 
     void FNGridFactorySYSU::ReadCellFile()
@@ -744,13 +741,24 @@ namespace zaran
         }
         Log::info("Check undefined node done");
     }
+    void FNGridFactorySYSU::CheckNeighborNum()
+    {
+        int node_num = m_node_coord.size();
+        int min_neibor_num = 1E5;
+        int max_neibor_num = 0;
+        for (int iNode = 0; iNode < node_num; iNode++)
+        {
+            auto &nodeNeibor = m_node_neibor[iNode];
+            min_neibor_num = Min(min_neibor_num, nodeNeibor.size());
+            max_neibor_num = Max(max_neibor_num, nodeNeibor.size());
+        }
+        Log::info("min neibor num:{} max neibor num:{}", min_neibor_num, max_neibor_num);
+    }
     void FNGridFactorySYSU::AddSelfToNeighbor()
     {
         int node_num = m_node_coord.size();
         for (int iNode = 0; iNode < node_num; iNode++)
         {
-            if (m_node_type[iNode] != NodeType::inner)
-                continue;
             bool find_current = false;
             auto &current_neighbor = m_node_neibor[iNode];
             for (int iNeibor = 0; iNeibor < current_neighbor.size(); iNeibor++)
@@ -764,18 +772,101 @@ namespace zaran
         }
         Log::info("Add self to neibor node's neibor node done");
     }
-    void FNGridFactorySYSU::AddInnerNeighborToBound()
+    void FNGridFactorySYSU::SetBoundNeighbor()
     {
-        for (iBound = 0; iBound < m_bound_node.size(); iBound++)
+        // 构建节点KD?
+        // 初始化vtk?
+        vtkNew<vtkPoints> points;
+        for (int i = 0; i < m_node_coord.size(); ++i)
+        {
+            points->InsertNextPoint(m_node_coord[i].data());
+        }
+        // 把vtk点转换为vtkploydata
+        vtkNew<vtkPolyData> polydata;
+        polydata->SetPoints(points);
+        // 将vtkploydata转换为vtk点定位器
+        vtkNew<vtkVertexGlyphFilter> glyphFilter;
+        glyphFilter->SetInputData(polydata);
+        glyphFilter->Update();
+        // 构建KD�?
+        vtkNew<vtkKdTreePointLocator> kdTree;
+        kdTree->SetDataSet(glyphFilter->GetOutput());
+        kdTree->BuildLocator();
+        int point_num = kdTree->GetDataSet()->GetNumberOfPoints();
+        int neibor_num_before = 0;
+        int neibor_num_after = 0;
+        int min_neibor_num = 1E5;
+        int max_neibor_num = 0;
+        int node_num = m_node_coord.size();
+        // 扩展内部节点邻居节点，用于计算梯度
+        std::set<int> neibor_set;
+        // 消除边界点对应的邻居点也是边界点的情况
+        for (int iBound = 0; iBound < m_bound_node.size(); iBound++)
         {
             auto &bound_node = m_bound_node[iBound];
             auto bound_index = bound_node.bound_index;
             auto ref_index = bound_node.ref_index;
-            auto bound_neibor = m_node_neibor[bound_index];
-            auto ref_neibor = m_node_neibor[ref_index];
-            bound_neibor = ref_neibor;
-            bound_neibor.push_back(ref_index);
-            bound_neibor.erase(std::find(bound_neibor.begin(), bound_neibor.end(), bound_index));
+            auto &bound_neibor = m_node_neibor[bound_index];
+            auto &ref_neibor = m_node_neibor[ref_index];
+            if (bound_neibor.size() == 0)
+            {
+                bound_neibor.push_back(ref_index);
+            }
+            if (m_node_type[ref_index] == NodeType::inner)
+            {
+                if (std::find(bound_neibor.begin(), bound_neibor.end(), ref_index) == bound_neibor.end())
+                {
+                    bound_neibor.push_back(ref_index);
+                }
+            }
+            if (bound_neibor.size() > 6)
+            {
+                continue;
+            }
+            else
+            {
+                neibor_set.clear();
+                auto &nodeNeibor = m_node_neibor[bound_index];
+                neibor_num_before = nodeNeibor.size();
+                double max_distance = 0;
+                for (auto &iNeibor : nodeNeibor)
+                {
+                    max_distance =
+                        Max(max_distance, DistanceOfTwoPoints(m_node_coord[bound_index].data(), m_node_coord[iNeibor].data()));
+                    neibor_set.insert(iNeibor);
+                }
+                // 以当前节点为中心，以最大距离为半径，找到范围内的节点
+                double search_radius = max_distance * 1.00001;
+                vtkNew<vtkIdList> result;
+                while (result->GetNumberOfIds() < 6)
+                {
+                    kdTree->FindPointsWithinRadius(search_radius, m_node_coord[bound_index].data(), result);
+                    if (result->GetNumberOfIds() > 20)
+                    {
+                        search_radius *= 0.9;
+                        result->Reset();
+                    }
+                    else
+                        search_radius *= 1.1;
+                }
+                for (int i = 0; i < result->GetNumberOfIds(); ++i)
+                {
+                    neibor_set.insert(result->GetId(i));
+                }
+                neibor_set.erase(bound_index);
+                nodeNeibor.resize(6); // 差分模板不改变
+                for (auto &i : neibor_set)
+                {
+                    // 如果nodeNeibor中没有该节点，添加该节点
+                    if (std::find(nodeNeibor.begin(), nodeNeibor.end(), i) == nodeNeibor.end())
+                        nodeNeibor.push_back(i);
+                }
+                neibor_num_after = nodeNeibor.size();
+                min_neibor_num = Min(min_neibor_num, neibor_num_after);
+                max_neibor_num = Max(max_neibor_num, neibor_num_after);
+                if (neibor_num_after < neibor_num_before)
+                    Log::info("node:{} neibor num before:{} neibor num after:{}", bound_index, neibor_num_before, neibor_num_after);
+            }
         }
         Log::info("Add inner node's neibor node to bound done");
     }

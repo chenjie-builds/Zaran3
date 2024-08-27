@@ -88,9 +88,9 @@ void NSFieldStruct::AllocateSolver()
         delete m_solver;
     }
     auto para = GetSolverPara();
-    if (para->GetMetricsScheme() == MetricsScheme::CMM) {
+    if (para->GetMidMetricsScheme() == MidMetricsScheme::CMM) {
         m_solver = new NSSolverStructCMM(1, "NS_Struct", GetSolverPara(), GetGrid(), GetDataManager());
-    } else if (para->GetMetricsScheme() == MetricsScheme::DEER) {
+    } else if (para->GetMidMetricsScheme() == MidMetricsScheme::DEER) {
         m_solver = new NSSolverStructDEER(1, "NS_Struct", GetSolverPara(), GetGrid(), GetDataManager());
     } else {
         Log::error("Invalid metrics scheme");
