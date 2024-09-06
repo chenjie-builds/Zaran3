@@ -2,7 +2,7 @@
 #include "DataManagerNS.h"
 namespace zaran
 {
-    DataManagerNS::DataManagerNS(FieldData* fieldData, int data_num) :DataManager(fieldData, data_num)
+    DataManagerNS::DataManagerNS(FieldData* field_data, int data_num) :DataManager(field_data, data_num)
     {
     }
     DataManagerNS::~DataManagerNS()
@@ -11,15 +11,15 @@ namespace zaran
         delete[] m_cons;
         delete[] m_residual;
         delete[] m_limiter;
-        for (int iEqu = 0; iEqu < m_equ_num; iEqu++)
+        for (int idx_eq = 0; idx_eq < m_equ_num; idx_eq++)
         {
-            delete[] m_viscous_flux[iEqu];
-            delete[] m_prim_grad[iEqu];
-            for (int iDim = 0; iDim < 3; iDim++)
+            delete[] m_viscous_flux[idx_eq];
+            delete[] m_prim_grad[idx_eq];
+            for (int idx_dim = 0; idx_dim < 3; idx_dim++)
             {
-                delete[] m_viscous_flux_grad[iEqu][iDim];
+                delete[] m_viscous_flux_grad[idx_eq][idx_dim];
             }
-            delete[] m_viscous_flux_grad[iEqu];
+            delete[] m_viscous_flux_grad[idx_eq];
         }
         delete[] m_viscous_flux;
         delete[] m_prim_grad;
@@ -29,74 +29,74 @@ namespace zaran
         delete[] m_temperture_grad;
     }
 
-    void DataManagerNS::SetPrim(int iEqu, int iNode, double value)
+    void DataManagerNS::SetPrim(int idx_eq, int idx_data, double data_value)
     {
-        m_prim[iEqu][iNode] = value;
+        m_prim[idx_eq][idx_data] = data_value;
     }
 
-    void DataManagerNS::SetCons(int iEqu, int iNode, double value)
+    void DataManagerNS::SetCons(int idx_eq, int idx_data, double data_value)
     {
-        m_cons[iEqu][iNode] = value;
+        m_cons[idx_eq][idx_data] = data_value;
     }
 
-    void DataManagerNS::SetResidual(int iEqu, int iNode, double value)
+    void DataManagerNS::SetResidual(int idx_eq, int idx_data, double data_value)
     {
-        m_residual[iEqu][iNode] = value;
+        m_residual[idx_eq][idx_data] = data_value;
     }
 
-    void DataManagerNS::SetLimiter(int iEqu, int iNode, double value)
+    void DataManagerNS::SetLimiter(int idx_eq, int idx_data, double data_value)
     {
-        m_limiter[iEqu][iNode] = value;
+        m_limiter[idx_eq][idx_data] = data_value;
     }
 
-    void DataManagerNS::SetViscousFlux(int iEqu, int iDim, int iNode, double value)
+    void DataManagerNS::SetViscousFlux(int idx_eq, int idx_dim, int idx_data, double data_value)
     {
-        m_viscous_flux[iEqu][iDim][iNode] = value;
+        m_viscous_flux[idx_eq][idx_dim][idx_data] = data_value;
     }
 
-    void DataManagerNS::SetViscousFluxGrad(int iEqu, int iDim, int iGradDim, int iNode, double value)
+    void DataManagerNS::SetViscousFluxGrad(int idx_eq, int idx_dim, int iGradDim, int idx_data, double data_value)
     {
-        m_viscous_flux_grad[iEqu][iDim][iGradDim][iNode] = value;
+        m_viscous_flux_grad[idx_eq][idx_dim][iGradDim][idx_data] = data_value;
     }
 
-    void DataManagerNS::SetPrimitiveGrad(int iEqu, int iGradDim, int iNode, double value)
+    void DataManagerNS::SetPrimitiveGrad(int idx_eq, int iGradDim, int idx_data, double data_value)
     {
-        m_prim_grad[iEqu][iGradDim][iNode] = value;
+        m_prim_grad[idx_eq][iGradDim][idx_data] = data_value;
     }
 
-    void DataManagerNS::SetTemperature(int iNode, double value)
+    void DataManagerNS::SetTemperature(int idx_data, double data_value)
     {
-        m_temperture[iNode] = value;
+        m_temperture[idx_data] = data_value;
     }
 
-    void DataManagerNS::SetTemperatureGrad(int iGradDim, int iNode, double value)
+    void DataManagerNS::SetTemperatureGrad(int iGradDim, int idx_data, double data_value)
     {
-        m_temperture_grad[iGradDim][iNode] = value;
+        m_temperture_grad[iGradDim][idx_data] = data_value;
     }
 
-    void DataManagerNS::SetNonPhysical(int iNode, int value)
+    void DataManagerNS::SetNonPhysical(int idx_data, int data_value)
     {
-        m_non_physical[iNode] = value;
+        m_non_physical[idx_data] = data_value;
     }
 
-    void DataManagerNS::SetTimeStep(int iNode, double dt)
+    void DataManagerNS::SetTimeStep(int idx_data, double dt)
     {
-        m_dt[iNode] = dt;
+        m_dt[idx_data] = dt;
     }
 
-    double DataManagerNS::GetPrim(int iEqu, int iNode)
+    double DataManagerNS::GetPrim(int idx_eq, int idx_data)
     {
-        return m_prim[iEqu][iNode];
+        return m_prim[idx_eq][idx_data];
     }
 
-    double* DataManagerNS::GetPrim(int iEqu)
+    double* DataManagerNS::GetPrim(int idx_eq)
     {
-        return  m_prim[iEqu];
+        return  m_prim[idx_eq];
     }
 
-    double DataManagerNS::GetDensity(int iNode)
+    double DataManagerNS::GetDensity(int idx_data)
     {
-        return m_prim[0][iNode];
+        return m_prim[0][idx_data];
     }
 
     double* DataManagerNS::GetDensity()
@@ -104,14 +104,14 @@ namespace zaran
         return m_prim[0];
     }
 
-    double* DataManagerNS::GetVelocity(int iDim)
+    double* DataManagerNS::GetVelocity(int idx_dim)
     {
-        return m_prim[iDim + 1];
+        return m_prim[idx_dim + 1];
     }
 
-    double DataManagerNS::GetVelocity(int iDim, int iNode)
+    double DataManagerNS::GetVelocity(int idx_dim, int idx_data)
     {
-        return m_prim[iDim + 1][iNode];
+        return m_prim[idx_dim + 1][idx_data];
     }
 
     double* DataManagerNS::GetPressure()
@@ -119,14 +119,14 @@ namespace zaran
         return m_prim[m_equ_num - 1];
     }
 
-    double DataManagerNS::GetPressure(int iNode)
+    double DataManagerNS::GetPressure(int idx_data)
     {
-        return m_prim[m_equ_num - 1][iNode];
+        return m_prim[m_equ_num - 1][idx_data];
     }
 
-    double DataManagerNS::GetTimeStep(int iNode)
+    double DataManagerNS::GetTimeStep(int idx_data)
     {
-        return m_dt[iNode];
+        return m_dt[idx_data];
     }
 
     double* DataManagerNS::GetTemperature()
@@ -134,69 +134,69 @@ namespace zaran
         return m_temperture;
     }
 
-    double DataManagerNS::GetTemperature(int iNode)
+    double DataManagerNS::GetTemperature(int idx_data)
     {
-        return m_temperture[iNode];
+        return m_temperture[idx_data];
     }
 
-    double* DataManagerNS::GetConservative(int iEqu)
+    double* DataManagerNS::GetConservative(int idx_eq)
     {
-        return  m_cons[iEqu];
+        return  m_cons[idx_eq];
     }
 
-    double DataManagerNS::GetCons(int iEqu, int iNode)
+    double DataManagerNS::GetCons(int idx_eq, int idx_data)
     {
-        return m_cons[iEqu][iNode];
+        return m_cons[idx_eq][idx_data];
     }
 
-    double* DataManagerNS::GetResidual(int iEqu)
+    double* DataManagerNS::GetResidual(int idx_eq)
     {
-        return m_residual[iEqu];
+        return m_residual[idx_eq];
     }
 
-    double DataManagerNS::GetResidual(int iEqu, int iNode)
+    double DataManagerNS::GetResidual(int idx_eq, int idx_data)
     {
-        return m_residual[iEqu][iNode];
+        return m_residual[idx_eq][idx_data];
     }
 
-    double* DataManagerNS::GetLimiter(int iEqu)
+    double* DataManagerNS::GetLimiter(int idx_eq)
     {
-        return m_limiter[iEqu];
+        return m_limiter[idx_eq];
     }
 
-    double DataManagerNS::GetLimiter(int iEqu, int iNode)
+    double DataManagerNS::GetLimiter(int idx_eq, int idx_data)
     {
-        return m_limiter[iEqu][iNode];
+        return m_limiter[idx_eq][idx_data];
     }
 
-    double* DataManagerNS::GetViscousFlux(int iEqu, int iDim)
+    double* DataManagerNS::GetViscousFlux(int idx_eq, int idx_dim)
     {
-        return m_viscous_flux[iEqu][iDim];
+        return m_viscous_flux[idx_eq][idx_dim];
     }
 
-    double DataManagerNS::GetViscousFlux(int iEqu, int iDim, int iNode)
+    double DataManagerNS::GetViscousFlux(int idx_eq, int idx_dim, int idx_data)
     {
-        return m_viscous_flux[iEqu][iDim][iNode];
+        return m_viscous_flux[idx_eq][idx_dim][idx_data];
     }
 
-    double* DataManagerNS::GetViscousFluxGrad(int iEqu, int iDim, int iGradDim)
+    double* DataManagerNS::GetViscousFluxGrad(int idx_eq, int idx_dim, int iGradDim)
     {
-        return  m_viscous_flux_grad[iEqu][iDim][iGradDim];
+        return  m_viscous_flux_grad[idx_eq][idx_dim][iGradDim];
     }
 
-    double DataManagerNS::GetViscousFluxGrad(int iEqu, int iDim, int iGradDim, int iNode)
+    double DataManagerNS::GetViscousFluxGrad(int idx_eq, int idx_dim, int iGradDim, int idx_data)
     {
-        return m_viscous_flux_grad[iEqu][iDim][iGradDim][iNode];
+        return m_viscous_flux_grad[idx_eq][idx_dim][iGradDim][idx_data];
     }
 
-    double* DataManagerNS::GetPrimitiveGrad(int iEqu, int iGradDim)
+    double* DataManagerNS::GetPrimitiveGrad(int idx_eq, int iGradDim)
     {
-        return m_prim_grad[iEqu][iGradDim];
+        return m_prim_grad[idx_eq][iGradDim];
     }
 
-    double DataManagerNS::GetPrimGrad(int iEqu, int iGradDim, int iNode)
+    double DataManagerNS::GetPrimGrad(int idx_eq, int iGradDim, int idx_data)
     {
-        return m_prim_grad[iEqu][iGradDim][iNode];
+        return m_prim_grad[idx_eq][iGradDim][idx_data];
     }
 
     int* DataManagerNS::GetNonPhysical()
@@ -204,9 +204,9 @@ namespace zaran
         return m_non_physical;
     }
 
-    int DataManagerNS::GetNonPhysical(int iNode)
+    int DataManagerNS::GetNonPhysical(int idx_data)
     {
-        return m_non_physical[iNode];
+        return m_non_physical[idx_data];
     }
 
 
@@ -219,25 +219,25 @@ namespace zaran
         m_data->AddData("y_velocity", type, m_data_num);
         m_data->AddData("z_velocity", type, m_data_num);
         m_data->AddData("pressure", type, m_data_num);
-        for (int iEqu = 0;iEqu < 5;iEqu++)
+        for (int idx_eq = 0;idx_eq < GetEqNum();idx_eq++)
         {
-            m_data->AddData("primitive_" + std::to_string(iEqu), type, m_data_num);
-            m_data->AddData("conservative_" + std::to_string(iEqu), type, m_data_num);
-            m_data->AddData("residual_" + std::to_string(iEqu), type, m_data_num);
-            m_data->AddData("limiter_" + std::to_string(iEqu), type, m_data_num);
-            for (int iDim = 0;iDim < 3;iDim++)
+            m_data->AddData("primitive_" + std::to_string(idx_eq), type, m_data_num);
+            m_data->AddData("conservative_" + std::to_string(idx_eq), type, m_data_num);
+            m_data->AddData("residual_" + std::to_string(idx_eq), type, m_data_num);
+            m_data->AddData("limiter_" + std::to_string(idx_eq), type, m_data_num);
+            for (int idx_dim = 0;idx_dim < 3;idx_dim++)
             {
-                m_data->AddData("viscous_flux_" + std::to_string(iEqu) + "_" + std::to_string(iDim), type, m_data_num);
-                m_data->AddData("prim_grad_" + std::to_string(iEqu) + "_" + std::to_string(iDim), type, m_data_num);
+                m_data->AddData("viscous_flux_" + std::to_string(idx_eq) + "_" + std::to_string(idx_dim), type, m_data_num);
+                m_data->AddData("prim_grad_" + std::to_string(idx_eq) + "_" + std::to_string(idx_dim), type, m_data_num);
                 for (int jDim = 0;jDim < 3;jDim++)
                 {
-                    m_data->AddData("viscous_flux_grad_" + std::to_string(iEqu) + "_" + std::to_string(iDim) + "_" + std::to_string(jDim), type, m_data_num);
+                    m_data->AddData("viscous_flux_grad_" + std::to_string(idx_eq) + "_" + std::to_string(idx_dim) + "_" + std::to_string(jDim), type, m_data_num);
                 }
             }
         }
-        for (int iDim = 0;iDim < 3;iDim++)
+        for (int idx_dim = 0;idx_dim < 3;idx_dim++)
         {
-            m_data->AddData("temperture_grad_" + std::to_string(iDim), type, m_data_num);
+            m_data->AddData("temperture_grad_" + std::to_string(idx_dim), type, m_data_num);
         }
         m_data->AddData("dt", type, m_data_num);
         m_data->AddData("temperature", type, m_data_num);
@@ -252,39 +252,39 @@ namespace zaran
         m_viscous_flux = new double** [m_equ_num];
         m_prim_grad = new double** [m_equ_num];
         m_viscous_flux_grad = new double*** [m_equ_num];
-        for (int iEqu = 0; iEqu < m_equ_num; iEqu++)
+        for (int idx_eq = 0; idx_eq < m_equ_num; idx_eq++)
         {
-            m_viscous_flux[iEqu] = new double* [3];
-            m_prim_grad[iEqu] = new double* [3];
-            m_viscous_flux_grad[iEqu] = new double** [3];
-            for (int iDim = 0; iDim < 3; iDim++)
+            m_viscous_flux[idx_eq] = new double* [3];
+            m_prim_grad[idx_eq] = new double* [3];
+            m_viscous_flux_grad[idx_eq] = new double** [3];
+            for (int idx_dim = 0; idx_dim < 3; idx_dim++)
             {
-                m_viscous_flux_grad[iEqu][iDim] = new double* [3];
+                m_viscous_flux_grad[idx_eq][idx_dim] = new double* [3];
             }
         }
         m_data->GetData("dt", m_dt);
         m_data->GetData("temperture", m_temperture);
         m_data->GetData("non_physical", m_non_physical);
-        for (int iEqu = 0;iEqu < 5;iEqu++)
+        for (int idx_eq = 0;idx_eq < GetEqNum();idx_eq++)
         {
-            m_data->GetData("primitive_" + std::to_string(iEqu), m_prim[iEqu]);
-            m_data->GetData("conservative_" + std::to_string(iEqu), m_cons[iEqu]);
-            m_data->GetData("residual_" + std::to_string(iEqu), m_residual[iEqu]);
-            m_data->GetData("limiter_" + std::to_string(iEqu), m_limiter[iEqu]);
-            for (int iDim = 0;iDim < 3;iDim++)
+            m_data->GetData("primitive_" + std::to_string(idx_eq), m_prim[idx_eq]);
+            m_data->GetData("conservative_" + std::to_string(idx_eq), m_cons[idx_eq]);
+            m_data->GetData("residual_" + std::to_string(idx_eq), m_residual[idx_eq]);
+            m_data->GetData("limiter_" + std::to_string(idx_eq), m_limiter[idx_eq]);
+            for (int idx_dim = 0;idx_dim < 3;idx_dim++)
             {
-                m_data->GetData("viscous_flux_" + std::to_string(iEqu) + "_" + std::to_string(iDim), m_viscous_flux[iEqu][iDim]);
-                m_data->GetData("prim_grad_" + std::to_string(iEqu) + "_" + std::to_string(iDim), m_prim_grad[iEqu][iDim]);
+                m_data->GetData("viscous_flux_" + std::to_string(idx_eq) + "_" + std::to_string(idx_dim), m_viscous_flux[idx_eq][idx_dim]);
+                m_data->GetData("prim_grad_" + std::to_string(idx_eq) + "_" + std::to_string(idx_dim), m_prim_grad[idx_eq][idx_dim]);
                 for (int jDim = 0;jDim < 3;jDim++)
                 {
-                    m_data->GetData("viscous_flux_grad_" + std::to_string(iEqu) + "_" + std::to_string(iDim) + "_" + std::to_string(jDim), m_viscous_flux_grad[iEqu][iDim][jDim]);
+                    m_data->GetData("viscous_flux_grad_" + std::to_string(idx_eq) + "_" + std::to_string(idx_dim) + "_" + std::to_string(jDim), m_viscous_flux_grad[idx_eq][idx_dim][jDim]);
                 }
             }
         }
         m_temperture_grad = new double* [3];
-        for (int iDim = 0;iDim < 3;iDim++)
+        for (int idx_dim = 0;idx_dim < 3;idx_dim++)
         {
-            m_data->GetData("temperture_grad_" + std::to_string(iDim), m_temperture_grad[iDim]);
+            m_data->GetData("temperture_grad_" + std::to_string(idx_dim), m_temperture_grad[idx_dim]);
         }
 
 

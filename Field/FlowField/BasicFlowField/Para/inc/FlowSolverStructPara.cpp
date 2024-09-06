@@ -21,6 +21,7 @@ namespace zaran
         InitMetricsType();
         InitFluxDifferenceOrder();
         InitInterSchme();
+        InitJacobianScheme();
     }
 
     void FlowSolverStructPara::InitMidMetricsScheme()
@@ -44,19 +45,19 @@ namespace zaran
     void FlowSolverStructPara::InitMetricsType()
     {
         string metrics_scheme = GlobalData::GetString("metrics_scheme");
-        if (metrics_scheme == "Original")
+        if (metrics_scheme == "S0")
         {
             m_metrics_scheme = MetricsScheme::S0;
         }
-        else if (metrics_scheme == "CMM1")
+        else if (metrics_scheme == "S1")
         {
             m_metrics_scheme = MetricsScheme::S1;
         }
-        else if (metrics_scheme == "CMM2")
+        else if (metrics_scheme == "S2")
         {
             m_metrics_scheme = MetricsScheme::S2;
         }
-        else if (metrics_scheme == "SCMM")
+        else if (metrics_scheme == "S3")
         {
             m_metrics_scheme = MetricsScheme::S3;
         }
@@ -99,6 +100,10 @@ namespace zaran
         else if (inter_schme == "WCNS5")
         {
             m_inter_schme = InterpolationScheme::WCNS5;
+        }
+        else if(inter_schme == "Grad")
+        {
+            m_inter_schme = InterpolationScheme::Grad;
         }
         else
         {

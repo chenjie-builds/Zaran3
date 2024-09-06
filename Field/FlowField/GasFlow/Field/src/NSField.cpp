@@ -39,7 +39,7 @@ namespace zaran
         {
             delete m_res_info;
         }
-        m_res_info = new ResInfo(GetSolverPara()->GetEquNum());
+        m_res_info = new ResInfo(GetSolverPara()->GetEqNum());
     }
 
 }

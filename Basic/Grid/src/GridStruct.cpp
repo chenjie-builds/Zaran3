@@ -1,9 +1,9 @@
 #include "GridStruct.h"
 namespace zaran
 {
-	GridStruct::GridStruct(const string& name, int index, int dim) :GridBase(name, index, dim, GridType::Structured)
+	GridStruct::GridStruct(const string &name, int index, int dim) : GridBase(name, index, dim, GridType::Structured)
 	{
-		m_ghost_size = 1;
+		m_ghost_level = 1;
 		m_node = nullptr;
 		m_face = nullptr;
 		m_cell = nullptr;
@@ -31,11 +31,10 @@ namespace zaran
 			delete[] m_bound_map;
 			m_bound_map = nullptr;
 		}
-
 	}
-	void GridStruct::Allocate(int ni, int nj, int nk, int ghost_size)
+	void GridStruct::Allocate(int ni, int nj, int nk, int ghost_level)
 	{
-		m_ghost_size = ghost_size;
+		m_ghost_level = ghost_level;
 		if (m_node != nullptr)
 		{
 			delete m_node;
@@ -57,10 +56,10 @@ namespace zaran
 			m_bound_map = nullptr;
 		}
 		m_node = new NodeStruct();
-		m_node->Allocate(ni + ghost_size * 2, nj + ghost_size * 2, nk + ghost_size * 2);
+		m_node->Allocate(ni + ghost_level * 2, nj + ghost_level * 2, nk + ghost_level * 2);
 		m_face = new FaceStruct();
 		m_cell = new CellStruct();
-		m_cell->Allocate(ni + ghost_size * 2 - 1, nj + ghost_size * 2 - 1, nk + ghost_size * 2 - 1);
+		m_cell->Allocate(ni + ghost_level * 2 - 1, nj + ghost_level * 2 - 1, nk + ghost_level * 2 - 1);
 		m_bound_map = new BoundMapStruct();
 	}
 	int GridStruct::GetNi()
@@ -77,7 +76,7 @@ namespace zaran
 	{
 		return m_node->GetKNum();
 	}
-	void GridStruct::GetNodeNum(int& ni, int& nj, int& nk)
+	void GridStruct::GetNodeNum(int &ni, int &nj, int &nk)
 	{
 		ni = GetNi();
 		nj = GetNj();
@@ -85,15 +84,15 @@ namespace zaran
 	}
 	int GridStruct::GetTotalNodeNum()
 	{
-		return m_node->GetNodeNum();
+		return m_node->GetCount();
 	}
-	void GridStruct::GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd)
+	void GridStruct::GetRange(int &iStart, int &iEnd, int &jStart, int &jEnd, int &kStart, int &kEnd)
 	{
-		iStart = m_ghost_size;
-		iEnd = GetNi() -  m_ghost_size-1;
-		jStart = m_ghost_size;
-		jEnd = GetNj() - m_ghost_size-1;
-		kStart = m_ghost_size;
-		kEnd = GetNk() -  m_ghost_size-1;
+		iStart = GetGhostLevel();
+		iEnd = GetNi() - GetGhostLevel() - 1;
+		jStart = GetGhostLevel();
+		jEnd = GetNj() - GetGhostLevel() - 1;
+		kStart = GetGhostLevel();
+		kEnd = GetNk() - GetGhostLevel() - 1;
 	}
 }

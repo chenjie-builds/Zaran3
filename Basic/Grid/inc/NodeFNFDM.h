@@ -37,48 +37,51 @@ class NodeFN:public NodeBase
              const int *neighbor_cell_num);
     virtual ~NodeFN();
     // 设置节点坐标
-    void SetCoord(int iNode, const double *coord);
+    void SetCoord(int idx, const double *coord);
     // 设置节点类型
-    void SetType(int iNode, NodeType &type);
-    // 设置邻居点云
-    void SetNeighborNode(int iNode, int neighbor_num, const int *neighbor_cloud);
+    void SetType(int idx, NodeType &type);
+    /// @brief 设置邻居节点
+    /// @param idx 需要设置的节点编号
+    /// @param neighbor_num 邻居节点个数
+    /// @param neighbor_node_idx 邻居节点编号
+    void SetNeighborNode(int idx, int neighbor_num, const int *neighbor_node_idx);
     // 设置邻居面元
-    void SetNeighborFace(int iNode, int neighbor_num, const int *neighbor_face);
+    void SetNeighborFace(int idx, int neighbor_num, const int *neighbor_face);
     // 设置邻居单元
-    void SetNeighborCell(int iNode, int neighbor_num, const int *neighbor_cell);
+    void SetNeighborCell(int idx, int neighbor_num, const int *neighbor_cell);
   public:
     // 返回节点类型
     const NodeType &GetType(const int &index) const;
     const double *GetCoord(const int &index) const;
-    const int *GetNeighborNode(const int &iNode) const;
-    int GetNeighborNodeNum(const int &iNode) const;
-    const int *GetNeighborFace(const int &iNode) const;
-    int GetNeighborFaceNum(const int &iNode) const;
-    const int *GetNeighborCell(const int &iNode) const;
-    int GetNeighborCellNum(const int &iNode) const;
+    const int *GetNeighborNode(const int &idx) const;
+    int GetNeighborNodeNum(const int &idx) const;
+    const int *GetNeighborFace(const int &idx) const;
+    int GetNeighborFaceNum(const int &idx) const;
+    const int *GetNeighborCell(const int &idx) const;
+    int GetNeighborCellNum(const int &idx) const;
   private:
     // 节点坐标
     double *m_coordinate;
     // 节点类型
     NodeType *m_type;
-    /// @brief m_node_num[iNode] 第iNode节点包含的邻居节点个数
+    /// @brief m_node_num[idx] 第iNode节点包含的邻居节点个数
     int *m_neighor_node_num;
-    /// @brief m_node[iNode] 第iNode节点包含的邻居节点在m_neighor_node中的起始位置
+    /// @brief m_node[idx] 第iNode节点包含的邻居节点在m_neighor_node中的起始位置
     int *m_neighor_node_index;
-    /// @brief m_neighor_node[m_node[iNode]] 第iNode节点的邻居节点
+    /// @brief m_neighor_node[m_node[idx]] 第iNode节点的邻居节点
     /// @brief 前6个为差分模板, 剩下为其他邻居
     int *m_neighor_node;
-    /// @brief m_face_num[iNode] 第iNode节点包含的面元个数
+    /// @brief m_face_num[idx] 第iNode节点包含的面元个数
     int *m_neighor_face_num;
-    /// @brief m_face[m_face_num[iNode]] 第iNode节点包含的面元编号
+    /// @brief m_face[m_face_num[idx]] 第iNode节点包含的面元编号
     int *m_neighor_face_index;
-    /// @brief m_neighor_face[m_face[iNode]] 第iNode节点包含的面元的邻居面元
+    /// @brief m_neighor_face[m_face[idx]] 第iNode节点包含的面元的邻居面元
     int *m_neighor_face;
-    /// @brief m_cell_num[iNode] 第iNode节点包含的单元个数
+    /// @brief m_cell_num[idx] 第iNode节点包含的单元个数
     int *m_neighor_cell_num;
-    /// @brief m_cell_index[m_cell_num[iNode]] 第iNode节点包含的单元编号
+    /// @brief m_cell_index[m_cell_num[idx]] 第iNode节点包含的单元编号
     int *m_neighor_cell_index;
-    /// @brief m_neighor_cell[m_cell_index[iNode]] 第iNode节点包含的单元的邻居单元
+    /// @brief m_neighor_cell[m_cell_index[idx]] 第iNode节点包含的单元的邻居单元
     int *m_neighor_cell;
 };
 } // namespace zaran

@@ -17,6 +17,8 @@ namespace zaran
 	{
 	public:
 		void Solver(RiemannSolverPara& para)override;
+		private:
+		void Harten(double& lamda, double delta);
 	private:
 		double a1, a2, a3, a4, a5, a6, a7, a8;
 		double delta_rho, delta_u, delta_v, delta_w, delta_p;

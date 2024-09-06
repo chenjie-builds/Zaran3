@@ -746,13 +746,24 @@ namespace zaran
         int node_num = m_node_coord.size();
         int min_neibor_num = 1E5;
         int max_neibor_num = 0;
+        int min_neibor_index = 0;
+        int max_neibor_index = 0;
         for (int iNode = 0; iNode < node_num; iNode++)
         {
             auto &nodeNeibor = m_node_neibor[iNode];
-            min_neibor_num = Min(min_neibor_num, nodeNeibor.size());
-            max_neibor_num = Max(max_neibor_num, nodeNeibor.size());
+            if (min_neibor_num > nodeNeibor.size())
+            {
+                min_neibor_num = nodeNeibor.size();
+                min_neibor_index = iNode;
+            }
+            if (max_neibor_num < nodeNeibor.size())
+            {
+                max_neibor_num = nodeNeibor.size();
+                max_neibor_index = iNode;
+            }
         }
         Log::info("min neibor num:{} max neibor num:{}", min_neibor_num, max_neibor_num);
+        Log::info("min neibor index:{} max neibor index:{}", min_neibor_index, max_neibor_index);
     }
     void FNGridFactorySYSU::AddSelfToNeighbor()
     {
@@ -774,6 +785,7 @@ namespace zaran
     }
     void FNGridFactorySYSU::SetBoundNeighbor()
     {
+        return;
         // 构建节点KD?
         // 初始化vtk?
         vtkNew<vtkPoints> points;
@@ -838,29 +850,58 @@ namespace zaran
                 // 以当前节点为中心，以最大距离为半径，找到范围内的节点
                 double search_radius = max_distance * 1.00001;
                 vtkNew<vtkIdList> result;
-                while (result->GetNumberOfIds() < 6)
+                while (true)
                 {
                     kdTree->FindPointsWithinRadius(search_radius, m_node_coord[bound_index].data(), result);
-                    if (result->GetNumberOfIds() > 20)
+                    int inner_num = 0;
+                    for (int i = 0; i < result->GetNumberOfIds(); ++i)
                     {
-                        search_radius *= 0.9;
-                        result->Reset();
+                        if (m_node_type[result->GetId(i)] == NodeType::inner)
+                        {
+                            inner_num++;
+                        }
                     }
+                    // Log::info("iBound={}, neighbor num: {}, inner num: {}, search radius: {:6E}", iBound, result->GetNumberOfIds(), inner_num, search_radius);
+                    if (inner_num > 6 || result->GetNumberOfIds() > 100)
+                        search_radius *= 0.95;
+                    else if ((inner_num != 0 && result->GetNumberOfIds() > 10) ||( inner_num >=3&&result->GetNumberOfIds() >=7)||result->GetNumberOfIds() > 30)
+                        break;
                     else
                         search_radius *= 1.1;
                 }
                 for (int i = 0; i < result->GetNumberOfIds(); ++i)
                 {
                     neibor_set.insert(result->GetId(i));
+                    // if (m_node_type[result->GetId(i)] == NodeType::inner)
+                    // {
+                    //     auto &inner_neibor = m_node_neibor[result->GetId(i)];
+                    //     for (auto &iNeibor : inner_neibor)
+                    //     {
+                    //         neibor_set.insert(iNeibor);
+                    //     }
+                    // }
                 }
                 neibor_set.erase(bound_index);
-                nodeNeibor.resize(6); // 差分模板不改变
                 for (auto &i : neibor_set)
                 {
                     // 如果nodeNeibor中没有该节点，添加该节点
                     if (std::find(nodeNeibor.begin(), nodeNeibor.end(), i) == nodeNeibor.end())
                         nodeNeibor.push_back(i);
                 }
+                Log::info("iBound :{}/{}, neighbor num: {}", iBound, m_bound_node.size(), nodeNeibor.size());
+
+                // Log::info("bound_index:{} neibor num: {}", bound_index, nodeNeibor.size());
+                // std::cout << "bound index:" << bound_index << ": ";
+                // double innner_num = 0;
+                // for (int iNeigh = 0; iNeigh < nodeNeibor.size(); iNeigh++)
+                // {
+                //     std::cout << nodeNeibor[iNeigh] << " ";
+                //     if (m_node_type[nodeNeibor[iNeigh]] == NodeType::inner)
+                //     {
+                //         innner_num++;
+                //     }
+                // }
+                // std::cout << "inner num:" << innner_num << std::endl;
                 neibor_num_after = nodeNeibor.size();
                 min_neibor_num = Min(min_neibor_num, neibor_num_after);
                 max_neibor_num = Max(max_neibor_num, neibor_num_after);

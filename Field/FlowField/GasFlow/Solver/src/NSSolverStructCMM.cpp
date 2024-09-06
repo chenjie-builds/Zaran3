@@ -464,7 +464,7 @@ namespace zaran
         auto node_metrics = GetNodeMetrics();
         auto idx_proxy = GetIdxProxy();
         auto gas = GetGas();
-        auto equ_num = GetPara()->GetEquNum();
+        auto equ_num = GetPara()->GetEqNum();
         int ni, nj, nk;
         ni = idx_proxy->GetNi();
         nj = idx_proxy->GetNj();
@@ -539,7 +539,7 @@ namespace zaran
         auto node_metrics = GetNodeMetrics();
         auto idx_proxy = GetIdxProxy();
         auto gas = GetGas();
-        auto equ_num = para->GetEquNum();
+        auto equ_num = para->GetEqNum();
         int is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
         RiemannSolverPara riemann_para[6];
@@ -611,7 +611,7 @@ namespace zaran
         auto node_metrics = GetNodeMetrics();
         auto idx_proxy = GetIdxProxy();
         auto gas = GetGas();
-        auto equ_num = para->GetEquNum();
+        auto equ_num = para->GetEqNum();
         int is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
         RiemannSolverPara riemann_para[6];

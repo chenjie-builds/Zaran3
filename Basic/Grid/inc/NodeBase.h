@@ -20,10 +20,10 @@ namespace zaran
     virtual ~NodeBase();
   public:
     // 返回节点总数
-    const int& GetNodeNum() const;
+    const int& GetCount() const;
   protected:
-    void SetNodeNum(int node_num);
+    void SetCount(int count);
   private:
-    int m_node_num;
+    int m_count;
   };
 } // namespace zaran

@@ -22,29 +22,29 @@ namespace zaran
     void InitFieldFarFlow() override;
     void InitFieldFarFieldNoVelocity() override;
     void InitFieldBackup() override;
+    void InitFieldVortex();
 
   protected:
     void CalcCoordTransCoef() override;
     void CalcMetrics();
     /// @brief 使用原始形式计算度量系数
-    void CalcMetricsOriginal();
-    void CalcMetricsOriginal_2nd();
-    void CalcMetricsOriginal_6th();
-    /// @brief 计算结构网格节点度量，使用CMM1
-    virtual void CalcMetricsCMM1();
-    void CalcMetricsCMM1_2nd();
-    void CalcMetricsCMM1_6th();
-    /// @brief 计算结构网格节点度量，使用CMM2
-    virtual void CalcMetricsCMM2();
-    /// @brief
-    void CalcMetricsCMM2_2nd();
-    void CalcMetricsCMM2_6th();
+    void CalcMetricsS0();
+    void CalcMetricsS0_2nd();
+    void CalcMetricsS0_6th();
+    /// @brief 计算结构网格节点度量，使用S1
+    virtual void CalcMetricsS1();
+    void CalcMetricsS1_2nd();
+    void CalcMetricsS1_6th();
+    /// @brief 计算结构网格节点度量，使用S2
+    virtual void CalcMetricsS2();
+    void CalcMetricsS2_2nd();
+    void CalcMetricsS2_6th();
     /// @brief 计算结构网格节点度量，使用SCMM
-    virtual void CalcMetricsSCMM();
-    void CalcMetricsSCMM_2nd();
-    void CalcMetricsSCMM_6th();
+    virtual void CalcMetricsS3();
+    void CalcMetricsS3_2nd();
+    void CalcMetricsS3_6th();
     /// @brief 计算结构网格节点度量，使用FSCMM
-    virtual void CalcMetricsFSCMM();
+    virtual void CalcMetricsS4();
     void CalcJacobian();
     void CalcJacobianV1();
     void CalcJacobianV2();
@@ -54,6 +54,8 @@ namespace zaran
 
   protected:
     void Preprocess() override;
+    void CalcPrimGradWLS();
+    void CalcLimiterVK();
     void CalcTimeStepLocal() override;
     void ReduceTimeStep(double &dt) override;
     void RungeKutta() override;
@@ -63,7 +65,7 @@ namespace zaran
     /// @brief 半点原始变量插值：一阶
     void CalcMidNode1st();
     /// @brief 半点原始变量插值：梯度二阶
-    void CalcMidNodePrimGrad();
+    void CalcMidNodeGrad();
     /// @brief 半点原始变量插值：MUSCL
     void CalcMidNodePrimMUSCL();
     /// @brief 虚拟节点半点原始变量插值：MUSCL

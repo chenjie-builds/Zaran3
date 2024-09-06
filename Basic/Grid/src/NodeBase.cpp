@@ -6,11 +6,11 @@ NodeBase::NodeBase()
 NodeBase::~NodeBase()
 {
 }
-const int &NodeBase::GetNodeNum() const
+const int &NodeBase::GetCount() const
 {
-    return m_node_num;
+    return m_count;
 }
-void NodeBase::SetNodeNum(int node_num)
+void NodeBase::SetCount(int count)
 {
-    m_node_num = node_num;
+    m_count = count;
 }

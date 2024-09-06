@@ -36,7 +36,7 @@ void NSFieldStruct::CalcResidual()
     auto grid = GetGrid();
     auto node = grid->GetNode();
     auto para = GetSolverPara();
-    int equ_num = para->GetEquNum();
+    int equ_num = para->GetEqNum();
     int is, ie, js, je, ks, ke;
     grid->GetRange(is, ie, js, je, ks, ke);
     int total_node_num = (ie - is + 1) * (je - js + 1) * (ke - ks + 1);
@@ -80,7 +80,7 @@ void NSFieldStruct::AllocateResInfo()
     if (m_res_info != nullptr) {
         delete m_res_info;
     }
-    m_res_info = new ResInfo(GetSolverPara()->GetEquNum());
+    m_res_info = new ResInfo(GetSolverPara()->GetEqNum());
 }
 void NSFieldStruct::AllocateSolver()
 {

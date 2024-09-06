@@ -3,7 +3,7 @@ namespace zaran
 {
 	NodeFN::NodeFN(int node_num)		
 	{
-		SetNodeNum(node_num);
+		SetCount(node_num);
 		m_coordinate = new double[3 * node_num];
 		m_type = new NodeType[node_num];
 		m_neighor_node_num = new int[node_num];
@@ -19,7 +19,7 @@ namespace zaran
 
 	NodeFN::NodeFN(int node_num,const int* neighbor_node_num,const int* neighbor_face_num, const int* neighbor_cell_num)
 	{
-		SetNodeNum(node_num);
+		SetCount(node_num);
 		m_coordinate = new double[3 * node_num];
 		m_type = new NodeType[node_num];
 		m_neighor_node_num = new int[node_num];
@@ -61,49 +61,49 @@ namespace zaran
 		delete[] m_neighor_face;
 		delete[] m_neighor_cell;
 	}
-	void NodeFN::SetCoord(int iNode, const double* coord)
+	void NodeFN::SetCoord(int idx, const double* coord)
 	{
 		for (int i = 0; i < 3; i++)
 		{
-			m_coordinate[iNode * 3 + i] = coord[i];
+			m_coordinate[idx * 3 + i] = coord[i];
 		}
 	}
-	void NodeFN::SetType(int iNode, NodeType& type)
+	void NodeFN::SetType(int idx, NodeType& type)
 	{
-		m_type[iNode] = type;
+		m_type[idx] = type;
 	}
-	void NodeFN::SetNeighborNode(int iNode, int neighbor_num, const int* neighbor_cloud)
+	void NodeFN::SetNeighborNode(int idx, int neighbor_num, const int* neighbor_cloud)
 	{
-		if (neighbor_num != m_neighor_node_num[iNode])
+		if (neighbor_num != m_neighor_node_num[idx])
 		{
-			int delta = neighbor_num - m_neighor_node_num[iNode];
-			m_neighor_node_num[iNode] = neighbor_num;
-			for (int i = iNode + 1; i < GetNodeNum(); i++)
+			int delta = neighbor_num - m_neighor_node_num[idx];
+			m_neighor_node_num[idx] = neighbor_num;
+			for (int i = idx + 1; i < GetCount(); i++)
 			{
 				m_neighor_node_index[i] += delta;
 			}
 			int sum = 0;
-			for (int i = 0; i < GetNodeNum(); i++)
+			for (int i = 0; i < GetCount(); i++)
 			{
 				sum += m_neighor_node_num[i];
 			}
 			//重新分配内存
 			int* temp = new int[sum];
-			//拷贝数据 0-->iNode
-			for (int i = 0; i < iNode; i++)
+			//拷贝数据 0-->idx
+			for (int i = 0; i < idx; i++)
 			{
 				for (int j = 0; j < m_neighor_node_num[i]; j++)
 				{
 					temp[m_neighor_node_index[i] + j] = m_neighor_node[m_neighor_node_index[i] + j];
 				}
 			}
-			//拷贝数据 iNode
+			//拷贝数据 idx
 			for (int i = 0; i < neighbor_num; i++)
 			{
-				temp[m_neighor_node_index[iNode] + i] = neighbor_cloud[i];
+				temp[m_neighor_node_index[idx] + i] = neighbor_cloud[i];
 			}
-			//拷贝数据 iNode+1-->node_num
-			for (int i = iNode + 1; i < GetNodeNum(); i++)
+			//拷贝数据 idx+1-->node_num
+			for (int i = idx + 1; i < GetCount(); i++)
 			{
 				for (int j = 0; j < m_neighor_node_num[i]; j++)
 				{
@@ -117,22 +117,22 @@ namespace zaran
 		{
 			for (int i = 0; i < neighbor_num; i++)
 			{
-				m_neighor_node[m_neighor_node_index[iNode] + i] = neighbor_cloud[i];
+				m_neighor_node[m_neighor_node_index[idx] + i] = neighbor_cloud[i];
 			}
 		}
 	}
-	void NodeFN::SetNeighborFace(int iNode, int neighbor_num, const int* neighbor_face)
+	void NodeFN::SetNeighborFace(int idx, int neighbor_num, const int* neighbor_face)
 	{
 		for (int i = 0; i < neighbor_num; i++)
 		{
-			m_neighor_face[m_neighor_face_index[iNode] + i] = neighbor_face[i];
+			m_neighor_face[m_neighor_face_index[idx] + i] = neighbor_face[i];
 		}
 	}
-	void NodeFN::SetNeighborCell(int iNode, int neighbor_num, const int* neighbor_cell)
+	void NodeFN::SetNeighborCell(int idx, int neighbor_num, const int* neighbor_cell)
 	{
 		for (int i = 0; i < neighbor_num; i++)
 		{
-			m_neighor_cell[m_neighor_cell_index[iNode] + i] = neighbor_cell[i];
+			m_neighor_cell[m_neighor_cell_index[idx] + i] = neighbor_cell[i];
 		}
 	}
 	const NodeType& NodeFN::GetType(const int& index)const
@@ -143,29 +143,29 @@ namespace zaran
 	{
 		return m_coordinate + index * 3;
 	}
-	const int* NodeFN::GetNeighborNode(const int& iNode)const
+	const int* NodeFN::GetNeighborNode(const int& idx)const
 	{
-		return m_neighor_node + m_neighor_node_index[iNode];
+		return m_neighor_node + m_neighor_node_index[idx];
 	}
-	int NodeFN::GetNeighborNodeNum(const int& iNode)const
+	int NodeFN::GetNeighborNodeNum(const int& idx)const
 	{
-		return m_neighor_node_num[iNode];
+		return m_neighor_node_num[idx];
 	}
-	const int* NodeFN::GetNeighborFace(const int& iNode)const
+	const int* NodeFN::GetNeighborFace(const int& idx)const
 	{
-		return m_neighor_face + m_neighor_face_index[iNode];
+		return m_neighor_face + m_neighor_face_index[idx];
 	}
-	int NodeFN::GetNeighborFaceNum(const int& iNode)const
+	int NodeFN::GetNeighborFaceNum(const int& idx)const
 	{
-		return m_neighor_face_num[iNode];
+		return m_neighor_face_num[idx];
 	}
-	const int* NodeFN::GetNeighborCell(const int& iNode)const
+	const int* NodeFN::GetNeighborCell(const int& idx)const
 	{
-		return m_neighor_cell + m_neighor_cell_index[iNode];
+		return m_neighor_cell + m_neighor_cell_index[idx];
 	}
-	int NodeFN::GetNeighborCellNum(const int& iNode)const
+	int NodeFN::GetNeighborCellNum(const int& idx)const
 	{
-		return m_neighor_cell_num[iNode];
+		return m_neighor_cell_num[idx];
 	}
 
 }

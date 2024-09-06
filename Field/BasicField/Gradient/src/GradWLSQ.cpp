@@ -1,18 +1,18 @@
 #include "GradWLSQ.h"
-#include"Log.h"
+#include "Log.h"
 using namespace zaran;
-zaran::GradWLSQ::GradWLSQ(GridFN* grid) :m_grid(grid)
+zaran::GradWLSQ::GradWLSQ(GridFN *grid) : m_grid(grid)
 {
     m_grid = grid;
     auto node = grid->GetNode();
-    int node_num = node->GetNodeNum();
+    int node_num = node->GetCount();
     double r11, r12, r13, r22, r23, r23_a, r23_b, r33;
     double alpha1, alpha2, alpha3;
     double beta;
     double alpha[3];
     std::vector<double> dx, dy, dz, weight;
-    m_omega = new double** [node_num];
-    for (int iNode = 0;iNode < node_num;iNode++)
+    m_omega = new double **[node_num];
+    for (int iNode = 0; iNode < node_num; iNode++)
     {
         // if (node->GetType(iNode) != NodeType::inner)
         //     continue;
@@ -24,8 +24,8 @@ zaran::GradWLSQ::GradWLSQ(GridFN* grid) :m_grid(grid)
         dy.resize(neighbor_num);
         dz.resize(neighbor_num);
         weight.resize(neighbor_num);
-        m_omega[iNode] = new double* [neighbor_num];
-        for (int iNeigh = 0;iNeigh < neighbor_num;iNeigh++)
+        m_omega[iNode] = new double *[neighbor_num];
+        for (int iNeigh = 0; iNeigh < neighbor_num; iNeigh++)
         {
             dx[iNeigh] = node->GetCoord(neighbors[iNeigh])[0] - node->GetCoord(iNode)[0];
             dy[iNeigh] = node->GetCoord(neighbors[iNeigh])[1] - node->GetCoord(iNode)[1];
@@ -43,13 +43,34 @@ zaran::GradWLSQ::GradWLSQ(GridFN* grid) :m_grid(grid)
             r23_b += dx[iNeigh] * dz[iNeigh];
             r33 += dz[iNeigh] * dz[iNeigh];
         }
-        r11 = sqrt(r11);
-        r12 = r12 / r11;
-        r22 = sqrt(r22 - r12 * r12);
-        r13 = r13 / r11;
-        r23 = (r23_a - r12 * r23_b / r11) / r22;
-        r33 = sqrt(r33 - r13 * r13 - r23 * r23);
-        beta = (r12 * r23 - r13 * r22) / (r11 * r22);
+        if (r11 >= 0.0)
+            r11 = sqrt(r11);
+        else
+            r11 = 0.0;
+        if (r11 != 0.0)
+            r12 = r12 / r11;
+        else
+            r12 = 0.0;
+        if (r22 - r12 * r12 >= 0.0)
+            r22 = sqrt(r22 - r12 * r12);
+        else
+            r22 = 0.0;
+        if (r11 != 0.0)
+            r13 = r13 / r11;
+        else
+            r13 = 0.0;
+        if (r22 != 0.0 && r11 != 0.0)
+            r23 = r23_a / r22 - r23_b * r12 / (r11 * r22);
+        else
+            r23 = 0.0;
+        if (r33 - r23 * r23 - r13 * r13 >= 0.0)
+            r33 = sqrt(r33 - r23 * r23 - r13 * r13);
+        else
+            r33 = 0.0;
+        if (r11 * r22 == 0.0)
+            beta = 0.0;
+        else
+            beta = (r12 * r23 - r13 * r22) / (r11 * r22);
         for (int iNeigh = 0; iNeigh < neighbor_num; ++iNeigh)
         {
             m_omega[iNode][iNeigh] = new double[3];
@@ -62,18 +83,28 @@ zaran::GradWLSQ::GradWLSQ(GridFN* grid) :m_grid(grid)
             m_omega[iNode][iNeigh][0] *= weight[iNeigh];
             m_omega[iNode][iNeigh][1] *= weight[iNeigh];
             m_omega[iNode][iNeigh][2] *= weight[iNeigh];
+            if (isnan(m_omega[iNode][iNeigh][0]) || isnan(m_omega[iNode][iNeigh][1]) || isnan(m_omega[iNode][iNeigh][2]))
+            {
+                Log::warn("GradWLSQ::GradWLSQ: omega is nan");
+            }
+            if (isnan(m_omega[iNode][iNeigh][0]))
+                m_omega[iNode][iNeigh][0] = 0.0;
+            if (isnan(m_omega[iNode][iNeigh][1]))
+                m_omega[iNode][iNeigh][1] = 0.0;
+            if (isnan(m_omega[iNode][iNeigh][2]))
+                m_omega[iNode][iNeigh][2] = 0.0;
         }
     }
 }
 GradWLSQ::~GradWLSQ()
 {
     auto node = m_grid->GetNode();
-    int node_num = node->GetNodeNum();
-    for (int iNode = 0;iNode < node_num;iNode++)
+    int node_num = node->GetCount();
+    for (int iNode = 0; iNode < node_num; iNode++)
     {
         auto neighbors = node->GetNeighborNode(iNode);
         int neighbor_num = node->GetNeighborNodeNum(iNode);
-        for (int iNeigh = 0;iNeigh < neighbor_num;iNeigh++)
+        for (int iNeigh = 0; iNeigh < neighbor_num; iNeigh++)
         {
             delete[] m_omega[iNode][iNeigh];
         }
@@ -82,7 +113,7 @@ GradWLSQ::~GradWLSQ()
     delete[] m_omega;
 }
 
-void GradWLSQ::CalcGradient(GridFN* grid, const double* data, double* grad_x, double* grad_y, double* grad_z)
+void GradWLSQ::CalcGradient(GridFN *grid, const double *data, double *grad_x, double *grad_y, double *grad_z)
 {
     if (grid != m_grid)
     {
@@ -90,21 +121,26 @@ void GradWLSQ::CalcGradient(GridFN* grid, const double* data, double* grad_x, do
         return;
     }
     auto node = grid->GetNode();
-    int node_num = node->GetNodeNum();
+    int node_num = node->GetCount();
 #pragma omp parallel for
-    for (int iNode = 0;iNode < node_num;iNode++)
+    for (int iNode = 0; iNode < node_num; iNode++)
     {
-        // if (node->GetType(iNode) != NodeType::inner)
-        //     continue;
+        if (node->GetType(iNode) != NodeType::inner)
+            continue;
         auto neighbors = node->GetNeighborNode(iNode);
         int neighbor_num = node->GetNeighborNodeNum(iNode);
         grad_x[iNode] = grad_y[iNode] = grad_z[iNode] = 0.0;
-        for (int iNeigh = 0;iNeigh < neighbor_num;iNeigh++)
+        for (int iNeigh = 0; iNeigh < neighbor_num; iNeigh++)
         {
             int iNeighNode = neighbors[iNeigh];
             grad_x[iNode] += m_omega[iNode][iNeigh][0] * (data[iNeighNode] - data[iNode]);
             grad_y[iNode] += m_omega[iNode][iNeigh][1] * (data[iNeighNode] - data[iNode]);
             grad_z[iNode] += m_omega[iNode][iNeigh][2] * (data[iNeighNode] - data[iNode]);
+        }
+        if (isnan(grad_x[iNode]) || isnan(grad_y[iNode]) || isnan(grad_z[iNode]))
+        {
+            Log::warn("GradWLSQ::CalcGradient: grad is nan");
+            grad_x[iNode] = grad_y[iNode] = grad_z[iNode] = 0.0;
         }
     }
 }

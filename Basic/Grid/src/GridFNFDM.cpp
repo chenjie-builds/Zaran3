@@ -102,7 +102,7 @@ namespace zaran
     }
     void GridFN::InitNode()
     {
-        m_total_node_num = m_node->GetNodeNum();
+        m_total_node_num = m_node->GetCount();
         for (int iNode = 0; iNode < m_total_node_num; iNode++)
         {
             if (m_node->GetType(iNode) == NodeType::inner)

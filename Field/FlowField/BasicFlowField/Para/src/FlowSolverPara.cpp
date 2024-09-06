@@ -280,7 +280,7 @@ void zaran::FlowSolverPara::SetCurrentStep(const int& currentStep)
 	m_current_step = currentStep;
 }
 
-const int& zaran::FlowSolverPara::GetEquNum() const
+const int& zaran::FlowSolverPara::GetEqNum() const
 {
 	return m_equ_num;
 

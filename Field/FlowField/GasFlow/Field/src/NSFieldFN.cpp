@@ -28,7 +28,7 @@ namespace zaran
         auto grid = GetGrid();
         auto node = grid->GetNode();
         auto para = GetSolverPara();
-        int equ_num = para->GetEquNum();
+        int equ_num = para->GetEqNum();
         int inner_node_num = grid->GetInnerNodeNum();
         auto inner_node = grid->GetInnerNode();
         double norm_inf = -LARGE_NUMBER;

@@ -23,7 +23,7 @@ void zaran::NodeStruct::Allocate(int i_num, int j_num, int k_num)
         delete[] m_coord;
     }
     m_coord = new double[3 * i_num * j_num * k_num];
-    SetNodeNum(i_num * j_num * k_num);
+    SetCount(i_num * j_num * k_num);
 }
 
 void NodeStruct::SetCoord(int idx_i, int idx_j, int idx_k, const double *coord)

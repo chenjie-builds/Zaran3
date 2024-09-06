@@ -93,7 +93,8 @@
         "xtree": "cpp",
         "xutility": "cpp",
         "*.txx": "cpp",
-        "dense": "cpp"
+        "dense": "cpp",
+        "codecvt": "cpp"
     },
     "C_Cpp.intelliSenseEngineFallback": "enabled",
     "cmake.generator": "Ninja",

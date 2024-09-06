@@ -32,11 +32,13 @@ namespace zaran
     //FirstOrder:一阶插值
     //MUSCL: MUSCL插值
     //WCNS5:WCNS5插值
+    //Grad:梯度插值
     enum class InterpolationScheme
     {
         FirstOrder,
         MUSCL,
         WCNS5,
+        Grad,
     };
     //Jacobi计算格式
     //V1:原始格式

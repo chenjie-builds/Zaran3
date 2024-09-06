@@ -26,8 +26,8 @@ namespace zaran
 		/// @param ni i方向上的节点总数
 		/// @param nj j方向上的节点总数 
 		/// @param nk k方向上的节点总数
-		/// @param ghost_size ghost节点层数
-		void Allocate(int ni, int nj, int nk, int ghost_size);
+		/// @param ghost_level ghost节点层数
+		void Allocate(int ni, int nj, int nk, int ghost_level);
 	public:
 		int GetNi();
 		int GetNj();
@@ -37,8 +37,12 @@ namespace zaran
 		NodeStruct* GetNode() { return m_node; }
 		FaceStruct* GetFace() { return m_face; }
 		CellStruct* GetCell() { return m_cell; }
+		/// @brief 获取边界条件
+		/// @return 
 		BoundMapStruct* GetBoundMap() { return m_bound_map; }
-		int GetGhostSize() { return m_ghost_size; }
+		/// @brief 获取ghost节点层数
+		/// @return  ghost节点层数
+		int GetGhostLevel() { return m_ghost_level; }
 	public:
 		/// @brief 返回用于计算的节点范围,不包含ghost节点
 		/// @param iStart i方向上的起始索引
@@ -50,7 +54,7 @@ namespace zaran
 		void GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd);
 	private:
 		/// @brief ghost节点层数
-		int m_ghost_size;
+		int m_ghost_level;
 		/// @brief 结构网格节点
 		NodeStruct* m_node;
 		/// @brief 	结构网格面
