@@ -113,6 +113,7 @@ namespace zaran
     void WallBC(BoundStruct &bound);
     void RiemannBC(BoundStruct &bound);
     void SymmetryBC(BoundStruct &bound);
+    void VortexBC(BoundStruct &bound);
 
   protected:
     void CheckPrimtive() override;

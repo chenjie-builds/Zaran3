@@ -16,7 +16,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include"GridFNFDM.h"
+#include "GridFNFDM.h"
 namespace zaran
 {
   /// @brief 读取中山大学网格数据
@@ -25,8 +25,9 @@ namespace zaran
   class FNGridFactorySYSU : public GridFactory
   {
   public:
-    FNGridFactorySYSU(const string& node_file_name = "node.dat", const string& ele_file_name = "cell.dat", const string& bnd_file_name = "bound.dat");
-    GridFN* CreateGrid() override;
+    FNGridFactorySYSU(const string &node_file_name = "node.dat", const string &ele_file_name = "cell.dat", const string &bnd_file_name = "bound.dat");
+    void CreateGrid(GridBase **&grid_list, int &grid_num) override;
+
   private:
     void ReadNodeFile();
     void SortNeiborNode();
@@ -37,9 +38,10 @@ namespace zaran
     void CheckUnkownNode();
     void CheckNeighborNum();
     void AddSelfToNeighbor();
-    //将内部节点的邻居节点加入到边界节点的邻居节点中
+    // 将内部节点的邻居节点加入到边界节点的邻居节点中
     void SetBoundNeighbor();
-    void ConvertToGrid(GridFN*& grid);
+    void ConvertToGrid(GridFN *&grid);
+
   private:
     struct BoundNode
     {
@@ -55,7 +57,6 @@ namespace zaran
       std::vector<double> normal;
       double area;
     };
-
 
   private:
     string m_node_file_name;

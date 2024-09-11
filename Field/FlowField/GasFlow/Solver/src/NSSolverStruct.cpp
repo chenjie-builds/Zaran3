@@ -65,6 +65,8 @@ namespace zaran
     }
     void NSSolverStruct::InitFieldFarFlow()
     {
+        InitFieldVortex();
+        return;
         auto grid = GetGrid();
         auto data_manager = GetDataManager();
         auto ni = m_idx_proxy->GetNi();
@@ -175,7 +177,7 @@ namespace zaran
                     x = node->GetCoord(i, j, k)[0];
                     y = node->GetCoord(i, j, k)[1];
                     z = node->GetCoord(i, j, k)[2];
-                    r2 = x * x + y * y + z * z;
+                    r2 = x * x + y * y;
                     prim[0] = pow(1.0 - (gamma - 1.0) * beta * beta * exp(1.0 - r2) / (8.0 * gamma * PI * PI), 1.0 / (gamma - 1.0));
                     prim[4] = pow(prim[0], gamma);
                     prim[1] = beta * exp(0.5 * (1.0 - r2)) / (2.0 * PI) * (-y);
@@ -6326,7 +6328,9 @@ namespace zaran
                         lamda += abs(u_zeta) + c * norm_zeta;
                     }
                     lamda = lamda * jacobi;
-                    data_manager->SetTimeStep(idx, cfl / lamda);
+                    // data_manager->SetTimeStep(idx, cfl / lamda);
+                    data_manager->SetTimeStep(idx, 0.002);
+
                     if (data_manager->GetTimeStep(idx) < min_dt)
                     {
                         min_dt = data_manager->GetTimeStep(idx);
@@ -7172,7 +7176,7 @@ namespace zaran
 #pragma omp parallel for
                 for (int iBound = 0; iBound < bound.size(); ++iBound)
                 {
-                    OutletBC(bound[iBound]);
+                    VortexBC(bound[iBound]);
                 }
             }
             else if (bound_name == "wall")
@@ -7183,11 +7187,6 @@ namespace zaran
                     WallBC(bound[iBound]);
                 }
             }
-            else
-            {
-                Log::error("Boundary condition not found");
-                exit(0);
-            }
         }
     }
     void NSSolverStruct::InletBC(BoundStruct &bound)
@@ -7196,7 +7195,7 @@ namespace zaran
         auto data_manager = GetDataManager();
         int ghost_size = grid->GetGhostLevel();
         int i_bound, j_bound, k_bound;
-        bound.GetIdxBound(i_bound, j_bound, k_bound);
+        bound.GetIdx(i_bound, j_bound, k_bound);
         auto bound_direction = bound.GetDirection();
         double prim_far[5];
         prim_far[0] = GetPara()->GetInflowDensity();
@@ -7232,7 +7231,7 @@ namespace zaran
         auto data_manager = GetDataManager();
         int ghost_size = grid->GetGhostLevel();
         int i_bound, j_bound, k_bound;
-        bound.GetIdxBound(i_bound, j_bound, k_bound);
+        bound.GetIdx(i_bound, j_bound, k_bound);
         int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
         int i_ghost, j_ghost, k_ghost;
         for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
@@ -7253,9 +7252,9 @@ namespace zaran
         auto grid = GetGrid();
         auto data_manager = GetDataManager();
         int ghost_size = grid->GetGhostLevel();
-        auto norm_bnd = bound.GetNormBound();
+        auto norm_bnd = bound.GetNorm();
         int i_bound, j_bound, k_bound;
-        bound.GetIdxBound(i_bound, j_bound, k_bound);
+        bound.GetIdx(i_bound, j_bound, k_bound);
         int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
         int i_ref, j_ref, k_ref;
         int i_ghost, j_ghost, k_ghost;
@@ -7293,6 +7292,43 @@ namespace zaran
     }
     void NSSolverStruct::SymmetryBC(BoundStruct &bound)
     {
+    }
+    void NSSolverStruct::VortexBC(BoundStruct &bound)
+    {
+        auto grid = GetGrid();
+        auto node = grid->GetNode();
+        auto para = GetPara();
+        auto data_manager = GetDataManager();
+        int ghost_size = grid->GetGhostLevel();
+        int i_bound, j_bound, k_bound;
+        bound.GetIdx(i_bound, j_bound, k_bound);
+        int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+        int i_ghost, j_ghost, k_ghost;
+        double beta = 5.0;
+        double x, y, z;
+        double r2;
+        double prim[5];
+        double gamma = 1.4;
+        for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
+        {
+            i_ghost = i_bound + iGhost * bound.GetDirection()[0];
+            j_ghost = j_bound + iGhost * bound.GetDirection()[1];
+            k_ghost = k_bound + iGhost * bound.GetDirection()[2];
+            int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+            x = node->GetCoord(i_ghost, j_ghost, k_ghost)[0];
+            y = node->GetCoord(i_ghost, j_ghost, k_ghost)[1];
+            z = node->GetCoord(i_ghost, j_ghost, k_ghost)[2];
+            r2 = x * x + y * y;
+            prim[0] = pow(1.0 - (gamma - 1.0) * beta * beta * exp(1.0 - r2) / (8.0 * gamma * PI * PI), 1.0 / (gamma - 1.0));
+            prim[4] = pow(prim[0], gamma);
+            prim[1] = beta * exp(0.5 * (1.0 - r2)) / (2.0 * PI) * (-y);
+            prim[2] = beta * exp(0.5 * (1.0 - r2)) / (2.0 * PI) * (x);
+            prim[3] = 0.0;
+            for (int idx_eq = 0; idx_eq < para->GetEqNum(); ++idx_eq)
+            {
+                data_manager->SetPrim(idx_eq, idx_ghost, prim[idx_eq]);
+            }
+        }
     }
     void NSSolverStruct::CheckPrimtive()
     {

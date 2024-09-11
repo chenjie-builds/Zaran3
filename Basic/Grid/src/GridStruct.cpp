@@ -60,7 +60,7 @@ namespace zaran
 		m_face = new FaceStruct();
 		m_cell = new CellStruct();
 		m_cell->Allocate(ni + ghost_level * 2 - 1, nj + ghost_level * 2 - 1, nk + ghost_level * 2 - 1);
-		m_bound_map = new BoundMapStruct();
+		m_bound_map = new BoundManagerStruct();
 	}
 	int GridStruct::GetNi()
 	{
@@ -86,13 +86,13 @@ namespace zaran
 	{
 		return m_node->GetCount();
 	}
-	void GridStruct::GetRange(int &iStart, int &iEnd, int &jStart, int &jEnd, int &kStart, int &kEnd)
+	void GridStruct::GetRange(int &is, int &ie, int &js, int &je, int &ks, int &ke)
 	{
-		iStart = GetGhostLevel();
-		iEnd = GetNi() - GetGhostLevel() - 1;
-		jStart = GetGhostLevel();
-		jEnd = GetNj() - GetGhostLevel() - 1;
-		kStart = GetGhostLevel();
-		kEnd = GetNk() - GetGhostLevel() - 1;
+		is = GetGhostLevel();
+		ie = GetNi() - GetGhostLevel() - 1;
+		js = GetGhostLevel();
+		je = GetNj() - GetGhostLevel() - 1;
+		ks = GetGhostLevel();
+		ke = GetNk() - GetGhostLevel() - 1;
 	}
 }

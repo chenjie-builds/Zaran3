@@ -11,7 +11,7 @@
 //==============================================================================||
 #pragma once
 #include "GlobalData.h"
-#include "FieldController.h"
+#include "FieldSimulation.h"
 #include "GridFactory.h"
 #include "GridList.h"
 namespace zaran

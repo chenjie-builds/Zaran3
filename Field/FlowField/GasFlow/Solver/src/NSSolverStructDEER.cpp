@@ -188,8 +188,8 @@ namespace zaran
                         mid_coord_right[iDim] = (right_coord[iDim] + coord[iDim]) / 2;
                         mid_coord[iDim] = (mid_coord_left[iDim] + mid_coord_right[iDim]) / 2;
                         move_vector[iDim] = coord[iDim] - mid_coord[iDim];
-                        // mid_coord_left[iDim] += move_vector[iDim];
-                        // mid_coord_right[iDim] += move_vector[iDim];
+                        mid_coord_left[iDim] += move_vector[iDim];
+                        mid_coord_right[iDim] += move_vector[iDim];
                     }
                     idx = idx_proxy->GetIdx(i, j, k);
                     riemann_para[0].norm(0) = node_metrics->GetXi(idx)[0];
@@ -220,8 +220,8 @@ namespace zaran
                         mid_coord_right[iDim] = (right_coord[iDim] + coord[iDim]) / 2;
                         mid_coord[iDim] = (mid_coord_left[iDim] + mid_coord_right[iDim]) / 2;
                         move_vector[iDim] = coord[iDim] - mid_coord[iDim];
-                        // mid_coord_left[iDim] += move_vector[iDim];
-                        // mid_coord_right[iDim] += move_vector[iDim];
+                        mid_coord_left[iDim] += move_vector[iDim];
+                        mid_coord_right[iDim] += move_vector[iDim];
                     }
                     riemann_para[2].norm(0) = node_metrics->GetEta(idx)[0];
                     riemann_para[2].norm(1) = node_metrics->GetEta(idx)[1];
@@ -253,8 +253,8 @@ namespace zaran
                             mid_coord_right[iDim] = (right_coord[iDim] + coord[iDim]) / 2;
                             mid_coord[iDim] = (mid_coord_left[iDim] + mid_coord_right[iDim]) / 2;
                             move_vector[iDim] = coord[iDim] - mid_coord[iDim];
-                            // mid_coord_left[iDim] += move_vector[iDim];
-                            // mid_coord_right[iDim] += move_vector[iDim];
+                            mid_coord_left[iDim] += move_vector[iDim];
+                            mid_coord_right[iDim] += move_vector[iDim];
                         }
                         riemann_para[4].norm(0) = node_metrics->GetZeta(idx)[0];
                         riemann_para[4].norm(1) = node_metrics->GetZeta(idx)[1];
@@ -475,12 +475,12 @@ namespace zaran
             value_left[iVal] = data_manager->GetPrim(iVal, idx_left);
             for (int iDim = 0; iDim < 3; ++iDim)
             {
-                value_left[iVal] += data_manager->GetLimiter(iVal, idx_left) * (mid_coord[iDim] - lef_coord[iDim]) * data_manager->GetPrimGrad(iVal, iDim, idx_left);
+                value_left[iVal] += /*data_manager->GetLimiter(iVal, idx_left) **/ (mid_coord[iDim] - lef_coord[iDim]) * data_manager->GetPrimGrad(iVal, iDim, idx_left);
             }
             value_right[iVal] = data_manager->GetPrim(iVal, idx_right);
             for (int iDim = 0; iDim < 3; ++iDim)
             {
-                value_right[iVal] += data_manager->GetLimiter(iVal, idx_right) * (mid_coord[iDim] - right_coord[iDim]) * data_manager->GetPrimGrad(iVal, iDim, idx_right);
+                value_right[iVal] += /*(mid_coord[iDim] - right_coord[iDim]) **/ (mid_coord[iDim] - right_coord[iDim]) * data_manager->GetPrimGrad(iVal, iDim, idx_right);
             }
         }
     }

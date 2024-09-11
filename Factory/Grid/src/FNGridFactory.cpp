@@ -17,7 +17,7 @@ namespace zaran
     {
     }
 
-    GridFN *FNGridFactorySYSU::CreateGrid()
+    void FNGridFactorySYSU::CreateGrid(GridBase **&grid_list, int &grid_num)
     {
         ReadNodeFile();
         ReadCellFile();
@@ -29,16 +29,21 @@ namespace zaran
         SetBoundNeighbor();
         AddSelfToNeighbor();
         CheckNeighborNum();
-        GridFN *grid = new GridFN("FNFDM", 0, 3);
-        ConvertToGrid(grid);
-        return grid;
+        grid_num = 1;
+        grid_list = new GridBase *[grid_num];
+        for (int i = 0; i < grid_num; i++)
+        {
+            grid_list[i] = new GridFN("FNFDM", 0, 3);
+            auto grid = static_cast<GridFN *>(grid_list[i]);
+            ConvertToGrid(grid);
+        }
     }
 
     void FNGridFactorySYSU::ReadNodeFile()
     {
         std::ifstream fin(m_node_file_name);
         int node_num;
-        // 读取所有节点坐�?
+        // read all node coord
         fin >> node_num;
         Log::info("Total node num:{}", node_num);
         m_node_coord.resize(node_num);
@@ -49,7 +54,7 @@ namespace zaran
             m_node_coord[i].resize(3);
             fin >> m_node_coord[i][0] >> m_node_coord[i][1] >> m_node_coord[i][2];
         }
-        // 读取所有内部节点邻居节�?
+        // read inner node's neighbor node
         int innerNodeNum = 0;
         fin >> innerNodeNum;
         Log::info("Inner node num:{}", innerNodeNum);
@@ -73,7 +78,7 @@ namespace zaran
             }
             m_node_type[innerNodeIndex] = NodeType::inner;
         }
-        // 读取边界节点
+        // read bound node info
         int total_bound_node_num = 0;
         int nBound;
         fin >> nBound;
@@ -864,7 +869,7 @@ namespace zaran
                     // Log::info("iBound={}, neighbor num: {}, inner num: {}, search radius: {:6E}", iBound, result->GetNumberOfIds(), inner_num, search_radius);
                     if (inner_num > 6 || result->GetNumberOfIds() > 100)
                         search_radius *= 0.95;
-                    else if ((inner_num != 0 && result->GetNumberOfIds() > 10) ||( inner_num >=3&&result->GetNumberOfIds() >=7)||result->GetNumberOfIds() > 30)
+                    else if ((inner_num != 0 && result->GetNumberOfIds() > 10) || (inner_num >= 3 && result->GetNumberOfIds() >= 7) || result->GetNumberOfIds() > 30)
                         break;
                     else
                         search_radius *= 1.1;

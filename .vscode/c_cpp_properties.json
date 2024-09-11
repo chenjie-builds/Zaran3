@@ -8,7 +8,6 @@
                 "${vcpkgRoot}/x86-windows/include"
             ],
             "defines": [
-                "_DEBUG",
                 "UNICODE",
                 "_UNICODE"
             ],

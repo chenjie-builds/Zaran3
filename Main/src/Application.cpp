@@ -167,7 +167,7 @@ namespace zaran
 		}
 		FieldBuilder* fieldFactory = new FieldBuilder(grid_type, solver_type, dim);
 		FieldManager* global_field = fieldFactory->Create();
-		FieldController* controller = new FieldController(global_field);
+		FieldSimulation* controller = new FieldSimulation(global_field);
 		controller->SolveField();
 	}
 

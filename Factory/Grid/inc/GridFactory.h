@@ -19,10 +19,13 @@ namespace zaran
   /// @details 根据控制参数生成网格
   /// @return 返回生成的
   /// @note 只负责生成网格，不负责销毁网格，销毁网格由Field 负责
-class GridFactory
-{
+  class GridFactory
+  {
   public:
-    virtual GridBase* CreateGrid() = 0;
+    /// @brief 生成网格数组
+    /// @param grid_list 生成的网格数组
+    /// @param grid_num 网格数组大小
+    virtual void CreateGrid(GridBase **&grid_list, int& grid_num) = 0;
     virtual ~GridFactory() {}
-};
+  };
 } // namespace zaran

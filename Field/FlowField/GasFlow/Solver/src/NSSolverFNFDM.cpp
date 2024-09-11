@@ -293,11 +293,6 @@ namespace zaran
 					WallBC(bound[iBound]);
 				}
 			}
-			else
-			{
-				Log::error("Boundary condition not found");
-				exit(0);
-			}
 		}
 	}
 	void NSSolverFNFDM::InletBC(BoundFN &bound)

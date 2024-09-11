@@ -1,5 +1,6 @@
 #pragma once
-#include"Field.h"
+#include "Field.h"
+#include "FieldDataCommInfo.h"
 #include <vector>
 namespace zaran
 {
@@ -10,19 +11,24 @@ namespace zaran
     public:
         FieldManager();
         ~FieldManager();
+
     public:
         /// @brief 释放
         void FreeMemory();
         /// @brief 获取Field
-        Field* GetField(int index);
+        Field *GetField(int idx_field);
+        /// @brief 获取field data communication information
+        FieldDataCommInfo *GetFieldDataCommInfo(int idx_field);
         /// @brief 获取Field数量
-        int GetFieldSize();
+        int GetFieldNum();
         /// @brief 添加Field
-        void AddField(Field* field);
+        void AddField(Field *field, FieldDataCommInfo *field_data_comm_info);
         /// @brief 移除Field
-        void RemoveField(Field* field);
+        void RemoveField(Field *field);
     private:
-        std::vector<Field*> m_field;
-
+        /// @brief Field, store all fields
+        std::vector<Field *> m_field;
+        /// @brief  field data communication information
+        std::vector<FieldDataCommInfo *> m_field_data_comm_info;
     };
 } // namespace zaran
