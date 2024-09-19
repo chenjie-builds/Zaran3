@@ -17,6 +17,7 @@ namespace zaran
         /// @param k_bnd_tgt the index of the boundary in k direction of the target block
         /// @param direction_tgt a 3-element array, each element is -1, 0 or 1
         BoundStruct(int i_bnd, int j_bnd, int k_bnd, const int *direction, const double *norm, int i_bnd_tgt = -1, int j_bnd_tgt = -1, int k_bnd_tgt = -1, const int *direction_tgt = nullptr, int target_block = -1);
+        BoundStruct()=default;
         ~BoundStruct();
         /// @brief set the index of the boundary
         /// @param i_bnd the index of the boundary in i direction

@@ -26,6 +26,6 @@ namespace zaran
         /// @param right_coord coordinate of right point
         /// @param value_left interpolated value of left side at mid point
         /// @param value_right interpolated value of right side at mid point
-        void MidNodeGrad(int idx_left, int idx_right, const double *lef_coord, const double *mid_coord, const double *right_coord, double *value_left, double *value_right);
+       virtual void MidNodeGrad(int idx_left, int idx_right, const double *lef_coord, const double *mid_coord, const double *right_coord, double *value_left, double *value_right);
     };
 }

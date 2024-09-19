@@ -33,7 +33,7 @@ void BoundFN::SetIdxBound(const int& idx_bound)
 {
 	m_idx_bound = idx_bound;
 }
-void BoundFN::SetNormBound(const DVector3D& boundNorm)
+void BoundFN::SetNorm(const double* boundNorm)
 {
 	for(int i=0;i<3;i++)
 	{

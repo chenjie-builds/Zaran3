@@ -25,7 +25,7 @@ namespace zaran
     /// @brief 生成网格数组
     /// @param grid_list 生成的网格数组
     /// @param grid_num 网格数组大小
-    virtual void CreateGrid(GridBase **&grid_list, int& grid_num) = 0;
+    virtual void CreateGrid(GridBase **&grid_list, int& grid_num) {};
     virtual ~GridFactory() {}
   };
 } // namespace zaran

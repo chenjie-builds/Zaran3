@@ -1,52 +1,54 @@
-#include"PointCloudModel.h"
-#include"CommonPara.h"
+#include "PointCloudModel.h"
+#include "CommonPara.h"
 #include "MathBasic.h"
 using namespace zaran;
-PointCloudModel::PointCloudModel(const std::vector<DVector3D>& point_list)
+PointCloudModel::PointCloudModel(const std::vector<DVector3D> &point_list)
 {
-	vtkNew<vtkPoints>points;
+	vtkNew<vtkPoints> points;
 	DVector3D max, min;
 	max = DVector3D(-LARGE_NUMBER, -LARGE_NUMBER, -LARGE_NUMBER);
 	min = DVector3D(LARGE_NUMBER, LARGE_NUMBER, LARGE_NUMBER);
+	Box box;
 	for (size_t iPoint = 0; iPoint < point_list.size(); ++iPoint)
 	{
-		auto& x = point_list[iPoint].x();
-		auto& y = point_list[iPoint].y();
-		auto& z = point_list[iPoint].z();
+		auto &x = point_list[iPoint].x();
+		auto &y = point_list[iPoint].y();
+		auto &z = point_list[iPoint].z();
 		points->InsertPoint(iPoint, x, y, z);
-		max = { std::max(max.x(), x), std::max(max.y(), y), std::max(max.z(), z) };
-		min = { std::min(min.x(), x), std::min(min.y(), y), std::min(min.z(), z) };
-
+		box.x_min = std::min(box.x_min, x);
+		box.x_max = std::max(box.x_max, x);
+		box.y_min = std::min(box.y_min, y);
+		box.y_max = std::max(box.y_max, y);
+		box.z_min = std::min(box.z_min, z);
+		box.z_max = std::max(box.z_max, z);
 	}
-	this->SetBoxMax(max);
-	this->SetBoxMin(min);
+	SetBox(box);
 	vtkNew<vtkPolyData> polydata;
 	polydata->SetPoints(points);
-	pointTree_ = vtkNew<vtkKdTreePointLocator>();
-	pointTree_->SetDataSet(polydata);
-	pointTree_->BuildLocator();
+	m_point_cloud = vtkNew<vtkKdTreePointLocator>();
+	m_point_cloud->SetDataSet(polydata);
+	m_point_cloud->BuildLocator();
 }
 
-bool PointCloudModel::InModel(const DVector3D& pt)const
+bool PointCloudModel::InModel(const double *point_input) const
 {
-	//点云模型，所有输入的点都在外部
+	// 点云模型，所有输入的点都在外部
 	return false;
 }
 
-void PointCloudModel::GenModelPoint(const double delta)
+void PointCloudModel::GetClosestPoint(const double *point_input, double *point_find) const
 {
-	// Model is construct by point cloud
-	// do nothing!
+	double coord[3] = {point_input[0], point_input[1], point_input[2]};
+	vtkIdType id = m_point_cloud->FindClosestPoint(coord);
+	auto closetPt = m_point_cloud->GetDataSet()->GetPoint(id);
+	point_find[0] = closetPt[0];
+	point_find[1] = closetPt[1];
+	point_find[2] = closetPt[2];
 }
-DVector3D PointCloudModel::GetClosestPoint(const DVector3D& pt)const
+double PointCloudModel::GetClosestDistance(const double *point_input) const
 {
-	double coord[3] = { pt.x(), pt.y(), pt.z() };
-	vtkIdType id = pointTree_->FindClosestPoint(coord);
-	auto closetPt = pointTree_->GetDataSet()->GetPoint(id);
-	return DVector3D(closetPt[0], closetPt[1], closetPt[2]);
-}
-double PointCloudModel::NearestDistance(const DVector3D& pt)const
-{
-	DVector3D near_point = GetClosestPoint(pt);
-	return DistanceOfTwoPoints(pt.data(), near_point.data());
+	double coord[3] = {point_input[0], point_input[1], point_input[2]};
+	vtkIdType id = m_point_cloud->FindClosestPoint(coord);
+	auto closetPt = m_point_cloud->GetDataSet()->GetPoint(id);
+	return DistanceOfTwoPoints(point_input, closetPt);
 }

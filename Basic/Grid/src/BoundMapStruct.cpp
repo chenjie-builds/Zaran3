@@ -24,6 +24,15 @@ namespace zaran
         }
     }
 
+    void BoundManagerStruct::CreateBoundary(const string &name)
+    {
+        auto it = m_bound_map.find(name);
+        if (it == m_bound_map.end())
+        {
+            m_bound_map.insert({name, std::vector<BoundStruct>()});
+        }
+    }
+
     std::vector<BoundStruct> &BoundManagerStruct::GetBoundary(const string &name)
     {
         auto it = m_bound_map.find(name);

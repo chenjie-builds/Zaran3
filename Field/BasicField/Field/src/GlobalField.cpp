@@ -36,6 +36,14 @@ namespace zaran
     {
         return m_field_data_comm_info[idx_field];
     }
+    void FieldManager::SetFieldDataCommInfo(int idx_field, FieldDataCommInfo *field_data_comm_info)
+    {
+        if(m_field_data_comm_info[idx_field] != nullptr)
+        {
+            delete m_field_data_comm_info[idx_field];
+        }
+        m_field_data_comm_info[idx_field] = field_data_comm_info;
+    }
     int FieldManager::GetFieldNum()
     {
         return m_field.size();

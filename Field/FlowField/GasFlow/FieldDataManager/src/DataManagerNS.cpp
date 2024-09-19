@@ -214,11 +214,11 @@ namespace zaran
     void DataManagerNS::CreateData()
     {
         FieldDataType type = FieldDataType::real;
-        m_data->AddData("density", type, m_data_num);
-        m_data->AddData("x_velocity", type, m_data_num);
-        m_data->AddData("y_velocity", type, m_data_num);
-        m_data->AddData("z_velocity", type, m_data_num);
-        m_data->AddData("pressure", type, m_data_num);
+        // m_data->AddData("density", type, m_data_num);
+        // m_data->AddData("x_velocity", type, m_data_num);
+        // m_data->AddData("y_velocity", type, m_data_num);
+        // m_data->AddData("z_velocity", type, m_data_num);
+        // m_data->AddData("pressure", type, m_data_num);
         for (int idx_eq = 0;idx_eq < GetEqNum();idx_eq++)
         {
             m_data->AddData("primitive_" + std::to_string(idx_eq), type, m_data_num);

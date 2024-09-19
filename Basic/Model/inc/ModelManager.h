@@ -10,8 +10,8 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include"PointCloudModel.h"
-#include"BasicType.h"
+#include "PointCloudModel.h"
+#include "BasicType.h"
 /*
 外形几何类，所有的外形都存在这里
 modNum：		外形的个数
@@ -21,24 +21,24 @@ filename：	存储外形信息文件的文件名
 */
 namespace zaran
 {
-	class ModelVec
+	class ModelManager
 	{
-	private:
-		Array<Model*> modelVec;
 	public:
-		ModelVec() { modelVec.resize(0); };
-		ModelVec(Array<Model*> mod) :modelVec(mod) {};
-		ModelVec(const ModelVec& mod) { modelVec = mod.modelVec; };
-		void AddMod(Model* mod) { modelVec.push_back(mod); }
-		void AddMod(Array<Model*> mod);
-		void AddMod(ModelVec* mod);
-		const Model& GetModel(size_t iModel)const { return *modelVec[iModel]; }
-		DVector3D GetBoxMax(size_t imodel) { return modelVec[imodel]->GetBoxMax(); }
-		DVector3D GetBoxMin(size_t imodel) { return modelVec[imodel]->GetBoxMin(); }
-		bool InModel(const DVector3D& pt)const;
-		void GenPointCloud(const double delta);
-		DVector3D GetClosestPoint(const DVector3D& pt)const;
-		double NearestDistance(const DVector3D& pt)const;
-		const size_t GetModelNum()const { return modelVec.size(); }
+		ModelManager();
+		ModelManager(std::vector<Model *> model) : m_model(model) {};
+		ModelManager(const ModelManager &model) { m_model = model.m_model; };
+		void AddModel(Model *model);
+		void AddModel(std::vector<Model *> model);
+		void AddModel(ModelManager *model);
+		const Model *GetModel(size_t iModel) const { return m_model[iModel]; }
+		bool InModel(const double *pt) const;
+		void GetClosestPoint(const double *pt, double *point_find) const;
+		double GetClosestDistance(const double *pt) const;
+		const size_t GetModelNum() const { return m_model.size(); }
+		Box& GetBox() { return m_box; }
+
+	private:
+		std::vector<Model *> m_model;
+		Box m_box;
 	};
 }

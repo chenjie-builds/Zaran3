@@ -27,12 +27,12 @@ namespace zaran
 		/// @param nj j方向上的节点总数
 		/// @param nk k方向上的节点总数
 		/// @param ghost_level ghost节点层数
-		void Allocate(int ni, int nj, int nk, int ghost_level);
+		virtual void Allocate(int ni, int nj, int nk, int ghost_level);
 
 	public:
-		int GetNi();
-		int GetNj();
-		int GetNk();
+		int GetNi() const;
+		int GetNj() const;
+		int GetNk() const;
 		void GetNodeNum(int &ni, int &nj, int &nk);
 		int GetTotalNodeNum();
 		NodeStruct *GetNode() { return m_node; }

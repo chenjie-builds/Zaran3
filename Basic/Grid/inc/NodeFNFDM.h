@@ -39,7 +39,8 @@ class NodeFN:public NodeBase
     // 设置节点坐标
     void SetCoord(int idx, const double *coord);
     // 设置节点类型
-    void SetType(int idx, NodeType &type);
+    void SetType(int idx, NodeType type);
+    void SetNeighborNode(int node_num, const int *neighbor_node_num, const int *neighbor_node);
     /// @brief 设置邻居节点
     /// @param idx 需要设置的节点编号
     /// @param neighbor_num 邻居节点个数

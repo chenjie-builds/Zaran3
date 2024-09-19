@@ -19,6 +19,7 @@ namespace zaran
         Field *GetField(int idx_field);
         /// @brief 获取field data communication information
         FieldDataCommInfo *GetFieldDataCommInfo(int idx_field);
+        void SetFieldDataCommInfo(int idx_field, FieldDataCommInfo *field_data_comm_info);
         /// @brief 获取Field数量
         int GetFieldNum();
         /// @brief 添加Field

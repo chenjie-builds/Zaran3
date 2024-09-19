@@ -72,14 +72,20 @@ namespace zaran
 	}
 	double AngleOfTwoArray3D(const double* A, const double* B)
 	{
+		// 计算点积
 		double dot = A[0] * B[0] + A[1] * B[1] + A[2] * B[2];
-		double cross[3];
-		cross[0] = A[1] * B[2] - A[2] * B[1];
-		cross[1] = A[2] * B[0] - A[0] * B[2];
-		cross[2] = A[0] * B[1] - A[1] * B[0];
-		double cross_norm = sqrt(cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]);
-		double angle = atan2(cross_norm, dot);
-		return angle;
+
+		// 计算向量 A 的模长
+		double normA = sqrt(A[0] * A[0] + A[1] * A[1] + A[2] * A[2]);
+
+		// 计算向量 B 的模长
+		double normB = sqrt(B[0] * B[0] + B[1] * B[1] + B[2] * B[2]);
+
+		// 计算夹角的余弦值
+		double cosTheta = dot / (normA * normB);
+
+		// 计算并返回夹角（弧度）
+		return acos(cosTheta);
 	}
 	double TriangleArea(const double* pt1, const double* pt2, const double* pt3)
 	{

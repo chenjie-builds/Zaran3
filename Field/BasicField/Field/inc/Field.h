@@ -10,13 +10,13 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include"BasicType.h"
+#include "BasicType.h"
 #include "Solver.h"
 #include "GridBase.h"
 #include "SolverPara.h"
 #include "FieldDataManager.h"
 #include <iostream>
-#include"FieldSolver.h"
+#include "FieldSolver.h"
 namespace zaran
 {
 	/// @brief 场的类型
@@ -25,42 +25,47 @@ namespace zaran
 	{
 		NS_FlexibleNode,
 		NS_Structured,
+		NS_Zaran,
 		Unset,
 	};
-	//场类，包含网格，求解器，求解器参数，场数据
+	// 场类，包含网格，求解器，求解器参数，场数据
 	class Field
 	{
 	public:
-		Field(GridBase* grid, FieldType fieldType = FieldType::Unset);
-		virtual~Field();
+		Field(GridBase *grid=nullptr, FieldType fieldType = FieldType::Unset);
+		virtual ~Field();
+
 	public:
 		virtual void Allocate();
 		void SetIdx(int idx) { m_idx = idx; }
+		void SetGrid(GridBase *grid) { m_grid = grid; }
 		int GetIdx() { return m_idx; }
-		virtual GridBase* GetGrid() { return m_grid; }
-		virtual FieldSolver* GetSolver() { return m_solver; }
-		virtual FieldData* GetFieldData() { return m_fieldData; }
-		virtual SolverPara* GetSolverPara() { return m_solver_para; }
-		virtual DataManager* GetDataManager() { return m_data_manager; }
+		virtual GridBase *GetGrid() { return m_grid; }
+		virtual FieldSolver *GetSolver() { return m_solver; }
+		virtual FieldData *GetFieldData() { return m_data; }
+		virtual SolverPara *GetSolverPara() { return m_solver_para; }
+		virtual DataManager *GetDataManager() { return m_data_manager; }
 		FieldType GetFieldType() { return m_fieldType; }
+
 	protected:
 		virtual void AllocateFieldData();
 		virtual void AllocateSolver() = 0;
 		virtual void AllocateSolverPara() = 0;
 		virtual void AllocateDataManager() = 0;
+
 	protected:
 		/// @brief 本场在全场数组中的索引
 		int m_idx;
 		/// @brief 场的网格，可能是结构化网格，也可能是非结构化网格
-		GridBase* m_grid;
+		GridBase *m_grid;
 		/// @brief 场的求解器，用于求解场
-		FieldSolver* m_solver;
+		FieldSolver *m_solver;
 		/// @brief 场的数据，包含场的值，梯度等
-		FieldData* m_fieldData;
+		FieldData *m_data;
 		/// @brief 场的求解器参数，用于设置求解器的参数
-		SolverPara* m_solver_para;
+		SolverPara *m_solver_para;
 		/// @brief 场的数据管理器，用于管理场的数据
-		DataManager* m_data_manager;
+		DataManager *m_data_manager;
 		/// @brief 场的类型
 		FieldType m_fieldType;
 	};

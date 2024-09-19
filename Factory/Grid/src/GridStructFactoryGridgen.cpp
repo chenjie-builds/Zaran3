@@ -1,4 +1,4 @@
-#include "GridStructFactory.h"
+#include "GridStructFactoryGridgen.h"
 #include "Log.h"
 #include <fstream>
 #include "MathBasic.h"

@@ -17,8 +17,8 @@ namespace zaran
 		STLReader() {};
 		~STLReader() {};
 		void ReadSTLFile(const char* filename);
-		vtkSmartPointer<vtkPolyData>&  GetMesh() { return m_mesh; }
+		vtkSmartPointer<vtkPolyData>&  GetPolyData() { return m_poly_data; }
 	private:
-		vtkSmartPointer<vtkPolyData> m_mesh;
+		vtkSmartPointer<vtkPolyData> m_poly_data;
 	};
 }

@@ -25,14 +25,13 @@ namespace zaran
 	class PointCloudModel :public Model
 	{
 	private:
-		vtkSmartPointer< vtkKdTreePointLocator> pointTree_;
+		vtkSmartPointer< vtkKdTreePointLocator> m_point_cloud;
 	public:
 		PointCloudModel() {};
 		PointCloudModel(const Array<DVector3D>& point_list);
-		bool InModel(const DVector3D& pt)const  override;
-		DVector3D GetClosestPoint(const DVector3D& pt)const override;
-		void GenModelPoint(const double delta) override;//生成模型离散点数组
-		double NearestDistance(const DVector3D& pt)const override;//求出pt离模型最近的点
+		bool InModel(const double* point_input)const  override;
+		void GetClosestPoint(const double*point_input,double*point_find)const override;
+		double GetClosestDistance(const double* point_input)const override;//求出pt离模型最近的点
 
 	};
 }

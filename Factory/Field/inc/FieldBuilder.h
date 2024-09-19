@@ -22,6 +22,7 @@ namespace zaran
         void CreateGrid();
         void CreateField();
         void CreateSolver();
+         FieldManager * CreateFieldZaran();
     private:
         GridType m_grid_type;
         FieldSolverType m_solver_type;

@@ -83,10 +83,10 @@ zaran::GradWLSQ::GradWLSQ(GridFN *grid) : m_grid(grid)
             m_omega[iNode][iNeigh][0] *= weight[iNeigh];
             m_omega[iNode][iNeigh][1] *= weight[iNeigh];
             m_omega[iNode][iNeigh][2] *= weight[iNeigh];
-            if (isnan(m_omega[iNode][iNeigh][0]) || isnan(m_omega[iNode][iNeigh][1]) || isnan(m_omega[iNode][iNeigh][2]))
-            {
-                Log::warn("GradWLSQ::GradWLSQ: omega is nan");
-            }
+            // if (isnan(m_omega[iNode][iNeigh][0]) || isnan(m_omega[iNode][iNeigh][1]) || isnan(m_omega[iNode][iNeigh][2]))
+            // {
+            //     Log::warn("GradWLSQ::GradWLSQ: omega is nan");
+            // }
             if (isnan(m_omega[iNode][iNeigh][0]))
                 m_omega[iNode][iNeigh][0] = 0.0;
             if (isnan(m_omega[iNode][iNeigh][1]))

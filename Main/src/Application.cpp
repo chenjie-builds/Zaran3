@@ -182,8 +182,7 @@ namespace zaran
 		STLReader reader;
 		reader.ReadSTLFile(modelFileName.c_str());
 		PolyDataModel model;
-		model.SetPolyData(reader.GetMesh(), 1e-6);
-		model.ShowModel();
+		model.SetPolyData(reader.GetPolyData(), 1e-6);
 		if (model.IsClosed())
 			Log::info("Import Model: {}, is closed!", modelFileName);
 		else

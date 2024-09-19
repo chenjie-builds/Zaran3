@@ -22,7 +22,7 @@ namespace zaran
 		void SetIdxGhost(const int& idx_ghost);
 		void SetIdxRef(const int& innnerIndex);
 		void SetIdxBound(const int& idx_bound);
-		void SetNormBound(const DVector3D& boundNorm);
+		void SetNorm(const double* boundNorm);
 		int& GetIdxBound() { return m_idx_bound; }
 		int& GetIdxRef() { return m_idx_ref; }
 		int& GetIdxGhost() { return m_idx_ghost; }

@@ -1,29 +1,29 @@
 #include "FieldBuilder.h"
 #include "GridFactory.h"
 #include "FNGridFactory.h"
-#include "GridStructFactory.h"
+#include "GridStructFactoryGridgen.h"
+#include "GridBlockFactory.h"
 #include "NSFieldFN.h"
 #include "NSFieldStruct.h"
 #include "Log.h"
+#include "NSFieldZaran.h"
+#include "ReadSTL.h"
+#include "PolyData.h"
 namespace zaran
 {
     FieldManager *FieldBuilder::Create()
     {
+        return CreateFieldZaran();
         FieldManager *field_manager = new FieldManager();
         GridFactory *grid_factory;
         if (m_grid_type == GridType::Flexible)
         {
-            grid_factory = new FNGridFactorySYSU();
+            grid_factory = new GridFNFactorySYSU();
         }
         else if (m_grid_type == GridType::Structured)
         {
             grid_factory = new GridStructFactoryGridgen();
         }
-        // else if (m_grid_type == GridType::Zaran)
-        // {
-        //     grid_factory = new GridFactoryZaran3D();
-        // }
-
         else
         {
             Log::warn("Unsupported Dimension! Please Check!");
@@ -95,4 +95,47 @@ namespace zaran
     {
     }
 
+    FieldManager *FieldBuilder::CreateFieldZaran()
+    {
+        // Read model file
+        STLReader stl_reader;
+        string mode_file = GlobalData::GetString("modelFileName");
+        stl_reader.ReadSTLFile(mode_file.c_str());
+        // Create model manager
+        PolyDataModel *poly_data_model = new PolyDataModel();
+        poly_data_model->SetPolyData(stl_reader.GetPolyData(), 0.0001);
+        ModelManager *model_manager = new ModelManager();
+        model_manager->AddModel(poly_data_model);
+        // Create field manager
+        FieldManager *field_manager = new FieldManager();
+        NSFieldZaran *zaran_field = new NSFieldZaran();
+        zaran_field->SetModelManager(model_manager);
+        // Create master grid
+        GridBlockInfo grid_info;
+        grid_info.ni = GlobalData::GetInt("nx");
+        grid_info.nj = GlobalData::GetInt("ny");
+        grid_info.nk = GlobalData::GetInt("nz");
+        grid_info.bound_box.x_min = GlobalData::GetDouble("xMin");
+        grid_info.bound_box.x_max = GlobalData::GetDouble("xMax");
+        grid_info.bound_box.y_min = GlobalData::GetDouble("yMin");
+        grid_info.bound_box.y_max = GlobalData::GetDouble("yMax");
+        grid_info.bound_box.z_min = GlobalData::GetDouble("zMin");
+        grid_info.bound_box.z_max = GlobalData::GetDouble("zMax");
+        grid_info.bound_type_i_minus=GlobalData::GetString("boundTypeIMinus");
+        grid_info.bound_type_i_plus=GlobalData::GetString("boundTypeIPlus");
+        grid_info.bound_type_j_minus=GlobalData::GetString("boundTypeJMinus");
+        grid_info.bound_type_j_plus=GlobalData::GetString("boundTypeJPlus");
+        grid_info.bound_type_k_minus=GlobalData::GetString("boundTypeKMinus");
+        grid_info.bound_type_k_plus=GlobalData::GetString("boundTypeKPlus");
+        GridBlockFactory *grid_factory = new GridBlockFactory();
+        GridBlock *grid;
+        grid_factory->CreateGrid(grid, grid_info);
+        zaran_field->SetGrid(grid);
+        field_manager->AddField(zaran_field, nullptr);
+        // Create slave grid
+        zaran_field->CreateSlaveField(field_manager);
+        zaran_field->Allocate();
+
+        return field_manager;
+    }
 }

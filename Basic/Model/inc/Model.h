@@ -10,24 +10,21 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include"BasicType.h"
+#include "BasicType.h"
+#include "CommonPara.h"
 namespace zaran
 {
 	class Model
 	{
 	public:
-		virtual bool InModel(const DVector3D& pt)const = 0;//判断点pt是否在
-		virtual void GenModelPoint(const double delta) = 0;//生成模型离散点数组
-		virtual DVector3D GetClosestPoint(const DVector3D& pt)const = 0;//求出点pt在模型离散点数组中最近的点
-		virtual double NearestDistance(const DVector3D& pt)const = 0;
-		void SetBoxMin(const DVector3D& box_min);
-		void SetBoxMax(const DVector3D& box_max);
-		const DVector3D& GetBoxMax()const { return box_max_; }
-		const DVector3D& GetBoxMin()const { return box_min_; }
-
-		//	virtual vector<Point> ModelPoint() { return modelPoint_; };
+		virtual bool InModel(const double *point_input) const = 0;		  // 判断点pt是否在
+		virtual void GetClosestPoint(const double *point_input,double * point_find) const = 0; // 求出点pt在模型离散点数组中最近的点
+		virtual double GetClosestDistance(const double *point_input) const = 0;
+		const Box &GetBox() const { return m_box; }
+		void SetBox(const Box &box) { m_box = box; }
 	private:
-		DVector3D box_min_, box_max_;
+		// 模型的包围盒
+		Box m_box;
 	};
 
 }

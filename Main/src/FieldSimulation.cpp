@@ -118,13 +118,15 @@ void FieldSimulation::SolveField()
 
 void FieldSimulation::CalcResidual()
 {
+    m_res_max = -LARGE_NUMBER;
+    m_res_ave = 0;
     for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
     {
         auto field = dynamic_cast<FieldNS *>(m_field_manager->GetField(iter_field));
         field->CalcResidual();
         auto res_info = field->GetResInfo();
-        m_res_max = res_info->GetInfNorm(0);
-        m_res_ave = res_info->GetL2Norm(0);
+        m_res_max = Max(m_res_max, res_info->GetInfNorm(0));
+        m_res_ave = m_res_ave + res_info->GetL2Norm(0);
     }
     m_res_flag = true;
 }
@@ -198,7 +200,6 @@ void FieldSimulation::BackupGlobalData(std::string &back_folder)
     }
     GlobalData::Backup(back_folder);
 }
-
 
 bool FieldSimulation::ContinueSolve()
 {
@@ -278,13 +279,13 @@ void FieldSimulation::PostSolve()
     int currentIter = GlobalData::GetInt("currentIter");
     int calResidualIter = GlobalData::GetInt("calResidualIter");
     int writeFieldIter = GlobalData::GetInt("writeFieldIter");
-    if (currentIter % calResidualIter == 0 || ContinueSolve())
+    if (currentIter % calResidualIter == 0 && ContinueSolve())
     {
         CalcResidual();
         Log::info("iter= {}, dt={:E}, res_max= {:E}, res_ave= {:E}", GlobalData::GetInt("currentIter"), GlobalData::GetDouble("dt"), m_res_max, m_res_ave);
         SaveResidual();
     }
-    if (currentIter % writeFieldIter == 0 || ContinueSolve())
+    if (currentIter % writeFieldIter == 0 && ContinueSolve())
     {
         SaveFieldData();
     }
@@ -297,15 +298,18 @@ void FieldSimulation::CommFieldData()
         auto field = m_field_manager->GetField(iter_field);
         auto field_data = field->GetFieldData();
         auto comm_info = m_field_manager->GetFieldDataCommInfo(iter_field);
+        if (comm_info == nullptr)
+        {
+            continue;
+        }
         int recv_node_num = comm_info->GetRecvNodeNum();
         for (int iNode = 0; iNode < recv_node_num; iNode++)
         {
-            auto recv_field = m_field_manager->GetField(comm_info->GetRecvFieldIdxGlobal()[iNode]);
+            auto recv_field = m_field_manager->GetField(comm_info->GetRecvFieldIdxTarget()[iNode]);
             auto recv_field_data = recv_field->GetFieldData();
-            int recv_node_idx_local = comm_info->GetRecvNodeIdxLocal()[iNode];
-            int recv_field_idx_global = comm_info->GetRecvFieldIdxGlobal()[iNode];
-            int recv_node_idx_global = comm_info->GetRecvNodeIdxGlobal()[iNode];
-            double *recv_data_cache = comm_info->GetRecvDataCache();
+            int recv_node_idx_local = comm_info->GetRecvNodeIdxSource()[iNode];
+            int recv_field_idx_global = comm_info->GetRecvFieldIdxTarget()[iNode];
+            int recv_node_idx_global = comm_info->GetRecvNodeIdxTarget()[iNode];
             auto &recv_data_name = comm_info->GetRecvDataName();
             for (size_t i_recv_data = 0; i_recv_data < recv_data_name.size(); i_recv_data++)
             {

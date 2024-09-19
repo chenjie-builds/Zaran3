@@ -62,17 +62,17 @@ namespace zaran
 		m_cell->Allocate(ni + ghost_level * 2 - 1, nj + ghost_level * 2 - 1, nk + ghost_level * 2 - 1);
 		m_bound_map = new BoundManagerStruct();
 	}
-	int GridStruct::GetNi()
+	int GridStruct::GetNi()const
 	{
 		return m_node->GetINum();
 	}
 
-	int GridStruct::GetNj()
+	int GridStruct::GetNj()const
 	{
 		return m_node->GetJNum();
 	}
 
-	int GridStruct::GetNk()
+	int GridStruct::GetNk()const
 	{
 		return m_node->GetKNum();
 	}

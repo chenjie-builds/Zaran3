@@ -4,14 +4,7 @@
 #include<fstream>
 #include<algorithm>
 using namespace zaran;
-void Model::SetBoxMin(const DVector3D& box_min)
-{
-	box_min_ = box_min;
-}
-void Model::SetBoxMax(const DVector3D& box_max)
-{
-	box_max_ = box_max;
-}
+
 //Point ModBase::GetClosestPoint(const Point& pt)
 //{
 	//int i, id = -1;
@@ -27,7 +20,7 @@ void Model::SetBoxMax(const DVector3D& box_max)
 	//return modelPoint_[id];
 //}
 
-//double ModBase::NearestDistance(const Point& pt)
+//double ModBase::GetClosestDistance(const Point& pt)
 //{
 	//int i, j;
 	//double min_dist = DBL_MAX;

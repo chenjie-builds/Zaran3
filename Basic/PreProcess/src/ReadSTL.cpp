@@ -17,12 +17,12 @@ namespace zaran
 			vtkSmartPointer<vtkSTLReader>::New();
 		reader->SetFileName(filename);
 		reader->Update();
-		m_mesh = vtkSmartPointer<vtkPolyData>::New();
-		m_mesh = reader->GetOutput();
-		vtkIdType numberOfCells = m_mesh->GetNumberOfCells();
-		auto numberOfPoints = m_mesh->GetNumberOfPoints();
-		auto numberOfFaces = m_mesh->GetNumberOfLines();
-		auto numberOfEdges = m_mesh->GetNumberOfStrips();
+		m_poly_data = vtkSmartPointer<vtkPolyData>::New();
+		m_poly_data = reader->GetOutput();
+		vtkIdType numberOfCells = m_poly_data->GetNumberOfCells();
+		auto numberOfPoints = m_poly_data->GetNumberOfPoints();
+		auto numberOfFaces = m_poly_data->GetNumberOfLines();
+		auto numberOfEdges = m_poly_data->GetNumberOfStrips();
 		std::cout << "Number of points: " << numberOfPoints << std::endl;
 		std::cout << "Number of cells: " << numberOfCells << std::endl;
 	}

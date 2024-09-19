@@ -123,23 +123,23 @@ namespace zaran
                     {
                         data_manager->SetPrim(idx_eq, idx, prim_far[idx_eq]);
                     }
-                    auto x = node->GetCoord(i, j, k)[0];
-                    if (x < 0.3001)
-                    {
-                        data_manager->SetPrim(0, idx, 1.0);
-                        data_manager->SetPrim(1, idx, 0.0);
-                        data_manager->SetPrim(2, idx, 0.0);
-                        data_manager->SetPrim(3, idx, 0.0);
-                        data_manager->SetPrim(4, idx, 1.0);
-                    }
-                    else
-                    {
-                        data_manager->SetPrim(0, idx, 0.125);
-                        data_manager->SetPrim(1, idx, 0.0);
-                        data_manager->SetPrim(2, idx, 0.0);
-                        data_manager->SetPrim(3, idx, 0.0);
-                        data_manager->SetPrim(4, idx, 0.1);
-                    }
+                    // auto x = node->GetCoord(i, j, k)[0];
+                    // if (x < 0.3001)
+                    // {
+                    //     data_manager->SetPrim(0, idx, 1.0);
+                    //     data_manager->SetPrim(1, idx, 0.0);
+                    //     data_manager->SetPrim(2, idx, 0.0);
+                    //     data_manager->SetPrim(3, idx, 0.0);
+                    //     data_manager->SetPrim(4, idx, 1.0);
+                    // }
+                    // else
+                    // {
+                    //     data_manager->SetPrim(0, idx, 0.125);
+                    //     data_manager->SetPrim(1, idx, 0.0);
+                    //     data_manager->SetPrim(2, idx, 0.0);
+                    //     data_manager->SetPrim(3, idx, 0.0);
+                    //     data_manager->SetPrim(4, idx, 0.1);
+                    // }
                     // data_manager->SetPrim(0, idx, pow(0.2 * i, 2) * pow(0.2 *
                     // j, 2.3));
                 }
@@ -6328,8 +6328,8 @@ namespace zaran
                         lamda += abs(u_zeta) + c * norm_zeta;
                     }
                     lamda = lamda * jacobi;
-                    // data_manager->SetTimeStep(idx, cfl / lamda);
-                    data_manager->SetTimeStep(idx, 0.002);
+                    data_manager->SetTimeStep(idx, cfl / lamda);
+                    // data_manager->SetTimeStep(idx, 0.002);
 
                     if (data_manager->GetTimeStep(idx) < min_dt)
                     {
@@ -7176,7 +7176,7 @@ namespace zaran
 #pragma omp parallel for
                 for (int iBound = 0; iBound < bound.size(); ++iBound)
                 {
-                    VortexBC(bound[iBound]);
+                    OutletBC(bound[iBound]);
                 }
             }
             else if (bound_name == "wall")
@@ -7203,11 +7203,11 @@ namespace zaran
         prim_far[2] = GetPara()->GetInflowVelocityY();
         prim_far[3] = GetPara()->GetInflowVelocityZ();
         prim_far[4] = GetPara()->GetInflowPressure();
-        prim_far[0] = 1.0;
-        prim_far[1] = 0.0;
-        prim_far[2] = 0.0;
-        prim_far[3] = 0.0;
-        prim_far[4] = 1.0;
+        // prim_far[0] = 1.0;
+        // prim_far[1] = 0.0;
+        // prim_far[2] = 0.0;
+        // prim_far[3] = 0.0;
+        // prim_far[4] = 1.0;
         double cons_far[5];
         GetGas()->Prim2Cons(prim_far, cons_far);
         int i_ghost, j_ghost, k_ghost;

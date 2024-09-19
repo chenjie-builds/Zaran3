@@ -9,7 +9,7 @@ namespace zaran
     class FieldNS :public Field
     {
     public:
-        FieldNS(GridBase* grid, FieldType fieldType);
+        FieldNS(GridBase* grid=nullptr, FieldType fieldType=FieldType::Unset);
         ~FieldNS();
         void Allocate() override;
     public:

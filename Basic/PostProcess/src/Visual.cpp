@@ -36,7 +36,7 @@ void zaran::Visual::WriteTecplotBinary(Field *field)
     INTEGER4 vIsDouble = 1;
     INTEGER4 fileType = 0;
     string grid_name = "grid_" + grid->GetName();
-    string var_name = "x y z rho u v w p";
+    string var_name = "x, y, z, density, velocity_x, velocity_y, velocity_z, pressure";
     std::string file_name = "result/" + std::to_string(GlobalData::GetInt("currentIter")) + ".plt";
     int i = TECINI142(grid_name.c_str(), var_name.c_str(), file_name.c_str(), (char *)".", &file_format, &fileType,
                       &debug, &vIsDouble);
@@ -152,7 +152,7 @@ void Visual::WriteTecplotBinary(NSFieldStruct *field)
     // 以ASCII格式写入，后期可以改为二进制格式
     std::ofstream out("result/" + std::to_string(GlobalData::GetInt("currentIter")) + ".dat");
     out << "TITLE=\"Flow Field\"\n";
-    out << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\",\"d_rho_dx\",\"d_rho_dy\",\"d_rho_dz\"\n";
+    out << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\"\n";
     out << "ZONE I=" << ni  << ", J=" << nj << ", K=" << nk << ", F=POINT\n";
     for (int k = ks ; k <= ke ; ++k)
     {
@@ -161,7 +161,7 @@ void Visual::WriteTecplotBinary(NSFieldStruct *field)
             for (int i = is; i <= ie ; ++i)
             {
                 int idx = idx_proxy->GetIdx(i, j, k);
-                out << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1] << " " << node->GetCoord(i, j, k)[2] << " " << density[idx] << " " << velocity_x[idx] << " " << velocity_y[idx] << " " << velocity_z[idx] << " " << pressure[idx] << " " << data_manager->GetPrimGrad(0,0,idx) << " " << data_manager->GetPrimGrad(0,1,idx) << " " << data_manager->GetPrimGrad(0,2,idx) << "\n";
+                out << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1] << " " << node->GetCoord(i, j, k)[2] << " " << density[idx] << " " << velocity_x[idx] << " " << velocity_y[idx] << " " << velocity_z[idx] << " " << pressure[idx]  << "\n";
             }
         }
     }

@@ -13,11 +13,11 @@
 namespace zaran
 {
 
-    FNGridFactorySYSU::FNGridFactorySYSU(const string &node_file_name, const string &ele_file_name, const string &bnd_file_name) : m_node_file_name(node_file_name), m_ele_file_name(ele_file_name), m_bnd_file_name(bnd_file_name)
+    GridFNFactorySYSU::GridFNFactorySYSU(const string &node_file_name, const string &ele_file_name, const string &bnd_file_name) : m_node_file_name(node_file_name), m_ele_file_name(ele_file_name), m_bnd_file_name(bnd_file_name)
     {
     }
 
-    void FNGridFactorySYSU::CreateGrid(GridBase **&grid_list, int &grid_num)
+    void GridFNFactorySYSU::CreateGrid(GridBase **&grid_list, int &grid_num)
     {
         ReadNodeFile();
         ReadCellFile();
@@ -39,7 +39,23 @@ namespace zaran
         }
     }
 
-    void FNGridFactorySYSU::ReadNodeFile()
+    void GridFNFactorySYSU::CreateGrid(GridFN *&grid)
+    {
+        ReadNodeFile();
+        ReadCellFile();
+        ReadBoundFile();
+        // SortNeiborNode();
+        // ExtendNeighborNode();
+        CheckNode();
+        CheckUnkownNode();
+        SetBoundNeighbor();
+        AddSelfToNeighbor();
+        CheckNeighborNum();
+        grid = new GridFN("FNFDM", 0, 3);
+        ConvertToGrid(grid);
+    }
+
+    void GridFNFactorySYSU::ReadNodeFile()
     {
         std::ifstream fin(m_node_file_name);
         int node_num;
@@ -254,7 +270,7 @@ namespace zaran
         fin.close();
     }
 
-    void FNGridFactorySYSU::SortNeiborNode()
+    void GridFNFactorySYSU::SortNeiborNode()
     {
         struct node_pair
         {
@@ -462,7 +478,7 @@ namespace zaran
         }
     }
 
-    void FNGridFactorySYSU::ExtendNeighborNode()
+    void GridFNFactorySYSU::ExtendNeighborNode()
     {
         // 构建节点KD?
         // 初始化vtk?
@@ -535,7 +551,7 @@ namespace zaran
         }
     }
 
-    void FNGridFactorySYSU::ReadCellFile()
+    void GridFNFactorySYSU::ReadCellFile()
     {
         std::ifstream fin;
         fin.open("cell.dat");
@@ -587,7 +603,7 @@ namespace zaran
         fin.close();
     }
 
-    void FNGridFactorySYSU::CheckNode()
+    void GridFNFactorySYSU::CheckNode()
     {
         double delta = 1e-5;
         double min_angle = LARGE_NUMBER;
@@ -734,7 +750,7 @@ namespace zaran
                   m_node_coord[min_angle_index_k][2]);
         Log::info("-------- Neighbor: {}, {}, {}, {}, {}, {}", m_node_neibor[min_angle_index_k][0], m_node_neibor[min_angle_index_k][1], m_node_neibor[min_angle_index_k][2], m_node_neibor[min_angle_index_k][3], m_node_neibor[min_angle_index_k][4], m_node_neibor[min_angle_index_k][5]);
     }
-    void FNGridFactorySYSU::CheckUnkownNode()
+    void GridFNFactorySYSU::CheckUnkownNode()
     {
         int node_num = m_node_coord.size();
         for (size_t i = 0; i < node_num; i++)
@@ -746,7 +762,7 @@ namespace zaran
         }
         Log::info("Check undefined node done");
     }
-    void FNGridFactorySYSU::CheckNeighborNum()
+    void GridFNFactorySYSU::CheckNeighborNum()
     {
         int node_num = m_node_coord.size();
         int min_neibor_num = 1E5;
@@ -770,7 +786,7 @@ namespace zaran
         Log::info("min neibor num:{} max neibor num:{}", min_neibor_num, max_neibor_num);
         Log::info("min neibor index:{} max neibor index:{}", min_neibor_index, max_neibor_index);
     }
-    void FNGridFactorySYSU::AddSelfToNeighbor()
+    void GridFNFactorySYSU::AddSelfToNeighbor()
     {
         int node_num = m_node_coord.size();
         for (int iNode = 0; iNode < node_num; iNode++)
@@ -788,7 +804,7 @@ namespace zaran
         }
         Log::info("Add self to neibor node's neibor node done");
     }
-    void FNGridFactorySYSU::SetBoundNeighbor()
+    void GridFNFactorySYSU::SetBoundNeighbor()
     {
         return;
         // 构建节点KD?
@@ -916,7 +932,7 @@ namespace zaran
         }
         Log::info("Add inner node's neibor node to bound done");
     }
-    void FNGridFactorySYSU::ConvertToGrid(GridFN *&grid)
+    void GridFNFactorySYSU::ConvertToGrid(GridFN *&grid)
     {
         int node_num = m_node_coord.size();
         std::vector<int> neighbor_node_num(node_num);
@@ -984,7 +1000,7 @@ namespace zaran
         }
         grid->SetBoundaryMap(boundary_map);
     }
-    void FNGridFactorySYSU::ReadBoundFile()
+    void GridFNFactorySYSU::ReadBoundFile()
     {
         std::ifstream fin;
         fin.open("bound.dat");

@@ -26,4 +26,8 @@ namespace zaran
 	const double EPSILON_NUMBER = 1.0e-12;
 
 	const double PI = 3.141592653589793238462643383279502884197169399;//圆周率pi
+	struct Box
+	{
+		double x_min, x_max, y_min, y_max, z_min, z_max;
+	};
 }
