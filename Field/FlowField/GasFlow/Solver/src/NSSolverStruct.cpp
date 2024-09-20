@@ -2,6 +2,7 @@
 #include "MathBasic.h"
 #include "FlowSolverStructPara.h"
 #include "Log.h"
+#include <omp.h>
 namespace zaran
 {
     NSSolverStruct::NSSolverStruct(int index, string name, FlowSolverPara *para, GridStruct *grid,
@@ -6300,6 +6301,7 @@ namespace zaran
         double cfl = para->GetCflNumber();
         double gamma = GetGas()->GetGamma();
         double min_dt = LARGE_NUMBER;
+#pragma omp parallel for
         for (int k = ks; k <= ke; ++k)
         {
             for (int j = js; j <= je; ++j)
@@ -6347,6 +6349,7 @@ namespace zaran
         auto ni = m_idx_proxy->GetNi();
         auto nj = m_idx_proxy->GetNj();
         auto nk = m_idx_proxy->GetNk();
+#pragma omp parallel for
         for (int k = 0; k < nk; ++k)
         {
             for (int j = 0; j < nj; ++j)
@@ -6372,11 +6375,12 @@ namespace zaran
         for (int iStage = 0; iStage < rkStage; ++iStage)
         {
             CalcResidual();
-            for (int i = is; i <= ie; ++i)
+            #pragma omp parallel for private(dt, jacobi)
+            for (int k = ks; k <= ke; ++k)
             {
                 for (int j = js; j <= je; ++j)
                 {
-                    for (int k = ks; k <= ke; ++k)
+                    for (int i = is; i <= ie; ++i)
                     {
                         int idx = m_idx_proxy->GetIdx(i, j, k);
                         dt = data_manager->GetTimeStep(idx);
@@ -6401,6 +6405,7 @@ namespace zaran
         auto nj = m_idx_proxy->GetNj();
         auto nk = m_idx_proxy->GetNk();
         double prim[5], cons[5];
+#pragma omp parallel for private(prim, cons)
         for (int k = 0; k < nk; ++k)
         {
             for (int j = 0; j < nj; ++j)
@@ -6430,6 +6435,7 @@ namespace zaran
         auto nj = m_idx_proxy->GetNj();
         auto nk = m_idx_proxy->GetNk();
         double prim[5], cons[5];
+        #pragma omp parallel for private(prim, cons)
         for (int k = 0; k < nk; ++k)
         {
             for (int j = 0; j < nj; ++j)
@@ -6457,6 +6463,7 @@ namespace zaran
         auto ni = m_idx_proxy->GetNi();
         auto nj = m_idx_proxy->GetNj();
         auto nk = m_idx_proxy->GetNk();
+        #pragma omp parallel for
         for (int k = 0; k < nk; ++k)
         {
             for (int j = 0; j < nj; ++j)

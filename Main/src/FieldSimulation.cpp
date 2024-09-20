@@ -45,11 +45,15 @@ void FieldSimulation::SaveDataTecplot()
     {
         if (m_field_manager->GetField(iter_field)->GetFieldType() == FieldType::NS_Structured)
         {
-            m_visual->WriteTecplotBinary(static_cast<NSFieldStruct *>(m_field_manager->GetField(iter_field)));
+            m_visual->WriteTecplotASCII(static_cast<NSFieldStruct *>(m_field_manager->GetField(iter_field)));
         }
         else if (m_field_manager->GetField(iter_field)->GetFieldType() == FieldType::NS_FlexibleNode)
         {
             m_visual->WriteTecplotBinary(static_cast<NSFieldFNFDM *>(m_field_manager->GetField(iter_field)));
+        }
+        else if (m_field_manager->GetField(iter_field)->GetFieldType() == FieldType::NS_Zaran)
+        {
+            m_visual->WriteTecplotBinary(static_cast<NSFieldZaran *>(m_field_manager->GetField(iter_field)));
         }
         else
         {

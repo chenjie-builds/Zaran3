@@ -48,6 +48,7 @@ void NSFieldStruct::CalcResidual()
         norm_inf = -LARGE_NUMBER;
         norm_l2 = 0;
         auto res = GetDataManager()->GetResidual(iEqu);
+        #pragma omp parallel for reduction(max : norm_inf) reduction(+ : norm_l2)
         for (int k = ks; k <= ke; k++) {
             for (int j = js; j <= je; j++) {
                 for (int i = is; i <= ie; i++) {

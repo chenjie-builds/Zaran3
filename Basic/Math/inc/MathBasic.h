@@ -56,5 +56,7 @@ namespace zaran
 	double QuadrangleArea(const double *pt1, const double *pt2, const double *pt3, const double *pt4);
 	// 计算两个向量的叉乘
 	void CrossProduct(const double *A, const double *B, double *C);
+	// 计算两个向量的点乘
+	double DotProduct(const double *A, const double *B);
 
 }

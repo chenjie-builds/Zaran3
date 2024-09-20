@@ -7,7 +7,7 @@
 #include "NSSolverBlock.h"
 namespace zaran
 {
-    NSFieldZaran::NSFieldZaran() : FieldNS(nullptr, FieldType::NS_Structured)
+    NSFieldZaran::NSFieldZaran() : FieldNS(nullptr, FieldType::NS_Zaran)
     {
         m_slave_field = nullptr;
         m_model_manager = nullptr;

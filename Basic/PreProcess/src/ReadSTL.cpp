@@ -1,18 +1,20 @@
-#include"ReadSTL.h"
+#include "ReadSTL.h"
 #include <vtkSTLReader.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkActor.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindowInteractor.h>
-#include<vtkVertexGlyphFilter.h>
-#include<vtkNamedColors.h>
-#include<vtkProperty.h>
+#include <vtkVertexGlyphFilter.h>
+#include <vtkNamedColors.h>
+#include <vtkProperty.h>
+#include "Log.h"
 namespace zaran
 {
 
-	void STLReader::ReadSTLFile(const char* filename)
+	void STLReader::ReadSTLFile(const char *filename)
 	{
+		Log::info("Read STL file: {}", filename);
 		vtkSmartPointer<vtkSTLReader> reader =
 			vtkSmartPointer<vtkSTLReader>::New();
 		reader->SetFileName(filename);
@@ -23,7 +25,8 @@ namespace zaran
 		auto numberOfPoints = m_poly_data->GetNumberOfPoints();
 		auto numberOfFaces = m_poly_data->GetNumberOfLines();
 		auto numberOfEdges = m_poly_data->GetNumberOfStrips();
-		std::cout << "Number of points: " << numberOfPoints << std::endl;
-		std::cout << "Number of cells: " << numberOfCells << std::endl;
+		Log::info("Read STL file done");
+		Log::info("Number of cells: {}", numberOfCells);
+		Log::info("Number of points: {}", numberOfPoints);
 	}
 }

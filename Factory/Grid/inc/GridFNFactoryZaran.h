@@ -19,10 +19,10 @@ namespace zaran
     };
     struct TransFace
     {
-        std::vector<int> idx_master;
+        std::vector<int> idx_block;
         bool operator<(const TransFace &rhs) const
         {
-            return idx_master < rhs.idx_master;
+            return idx_block < rhs.idx_block;
         }
         std::vector<int> idx_slave;
     };
@@ -78,6 +78,8 @@ namespace zaran
         void TagCells();
         void ProcessCell(int start_i, int end_i, int start_j, int end_j, int start_k, int end_k);
         void TagNodes();
+        void ReTagBlockGrid();
+        void ReTagCells();
         void SetNodeTag();
         void WriteNodeTag();
         void WriteProjectNode();
@@ -94,11 +96,12 @@ namespace zaran
         void SetFNGridBoundary();
         void SetFNGridBoundaryFace();
 
-
         // 生成参考节点,即过渡节点计算需要的内部点,在SlaveGrid第0层
         void BuildRefNode();
         // 生成过渡节点,即过渡节点计算需要的内部点,在SlaveGrid第1层
         void BuildTransNode();
+        // 检查过渡节点,不能同时i+1和i-1都是固体节点
+        bool CheckTransNode();
         void CheckTransFace();
         // 生成物面节点,即过渡节点计算需要的内部点,在SlaveGrid最后一层
         void BuildWallNode();
@@ -128,6 +131,6 @@ namespace zaran
         std::set<ConnectInfo> m_trans_node;
         FNGridInfo m_fn_info;
 
-        int m_layer_num ;
+        int m_layer_num;
     };
 }

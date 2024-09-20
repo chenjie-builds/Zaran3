@@ -10,19 +10,37 @@ namespace zaran
         m_block_grid = grid_master;
         m_fn_grid = grid;
         m_idx_proxy = new StructIdxProxy(m_block_grid);
-        m_layer_num = 2;
+        m_layer_num = GlobalData::GetInt("projection_layer");
         TagBlockGrid();
+        TagNodes();
+        Log::info("CheckTransNode...");
+        while (!CheckTransNode())
+        {
+            ReTagBlockGrid();
+        }
+        Log::info("CheckTransNode success");
+        CheckTransFace();
+        // WriteNodeTag();
+        SetNodeTag();
+        Log::info("BuildFNNodeCoord");
         BuildFNNodeCoord();
+        Log::info("SetFNGridNode");
         SetFNGridNode();
         WriteProjectNode();
         WriteModelSurface();
         WriteTransFace();
+        Log::info("BuildCell");
         BuildCell();
+        Log::info("SetFNGridCell");
         SetFNGridCell();
         WriteSlaveGrid();
+        Log::info("BuildNodeNeighbor");
         BuildNodeNeighbor();
+        Log::info("SetFNGridNodeNeighbor");
         SetFNGridNodeNeighbor();
+        Log::info("SetFNGridBoundary");
         SetFNGridBoundary();
+        Log::info("SetFNGridBoundaryFace");
         SetFNGridBoundaryFace();
     }
 
@@ -30,9 +48,6 @@ namespace zaran
     {
         TagCells();
         TagNodes();
-        CheckTransFace();
-        WriteNodeTag();
-        SetNodeTag();
     }
 
     void GridFNFactoryZaran::TagCells()
@@ -51,7 +66,8 @@ namespace zaran
         double dx = grid->GetDx();
         double dy = grid->GetDy();
         double dz = grid->GetDz();
-        double tol = 0.5 * sqrt(dx * dx + dy * dy + dz * dz);
+        double tol_factor = GlobalData::GetDouble("tol_factor");
+        double tol = tol_factor * sqrt(dx * dx + dy * dy + dz * dz);
         auto model_manager = GetModelManager();
         auto box = grid->GetBoundBox();
         auto model_box = model_manager->GetBox();
@@ -165,7 +181,8 @@ namespace zaran
                     }
                 }
             }
-            Log::info("new_solid_num={}", new_solid_num);
+            if (new_solid_num > 0)
+                Log::info("new_solid_num={}", new_solid_num);
         }
 
         // tag the fluid-solid cells
@@ -222,21 +239,28 @@ namespace zaran
         {
             return i >= 0 && i < ni - 1 && j >= 0 && j < nj - 1 && k >= 0 && k < nk - 1;
         };
+        int is, ie, js, je, ks, ke;
+        grid->GetRange(is, ie, js, je, ks, ke);
         m_node_type.resize(ni * nj * nk);
         for (int idx = 0; idx < ni * nj * nk; idx++)
         {
-            m_node_type[idx] = PhysicalType::Unset;
+            int i, j, k;
+            m_idx_proxy->GetIdxStruct(idx, i, j, k);
+            if (i < is || i >= ie || j < js || j >= je || k < ks || k >= ke)
+            {
+                m_node_type[idx] = PhysicalType::Fluid;
+            }
+            else
+                m_node_type[idx] = PhysicalType::Unset;
         }
-        int is, ie, js, je, ks, ke;
-        grid->GetRange(is, ie, js, je, ks, ke);
         std::set<int> trans_node_set;
         std::set<TransFace> trans_face_set;
         // find the fluid-solid nodes
-        for (int k = 0; k < nk; k++)
+        for (int k = ks; k <= ke; k++)
         {
-            for (int j = 0; j < nj; j++)
+            for (int j = js; j <= je; j++)
             {
-                for (int i = 0; i < ni; i++)
+                for (int i = is; i <= ie; i++)
                 {
                     int idx = m_idx_proxy->GetIdx(i, j, k);
                     if (IsValidCell(i - 1, j, k))
@@ -278,11 +302,12 @@ namespace zaran
                 }
             }
         }
+        m_trans_face.clear();
         m_trans_face.resize(trans_face_set.size());
         int idx = 0;
         for (auto &trans : trans_face_set)
         {
-            m_trans_face[idx++].idx_master = trans.idx_master;
+            m_trans_face[idx++].idx_block = trans.idx_block;
         }
 
         m_node_type[m_idx_proxy->GetIdx(0, 0, 0)] = PhysicalType::Fluid;
@@ -323,6 +348,12 @@ namespace zaran
         }
     }
 
+    void GridFNFactoryZaran::ReTagBlockGrid()
+    {
+        ReTagCells();
+        TagNodes();
+    }
+
     void GridFNFactoryZaran::ProcessCell(int start_i, int end_i, int start_j, int end_j, int start_k, int end_k)
     {
         // Log::info("start_i={}, end_i={}, start_j={}, end_j={}, start_k={}, end_k={}", start_i, end_i, start_j, end_j, start_k, end_k);
@@ -347,8 +378,9 @@ namespace zaran
         double tol_x = x_max - x_min;
         double tol_y = y_max - y_min;
         double tol_z = z_max - z_min;
-        double tol = 0.5 * sqrt(tol_x * tol_x + tol_y * tol_y + tol_z * tol_z);
-        double tol1 = 0.5 * sqrt(grid->GetDx() * grid->GetDx() + grid->GetDy() * grid->GetDy() + grid->GetDz() * grid->GetDz());
+        double tol_factor = GlobalData::GetDouble("tol_factor");
+        double tol = tol_factor * sqrt(tol_x * tol_x + tol_y * tol_y + tol_z * tol_z);
+        double tol1 = tol_factor * sqrt(grid->GetDx() * grid->GetDx() + grid->GetDy() * grid->GetDy() + grid->GetDz() * grid->GetDz());
         tol += tol1;
         PhysicalType cell_type = PhysicalType::Unset;
         double dist = 0;
@@ -446,6 +478,97 @@ namespace zaran
                     ProcessCell(mid_i, end_i, start_j, mid_j, mid_k, end_k);
                     ProcessCell(start_i, mid_i, mid_j, end_j, mid_k, end_k);
                     ProcessCell(mid_i, end_i, mid_j, end_j, mid_k, end_k);
+                }
+            }
+        }
+    }
+
+    void GridFNFactoryZaran::ReTagCells()
+    {
+        // 去掉所有的FluidSolid标记
+        for (int iCell = 0; iCell < m_cell_type.size(); iCell++)
+        {
+            if (m_cell_type[iCell] == PhysicalType::FluidSolid)
+            {
+                m_cell_type[iCell] = PhysicalType::Fluid;
+            }
+        }
+
+        auto grid = GetBlockGrid();
+        int ni, nj, nk;
+        ni = grid->GetNi();
+        nj = grid->GetNj();
+        nk = grid->GetNk();
+        // 检查是否有Solid单元被标记为Fluid
+        int new_solid_num = 1;
+        while (new_solid_num > 0)
+        {
+            new_solid_num = 0;
+            for (int i = 0; i < ni - 1; i++)
+            {
+                for (int j = 0; j < nj - 1; j++)
+                {
+                    for (int k = 0; k < -1; k++)
+                    {
+                        int idx = m_idx_proxy->GetIdx(i, j, k);
+                        if (m_cell_type[idx] != PhysicalType::Fluid)
+                            continue;
+                        if (m_cell_type[m_idx_proxy->GetIdx(i + 1, j, k)] == PhysicalType::Solid && m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k)] == PhysicalType::Solid)
+                        {
+                            m_cell_type[idx] = PhysicalType::Solid;
+                            new_solid_num++;
+                        }
+                        else if (m_cell_type[m_idx_proxy->GetIdx(i, j + 1, k)] == PhysicalType::Solid && m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k)] == PhysicalType::Solid)
+                        {
+                            m_cell_type[idx] = PhysicalType::Solid;
+                            new_solid_num++;
+                        }
+                        else if (m_cell_type[m_idx_proxy->GetIdx(i, j, k + 1)] == PhysicalType::Solid && m_cell_type[m_idx_proxy->GetIdx(i, j, k - 1)] == PhysicalType::Solid)
+                        {
+                            m_cell_type[idx] = PhysicalType::Solid;
+                            new_solid_num++;
+                        }
+                    }
+                }
+            }
+            if (new_solid_num > 0)
+                Log::info("new_solid_num={}", new_solid_num);
+        }
+
+        // retag the fluid-solid cells
+        for (int k = 1; k < nk - 1; k++)
+        {
+            for (int j = 1; j < nj - 1; j++)
+            {
+                for (int i = 1; i < ni - 1; i++)
+                {
+                    int idx = m_idx_proxy->GetIdx(i, j, k);
+                    if (m_cell_type[idx] != PhysicalType::Fluid)
+                        continue;
+                    if (m_cell_type[m_idx_proxy->GetIdx(i + 1, j, k)] == PhysicalType::Solid)
+                    {
+                        m_cell_type[idx] = PhysicalType::FluidSolid;
+                    }
+                    if (m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k)] == PhysicalType::Solid)
+                    {
+                        m_cell_type[idx] = PhysicalType::FluidSolid;
+                    }
+                    if (m_cell_type[m_idx_proxy->GetIdx(i, j + 1, k)] == PhysicalType::Solid)
+                    {
+                        m_cell_type[idx] = PhysicalType::FluidSolid;
+                    }
+                    if (m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k)] == PhysicalType::Solid)
+                    {
+                        m_cell_type[idx] = PhysicalType::FluidSolid;
+                    }
+                    if (m_cell_type[m_idx_proxy->GetIdx(i, j, k + 1)] == PhysicalType::Solid)
+                    {
+                        m_cell_type[idx] = PhysicalType::FluidSolid;
+                    }
+                    if (m_cell_type[m_idx_proxy->GetIdx(i, j, k - 1)] == PhysicalType::Solid)
+                    {
+                        m_cell_type[idx] = PhysicalType::FluidSolid;
+                    }
                 }
             }
         }
@@ -709,12 +832,16 @@ namespace zaran
             total_neighbor_num += neighbor_node_num[i];
         }
         std::vector<int> neighbor_node_idx;
-        neighbor_node_idx.reserve(total_neighbor_num);
+        neighbor_node_idx.resize(total_neighbor_num);
+        int idx = 0;
         for (int iLayer = 0; iLayer < m_fn_info.node.size(); iLayer++)
         {
             for (int iNode = 0; iNode < m_fn_info.node[iLayer].size(); iNode++)
             {
-                neighbor_node_idx.insert(neighbor_node_idx.end(), m_fn_info.node[iLayer][iNode].neighbor_node.begin(), m_fn_info.node[iLayer][iNode].neighbor_node.end());
+                for (int iNeighbor = 0; iNeighbor < m_fn_info.node[iLayer][iNode].neighbor_node.size(); iNeighbor++)
+                {
+                    neighbor_node_idx[idx++] = m_fn_info.node[iLayer][iNode].neighbor_node[iNeighbor];
+                }
             }
         }
         node->SetNeighborNode(node_num, neighbor_node_num.data(), neighbor_node_idx.data());
@@ -767,7 +894,7 @@ namespace zaran
         face_node_num.resize(face_num);
         for (int iFace = 0; iFace < face_num; iFace++)
         {
-            face_node_num[iFace] = m_trans_face[iFace].idx_master.size();
+            face_node_num[iFace] = m_trans_face[iFace].idx_block.size();
         }
         face->Allocate(face_num, face_node_num.data());
         double normal[3];
@@ -882,7 +1009,7 @@ namespace zaran
 
         for (int iFace = 0; iFace < m_trans_face.size(); iFace++)
         {
-            auto face_node_idx = m_trans_face[iFace].idx_master;
+            auto face_node_idx = m_trans_face[iFace].idx_block;
             for (int iNode = 0; iNode < face_node_idx.size(); iNode++)
             {
                 trans_node_idx_set.insert(face_node_idx[iNode]);
@@ -904,9 +1031,10 @@ namespace zaran
         }
         for (int iFace = 0; iFace < m_trans_face.size(); iFace++)
         {
-            auto idx_master = m_trans_face[iFace].idx_master;
+            auto idx_master = m_trans_face[iFace].idx_block;
             auto &idx_slave = m_trans_face[iFace].idx_slave;
             idx_slave.resize(idx_master.size());
+            bool find = false;
             for (int iNode = 0; iNode < idx_slave.size(); iNode++)
             {
                 for (auto &slave : m_trans_node)
@@ -914,17 +1042,166 @@ namespace zaran
                     if (slave.idx_block == idx_master[iNode])
                     {
                         idx_slave[iNode] = slave.idx_local_layer;
+                        find = true;
                         break;
+                    }
+                }
+                if (!find)
+                {
+                    Log::error("Can not find trans node:{}", idx_master[iNode]);
+                }
+            }
+        }
+    }
+    bool GridFNFactoryZaran::CheckTransNode()
+    {
+        int total_error_num = 0;
+        for (int iNode = 0; iNode < m_node_type.size(); iNode++)
+        {
+            int i, j, k;
+            m_idx_proxy->GetIdxStruct(iNode, i, j, k);
+            if (m_node_type[iNode] != PhysicalType::FluidSolid)
+                continue;
+            auto type_ip = m_node_type[m_idx_proxy->GetIdx(i + 1, j, k)];
+            auto type_im = m_node_type[m_idx_proxy->GetIdx(i - 1, j, k)];
+            auto type_jp = m_node_type[m_idx_proxy->GetIdx(i, j + 1, k)];
+            auto type_jm = m_node_type[m_idx_proxy->GetIdx(i, j - 1, k)];
+            auto type_kp = m_node_type[m_idx_proxy->GetIdx(i, j, k + 1)];
+            auto type_km = m_node_type[m_idx_proxy->GetIdx(i, j, k - 1)];
+            int error_num = 0;
+            if (type_ip == PhysicalType::Solid && type_im == PhysicalType::Solid)
+            {
+                // Log::warn("The trans node:({},{},{}) i+1 and i-1 are solid", i, j, k);
+                error_num++;
+            }
+            if (type_jp == PhysicalType::Solid && type_jm == PhysicalType::Solid)
+            {
+                // Log::warn("The trans node:({},{},{}) j+1 and j-1 are solid", i, j, k);
+                error_num++;
+            }
+            if (type_kp == PhysicalType::Solid && type_km == PhysicalType::Solid)
+            {
+                // Log::warn("The trans node:({},{},{}) k+1 and k-1 are solid", i, j, k);
+                error_num++;
+            }
+            if (error_num > 0)
+            {
+                m_cell_type[m_idx_proxy->GetIdx(i, j, k)] = PhysicalType::Solid;
+                m_cell_type[m_idx_proxy->GetIdx(i, j, k - 1)] = PhysicalType::Solid;
+                m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k)] = PhysicalType::Solid;
+                m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k - 1)] = PhysicalType::Solid;
+                m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k)] = PhysicalType::Solid;
+                m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k - 1)] = PhysicalType::Solid;
+                m_cell_type[m_idx_proxy->GetIdx(i - 1, j - 1, k)] = PhysicalType::Solid;
+                m_cell_type[m_idx_proxy->GetIdx(i - 1, j - 1, k - 1)] = PhysicalType::Solid;
+            }
+            total_error_num += error_num;
+        }
+        if (total_error_num == 0)
+        {
+            for (int iNode = 0; iNode < m_node_type.size(); iNode++)
+            {
+                auto grid = GetBlockGrid();
+                auto node = grid->GetNode();
+                int i, j, k;
+                m_idx_proxy->GetIdxStruct(iNode, i, j, k);
+                if (m_node_type[iNode] != PhysicalType::FluidSolid)
+                    continue;
+                double dist = 0;
+                auto coord = node->GetCoord(i, j, k);
+                double wall_coord[3];
+                m_model_manager->GetClosestPoint(coord, wall_coord);
+                dist = DistanceOfTwoPoints(coord, wall_coord);
+                double tol_factor = GlobalData::GetDouble("tol_factor");
+                double tol = tol_factor * sqrt(grid->GetDx() * grid->GetDx() + grid->GetDy() * grid->GetDy() + grid->GetDz() * grid->GetDz());
+                if (dist < tol)
+                {
+                    m_cell_type[m_idx_proxy->GetIdx(i, j, k)] = PhysicalType::Solid;
+                    m_cell_type[m_idx_proxy->GetIdx(i, j, k - 1)] = PhysicalType::Solid;
+                    m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k)] = PhysicalType::Solid;
+                    m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k - 1)] = PhysicalType::Solid;
+                    m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k)] = PhysicalType::Solid;
+                    m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k - 1)] = PhysicalType::Solid;
+                    m_cell_type[m_idx_proxy->GetIdx(i - 1, j - 1, k)] = PhysicalType::Solid;
+                    m_cell_type[m_idx_proxy->GetIdx(i - 1, j - 1, k - 1)] = PhysicalType::Solid;
+                    total_error_num++;
+                }
+                else
+                {
+                    int neighbor_i[6] = {i - 1, i + 1, i, i, i, i};
+                    int neighbor_j[6] = {j, j, j - 1, j + 1, j, j};
+                    int neighbor_k[6] = {k, k, k, k, k - 1, k + 1};
+                    double coord[6][3];
+                    int direction[6] = {1, 1, 1, 1, 1, 1};
+                    for (int iNeighbor = 0; iNeighbor < 6; iNeighbor++)
+                    {
+                        for (int iDim = 0; iDim < 3; iDim++)
+                        {
+                            coord[iNeighbor][iDim] = node->GetCoord(neighbor_i[iNeighbor], neighbor_j[iNeighbor], neighbor_k[iNeighbor])[iDim];
+                        }
+                    }
+                    for (int iNeighbor = 0; iNeighbor < 6; iNeighbor++)
+                    {
+                        if (m_node_type[m_idx_proxy->GetIdx(neighbor_i[iNeighbor], neighbor_j[iNeighbor], neighbor_k[iNeighbor])] == PhysicalType::Solid)
+                        {
+                            direction[iNeighbor] = 0;
+                            for (int iDim = 0; iDim < 3; iDim++)
+                            {
+                                coord[iNeighbor][iDim] = wall_coord[iDim];
+                            }
+                        }
+                    }
+                    DVector3D vec1, vec2, vec3;
+                    for (int iDim = 0; iDim < 3; iDim++)
+                    {
+                        vec1[iDim] = coord[1][iDim] - coord[0][iDim];
+                        vec2[iDim] = coord[3][iDim] - coord[2][iDim];
+                        vec3[iDim] = coord[5][iDim] - coord[4][iDim];
+                    }
+                    double coef_x[3], coef_y[3], coef_z[3];
+                    double volume = (vec1.cross(vec2)).dot(vec3);
+                    double cross[3];
+                    CrossProduct(vec1.data(), vec2.data(), cross);
+                    double volume2 = DotProduct(cross, vec3.data());
+                    if (abs(volume) < 1e-5 || isnan(abs(volume)) || isinf(abs(volume)))
+                    {
+                        m_cell_type[m_idx_proxy->GetIdx(i, j, k)] = PhysicalType::Solid;
+                        m_cell_type[m_idx_proxy->GetIdx(i, j, k - 1)] = PhysicalType::Solid;
+                        m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k)] = PhysicalType::Solid;
+                        m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k - 1)] = PhysicalType::Solid;
+                        m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k)] = PhysicalType::Solid;
+                        m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k - 1)] = PhysicalType::Solid;
+                        m_cell_type[m_idx_proxy->GetIdx(i - 1, j - 1, k)] = PhysicalType::Solid;
+                        m_cell_type[m_idx_proxy->GetIdx(i - 1, j - 1, k - 1)] = PhysicalType::Solid;
+                        total_error_num++;
+                        // Log::info("dist:{}, volume:{}, modify:{},{},{},{},{},{}", dist, volume, direction[0], direction[1], direction[2], direction[3], direction[4], direction[5]);
+                        // Log::info("vec1:{},{},{}", vec1[0], vec1[1], vec1[2]);
+                        // Log::info("vec2:{},{},{}", vec2[0], vec2[1], vec2[2]);
+                        // Log::info("vec3:{},{},{}", vec3[0], vec3[1], vec3[2]);
+                        // Log::info("cross:{},{},{}", cross[0], cross[1], cross[2]);
+                        // Log::info("volume2:{}", volume2);
+                        // Log::info("coord0:{},{},{}", coord[0][0], coord[0][1], coord[0][2]);
+                        // Log::info("coord1:{},{},{}", coord[1][0], coord[1][1], coord[1][2]);
+                        // Log::info("coord2:{},{},{}", coord[2][0], coord[2][1], coord[2][2]);
+                        // Log::info("coord3:{},{},{}", coord[3][0], coord[3][1], coord[3][2]);
+                        // Log::info("coord4:{},{},{}", coord[4][0], coord[4][1], coord[4][2]);
+                        // Log::info("coord5:{},{},{}", coord[5][0], coord[5][1], coord[5][2]);
                     }
                 }
             }
         }
+        if (total_error_num > 0)
+        {
+            Log::warn("error trans node num:{}", total_error_num);
+            return false;
+        }
+        return true;
     }
     void GridFNFactoryZaran::CheckTransFace()
     {
         for (int iFace = 0; iFace < m_trans_face.size(); iFace++)
         {
-            auto face_node_idx = m_trans_face[iFace].idx_master;
+            auto face_node_idx = m_trans_face[iFace].idx_block;
             for (int iNode = 0; iNode < face_node_idx.size(); iNode++)
             {
                 if (m_node_type[face_node_idx[iNode]] != PhysicalType::FluidSolid)
@@ -974,9 +1251,13 @@ namespace zaran
     }
     void GridFNFactoryZaran::BuildNodeNeighbor()
     {
+        Log::info("BuildProjectNodeNeighbor");
         BuildProjectNodeNeighbor();
+        Log::info("BuildTransNodeNeighbor");
         BuildTransNodeNeighbor();
-        ReorderProjectNodeNeighbor();
+        // Log::info("ReorderProjectNodeNeighbor");
+        // ReorderProjectNodeNeighbor();
+        Log::info("CheckProjectNodeNeighbor");
         CheckProjectNodeNeighbor();
     }
     void GridFNFactoryZaran::BuildProjectNodeNeighbor()
@@ -1032,10 +1313,6 @@ namespace zaran
         // build the neighbor node
         for (int iNode = 0; iNode < m_fn_info.node[1].size(); iNode++)
         {
-            if (iNode == 508)
-            {
-                int a = 0;
-            }
             for (int iLayer = 2; iLayer < m_layer_num; iLayer++)
             {
                 int idx = m_fn_info.node[iLayer][iNode].idx;
@@ -1272,16 +1549,12 @@ namespace zaran
         auto grid = GetFNGrid();
         auto node = grid->GetNode();
         int node_num = m_fn_info.node[1].size();
-        double delta = 15*PI / 180;
+        double delta = 15 * PI / 180;
         for (int iLayer = 1; iLayer < m_layer_num; iLayer++)
         {
             for (int iNode = 0; iNode < node_num; iNode++)
             {
                 int idx = m_fn_info.node[iLayer][iNode].idx;
-                if (iNode == 508)
-                {
-                    int a = 0;
-                }
                 auto &neighbor = m_fn_info.node[iLayer][iNode].neighbor_node;
                 Array<DVector3D> vec(3);
                 for (int i = 0; i < 3; i++)
@@ -1292,42 +1565,41 @@ namespace zaran
                 }
                 double volume = vec[0].cross(vec[1]).dot(vec[2]);
                 // 检查是否是右手坐标系
-                if (vec[0].cross(vec[1]).dot(vec[2]) < 0)
+                if (volume < 0)
                 {
                     std::swap(neighbor[0], neighbor[1]);
                 }
-                double angle = AngleOfTwoArray3D(vec[0].data(), vec[1].data());
-                // i,j方向平行
-                if (abs(angle) < delta)
-                {
-                    std::swap(neighbor[1], neighbor[3]);
-                }
-                else if (abs(angle - PI) < delta)
-                {
-                    std::swap(neighbor[1], neighbor[2]);
-                }
+                // double angle = AngleOfTwoArray3D(vec[0].data(), vec[1].data());
+                // // i,j方向平行
+                // if (abs(angle) < delta)
+                // {
+                //     std::swap(neighbor[1], neighbor[3]);
+                // }
+                // else if (abs(angle - PI) < delta)
+                // {
+                //     std::swap(neighbor[1], neighbor[2]);
+                // }
 
-                angle = AngleOfTwoArray3D(vec[0].data(), vec[2].data());
-                // i,k方向平行
-                if (abs(angle) < delta)
-                {
-                    std::swap(neighbor[1], neighbor[5]);
-                }
-                else if (abs(angle - PI) < delta)
-                {
-                    std::swap(neighbor[1], neighbor[4]);
-                }
-                angle = AngleOfTwoArray3D(vec[1].data(), vec[2].data());
-                double angle1 =angle*180/PI;
-                // j,k方向平行
-                if (abs(angle) < delta)
-                {
-                    std::swap(neighbor[3], neighbor[5]);
-                }
-                else if (abs(angle - PI) < delta)
-                {
-                    std::swap(neighbor[3], neighbor[4]);
-                }
+                // angle = AngleOfTwoArray3D(vec[0].data(), vec[2].data());
+                // // i,k方向平行
+                // if (abs(angle) < delta)
+                // {
+                //     std::swap(neighbor[1], neighbor[5]);
+                // }
+                // else if (abs(angle - PI) < delta)
+                // {
+                //     std::swap(neighbor[1], neighbor[4]);
+                // }
+                // angle = AngleOfTwoArray3D(vec[1].data(), vec[2].data());
+                // // j,k方向平行
+                // if (abs(angle) < delta)
+                // {
+                //     std::swap(neighbor[3], neighbor[5]);
+                // }
+                // else if (abs(angle - PI) < delta)
+                // {
+                //     std::swap(neighbor[3], neighbor[4]);
+                // }
                 // 检查是否是右手坐标系
                 for (int i = 0; i < 3; i++)
                 {
@@ -1346,9 +1618,10 @@ namespace zaran
                     vec[1][i] = node->GetCoord(neighbor[3])[i] - node->GetCoord(neighbor[2])[i];
                     vec[2][i] = node->GetCoord(neighbor[5])[i] - node->GetCoord(neighbor[4])[i];
                 }
-                if (idx == 11400)
+                volume = vec[0].cross(vec[1]).dot(vec[2]);
+                if (volume < 0 || isnan(abs(volume)) || isinf(abs(volume)))
                 {
-                    Log::error("node:{}, iLayer;{}, iNode:{}, coord:{}, {}, {}, volume:{}", idx, iLayer, iNode, node->GetCoord(idx)[0], node->GetCoord(idx)[1], node->GetCoord(idx)[2], vec[0].cross(vec[1]).dot(vec[2]));
+                    Log::error("The node:{} is not right hand", idx);
                 }
             }
         }
@@ -1372,13 +1645,11 @@ namespace zaran
         }
         for (int iNode = 0; iNode < m_fn_info.node[1].size(); iNode++)
         {
-            if (m_fn_info.node[1][iNode].idx == 1914)
-            {
-                int a = 0;
-            }
             int next_layer_node = m_fn_info.node[2][iNode].idx;
             for (int iNeighbor = 0; iNeighbor < 6; iNeighbor++)
             {
+                bool find = false;
+                int solid_num = 0;
                 int idx_master = m_fn_info.node[1][iNode].neighbor_node[iNeighbor];
                 if (m_node_type[idx_master] == PhysicalType::FluidSolid)
                 {
@@ -1387,6 +1658,7 @@ namespace zaran
                         if (nodes.idx_block == idx_master)
                         {
                             m_fn_info.node[1][iNode].neighbor_node[iNeighbor] = m_fn_info.node[1][nodes.idx_local_layer].idx;
+                            find = true;
                             break;
                         }
                     }
@@ -1398,6 +1670,7 @@ namespace zaran
                         if (nodes.idx_block == idx_master)
                         {
                             m_fn_info.node[1][iNode].neighbor_node[iNeighbor] = m_fn_info.node[0][nodes.idx_local_layer].idx;
+                            find = true;
                             break;
                         }
                     }
@@ -1405,10 +1678,18 @@ namespace zaran
                 else if (m_node_type[idx_master] == PhysicalType::Solid)
                 {
                     m_fn_info.node[1][iNode].neighbor_node[iNeighbor] = next_layer_node;
+                    find = true;
+                    solid_num++;
                 }
-                else
+                if (!find)
                 {
-                    Log::error("Invalid node type: {}", idx_master);
+                    int i, j, k;
+                    m_idx_proxy->GetIdxStruct(idx_master, i, j, k);
+                    Log::error("Invalid node:{}, {},{},{}, type:{}", idx_master, i, j, k, int(m_node_type[idx_master]));
+                }
+                if (solid_num > 3)
+                {
+                    Log::error("Invalid node:{}, type:{}", idx_master, int(m_node_type[idx_master]));
                 }
             }
         }

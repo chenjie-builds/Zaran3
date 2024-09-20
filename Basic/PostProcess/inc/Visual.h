@@ -9,16 +9,19 @@
 //*	@brief	Á÷³¡ÏÔÊ¾																||
 //*	@author	Chen Jie.															||
 //==============================================================================||
-#pragma	once
+#pragma once
 #include "Field.h"
 #include "NSFieldStruct.h"
+#include "NSFieldZaran.h"
 namespace zaran
 {
 	class Visual
 	{
 	public:
-		void WriteTecplotBinary(Field* field);
-		void WriteTecplotBinary(NSFieldStruct* field);
-		void WriteVTK(Field* field);
+		void WriteTecplotBinary(Field *field);
+		void WriteTecplotASCII(NSFieldStruct *field);
+		void WriteTecplotASCII(NSFieldZaran *field);
+		void WriteTecplotBinary(NSFieldZaran *field);
+		void WriteVTK(Field *field);
 	};
 }

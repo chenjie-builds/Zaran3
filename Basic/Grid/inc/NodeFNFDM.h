@@ -15,26 +15,26 @@
 #include "NodeBase.h"
 namespace zaran
 {
-enum class NodeType // 节点类型
-{
-    inner,       // 内部点，不是边界
-    inlet,       // 入口
-    outlet,      // 出口
-    wall,    // 壁面
-    hole,        // 洞边界
-    symmetry,    // 对称面
-    farfield,    // 远场
-    corner,      // 角点
-    ghost,       // ghonst point
-    userDefined, // 用户自定义
-    undefined    // 未定义
-};
-class NodeFN:public NodeBase
-{
+  enum class NodeType // 节点类型
+  {
+    inner = -1,      // 内部点，不是边界
+    inlet = 1,       // 入口
+    outlet = 2,      // 出口
+    wall = 3,        // 壁面
+    hole = 4,        // 洞边界
+    symmetry = 5,    // 对称面
+    farfield = 6,    // 远场
+    corner = 7,      // 角点
+    ghost = 8,       // ghonst point
+    userDefined = 9, // 用户自定义
+    undefined = -2   // 未定义
+  };
+  class NodeFN : public NodeBase
+  {
   public:
     NodeFN(int node_num);
     NodeFN(int node_num, const int *neighbor_node_num, const int *neighbor_face_num,
-             const int *neighbor_cell_num);
+           const int *neighbor_cell_num);
     virtual ~NodeFN();
     // 设置节点坐标
     void SetCoord(int idx, const double *coord);
@@ -50,6 +50,7 @@ class NodeFN:public NodeBase
     void SetNeighborFace(int idx, int neighbor_num, const int *neighbor_face);
     // 设置邻居单元
     void SetNeighborCell(int idx, int neighbor_num, const int *neighbor_cell);
+
   public:
     // 返回节点类型
     const NodeType &GetType(const int &index) const;
@@ -60,6 +61,7 @@ class NodeFN:public NodeBase
     int GetNeighborFaceNum(const int &idx) const;
     const int *GetNeighborCell(const int &idx) const;
     int GetNeighborCellNum(const int &idx) const;
+
   private:
     // 节点坐标
     double *m_coordinate;
@@ -84,5 +86,5 @@ class NodeFN:public NodeBase
     int *m_neighor_cell_index;
     /// @brief m_neighor_cell[m_cell_index[idx]] 第iNode节点包含的单元的邻居单元
     int *m_neighor_cell;
-};
+  };
 } // namespace zaran
