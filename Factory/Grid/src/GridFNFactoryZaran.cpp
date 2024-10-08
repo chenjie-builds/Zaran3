@@ -1481,7 +1481,7 @@ namespace zaran
                     DVector3D vec1, vec2;
                     vec1 = node_proj_map[temp.node1];
                     vec2 = node_proj_map[temp.node2];
-                    double angle = AngleOfTwoArray3D(vec1.data(), vec2.data()) + GetRand(0.0, 1.0) * EPSILON_NUMBER;
+                    double angle = AngleOfTwoArray3D(vec1.data(), vec2.data());
                     if (vec1.cross(vec2).dot(main_vec) < 0)
                         angle = 2 * PI - angle;
                     node_pair_map[angle] = temp;
@@ -1541,6 +1541,8 @@ namespace zaran
                 //! 前四个点没有排序
                 neighbor.push_back(main_pair.node1);
                 neighbor.push_back(main_pair.node2);
+                std::swap(neighbor[0], neighbor[4]);
+                std::swap(neighbor[1], neighbor[5]);
             }
         }
     }
@@ -1550,6 +1552,7 @@ namespace zaran
         auto node = grid->GetNode();
         int node_num = m_fn_info.node[1].size();
         double delta = 15 * PI / 180;
+        double angle;
         for (int iLayer = 1; iLayer < m_layer_num; iLayer++)
         {
             for (int iNode = 0; iNode < node_num; iNode++)
@@ -1564,10 +1567,21 @@ namespace zaran
                     vec[2][i] = node->GetCoord(neighbor[5])[i] - node->GetCoord(neighbor[4])[i];
                 }
                 double volume = vec[0].cross(vec[1]).dot(vec[2]);
+                angle = AngleOfTwoArray3D(vec[1].data(), vec[2].data());
                 // 检查是否是右手坐标系
                 if (volume < 0)
                 {
                     std::swap(neighbor[0], neighbor[1]);
+                }
+                angle = AngleOfTwoArray3D(vec[1].data(), vec[2].data());
+                // j,k方向平行
+                if (abs(angle) < delta)
+                {
+                    std::swap(neighbor[3], neighbor[5]);
+                }
+                else if (abs(angle - PI) < delta)
+                {
+                    std::swap(neighbor[3], neighbor[4]);
                 }
                 // double angle = AngleOfTwoArray3D(vec[0].data(), vec[1].data());
                 // // i,j方向平行
@@ -1590,16 +1604,7 @@ namespace zaran
                 // {
                 //     std::swap(neighbor[1], neighbor[4]);
                 // }
-                // angle = AngleOfTwoArray3D(vec[1].data(), vec[2].data());
-                // // j,k方向平行
-                // if (abs(angle) < delta)
-                // {
-                //     std::swap(neighbor[3], neighbor[5]);
-                // }
-                // else if (abs(angle - PI) < delta)
-                // {
-                //     std::swap(neighbor[3], neighbor[4]);
-                // }
+
                 // 检查是否是右手坐标系
                 for (int i = 0; i < 3; i++)
                 {
@@ -1609,7 +1614,7 @@ namespace zaran
                 }
                 if (vec[0].cross(vec[1]).dot(vec[2]) < 0)
                 {
-                    std::swap(neighbor[4], neighbor[5]);
+                    std::swap(neighbor[0], neighbor[1]);
                 }
                 // 检查是否是右手坐标系
                 for (int i = 0; i < 3; i++)

@@ -75,6 +75,55 @@ namespace zaran
 		}
 		fin.close();
 	}
+	void NSSolverFNFDM::InitFieldExplosion()
+	{
+		GridFN *grid = GetGrid();
+		FlowSolverPara *para = GetPara();
+		auto data_manager = GetDataManager();
+		double prim_far[5];
+		prim_far[0] = para->GetInflowDensity();
+		prim_far[1] = 0.0;
+		prim_far[2] = 0.0;
+		prim_far[3] = 0.0;
+		prim_far[4] = para->GetInflowPressure();
+		double explosion_pressure = GlobalData::GetDouble("explosion_pressure");
+		double prim_explosion[5];
+		prim_explosion[0] = prim_far[0];
+		prim_explosion[1] = 0.0;
+		prim_explosion[2] = 0.0;
+		prim_explosion[3] = 0.0;
+		prim_explosion[4] = explosion_pressure * prim_far[4];
+		double explosion_center[3];
+		explosion_center[0] = GlobalData::GetDouble("explosion_center_x");
+		explosion_center[1] = GlobalData::GetDouble("explosion_center_y");
+		explosion_center[2] = GlobalData::GetDouble("explosion_center_z");
+		double explosion_radius = GlobalData::GetDouble("explosion_radius");
+		double x, y, z;
+		int n_node = grid->GetTotalNodeNum();
+		for (int iNode = 0; iNode < n_node; ++iNode)
+		{
+			x = grid->GetNode()->GetCoord(iNode)[0];
+			y = grid->GetNode()->GetCoord(iNode)[1];
+			z = grid->GetNode()->GetCoord(iNode)[2];
+			double distance = sqrt((x - explosion_center[0]) * (x - explosion_center[0]) +
+								   (y - explosion_center[1]) * (y - explosion_center[1]) +
+								   (z - explosion_center[2]) * (z - explosion_center[2]));
+			if (distance < explosion_radius)
+			{
+				for (int iVal = 0; iVal < para->GetEqNum(); ++iVal)
+				{
+					data_manager->SetPrim(iVal, iNode, prim_explosion[iVal]);
+				}
+			}
+			else
+			{
+				for (int iVal = 0; iVal < para->GetEqNum(); ++iVal)
+				{
+					data_manager->SetPrim(iVal, iNode, prim_far[iVal]);
+				}
+			}
+		}
+	}
 	void NSSolverFNFDM::CalcCoordTransCoef()
 	{
 		Log::info("Compute NS 3D Coordination Transformation Coefficients");
@@ -118,7 +167,7 @@ namespace zaran
 		Log::info("NS 3D Coordination Transformation Coefficients are computed");
 		Log::info("Max Jacobian = {} at node {}", max_jacobian, max_jacobian_node);
 		Log::info("Min Jacobian = {} at node {}", min_jacobian, min_jacobian_node);
-		auto neighbor= node->GetNeighborNode(min_jacobian_node);
+		auto neighbor = node->GetNeighborNode(min_jacobian_node);
 		Log::info("Neighbor node of min Jacobian node: ");
 		for (int i = 0; i < 6; ++i)
 		{
@@ -766,45 +815,45 @@ namespace zaran
 			}
 			if (exist_nonphysical)
 			{
-				// data_manager->SetNonPhysical(iNode, 1);
-				// nonphysical_node_num++;
-				// Log::info("Step: {}, Non-physical Node: {}", GlobalData::GetInt("currentIter"), iNode);
-				// Log::warn("Non-physical Node: {}, neighbor num: {}, prim: {:6E},{:6E},{:6E},{:6E},{:6E}", iNode,
-				// 		  node->GetNeighborNodeNum(iNode), data_manager->GetPrim(0, iNode), data_manager->GetPrim(1, iNode),
-				// 		  data_manager->GetPrim(2, iNode), data_manager->GetPrim(3, iNode), data_manager->GetPrim(4, iNode));
-				// Log::warn("Non-physical Node: {}, coord: {:6E}, {:6E}, {:6E}", iNode, node->GetCoord(iNode)[0],
-				// 		  node->GetCoord(iNode)[1], node->GetCoord(iNode)[2]);
-				// int neighbor_num = node->GetNeighborNodeNum(iNode);
-				// for (int iNeighbor = 0; iNeighbor < neighbor_num; ++iNeighbor)
-				// {
-				// 	Log::warn("Neighbor Node: {}, index:{}, neighbor_num: {}, Jacobian: {:6E},\n prim: {:6E},{:6E},{:6E},{:6E},{:6E}\ndensity_grad: {:6E},{:6E},{:6E},\npressure_grad: {:6E},{:6E},{:6E},\n limiter: {:6E},{:6E},{:6E},{:6E},{:6E}\n",
-				// 			  iNeighbor, node->GetNeighborNode(iNode)[iNeighbor], node->GetNeighborNodeNum(node->GetNeighborNode(iNode)[iNeighbor]),
-				// 			  m_node_metric->GetJacobian(node->GetNeighborNode(iNode)[iNeighbor]),
-				// 			  data_manager->GetPrim(0, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrim(1, node->GetNeighborNode(iNode)[iNeighbor]),
-				// 			  data_manager->GetPrim(2, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrim(3, node->GetNeighborNode(iNode)[iNeighbor]),
-				// 			  data_manager->GetPrim(4, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(0, 0, node->GetNeighborNode(iNode)[iNeighbor]),
-				// 			  data_manager->GetPrimGrad(0, 1, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(0, 2, node->GetNeighborNode(iNode)[iNeighbor]),
-				// 			  data_manager->GetPrimGrad(4, 0, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(4, 1, node->GetNeighborNode(iNode)[iNeighbor]),
-				// 			  data_manager->GetPrimGrad(4, 2, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(0, node->GetNeighborNode(iNode)[iNeighbor]),
-				// 			  data_manager->GetLimiter(1, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(2, node->GetNeighborNode(iNode)[iNeighbor]),
-				// 			  data_manager->GetLimiter(3, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(4, node->GetNeighborNode(iNode)[iNeighbor]));
-				// 	// for (int jNeighbor = 0; jNeighbor < node->GetNeighborNodeNum(node->GetNeighborNode(iNode)[iNeighbor]); jNeighbor++)
-				// 	// {
-				// 	// 	Log::warn("Neighbor Node: {}, Neighbor: {}, index: {}, Jacobian: {:6E}",
-				// 	// 			  iNeighbor, jNeighbor, node->GetNeighborNode(node->GetNeighborNode(iNode)[iNeighbor])[jNeighbor]),
-				// 	// 		m_node_metric->GetJacobian(node->GetNeighborNode(node->GetNeighborNode(iNode)[iNeighbor])[jNeighbor]);
-				// 	// }
-				// }
+				data_manager->SetNonPhysical(iNode, 1);
+				nonphysical_node_num++;
+				Log::info("Step: {}, Non-physical Node: {}", GlobalData::GetInt("currentIter"), iNode);
+				Log::warn("Non-physical Node: {}, neighbor num: {}, prim: {:6E},{:6E},{:6E},{:6E},{:6E}", iNode,
+						  node->GetNeighborNodeNum(iNode), data_manager->GetPrim(0, iNode), data_manager->GetPrim(1, iNode),
+						  data_manager->GetPrim(2, iNode), data_manager->GetPrim(3, iNode), data_manager->GetPrim(4, iNode));
+				Log::warn("Non-physical Node: {}, coord: {:6E}, {:6E}, {:6E}", iNode, node->GetCoord(iNode)[0],
+						  node->GetCoord(iNode)[1], node->GetCoord(iNode)[2]);
+				int neighbor_num = node->GetNeighborNodeNum(iNode);
+				for (int iNeighbor = 0; iNeighbor < neighbor_num; ++iNeighbor)
+				{
+					Log::warn("Neighbor Node: {}, index:{}, neighbor_num: {}, Jacobian: {:6E},\n prim: {:6E},{:6E},{:6E},{:6E},{:6E}\ndensity_grad: {:6E},{:6E},{:6E},\npressure_grad: {:6E},{:6E},{:6E},\n limiter: {:6E},{:6E},{:6E},{:6E},{:6E}\n",
+							  iNeighbor, node->GetNeighborNode(iNode)[iNeighbor], node->GetNeighborNodeNum(node->GetNeighborNode(iNode)[iNeighbor]),
+							  m_node_metric->GetJacobian(node->GetNeighborNode(iNode)[iNeighbor]),
+							  data_manager->GetPrim(0, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrim(1, node->GetNeighborNode(iNode)[iNeighbor]),
+							  data_manager->GetPrim(2, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrim(3, node->GetNeighborNode(iNode)[iNeighbor]),
+							  data_manager->GetPrim(4, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(0, 0, node->GetNeighborNode(iNode)[iNeighbor]),
+							  data_manager->GetPrimGrad(0, 1, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(0, 2, node->GetNeighborNode(iNode)[iNeighbor]),
+							  data_manager->GetPrimGrad(4, 0, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(4, 1, node->GetNeighborNode(iNode)[iNeighbor]),
+							  data_manager->GetPrimGrad(4, 2, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(0, node->GetNeighborNode(iNode)[iNeighbor]),
+							  data_manager->GetLimiter(1, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(2, node->GetNeighborNode(iNode)[iNeighbor]),
+							  data_manager->GetLimiter(3, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(4, node->GetNeighborNode(iNode)[iNeighbor]));
+					// for (int jNeighbor = 0; jNeighbor < node->GetNeighborNodeNum(node->GetNeighborNode(iNode)[iNeighbor]); jNeighbor++)
+					// {
+					// 	Log::warn("Neighbor Node: {}, Neighbor: {}, index: {}, Jacobian: {:6E}",
+					// 			  iNeighbor, jNeighbor, node->GetNeighborNode(node->GetNeighborNode(iNode)[iNeighbor])[jNeighbor]),
+					// 		m_node_metric->GetJacobian(node->GetNeighborNode(node->GetNeighborNode(iNode)[iNeighbor])[jNeighbor]);
+					// }
+				}
 			}
 		}
 		if (nonphysical_node_num > 0)
 		{
 
 			Log::warn("Non-physical Node Num: {}", nonphysical_node_num);
-			// auto para = GetPara();
-			// double cfl = para->GetCflNumber();
-			// para->ReduceCflNumber();
-			// Log::warn("CFL Number is reduced to {}", cfl);
+			auto para = GetPara();
+			double cfl = para->GetCflNumber();
+			para->ReduceCflNumber();
+			Log::warn("CFL Number is reduced to {}", cfl);
 		}
 	}
 

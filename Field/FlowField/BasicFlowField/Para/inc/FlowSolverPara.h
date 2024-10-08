@@ -31,7 +31,8 @@ namespace zaran
 	{
 		FarFlow,//远场
 		FarFlowNoVelocity,//远场无速度
-		Backup//备份文件
+		Backup,//备份文件
+		Explosion//爆炸
 	};
 	class FlowSolverPara :public SolverPara
 	{

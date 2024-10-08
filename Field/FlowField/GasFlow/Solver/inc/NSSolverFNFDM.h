@@ -28,6 +28,7 @@ namespace zaran
 		void InitFieldFarFlow() override;
 		void InitFieldFarFieldNoVelocity() override;
 		void InitFieldBackup() override;
+		void InitFieldExplosion() override;
 		void CalcCoordTransCoef() override;
 		void BackupField(std::string &back_folder) override;
 

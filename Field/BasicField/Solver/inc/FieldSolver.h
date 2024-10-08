@@ -19,6 +19,7 @@ namespace zaran
 	{
 		NS_Struct,
 		NS_FNFDM,
+		NS_ZaRan,
 	};
 	/// @brief 场求解器基类
 	class FieldSolver :public Solver

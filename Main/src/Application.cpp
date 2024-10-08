@@ -151,8 +151,8 @@ namespace zaran
 			}
 			else if (grid_type_name == "Zaran")
 			{
-				// grid_type = GridType::Zaran;
-				// solver_type = FieldSolverType::NS_ZaRan_3D;
+				grid_type = GridType::Zaran;
+				solver_type = FieldSolverType::NS_ZaRan;
 			}
 			else
 			{

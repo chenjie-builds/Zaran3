@@ -1,12 +1,11 @@
-#include"FlowSolverPara.h"
+#include "FlowSolverPara.h"
 #include "GlobalData.h"
 #include "Log.h"
 #include "PerfectGas.h"
-#include<iostream>
+#include <iostream>
 using namespace zaran;
 FlowSolverPara::FlowSolverPara()
 {
-
 }
 
 FlowSolverPara::~FlowSolverPara()
@@ -55,6 +54,10 @@ void FlowSolverPara::Init()
 	{
 		m_init_field_type = InitFieldType::Backup;
 	}
+	else if (inflow_type == "Explosion")
+	{
+		m_init_field_type = InitFieldType::Explosion;
+	}
 	else
 	{
 		m_init_field_type = InitFieldType::FarFlow;
@@ -64,19 +67,19 @@ void FlowSolverPara::Init()
 	int rkStage = GlobalData::GetInt("rkStage");
 	if (rkStage == 1)
 	{
-		m_rk_coef = { 1.0 };
+		m_rk_coef = {1.0};
 	}
 	else if (rkStage == 3)
 	{
-		m_rk_coef = { 0.1918,0.4929,1.0 };
+		m_rk_coef = {0.1918, 0.4929, 1.0};
 	}
 	else if (rkStage == 4)
 	{
-		m_rk_coef = { 0.1084,0.2602,0.5052,1.0 };
+		m_rk_coef = {0.1084, 0.2602, 0.5052, 1.0};
 	}
 	else if (rkStage == 5)
 	{
-		m_rk_coef = { 0.0695,0.1602,0.2898,0.5060 };
+		m_rk_coef = {0.0695, 0.1602, 0.2898, 0.5060};
 	}
 	else
 	{
@@ -131,7 +134,6 @@ void FlowSolverPara::Init()
 	}
 	InitCflNumber();
 	InitLimiter();
-
 }
 
 void zaran::FlowSolverPara::InitCflNumber()
@@ -170,7 +172,7 @@ void zaran::FlowSolverPara::InitLimiter()
 		system("pause");
 	}
 	m_max_limit = GlobalData::GetDouble("maxLimiterSlope");
-	if(m_max_limit < 0.0 || m_max_limit > 1.0)
+	if (m_max_limit < 0.0 || m_max_limit > 1.0)
 	{
 		Log::warn("Wrong Max Limiter Slope: {}, Please Check Control File!", m_max_limit);
 		std::cin.get();
@@ -178,26 +180,24 @@ void zaran::FlowSolverPara::InitLimiter()
 	}
 }
 
-const InitFieldType& FlowSolverPara::GetInitFieldType() const
+const InitFieldType &FlowSolverPara::GetInitFieldType() const
 {
 	return m_init_field_type;
 }
 
- int FlowSolverPara::GetIsViscous() const
+int FlowSolverPara::GetIsViscous() const
 {
 	return m_is_viscous;
 }
 
- int zaran::FlowSolverPara::GetCurrentStep() const
+int zaran::FlowSolverPara::GetCurrentStep() const
 {
 	return m_current_step;
 }
 
-
- double zaran::FlowSolverPara::GetCflNumber() const
+double zaran::FlowSolverPara::GetCflNumber() const
 {
 	return m_cfl->GetCFL(m_current_step);
-
 }
 
 void zaran::FlowSolverPara::ReduceCflNumber()
@@ -205,113 +205,107 @@ void zaran::FlowSolverPara::ReduceCflNumber()
 	m_cfl->ReduceCFL();
 }
 
-
-const DArray& FlowSolverPara::GetRKCoef() const
+const DArray &FlowSolverPara::GetRKCoef() const
 {
 	return m_rk_coef;
 }
 
-
-
-void FlowSolverPara::SetInitFieldType(InitFieldType& initflowType)
+void FlowSolverPara::SetInitFieldType(InitFieldType &initflowType)
 {
 	m_init_field_type = initflowType;
 }
 
-void FlowSolverPara::SetIsViscous(const int& isViscous)
+void FlowSolverPara::SetIsViscous(const int &isViscous)
 {
 	m_is_viscous = isViscous;
 }
 
-
-
-void FlowSolverPara::SetRKCoef(const DArray& rkCoef)
+void FlowSolverPara::SetRKCoef(const DArray &rkCoef)
 {
 	m_rk_coef = rkCoef;
 }
 
-const GradScheme& FlowSolverPara::GetGradScheme() const
+const GradScheme &FlowSolverPara::GetGradScheme() const
 {
 	return m_grad_scheme;
 }
 
-const LimiterType& FlowSolverPara::GetLimiterType() const
+const LimiterType &FlowSolverPara::GetLimiterType() const
 {
 	return n_limiter_type;
 }
 
-const std::string& zaran::FlowSolverPara::GetBackupFieldFileName() const
+const std::string &zaran::FlowSolverPara::GetBackupFieldFileName() const
 {
 	return m_backup_field_file_name;
 }
 
-const Dimensionless& zaran::FlowSolverPara::GetDimensionless() const
+const Dimensionless &zaran::FlowSolverPara::GetDimensionless() const
 {
 	return m_dimensionless;
 }
 
-const RiemannSolverType& zaran::FlowSolverPara::GetRiemannSolverType() const
+const RiemannSolverType &zaran::FlowSolverPara::GetRiemannSolverType() const
 {
 	return m_riemann_solver_type;
 }
 
 const double zaran::FlowSolverPara::GetMaxLimit() const
 {
-    return m_max_limit;
+	return m_max_limit;
 }
 
-void FlowSolverPara::SetGradScheme(const GradScheme& gradScheme)
+void FlowSolverPara::SetGradScheme(const GradScheme &gradScheme)
 {
 	m_grad_scheme = gradScheme;
 }
 
-void FlowSolverPara::SetLimiterType(const LimiterType& limiterType)
+void FlowSolverPara::SetLimiterType(const LimiterType &limiterType)
 {
 	n_limiter_type = limiterType;
 }
 
-void zaran::FlowSolverPara::SetBackupFieldFileName(const std::string& backupFieldFileName)
+void zaran::FlowSolverPara::SetBackupFieldFileName(const std::string &backupFieldFileName)
 {
 	m_backup_field_file_name = backupFieldFileName;
 }
 
-void zaran::FlowSolverPara::SetCurrentStep(const int& currentStep)
+void zaran::FlowSolverPara::SetCurrentStep(const int &currentStep)
 {
 	m_current_step = currentStep;
 }
 
-const int& zaran::FlowSolverPara::GetEqNum() const
+const int &zaran::FlowSolverPara::GetEqNum() const
 {
 	return m_equ_num;
-
 }
 
-const double& zaran::FlowSolverPara::GetInflowDensity() const
+const double &zaran::FlowSolverPara::GetInflowDensity() const
 {
 	return m_inflow_density;
 }
 
-const double& zaran::FlowSolverPara::GetInflowVelocityX() const
+const double &zaran::FlowSolverPara::GetInflowVelocityX() const
 {
 	return m_inflow_velocity_x;
 }
 
-const double& zaran::FlowSolverPara::GetInflowVelocityY() const
+const double &zaran::FlowSolverPara::GetInflowVelocityY() const
 {
 	return m_inflow_velocity_y;
 }
 
-const double& zaran::FlowSolverPara::GetInflowVelocityZ() const
+const double &zaran::FlowSolverPara::GetInflowVelocityZ() const
 {
 	return m_inflow_velocity_z;
 }
 
-const double& zaran::FlowSolverPara::GetInflowPressure() const
+const double &zaran::FlowSolverPara::GetInflowPressure() const
 {
 	return m_inflow_pressure;
 }
 
-const double& zaran::FlowSolverPara::GetInflowTemperature() const
+const double &zaran::FlowSolverPara::GetInflowTemperature() const
 {
 	return m_inflow_temperature;
 }

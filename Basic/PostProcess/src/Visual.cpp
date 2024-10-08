@@ -221,6 +221,8 @@ void zaran::Visual::WriteTecplotBinary(NSFieldZaran *field)
     INTEGER4 node_num = ni * nj * nk;
     INTEGER4 cell_num = (ni - 1) * (nj - 1) * (nk - 1);
     DArray x(node_num), y(node_num), z(node_num), density(node_num), velocity_x(node_num), velocity_y(node_num), velocity_z(node_num), pressure(node_num);
+
+    std::vector<int> iBlank(node_num);
     for (int k = 0; k < nk; ++k)
     {
         for (int j = 0; j < nj; ++j)
@@ -237,15 +239,17 @@ void zaran::Visual::WriteTecplotBinary(NSFieldZaran *field)
                 velocity_y[idx] = data_manager->GetVelocity(1, idx0);
                 velocity_z[idx] = data_manager->GetVelocity(2, idx0);
                 pressure[idx] = data_manager->GetPressure(idx0);
+                iBlank[idx] = (int)grid->GetIBlank(i + is, j + js, k + ks);
             }
         }
     }
     INTEGER4 file_format = 0;
     INTEGER4 debug = 0;
     INTEGER4 vIsDouble = 1;
+    INTEGER4 vIsInt = 0;
     INTEGER4 fileType = 0;
     string grid_name = "grid_" + grid->GetName();
-    string var_name = "x, y, z, density, velocity_x, velocity_y, velocity_z, pressure";
+    string var_name = "x, y, z, density, velocity_x, velocity_y, velocity_z, pressure, iBlank";
     std::string file_name = "result/" + std::to_string(GlobalData::GetInt("currentIter")) + "-block.plt";
     int i = TECINI142(grid_name.c_str(), var_name.c_str(), file_name.c_str(), (char *)".", &file_format, &fileType,
                       &debug, &vIsDouble);
@@ -261,7 +265,7 @@ void zaran::Visual::WriteTecplotBinary(NSFieldZaran *field)
     INTEGER4 isBlock = 1;
     INTEGER4 nFConns = 0;
     INTEGER4 FNMode = 0;
-    int valueLocation[] = {1, 1, 1, 1, 1, 1, 1, 1};
+    int valueLocation[] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
     int shrConn = 0;
     i = TECZNE142((char *)zone_name.c_str(), &zone_type, &node_num, &cell_num, &face_num, &iCellMax, &jCellMax,
                   &kCellMax, &solution_time, &strandID, &parentZn, &isBlock, &nFConns, &FNMode, 0, 0, 0, NULL,
@@ -275,6 +279,7 @@ void zaran::Visual::WriteTecplotBinary(NSFieldZaran *field)
     i = TECDAT142(&node_num, velocity_y.data(), &vIsDouble);
     i = TECDAT142(&node_num, velocity_z.data(), &vIsDouble);
     i = TECDAT142(&node_num, pressure.data(), &vIsDouble);
+    i = TECDAT142(&node_num, iBlank.data(), &vIsInt);
     INTEGER4 connectivityCount = cell_num * 8;
     std::vector<INTEGER4> cell_nodes(connectivityCount);
     for (int k = 0; k < nk - 1; k++)

@@ -29,6 +29,7 @@ namespace zaran
 		virtual void InitFieldFarFlow() = 0;
 		virtual void InitFieldFarFieldNoVelocity() = 0;
 		virtual void InitFieldBackup() = 0;
+		virtual void InitFieldExplosion() = 0;
 		void InitSolver() override;
 		void Solve() override;
 		void UpdateField() override;

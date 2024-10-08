@@ -23,6 +23,7 @@ namespace zaran
     void InitFieldFarFieldNoVelocity() override;
     void InitFieldBackup() override;
     void InitFieldVortex();
+    void InitFieldExplosion() override;
 
   protected:
     void CalcCoordTransCoef() override;

@@ -41,6 +41,10 @@ namespace zaran
 		{
 			InitFieldBackup();
 		}
+		else if (init_type == InitFieldType::Explosion)
+		{
+			InitFieldExplosion();
+		}
 		else
 		{
 			Log::warn("Initialize Failed!");
