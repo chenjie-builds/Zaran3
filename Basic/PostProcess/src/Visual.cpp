@@ -137,7 +137,10 @@ void Visual::WriteTecplotASCII(NSFieldStruct *field)
     auto data_manager = field->GetDataManager();
     auto solver = field->GetSolver();
     auto metrics = solver->GetNodeMetrics();
-    StructIdxProxy *idx_proxy = new StructIdxProxy(grid);
+    int grid_ni = grid->GetNi();
+    int grid_nj = grid->GetNj();
+    int grid_nk = grid->GetNk();
+    StructIdxProxy *idx_proxy = new StructIdxProxy(grid_ni, grid_nj, grid_nk);
     int is, ie, js, je, ks, ke;
     grid->GetRange(is, ie, js, je, ks, ke);
     int ni = ie - is + 1;
@@ -150,7 +153,7 @@ void Visual::WriteTecplotASCII(NSFieldStruct *field)
     const double *velocity_z = data_manager->GetVelocity(2);
     const double *pressure = data_manager->GetPressure();
     // 以ASCII格式写入，后期可以改为二进制格式
-    std::ofstream out("result/" + std::to_string(GlobalData::GetInt("currentIter")) + ".dat");
+    std::ofstream out("result/" + std::to_string(GlobalData::GetInt("currentIter")) +"_"+ std::to_string(field->GetIdx()) + ".dat");
     out << "TITLE=\"Flow Field\"\n";
     out << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\"\n";
     out << "ZONE I=" << ni << ", J=" << nj << ", K=" << nk << ", F=POINT\n";
@@ -174,7 +177,10 @@ void zaran::Visual::WriteTecplotASCII(NSFieldZaran *field)
     auto node = grid->GetNode();
     auto data_manager = field->GetDataManager();
     auto solver = field->GetSolver();
-    StructIdxProxy *idx_proxy = new StructIdxProxy(grid);
+    int grid_ni = grid->GetNi();
+    int grid_nj = grid->GetNj();
+    int grid_nk = grid->GetNk();
+    StructIdxProxy *idx_proxy = new StructIdxProxy(grid_ni, grid_nj, grid_nk);
     int is, ie, js, je, ks, ke;
     grid->GetRange(is, ie, js, je, ks, ke);
     int ni = ie - is + 1;
@@ -216,8 +222,10 @@ void zaran::Visual::WriteTecplotBinary(NSFieldZaran *field)
     int ni = ie - is + 1;
     int nj = je - js + 1;
     int nk = ke - ks + 1;
-    auto idx_proxy = new StructIdxProxy(grid);
-
+    int grid_ni = grid->GetNi();
+    int grid_nj = grid->GetNj();
+    int grid_nk = grid->GetNk();
+    auto idx_proxy = new StructIdxProxy(grid_ni, grid_nj, grid_nk);
     INTEGER4 node_num = ni * nj * nk;
     INTEGER4 cell_num = (ni - 1) * (nj - 1) * (nk - 1);
     DArray x(node_num), y(node_num), z(node_num), density(node_num), velocity_x(node_num), velocity_y(node_num), velocity_z(node_num), pressure(node_num);

@@ -13,8 +13,7 @@ namespace zaran
 {
     FieldManager *FieldBuilder::Create()
     {
-        return CreateFieldZaran();
-        if(m_grid_type==GridType::Zaran)
+        if (m_grid_type == GridType::Zaran)
         {
             return CreateFieldZaran();
         }
@@ -49,30 +48,42 @@ namespace zaran
             if (m_solver_type == FieldSolverType::NS_FNFDM)
             {
                 field_list[iField] = new NSFieldFNFDM(grid[iField]);
+                field_list[iField]->SetIdx(iField);
             }
             else if (m_solver_type == FieldSolverType::NS_Struct)
             {
                 field_list[iField] = new NSFieldStruct(grid[iField]);
+                field_list[iField]->SetIdx(iField);
                 auto grid_struct = dynamic_cast<GridStruct *>(grid[iField]);
+                int ni = grid_struct->GetNi();
+                int nj = grid_struct->GetNj();
+                int nk = grid_struct->GetNk();
                 auto bound_map = grid_struct->GetBoundMap();
-                auto &connect_bound = bound_map->GetBoundary("connection");
-                StructIdxProxy *src_idx_proxy = new StructIdxProxy(grid_struct);
-                recv_node_idx_local.resize(connect_bound.size());
-                recv_field_idx_global.resize(connect_bound.size());
-                recv_node_idx_global.resize(connect_bound.size());
-                for (int i = 0; i < connect_bound.size(); i++)
+                if (bound_map->IsBoundaryExist("connection"))
                 {
-                    int idx_i, idx_j, idx_k;
-                    connect_bound[i].GetIdx(idx_i, idx_j, idx_k);
-                    int idx = src_idx_proxy->GetIdx(idx_i, idx_j, idx_k);
-                    recv_node_idx_local[i] = idx;
-                    recv_field_idx_global[i] = connect_bound[i].GetTargetBlock();
-                    StructIdxProxy *tgt_idx_proxy = new StructIdxProxy(dynamic_cast<GridStruct *>(grid[recv_field_idx_global[i]]));
-                    connect_bound[i].GetIdxTgt(idx_i, idx_j, idx_k);
-                    recv_node_idx_global[i] = tgt_idx_proxy->GetIdx(idx_i, idx_j, idx_k);
-                    delete tgt_idx_proxy;
+                    auto &connect_bound = bound_map->GetBoundary("connection");
+                    StructIdxProxy *src_idx_proxy = new StructIdxProxy(ni, nj, nk);
+                    recv_node_idx_local.resize(connect_bound.size());
+                    recv_field_idx_global.resize(connect_bound.size());
+                    recv_node_idx_global.resize(connect_bound.size());
+                    for (int i = 0; i < connect_bound.size(); i++)
+                    {
+                        int idx_i, idx_j, idx_k;
+                        connect_bound[i].GetIdx(idx_i, idx_j, idx_k);
+                        int idx = src_idx_proxy->GetIdx(idx_i, idx_j, idx_k);
+                        recv_node_idx_local[i] = idx;
+                        recv_field_idx_global[i] = connect_bound[i].GetTargetBlock();
+                        auto recv_grid_struct = dynamic_cast<GridStruct *>(grid[recv_field_idx_global[i]]);
+                        int recv_ni = recv_grid_struct->GetNi();
+                        int recv_nj = recv_grid_struct->GetNj();
+                        int recv_nk = recv_grid_struct->GetNk();
+                        StructIdxProxy *tgt_idx_proxy = new StructIdxProxy(recv_ni, recv_nj, recv_nk);
+                        connect_bound[i].GetIdxTgt(idx_i, idx_j, idx_k);
+                        recv_node_idx_global[i] = tgt_idx_proxy->GetIdx(idx_i, idx_j, idx_k);
+                        delete tgt_idx_proxy;
+                    }
+                    delete src_idx_proxy;
                 }
-                delete src_idx_proxy;
             }
             else
             {
@@ -125,12 +136,12 @@ namespace zaran
         grid_info.bound_box.y_max = GlobalData::GetDouble("yMax");
         grid_info.bound_box.z_min = GlobalData::GetDouble("zMin");
         grid_info.bound_box.z_max = GlobalData::GetDouble("zMax");
-        grid_info.bound_type_i_minus=GlobalData::GetString("boundTypeIMinus");
-        grid_info.bound_type_i_plus=GlobalData::GetString("boundTypeIPlus");
-        grid_info.bound_type_j_minus=GlobalData::GetString("boundTypeJMinus");
-        grid_info.bound_type_j_plus=GlobalData::GetString("boundTypeJPlus");
-        grid_info.bound_type_k_minus=GlobalData::GetString("boundTypeKMinus");
-        grid_info.bound_type_k_plus=GlobalData::GetString("boundTypeKPlus");
+        grid_info.bound_type_i_minus = GlobalData::GetString("boundTypeIMinus");
+        grid_info.bound_type_i_plus = GlobalData::GetString("boundTypeIPlus");
+        grid_info.bound_type_j_minus = GlobalData::GetString("boundTypeJMinus");
+        grid_info.bound_type_j_plus = GlobalData::GetString("boundTypeJPlus");
+        grid_info.bound_type_k_minus = GlobalData::GetString("boundTypeKMinus");
+        grid_info.bound_type_k_plus = GlobalData::GetString("boundTypeKPlus");
         GridBlockFactory *grid_factory = new GridBlockFactory();
         GridBlock *grid;
         grid_factory->CreateGrid(grid, grid_info);

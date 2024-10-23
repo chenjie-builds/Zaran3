@@ -56,6 +56,8 @@ namespace zaran
   protected:
     void Preprocess() override;
     void CalcPrimGradWLS();
+    void CalcPrimGradWLS2D();
+    void CalcPrimGradWLS3D();
     void CalcLimiterVK();
     void CalcTimeStepLocal() override;
     void ReduceTimeStep(double &dt) override;
@@ -69,8 +71,10 @@ namespace zaran
     void CalcMidNodeGrad();
     /// @brief 半点原始变量插值：MUSCL
     void CalcMidNodePrimMUSCL();
+    void CalcMidNodePrimMUSCL_SV();
     /// @brief 虚拟节点半点原始变量插值：MUSCL
     void CalcMidGhostNodePrimMUSCL();
+    void CalcMidGhostNodePrimMUSCL_SV();
     /// @brief 半点原始变量插值：WCNS5
     void CalcMidNodePrimWCNS5();
     /// @brief 虚拟节点半点原始变量插值：WCNS5
@@ -88,6 +92,7 @@ namespace zaran
     /// @param value_left interpolated value of left side at mid point i+1/2
     /// @param value_right interpolated value of right side at mid point i+1/2
     void MidNodeMUSCL(const double *value, double &value_left, double &value_right);
+    void MidNodeMUSCL_SV(const double *value,  double**coord, double &value_left, double &value_right);
     /// @brief mid node value interpolate use WCNS5
     /// @param value values at node, size = 5,(i-2,i-1,i,i+1,i+2)
     /// @param value_left interpolated value of left side at mid point i+1/2
@@ -101,6 +106,7 @@ namespace zaran
     virtual void CalcInviscidResidual1st();
     virtual void CalcInviscidResidualGrad();
     virtual void CalcInviscidResidualMUSCL();
+    virtual void CalcInviscidResidualMUSCL_SV();
     virtual void CalcInviscidResidualWCNS5();
     // 计算粘性通量
     void CalcViscousResidual() override;

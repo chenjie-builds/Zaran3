@@ -24,6 +24,8 @@ namespace zaran
         void SetBoundInfo(GridBase **grid_list, int &grid_num);
         void SetNodeCoord(GridBase **grid_list, int &grid_num);
         void SetGhostNodeCoord(GridBase **grid_list, int &grid_num);
+        void SetGhostNodeCoord3D(GridBase **grid_list, int &grid_num);
+        void SetGhostNodeCoord2D(GridBase **grid_list, int &grid_num);
         size_t GetBlockNum() { return m_block.size(); };
         void WriteGridTest(GridBase **grid_list, int &grid_num);
         struct NodeCoord

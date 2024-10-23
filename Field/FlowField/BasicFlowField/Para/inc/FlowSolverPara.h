@@ -52,6 +52,7 @@ namespace zaran
 		void SetBackupFieldFileName(const std::string& backupFieldFileName);
 		void SetCurrentStep(const int& currentStep);
 	public:
+		/// @brief 方程个数
 		const int& GetEqNum()const;
 		const double& GetInflowDensity()const;
 		const double& GetInflowVelocityX()const;

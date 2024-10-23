@@ -10,22 +10,34 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include "GridStruct.h"
+#include "IdxProxy.h"
 namespace zaran
 {
     // 三维结构网格索引代理类
     // 用于计算三维结构网格的索引，便于和其他网格类型统一
-    class StructIdxProxy
+    class StructIdxProxy : public IdxProxy
     {
     public:
-        StructIdxProxy(GridStruct* grid);
+        StructIdxProxy() = default;
+        StructIdxProxy(int ni, int nj, int nk);
         ~StructIdxProxy();
-        int GetNi()const;
-        int GetNj()const;
-        int GetNk()const;
-        int GetIdx(int i, int j, int k)const;
-        void GetIdxStruct(int idx, int& i, int& j, int& k)const;
+        void SetIdx(int i, int j, int k);
+        void SetI(int i);
+        void SetJ(int j);
+        void SetK(int k);
+        int GetNi() const;
+        int GetNj() const;
+        int GetNk() const;
+        void GetIdxStruct(int &i, int &j, int &k) ;
+        using IdxProxy::SetIdx;
+        using IdxProxy::GetIdx;
+        int GetIdx(int i, int j, int k) const
+        {
+            return i + j * m_ni + k * m_ni * m_nj;
+        }
     private:
-        GridStruct* m_grid;
+        GridStruct *m_grid;
+        int m_ni, m_nj, m_nk;
+        int m_idx_i, m_idx_j, m_idx_k;
     };
 }

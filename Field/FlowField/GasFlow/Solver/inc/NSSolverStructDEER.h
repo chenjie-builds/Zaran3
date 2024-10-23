@@ -15,6 +15,7 @@ namespace zaran
         //==================================================================
         //@brief 通量差分：二阶中心差分
         void FluxDifference2nd() override;
+        //@brief 通量差分：二阶中心差分,移动中间节点,用于梯度插值得到中间节点值
         void FlueDifference2nd_MoveMidNode();
         //@biref 通量差分：六阶中心差分
         void FluxDifference6th() override;

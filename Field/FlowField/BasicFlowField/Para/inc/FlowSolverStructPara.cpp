@@ -97,6 +97,10 @@ namespace zaran
         {
             m_inter_schme = InterpolationScheme::MUSCL;
         }
+        else if (inter_schme == "MUSCL_SV")
+        {
+            m_inter_schme = InterpolationScheme::MUSCL_SV;
+        }
         else if (inter_schme == "WCNS5")
         {
             m_inter_schme = InterpolationScheme::WCNS5;

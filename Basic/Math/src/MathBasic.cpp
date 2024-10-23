@@ -1,6 +1,7 @@
 #include <cmath>
 #include "MathBasic.h"
 #include "CommonPara.h"
+#include <Eigen/Dense>
 namespace zaran
 {
 
@@ -83,8 +84,8 @@ namespace zaran
 
 		// 计算夹角的余弦值
 		double cosTheta = dot / (normA * normB);
-		cosTheta =Min(1.0-SMALL_NUMBER, cosTheta);
-		cosTheta = Max(-1.0+SMALL_NUMBER, cosTheta);
+		cosTheta = Min(1.0 - SMALL_NUMBER, cosTheta);
+		cosTheta = Max(-1.0 + SMALL_NUMBER, cosTheta);
 
 		// 计算并返回夹角（弧度）
 		return acos(cosTheta);
@@ -121,5 +122,87 @@ namespace zaran
 	double DotProduct(const double *A, const double *B)
 	{
 		return A[0] * B[0] + A[1] * B[1] + A[2] * B[2];
+	}
+	void LineFit2D(const double **coord, int point_num, double &a, double &b, double &c)
+	{
+		if (point_num < 2)
+		{
+			a = b = c = 0;
+			return;
+		}
+		else
+		{
+			double sum_x = 0.0, sum_y = 0.0;
+			double sum_xy = 0.0, sum_xx = 0.0;
+			for (int i = 0; i < point_num; ++i)
+			{
+				double x = coord[i][0];
+				double y = coord[i][1];
+				sum_x += x;
+				sum_y += y;
+				sum_xy += x * y;
+				sum_xx += x * x;
+			}
+			double denominator = point_num * sum_xx - sum_x * sum_x;
+			if (abs(denominator) < SMALL_NUMBER)
+			{
+				a = 1;
+				b = 0;
+				c = -sum_x / point_num;
+				return;
+			}
+			a = (point_num * sum_xy - sum_x * sum_y) / denominator;
+			b = (sum_xx * sum_y - sum_x * sum_xy) / denominator;
+			c = b;
+			b = -1;
+		}
+	}
+	void PlaneFit3D(const double **coord, int point_num, double &A, double &B, double &C, double &D)
+	{
+		if (point_num < 3)
+		{
+			A = B = C = D = 0;
+			return;
+		}
+
+		double sum_x = 0.0, sum_y = 0.0, sum_z = 0.0;
+		double sum_xy = 0.0, sum_xz = 0.0, sum_yz = 0.0;
+		double sum_xx = 0.0, sum_yy = 0.0;
+
+		// 计算必要的求和
+		for (int i = 0; i < point_num; ++i)
+		{
+			double x = coord[i][0];
+			double y = coord[i][1];
+			double z = coord[i][2];
+			sum_x += x;
+			sum_y += y;
+			sum_z += z;
+			sum_xy += x * y;
+			sum_xz += x * z;
+			sum_yz += y * z;
+			sum_xx += x * x;
+			sum_yy += y * y;
+		}
+
+		// 构建矩阵 A
+		double denominator = point_num * (sum_xx * sum_yy - sum_xy * sum_xy);
+		if (denominator == 0)
+		{
+			A = B = C = 0;
+			D = sum_z / point_num; // 使用z的平均值
+			return;
+		}
+
+		// 求解平面参数
+		A = (point_num * (sum_y * sum_xz - sum_x * sum_yz) - sum_x * (sum_y * sum_xz - sum_y * sum_yz)) / denominator;
+		B = (point_num * (sum_x * sum_yz - sum_y * sum_xz) - sum_y * (sum_x * sum_xz - sum_x * sum_yz)) / denominator;
+		C = -1; // C设为-1使得方程形式为 Ax + By + Cz + D = 0
+
+		// 计算常数项 D
+		D = (sum_z - A * sum_x / point_num - B * sum_y / point_num) / point_num;
+
+		// 将常数项调整到方程的另一边
+		D = -D;
 	}
 }

@@ -5,23 +5,16 @@ namespace zaran
 
     void BoundManagerStruct::AddBoundary(const string &name, BoundStruct &bound)
     {
-        auto it = m_bound_map.find(name);
-        if (it == m_bound_map.end())
+        CreateBoundary(name);
+        auto &bound_vec = m_bound_map[name];
+        for (int iBound = 0; iBound < bound_vec.size(); ++iBound)
         {
-            m_bound_map.insert({name, std::vector<BoundStruct>({bound})});
-        }
-        else
-        {
-            auto &bound_vec = it->second;
-            for (int iBound = 0; iBound < bound_vec.size(); ++iBound)
+            if (bound_vec[iBound] == bound)
             {
-                if (bound_vec[iBound] == bound)
-                {
-                    return;
-                }
+                return;
             }
-            bound_vec.emplace_back(bound);
         }
+        m_bound_map[name].emplace_back(bound);
     }
 
     void BoundManagerStruct::CreateBoundary(const string &name)

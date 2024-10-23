@@ -10,10 +10,10 @@ namespace zaran
         : NSSolver(index, name, para, grid, data_manager)
     {
         int ni, nj, nk;
-        m_idx_proxy = new StructIdxProxy(grid);
-        ni = m_idx_proxy->GetNi();
-        nj = m_idx_proxy->GetNj();
-        nk = m_idx_proxy->GetNk();
+        ni = grid->GetNi();
+        nj = grid->GetNj();
+        nk = grid->GetNk();
+        m_idx_proxy = new StructIdxProxy(ni, nj, nk);
         int node_num = ni * nj * nk;
         m_node_metrics = new Metrics(node_num);
         m_metrics_half_i = new Metrics(node_num);
@@ -80,6 +80,15 @@ namespace zaran
         prim_far[2] = para->GetInflowVelocityY();
         prim_far[3] = para->GetInflowVelocityZ();
         prim_far[4] = para->GetInflowPressure();
+        // prim_far[1] = 3.0;
+        // prim_far[2] = 0.0;
+        // prim_far[3] = 0.0;
+        // prim_far[4] = 1.4;
+        // prim_far[0] = 3.87330;
+        // prim_far[1] = 0;
+        // prim_far[2] = 0;
+        // prim_far[3] = 0.0;
+        // prim_far[4] = 4.82466;
         for (int idx_eq = 0; idx_eq < para->GetEqNum(); ++idx_eq)
         {
             for (int k = 0; k < nk; ++k)
@@ -88,7 +97,10 @@ namespace zaran
                 {
                     for (int i = 0; i < ni; ++i)
                     {
-                        int idx = m_idx_proxy->GetIdx(i, j, k);
+                        m_idx_proxy->SetIdx(i, j, k);
+                        int idx = m_idx_proxy->GetIdx();
+                        // double y = grid->GetNode()->GetCoord(i, j, k)[1];
+                        // prim_far[0] = 1.0 + 0.01 * y;
                         for (int idx_eq = 0; idx_eq < para->GetEqNum(); ++idx_eq)
                         {
                             data_manager->SetPrim(idx_eq, idx, prim_far[idx_eq]);
@@ -113,13 +125,20 @@ namespace zaran
         prim_far[2] = 0.0;
         prim_far[3] = 0.0;
         prim_far[4] = para->GetInflowPressure();
+        // prim_far[1] = 0.0;
+        // prim_far[2] = 0.0;
+        // prim_far[3] = 0.0;
+        // prim_far[4] = 1.4;
         for (int k = 0; k < nk; ++k)
         {
             for (int j = 0; j < nj; ++j)
             {
                 for (int i = 0; i < ni; ++i)
                 {
-                    int idx = m_idx_proxy->GetIdx(i, j, k);
+                    m_idx_proxy->SetIdx(i, j, k);
+                    int idx = m_idx_proxy->GetIdx();
+                    // double y = grid->GetNode()->GetCoord(i, j, k)[1];
+                    // prim_far[0] = 1.0 + 0.01 * y;
                     for (int idx_eq = 0; idx_eq < para->GetEqNum(); ++idx_eq)
                     {
                         data_manager->SetPrim(idx_eq, idx, prim_far[idx_eq]);
@@ -170,7 +189,8 @@ namespace zaran
             {
                 for (int i = 0; i < ni; ++i)
                 {
-                    int idx = m_idx_proxy->GetIdx(i, j, k);
+                    m_idx_proxy->SetIdx(i, j, k);
+                    int idx = m_idx_proxy->GetIdx();
                     for (int idx_eq = 0; idx_eq < para->GetEqNum(); ++idx_eq)
                     {
                         data_manager->SetPrim(idx_eq, idx, prim[idx_eq]);
@@ -227,7 +247,8 @@ namespace zaran
                 {
                     for (int i = 0; i < ni; ++i)
                     {
-                        int idx = m_idx_proxy->GetIdx(i, j, k);
+                        m_idx_proxy->SetIdx(i, j, k);
+                        int idx = m_idx_proxy->GetIdx();
                         x = grid->GetNode()->GetCoord(i, j, k)[0];
                         y = grid->GetNode()->GetCoord(i, j, k)[1];
                         z = grid->GetNode()->GetCoord(i, j, k)[2];
@@ -6208,6 +6229,90 @@ namespace zaran
     void NSSolverStruct::CalcPrimGradWLS()
     {
         auto grid = GetGrid();
+        if (grid->GetDim() == 2)
+        {
+            CalcPrimGradWLS2D();
+        }
+        else if (grid->GetDim() == 3)
+        {
+            CalcPrimGradWLS3D();
+        }
+    }
+    void NSSolverStruct::CalcPrimGradWLS2D()
+    {
+        auto grid = GetGrid();
+        auto node = grid->GetNode();
+        auto idx_proxy = GetIdxProxy();
+        auto data_manager = GetDataManager();
+        int ni, nj, nk;
+        ni = idx_proxy->GetNi();
+        nj = idx_proxy->GetNj();
+        nk = idx_proxy->GetNk();
+        Matrix2d A, A_inv;
+        DVector2D b, grad;
+        int neighbor_num = 4;
+        std::vector<int> temp_i, temp_j, temp_k;
+        temp_i.resize(neighbor_num);
+        temp_j.resize(neighbor_num);
+        temp_k.resize(neighbor_num);
+
+        double delta_x, delta_y, delta_z, delta_val;
+        double weight;
+        for (int k = 1; k < nk - 1; ++k)
+        {
+            for (int j = 1; j < nj - 1; ++j)
+            {
+                for (int i = 1; i < ni - 1; ++i)
+                {
+                    A.setZero();
+                    int idx = idx_proxy->GetIdx(i, j, k);
+                    auto coord = node->GetCoord(i, j, k);
+                    temp_i[0] = i - 1, temp_j[0] = j, temp_k[0] = k;
+                    temp_i[1] = i + 1, temp_j[1] = j, temp_k[1] = k;
+                    temp_i[2] = i, temp_j[2] = j - 1, temp_k[2] = k;
+                    temp_i[3] = i, temp_j[3] = j + 1, temp_k[3] = k;
+
+                    for (int iNeigh = 0; iNeigh < neighbor_num; ++iNeigh)
+                    {
+                        auto coord_neigh = node->GetCoord(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh]);
+                        delta_x = coord_neigh[0] - coord[0];
+                        delta_y = coord_neigh[1] - coord[1];
+                        weight = 1.0 / sqrt(delta_x * delta_x + delta_y * delta_y);
+                        A(0, 0) += weight * delta_x * delta_x;
+                        A(0, 1) += weight * delta_x * delta_y;
+                        A(1, 0) += weight * delta_y * delta_x;
+                        A(1, 1) += weight * delta_y * delta_y;
+                    }
+                    A_inv = A.inverse();
+                    for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
+                    {
+                        b.setZero();
+                        for (int iNeigh = 0; iNeigh < neighbor_num; ++iNeigh)
+                        {
+                            delta_val = data_manager->GetPrim(idx_eq, idx_proxy->GetIdx(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh])) -
+                                        data_manager->GetPrim(idx_eq, idx);
+                            auto coord_neigh = node->GetCoord(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh]);
+                            delta_x = coord_neigh[0] - coord[0];
+                            delta_y = coord_neigh[1] - coord[1];
+                            weight = 1.0 / sqrt(delta_x * delta_x + delta_y * delta_y);
+                            b[0] += weight * delta_x * delta_val;
+                            b[1] += weight * delta_y * delta_val;
+                        }
+
+                        grad = A_inv * b;
+                        for (size_t iDim = 0; iDim < 2; ++iDim)
+                        {
+                            data_manager->SetPrimitiveGrad(idx_eq, iDim, idx, grad(iDim));
+                        }
+                        data_manager->SetPrimitiveGrad(idx_eq, 2, idx, 0);
+                    }
+                }
+            }
+        }
+    }
+    void NSSolverStruct::CalcPrimGradWLS3D()
+    {
+        auto grid = GetGrid();
         auto node = grid->GetNode();
         auto idx_proxy = GetIdxProxy();
         auto data_manager = GetDataManager();
@@ -6217,7 +6322,13 @@ namespace zaran
         nk = idx_proxy->GetNk();
         Matrix3d A, A_inv;
         DVector3D b, grad;
-        int temp_i[6], temp_j[6], temp_k[6];
+        int neighbor_num = 6;
+        std::vector<int> temp_i, temp_j, temp_k;
+
+        temp_i.resize(neighbor_num);
+        temp_j.resize(neighbor_num);
+        temp_k.resize(neighbor_num);
+
         double delta_x, delta_y, delta_z, delta_val;
         double weight;
         for (int k = 1; k < nk - 1; ++k)
@@ -6235,7 +6346,8 @@ namespace zaran
                     temp_i[3] = i, temp_j[3] = j + 1, temp_k[3] = k;
                     temp_i[4] = i, temp_j[4] = j, temp_k[4] = k - 1;
                     temp_i[5] = i, temp_j[5] = j, temp_k[5] = k + 1;
-                    for (int iNeigh = 0; iNeigh < 6; ++iNeigh)
+
+                    for (int iNeigh = 0; iNeigh < neighbor_num; ++iNeigh)
                     {
                         auto coord_neigh = node->GetCoord(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh]);
                         delta_x = coord_neigh[0] - coord[0];
@@ -6256,7 +6368,7 @@ namespace zaran
                     for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
                     {
                         b.setZero();
-                        for (int iNeigh = 0; iNeigh < 6; ++iNeigh)
+                        for (int iNeigh = 0; iNeigh < neighbor_num; ++iNeigh)
                         {
                             delta_val = data_manager->GetPrim(idx_eq, idx_proxy->GetIdx(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh])) -
                                         data_manager->GetPrim(idx_eq, idx);
@@ -6274,8 +6386,10 @@ namespace zaran
                         for (size_t iDim = 0; iDim < 3; ++iDim)
                         {
                             data_manager->SetPrimitiveGrad(idx_eq, iDim, idx, grad(iDim));
+                            // data_manager->SetPrimitiveGrad(idx_eq, iDim, idx, 0.0);
                         }
                     }
+                    // Log::info("density grad: {} {} {}", data_manager->GetPrimGrad(0, 0, idx), data_manager->GetPrimGrad(0, 1, idx), data_manager->GetPrimGrad(0, 2, idx));
                 }
             }
         }
@@ -6293,7 +6407,21 @@ namespace zaran
         nj = idx_proxy->GetNj();
         nk = idx_proxy->GetNk();
         double max_val, min_val;
-        int temp_i[6], temp_j[6], temp_k[6];
+        int neighbor_num = 4;
+        std::vector<int> temp_i, temp_j, temp_k;
+        if (grid->GetDim() == 2)
+        {
+            temp_i.resize(neighbor_num);
+            temp_j.resize(neighbor_num);
+            temp_k.resize(neighbor_num);
+        }
+        else
+        {
+            neighbor_num = 6;
+            temp_i.resize(neighbor_num);
+            temp_j.resize(neighbor_num);
+            temp_k.resize(neighbor_num);
+        }
         for (int idx_eq = 0; idx_eq < 5; idx_eq++)
         {
 
@@ -6309,21 +6437,25 @@ namespace zaran
                         temp_i[1] = i + 1, temp_j[1] = j, temp_k[1] = k;
                         temp_i[2] = i, temp_j[2] = j - 1, temp_k[2] = k;
                         temp_i[3] = i, temp_j[3] = j + 1, temp_k[3] = k;
-                        temp_i[4] = i, temp_j[4] = j, temp_k[4] = k - 1;
-                        temp_i[5] = i, temp_j[5] = j, temp_k[5] = k + 1;
-                        max_val = min_val = data_manager->GetPrim(idx_eq, idx);
-                        for (int iNeigh = 0; iNeigh < 6; ++iNeigh)
+                        if (grid->GetDim() == 3)
+                        {
+                            temp_i[4] = i, temp_j[4] = j, temp_k[4] = k - 1;
+                            temp_i[5] = i, temp_j[5] = j, temp_k[5] = k + 1;
+                        }
+                        max_val = data_manager->GetPrim(idx_eq, idx);
+                        min_val = data_manager->GetPrim(idx_eq, idx);
+                        for (int iNeigh = 0; iNeigh < neighbor_num; ++iNeigh)
                         {
                             int idx_neigh = idx_proxy->GetIdx(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh]);
                             max_val = Max(max_val, data_manager->GetPrim(idx_eq, idx_neigh));
                             min_val = Min(min_val, data_manager->GetPrim(idx_eq, idx_neigh));
                         }
-                        eps = vk_coef * (max_val - min_val);
-                        eps = eps * eps + SMALL_NUMBER;
+                        eps = vk_coef * (max_val - min_val) + SMALL_NUMBER;
+                        eps = eps * eps;
                         double delta_max = max_val - data_manager->GetPrim(idx_eq, idx);
                         double delta_min = min_val - data_manager->GetPrim(idx_eq, idx);
                         double temp_coef = LARGE_NUMBER;
-                        for (int iNeigh = 0; iNeigh < 6; ++iNeigh)
+                        for (int iNeigh = 0; iNeigh < neighbor_num; ++iNeigh)
                         {
                             int idx_neigh = idx_proxy->GetIdx(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh]);
                             auto coord_neigh = node->GetCoord(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh]);
@@ -6347,6 +6479,7 @@ namespace zaran
                             }
                         }
                         data_manager->SetLimiter(idx_eq, idx, temp_coef);
+                        // data_manager->SetLimiter(idx_eq, idx, 0.0);
                     }
                 }
             }
@@ -6557,28 +6690,22 @@ namespace zaran
                 for (int i = 1; i < ni - 1; ++i)
                 {
                     int idx = m_idx_proxy->GetIdx(i, j, k);
-                    int idx_left = m_idx_proxy->GetIdx(i - 1, j, k);
                     int idx_right = m_idx_proxy->GetIdx(i + 1, j, k);
                     for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
                     {
-                        data_manager->SetMidNodePrimLeft(idx_eq, 0, idx, data_manager->GetPrim(idx_eq, idx_left));
-                        data_manager->SetMidNodePrimRight(idx_eq, 0, idx, data_manager->GetPrim(idx_eq, idx_right));
+                        data_manager->SetMidNodePrim(idx_eq, 0, idx, data_manager->GetPrim(idx_eq, idx), data_manager->GetPrim(idx_eq, idx_right));
                     }
-                    idx_left = m_idx_proxy->GetIdx(i, j - 1, k);
                     idx_right = m_idx_proxy->GetIdx(i, j + 1, k);
                     for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
                     {
-                        data_manager->SetMidNodePrimLeft(idx_eq, 1, idx, data_manager->GetPrim(idx_eq, idx_left));
-                        data_manager->SetMidNodePrimRight(idx_eq, 1, idx, data_manager->GetPrim(idx_eq, idx_right));
+                        data_manager->SetMidNodePrim(idx_eq, 1, idx, data_manager->GetPrim(idx_eq, idx), data_manager->GetPrim(idx_eq, idx_right));
                     }
                     if (grid->GetDim() == 3)
                     {
-                        idx_left = m_idx_proxy->GetIdx(i, j, k - 1);
                         idx_right = m_idx_proxy->GetIdx(i, j, k + 1);
                         for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
                         {
-                            data_manager->SetMidNodePrimLeft(idx_eq, 2, idx, data_manager->GetPrim(idx_eq, idx_left));
-                            data_manager->SetMidNodePrimRight(idx_eq, 2, idx, data_manager->GetPrim(idx_eq, idx_right));
+                            data_manager->SetMidNodePrim(idx_eq, 2, idx, data_manager->GetPrim(idx_eq, idx), data_manager->GetPrim(idx_eq, idx_right));
                         }
                     }
                 }
@@ -6603,7 +6730,6 @@ namespace zaran
                 for (int i = 1; i < ni - 1; ++i)
                 {
                     int idx = m_idx_proxy->GetIdx(i, j, k);
-                    int idx_left = m_idx_proxy->GetIdx(i - 1, j, k);
                     int idx_right = m_idx_proxy->GetIdx(i + 1, j, k);
                     coord_vec[0] = node->GetCoord(i + 1, j, k)[0] - node->GetCoord(i, j, k)[0];
                     coord_vec[1] = node->GetCoord(i + 1, j, k)[1] - node->GetCoord(i, j, k)[1];
@@ -6613,15 +6739,7 @@ namespace zaran
                     {
                         data_manager->SetMidNodePrim(idx_eq, 0, idx, value_left[idx_eq], value_right[idx_eq]);
                     }
-                    coord_vec[0] = node->GetCoord(i, j, k)[0] - node->GetCoord(i - 1, j, k)[0];
-                    coord_vec[1] = node->GetCoord(i, j, k)[1] - node->GetCoord(i - 1, j, k)[1];
-                    coord_vec[2] = node->GetCoord(i, j, k)[2] - node->GetCoord(i - 1, j, k)[2];
-                    MidNodeGrad(idx_left, idx, coord_vec, value_left, value_right);
-                    for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
-                    {
-                        data_manager->SetMidNodePrim(idx_eq, 0, idx, value_left[idx_eq], value_right[idx_eq]);
-                    }
-                    idx_left = m_idx_proxy->GetIdx(i, j - 1, k);
+
                     idx_right = m_idx_proxy->GetIdx(i, j + 1, k);
                     coord_vec[0] = node->GetCoord(i, j + 1, k)[0] - node->GetCoord(i, j, k)[0];
                     coord_vec[1] = node->GetCoord(i, j + 1, k)[1] - node->GetCoord(i, j, k)[1];
@@ -6631,30 +6749,13 @@ namespace zaran
                     {
                         data_manager->SetMidNodePrim(idx_eq, 1, idx, value_left[idx_eq], value_right[idx_eq]);
                     }
-                    coord_vec[0] = node->GetCoord(i, j, k)[0] - node->GetCoord(i, j - 1, k)[0];
-                    coord_vec[1] = node->GetCoord(i, j, k)[1] - node->GetCoord(i, j - 1, k)[1];
-                    coord_vec[2] = node->GetCoord(i, j, k)[2] - node->GetCoord(i, j - 1, k)[2];
-                    MidNodeGrad(idx_left, idx, coord_vec, value_left, value_right);
-                    for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
-                    {
-                        data_manager->SetMidNodePrim(idx_eq, 1, idx, value_left[idx_eq], value_right[idx_eq]);
-                    }
                     if (grid->GetDim() == 3)
                     {
-                        idx_left = m_idx_proxy->GetIdx(i, j, k - 1);
                         idx_right = m_idx_proxy->GetIdx(i, j, k + 1);
                         coord_vec[0] = node->GetCoord(i, j, k + 1)[0] - node->GetCoord(i, j, k)[0];
                         coord_vec[1] = node->GetCoord(i, j, k + 1)[1] - node->GetCoord(i, j, k)[1];
                         coord_vec[2] = node->GetCoord(i, j, k + 1)[2] - node->GetCoord(i, j, k)[2];
                         MidNodeGrad(idx, idx_right, coord_vec, value_left, value_right);
-                        for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
-                        {
-                            data_manager->SetMidNodePrim(idx_eq, 2, idx, value_left[idx_eq], value_right[idx_eq]);
-                        }
-                        coord_vec[0] = node->GetCoord(i, j, k)[0] - node->GetCoord(i, j, k - 1)[0];
-                        coord_vec[1] = node->GetCoord(i, j, k)[1] - node->GetCoord(i, j, k - 1)[1];
-                        coord_vec[2] = node->GetCoord(i, j, k)[2] - node->GetCoord(i, j, k - 1)[2];
-                        MidNodeGrad(idx_left, idx, coord_vec, value_left, value_right);
                         for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
                         {
                             data_manager->SetMidNodePrim(idx_eq, 2, idx, value_left[idx_eq], value_right[idx_eq]);
@@ -6674,7 +6775,7 @@ namespace zaran
         auto nk = m_idx_proxy->GetNk();
         // MUSCL整点变量(i-2,i-1,i,i+1,i+2)的值
         double value_temp[5];
-        int idx_temp[5];
+        int idx_temp[5], i_temp[5], j_temp[5], k_temp[5];
         int is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
         double left_value, right_value;
@@ -6686,54 +6787,136 @@ namespace zaran
             {
                 for (int i = is; i <= ie; ++i)
                 {
-                    idx_temp[0] = m_idx_proxy->GetIdx(i - 2, j, k);
-                    idx_temp[1] = m_idx_proxy->GetIdx(i - 1, j, k);
-                    idx_temp[2] = m_idx_proxy->GetIdx(i, j, k);
-                    idx_temp[3] = m_idx_proxy->GetIdx(i + 1, j, k);
-                    idx_temp[4] = m_idx_proxy->GetIdx(i + 2, j, k);
+                    i_temp[0] = i - 2, i_temp[1] = i - 1, i_temp[2] = i, i_temp[3] = i + 1, i_temp[4] = i + 2;
+                    j_temp[0] = j_temp[1] = j_temp[2] = j_temp[3] = j_temp[4] = j;
+                    k_temp[0] = k_temp[1] = k_temp[2] = k_temp[3] = k_temp[4] = k;
+                    auto idx = m_idx_proxy->GetIdx(i, j, k);
                     for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
                     {
-                        value_temp[0] = data_manager->GetPrim(idx_eq, idx_temp[0]);
-                        value_temp[1] = data_manager->GetPrim(idx_eq, idx_temp[1]);
-                        value_temp[2] = data_manager->GetPrim(idx_eq, idx_temp[2]);
-                        value_temp[3] = data_manager->GetPrim(idx_eq, idx_temp[3]);
-                        value_temp[4] = data_manager->GetPrim(idx_eq, idx_temp[4]);
+                        for (int iTemp = 0; iTemp < 5; ++iTemp)
+                        {
+                            value_temp[iTemp] = data_manager->GetPrim(idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
+                        }
                         MidNodeMUSCL(value_temp, left_value, right_value);
-                        data_manager->SetMidNodePrim(idx_eq, 0, idx_temp[2], left_value, right_value);
+                        data_manager->SetMidNodePrim(idx_eq, 0, idx, left_value, right_value);
                     }
-                    idx_temp[0] = m_idx_proxy->GetIdx(i, j - 2, k);
-                    idx_temp[1] = m_idx_proxy->GetIdx(i, j - 1, k);
-                    idx_temp[3] = m_idx_proxy->GetIdx(i, j + 1, k);
-                    idx_temp[4] = m_idx_proxy->GetIdx(i, j + 2, k);
+                    i_temp[0] = i_temp[1] = i_temp[2] = i_temp[3] = i_temp[4] = i;
+                    j_temp[0] = j - 2, j_temp[1] = j - 1, j_temp[2] = j, j_temp[3] = j + 1, j_temp[4] = j + 2;
+                    k_temp[0] = k_temp[1] = k_temp[2] = k_temp[3] = k_temp[4] = k;
                     for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
                     {
-                        value_temp[0] = data_manager->GetPrim(idx_eq, idx_temp[0]);
-                        value_temp[1] = data_manager->GetPrim(idx_eq, idx_temp[1]);
-                        value_temp[2] = data_manager->GetPrim(idx_eq, idx_temp[2]);
-                        value_temp[3] = data_manager->GetPrim(idx_eq, idx_temp[3]);
-                        value_temp[4] = data_manager->GetPrim(idx_eq, idx_temp[4]);
+                        for (int iTemp = 0; iTemp < 5; ++iTemp)
+                        {
+                            value_temp[iTemp] = data_manager->GetPrim(idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
+                        }
                         MidNodeMUSCL(value_temp, left_value, right_value);
-                        data_manager->SetMidNodePrim(idx_eq, 1, idx_temp[2], left_value, right_value);
+                        data_manager->SetMidNodePrim(idx_eq, 1, idx, left_value, right_value);
                     }
+
                     if (grid->GetDim() == 3)
                     {
-                        idx_temp[0] = m_idx_proxy->GetIdx(i, j, k - 2);
-                        idx_temp[1] = m_idx_proxy->GetIdx(i, j, k - 1);
-                        idx_temp[3] = m_idx_proxy->GetIdx(i, j, k + 1);
-                        idx_temp[4] = m_idx_proxy->GetIdx(i, j, k + 2);
+                        i_temp[0] = i_temp[1] = i_temp[2] = i_temp[3] = i_temp[4] = i;
+                        j_temp[0] = j_temp[1] = j_temp[2] = j_temp[3] = j_temp[4] = j;
+                        k_temp[0] = k - 2, k_temp[1] = k - 1, k_temp[2] = k, k_temp[3] = k + 1, k_temp[4] = k + 2;
                         for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
                         {
-                            value_temp[0] = data_manager->GetPrim(idx_eq, idx_temp[0]);
-                            value_temp[1] = data_manager->GetPrim(idx_eq, idx_temp[1]);
-                            value_temp[2] = data_manager->GetPrim(idx_eq, idx_temp[2]);
-                            value_temp[3] = data_manager->GetPrim(idx_eq, idx_temp[3]);
-                            value_temp[4] = data_manager->GetPrim(idx_eq, idx_temp[4]);
+                            for (int iTemp = 0; iTemp < 5; ++iTemp)
+                            {
+                                value_temp[iTemp] = data_manager->GetPrim(idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
+                            }
                             MidNodeMUSCL(value_temp, left_value, right_value);
-                            data_manager->SetMidNodePrim(idx_eq, 2, idx_temp[2], left_value, right_value);
+                            data_manager->SetMidNodePrim(idx_eq, 2, idx, left_value, right_value);
                         }
                     }
                 }
             }
+        }
+    }
+
+    void NSSolverStruct::CalcMidNodePrimMUSCL_SV()
+    {
+        auto grid = GetGrid();
+        auto node = grid->GetNode();
+        auto data_manager = GetDataManager();
+        int equ_num = GetPara()->GetEqNum();
+        auto ni = m_idx_proxy->GetNi();
+        auto nj = m_idx_proxy->GetNj();
+        auto nk = m_idx_proxy->GetNk();
+        double **coord_temp = new double *[5];
+        for (int i = 0; i < 5; ++i)
+        {
+            coord_temp[i] = new double[3];
+        }
+        // MUSCL整点变量(i-2,i-1,i,i+1,i+2)的值
+        double value_temp[5];
+        int idx_temp[5], i_temp[5], j_temp[5], k_temp[5];
+        int is, ie, js, je, ks, ke;
+        grid->GetRange(is, ie, js, je, ks, ke);
+        double left_value, right_value;
+        ///@note
+        /// 从ks-1开始，到ke结束，因为对第一个计算点ks进行通量差分时，需要使用ks-1/2处的值
+        for (int k = ks; k <= ke; ++k)
+        {
+            for (int j = js; j <= je; ++j)
+            {
+                for (int i = is; i <= ie; ++i)
+                {
+                    i_temp[0] = i - 2, i_temp[1] = i - 1, i_temp[2] = i, i_temp[3] = i + 1, i_temp[4] = i + 2;
+                    j_temp[0] = j_temp[1] = j_temp[2] = j_temp[3] = j_temp[4] = j;
+                    k_temp[0] = k_temp[1] = k_temp[2] = k_temp[3] = k_temp[4] = k;
+                    auto idx = m_idx_proxy->GetIdx(i, j, k);
+                    for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+                    {
+                        for (int iTemp = 0; iTemp < 5; ++iTemp)
+                        {
+                            value_temp[iTemp] = data_manager->GetPrim(idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
+                            for (int iDim = 0; iDim < 3; ++iDim)
+                            {
+                                coord_temp[iTemp][iDim] = node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[iDim];
+                            }
+                        }
+                        MidNodeMUSCL_SV(value_temp, coord_temp, left_value, right_value);
+                        data_manager->SetMidNodePrim(idx_eq, 0, idx, left_value, right_value);
+                    }
+                    i_temp[0] = i_temp[1] = i_temp[2] = i_temp[3] = i_temp[4] = i;
+                    j_temp[0] = j - 2, j_temp[1] = j - 1, j_temp[2] = j, j_temp[3] = j + 1, j_temp[4] = j + 2;
+                    k_temp[0] = k_temp[1] = k_temp[2] = k_temp[3] = k_temp[4] = k;
+                    for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+                    {
+                        for (int iTemp = 0; iTemp < 5; ++iTemp)
+                        {
+                            value_temp[iTemp] = data_manager->GetPrim(idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
+                            for (int iDim = 0; iDim < 3; ++iDim)
+                            {
+                                coord_temp[iTemp][iDim] = node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[iDim];
+                            }
+                        }
+                        MidNodeMUSCL_SV(value_temp, coord_temp, left_value, right_value);
+                        data_manager->SetMidNodePrim(idx_eq, 1, idx, left_value, right_value);
+                    }
+
+                    if (grid->GetDim() == 3)
+                    {
+                        i_temp[0] = i_temp[1] = i_temp[2] = i_temp[3] = i_temp[4] = i;
+                        j_temp[0] = j_temp[1] = j_temp[2] = j_temp[3] = j_temp[4] = j;
+                        k_temp[0] = k - 2, k_temp[1] = k - 1, k_temp[2] = k, k_temp[3] = k + 1, k_temp[4] = k + 2;
+                        for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+                        {
+                            for (int iTemp = 0; iTemp < 5; ++iTemp)
+                            {
+                                value_temp[iTemp] = data_manager->GetPrim(idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
+                                for (int iDim = 0; iDim < 3; ++iDim)
+                                {
+                                    coord_temp[iTemp][iDim] = node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[iDim];
+                                }
+                            }
+                            MidNodeMUSCL_SV(value_temp, coord_temp, left_value, right_value);
+                            data_manager->SetMidNodePrim(idx_eq, 2, idx, left_value, right_value);
+                        }
+                    }
+                }
+            }
+            delete[] coord_temp;
         }
     }
 
@@ -6758,7 +6941,7 @@ namespace zaran
             {
                 // i=is-1处的值
                 // 不存在i-2处的值且不参与计算,用i-1处的值代替，不影响计算结果
-                idx_temp[0] = m_idx_proxy->GetIdx(is - 2, j, k);
+                idx_temp[0] = m_idx_proxy->GetIdx(is - 3, j, k);
                 idx_temp[1] = m_idx_proxy->GetIdx(is - 2, j, k);
                 idx_temp[2] = m_idx_proxy->GetIdx(is - 1, j, k);
                 idx_temp[3] = m_idx_proxy->GetIdx(is, j, k);
@@ -6782,7 +6965,7 @@ namespace zaran
             {
                 // j=js-1处的值，(js-1/2)右值会用到，但(js-1/2)左值在计算中不会使用
                 // 不存在j-2处的值,用j-1处的值代替，不影响计算结果
-                idx_temp[0] = m_idx_proxy->GetIdx(i, js - 2, k);
+                idx_temp[0] = m_idx_proxy->GetIdx(i, js - 3, k);
                 idx_temp[1] = m_idx_proxy->GetIdx(i, js - 2, k);
                 idx_temp[2] = m_idx_proxy->GetIdx(i, js - 1, k);
                 idx_temp[3] = m_idx_proxy->GetIdx(i, js, k);
@@ -6826,6 +7009,116 @@ namespace zaran
                 }
             }
         }
+    }
+
+    void NSSolverStruct::CalcMidGhostNodePrimMUSCL_SV()
+    {
+        auto grid = GetGrid();
+        auto node = grid->GetNode();
+        auto data_manager = GetDataManager();
+        int equ_num = GetPara()->GetEqNum();
+        auto ni = m_idx_proxy->GetNi();
+        auto nj = m_idx_proxy->GetNj();
+        auto nk = m_idx_proxy->GetNk();
+        double value_temp[5];
+        double value_left[5], value_right[5];
+        int is, ie, js, je, ks, ke;
+        grid->GetRange(is, ie, js, je, ks, ke);
+        double **coord_temp = new double *[5];
+        for (int i = 0; i < 5; ++i)
+        {
+            coord_temp[i] = new double[3];
+        }
+        int idx_temp[5], i_temp[5], j_temp[5], k_temp[5];
+        double left_value, right_value;
+        int i, j, k;
+        for (k = ks; k <= ke; ++k)
+        {
+            for (j = js; j <= je; ++j)
+            {
+                // i=is-1处的值
+                // 不存在i-2处的值且不参与计算,用i-1处的值代替，不影响计算结果
+                i_temp[0] = is - 2, i_temp[1] = is - 2, i_temp[2] = is - 1, i_temp[3] = is, i_temp[4] = is + 1;
+                j_temp[0] = j_temp[1] = j_temp[2] = j_temp[3] = j_temp[4] = j;
+                k_temp[0] = k_temp[1] = k_temp[2] = k_temp[3] = k_temp[4] = k;
+
+                auto idx = m_idx_proxy->GetIdx(is - 1, j, k);
+                for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+                {
+                    for (int iTemp = 0; iTemp < 5; ++iTemp)
+                    {
+                        value_temp[iTemp] = data_manager->GetPrim(idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
+                        for (int iDim = 0; iDim < 3; ++iDim)
+                        {
+                            coord_temp[iTemp][iDim] = node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[iDim];
+                        }
+                    }
+                    // MidNodeMUSCL(value_temp, left_value, right_value);
+                    MidNodeMUSCL_SV(value_temp, coord_temp, left_value, right_value);
+                    data_manager->SetMidNodePrim(idx_eq, 0, idx, left_value, right_value);
+                }
+            }
+        }
+
+        for (k = ks; k <= ke; ++k)
+        {
+            for (i = is; i <= ie; ++i)
+            {
+                // j=js-1处的值，(js-1/2)右值会用到，但(js-1/2)左值在计算中不会使用
+                // 不存在j-2处的值,用j-1处的值代替，不影响计算结果
+                i_temp[0] = i_temp[1] = i_temp[2] = i_temp[3] = i_temp[4] = i;
+                j_temp[0] = js - 2, j_temp[1] = js - 2, j_temp[2] = js - 1, j_temp[3] = js, j_temp[4] = js + 1;
+                k_temp[0] = k_temp[1] = k_temp[2] = k_temp[3] = k_temp[4] = k;
+
+                auto idx = m_idx_proxy->GetIdx(i, js - 1, k);
+                for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+                {
+                    for (int iTemp = 0; iTemp < 5; ++iTemp)
+                    {
+                        value_temp[iTemp] = data_manager->GetPrim(idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
+                        for (int iDim = 0; iDim < 3; ++iDim)
+                        {
+                            coord_temp[iTemp][iDim] = node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[iDim];
+                        }
+                    }
+                    // MidNodeMUSCL(value_temp, left_value, right_value);
+                    MidNodeMUSCL_SV(value_temp, coord_temp, left_value, right_value);
+                    data_manager->SetMidNodePrim(idx_eq, 1, idx, left_value, right_value);
+                }
+            }
+        }
+
+        if (grid->GetDim() == 3)
+        {
+            for (j = js; j <= je; ++j)
+            {
+                for (i = is; i <= ie; ++i)
+                {
+                    // k=ks-1处的值，(ks-1/2)右值会用到，但(ks-1/2)左值在计算中不会使用
+                    // 不存在k-2处的值,用k-1处的值代替，不影响计算结果
+                    i_temp[0] = i_temp[1] = i_temp[2] = i_temp[3] = i_temp[4] = i;
+                    j_temp[0] = j_temp[1] = j_temp[2] = j_temp[3] = j_temp[4] = j;
+                    k_temp[0] = ks - 2, k_temp[1] = ks - 2, k_temp[2] = ks - 1, k_temp[3] = ks, k_temp[4] = ks + 1;
+
+                    auto idx = m_idx_proxy->GetIdx(i, j, ks - 1);
+                    for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+                    {
+                        for (int iTemp = 0; iTemp < 5; ++iTemp)
+                        {
+                            value_temp[iTemp] = data_manager->GetPrim(idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
+                            for (int iDim = 0; iDim < 3; ++iDim)
+                            {
+                                coord_temp[iTemp][iDim] = node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[iDim];
+                            }
+                        }
+                        // MidNodeMUSCL(value_temp, left_value, right_value);
+                        MidNodeMUSCL_SV(value_temp, coord_temp, left_value, right_value);
+                        data_manager->SetMidNodePrim(idx_eq, 2, idx, left_value, right_value);
+                    }
+                }
+            }
+        }
+        delete[] coord_temp;
     }
 
     void NSSolverStruct::CalcMidNodePrimWCNS5()
@@ -7049,12 +7342,12 @@ namespace zaran
         for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
         {
             value_left[idx_eq] =
-                data_manager->GetPrim(idx_eq, idx_left) + 0.5 * data_manager->GetLimiter(idx_eq, idx_left) *
+                data_manager->GetPrim(idx_eq, idx_left) + 0.0 * 0.5 * data_manager->GetLimiter(idx_eq, idx_left) *
                                                               (coord_vec[0] * data_manager->GetPrimGrad(idx_eq, 0, idx_left) +
                                                                coord_vec[1] * data_manager->GetPrimGrad(idx_eq, 1, idx_left) +
                                                                coord_vec[2] * data_manager->GetPrimGrad(idx_eq, 2, idx_left));
             value_right[idx_eq] =
-                data_manager->GetPrim(idx_eq, idx_right) - 0.5 * data_manager->GetLimiter(idx_eq, idx_right) *
+                data_manager->GetPrim(idx_eq, idx_right) - 0.0 * 0.5 * data_manager->GetLimiter(idx_eq, idx_right) *
                                                                (coord_vec[0] * data_manager->GetPrimGrad(idx_eq, 0, idx_right) +
                                                                 coord_vec[1] * data_manager->GetPrimGrad(idx_eq, 1, idx_right) +
                                                                 coord_vec[2] * data_manager->GetPrimGrad(idx_eq, 2, idx_right));
@@ -7081,10 +7374,46 @@ namespace zaran
         double delta_minus = value[2] - value[1];
         double delta = LimiterVanLeer(delta_plus, delta_minus);
         value_left = value[2] + 0.125 * ((1.0 - k) * delta + (1.0 + k) * delta);
+        // value_left = value[2] + 0.25 * ((1.0 - k) * delta_minus + (1.0 + k) * delta_plus);
         delta_plus = value[4] - value[3];
         delta_minus = value[3] - value[2];
         delta = LimiterVanLeer(delta_plus, delta_minus);
         value_right = value[3] - 0.125 * ((1.0 - k) * delta + (1.0 + k) * delta);
+        // value_right = value[3] - 0.25 * ((1.0 - k) * delta_plus + (1.0 + k) * delta_minus);
+        if (isnan(value_left) || isnan(value_right))
+        {
+            Log::error("MUSCL interpolation failed!");
+            Log::error("value[0] = {}, value[1] = {}, value[2] = {}, value[3] = {}, "
+                       "value[4] = {}",
+                       value[0], value[1], value[2], value[3], value[4]);
+            exit(0);
+        }
+    }
+
+    void NSSolverStruct::MidNodeMUSCL_SV(const double *value, double **coord, double &value_left, double &value_right)
+    {
+        auto para = GetPara();
+        auto data_manager = GetDataManager();
+        double k = -1.0;
+        double l = sqrt(pow(coord[3][0] - coord[2][0], 2) + pow(coord[3][1] - coord[2][1], 2) + pow(coord[3][2] - coord[2][2], 2));
+        double delta_plus = value[3] - value[2];
+        double l_plus = sqrt(pow(coord[3][0] - coord[2][0], 2) + pow(coord[3][1] - coord[2][1], 2) + pow(coord[3][2] - coord[2][2], 2));
+        double delta_minus = value[2] - value[1];
+        double l_minus = sqrt(pow(coord[2][0] - coord[1][0], 2) + pow(coord[2][1] - coord[1][1], 2) + pow(coord[2][2] - coord[1][2], 2));
+        l_plus = l / l_plus;
+        l_minus = l / l_minus;
+        // double delta = LimiterVanLeer(delta_plus, delta_minus);
+        // value_left = value[2] + 0.125 * ((1.0 - k) * delta + (1.0 + k) * delta);
+        value_left = value[2] + 0.25 * ((1.0 - k) * l_minus * delta_minus + (1.0 + k) * l_plus * delta_plus);
+        delta_plus = value[4] - value[3];
+        l_plus = sqrt(pow(coord[4][0] - coord[3][0], 2) + pow(coord[4][1] - coord[3][1], 2) + pow(coord[4][2] - coord[3][2], 2));
+        delta_minus = value[3] - value[2];
+        l_minus = sqrt(pow(coord[3][0] - coord[2][0], 2) + pow(coord[3][1] - coord[2][1], 2) + pow(coord[3][2] - coord[2][2], 2));
+        l_plus = l / l_plus;
+        l_minus = l / l_minus;
+        // delta = LimiterVanLeer(delta_plus, delta_minus);
+        // value_right = value[3] - 0.125 * ((1.0 - k) * delta + (1.0 + k) * delta);
+        value_right = value[3] - 0.25 * ((1.0 - k) * l_plus * delta_plus + (1.0 + k) * l_minus * delta_minus);
         if (isnan(value_left) || isnan(value_right))
         {
             Log::error("MUSCL interpolation failed!");
@@ -7158,6 +7487,10 @@ namespace zaran
         {
             CalcInviscidResidualMUSCL();
         }
+        else if (inter_scheme == InterpolationScheme::MUSCL_SV)
+        {
+            CalcInviscidResidualMUSCL_SV();
+        }
         else if (inter_scheme == InterpolationScheme::WCNS5)
         {
             CalcInviscidResidualWCNS5();
@@ -7175,19 +7508,23 @@ namespace zaran
     void NSSolverStruct::CalcInviscidResidual1st()
     {
         CalcMidNode1st();
-        CalcMidGhostNodePrimMUSCL();
         FluxDifference2nd();
     }
     void NSSolverStruct::CalcInviscidResidualGrad()
     {
         CalcMidNodeGrad();
-        CalcMidGhostNodePrimMUSCL();
         FluxDifference2nd();
     }
     void NSSolverStruct::CalcInviscidResidualMUSCL()
     {
         CalcMidNodePrimMUSCL();
         CalcMidGhostNodePrimMUSCL();
+        FluxDifference2nd();
+    }
+    void NSSolverStruct::CalcInviscidResidualMUSCL_SV()
+    {
+        CalcMidNodePrimMUSCL_SV();
+        CalcMidGhostNodePrimMUSCL_SV();
         FluxDifference2nd();
     }
     void NSSolverStruct::CalcInviscidResidualWCNS5()
@@ -7217,13 +7554,16 @@ namespace zaran
         auto grid = GetGrid();
         auto data_manager = GetDataManager();
         auto bound_map = grid->GetBoundMap();
+
         for (auto &boundary : bound_map->GetBoundaryMap())
         {
             auto &bound_name = boundary.first;
             auto &bound = boundary.second;
+
             if (bound_name == "hole")
                 continue;
-            if (bound_name == "riemann")
+
+            if (bound_name == "farfield")
             {
 #pragma omp parallel for
                 for (int iBound = 0; iBound < bound.size(); ++iBound)
@@ -7265,27 +7605,21 @@ namespace zaran
         int i_bound, j_bound, k_bound;
         bound.GetIdx(i_bound, j_bound, k_bound);
         auto bound_direction = bound.GetDirection();
-        double prim_far[5];
-        prim_far[0] = GetPara()->GetInflowDensity();
-        prim_far[1] = GetPara()->GetInflowVelocityX();
-        prim_far[2] = GetPara()->GetInflowVelocityY();
-        prim_far[3] = GetPara()->GetInflowVelocityZ();
-        prim_far[4] = GetPara()->GetInflowPressure();
-        // prim_far[0] = 1.0;
-        // prim_far[1] = 0.0;
-        // prim_far[2] = 0.0;
-        // prim_far[3] = 0.0;
-        // prim_far[4] = 1.0;
+        double prim_far[5] = {
+            GetPara()->GetInflowDensity(),
+            GetPara()->GetInflowVelocityX(),
+            GetPara()->GetInflowVelocityY(),
+            GetPara()->GetInflowVelocityZ(),
+            GetPara()->GetInflowPressure()};
         double cons_far[5];
         GetGas()->Prim2Cons(prim_far, cons_far);
-        int i_ghost, j_ghost, k_ghost;
-        int idx_ghost;
         for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
         {
-            i_ghost = i_bound + iGhost * bound_direction[0];
-            j_ghost = j_bound + iGhost * bound_direction[1];
-            k_ghost = k_bound + iGhost * bound_direction[2];
-            idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+            int i_ghost = i_bound + iGhost * bound_direction[0];
+            int j_ghost = j_bound + iGhost * bound_direction[1];
+            int k_ghost = k_bound + iGhost * bound_direction[2];
+            int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+
             for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
             {
                 data_manager->SetPrim(idx_eq, idx_ghost, prim_far[idx_eq]);
@@ -7301,17 +7635,27 @@ namespace zaran
         int i_bound, j_bound, k_bound;
         bound.GetIdx(i_bound, j_bound, k_bound);
         int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
-        int i_ghost, j_ghost, k_ghost;
+
+        auto bound_direction = bound.GetDirection();
+        std::vector<int> prim_vals(5), cons_vals(5);
+
+        // 预先获取边界的原始变量和守恒变量
+        for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
+        {
+            prim_vals[idx_eq] = data_manager->GetPrim(idx_eq, idx_bound);
+            cons_vals[idx_eq] = data_manager->GetCons(idx_eq, idx_bound);
+        }
         for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
         {
-            i_ghost = i_bound + iGhost * bound.GetDirection()[0];
-            j_ghost = j_bound + iGhost * bound.GetDirection()[1];
-            k_ghost = k_bound + iGhost * bound.GetDirection()[2];
+            int i_ghost = i_bound + iGhost * bound_direction[0];
+            int j_ghost = j_bound + iGhost * bound_direction[1];
+            int k_ghost = k_bound + iGhost * bound_direction[2];
             int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+
             for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
             {
-                data_manager->SetPrim(idx_eq, idx_ghost, data_manager->GetPrim(idx_eq, idx_bound));
-                data_manager->SetCons(idx_eq, idx_ghost, data_manager->GetCons(idx_eq, idx_bound));
+                data_manager->SetPrim(idx_eq, idx_ghost, prim_vals[idx_eq]);
+                data_manager->SetCons(idx_eq, idx_ghost, cons_vals[idx_eq]);
             }
         }
     }
@@ -7326,6 +7670,13 @@ namespace zaran
         int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
         int i_ref, j_ref, k_ref;
         int i_ghost, j_ghost, k_ghost;
+        auto node = grid->GetNode();
+        auto bound_coord = node->GetCoord(i_bound, j_bound, k_bound);
+        double prim_bnd[5];
+        for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
+        {
+            prim_bnd[idx_eq] = data_manager->GetPrim(idx_eq, idx_bound);
+        }
         for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
         {
             i_ghost = i_bound + iGhost * bound.GetDirection()[0];
@@ -7343,9 +7694,9 @@ namespace zaran
             }
             double vel_ref[3] = {prim_ghost[1], prim_ghost[2], prim_ghost[3]};
             double vn_ref = vel_ref[0] * norm_bnd[0] + vel_ref[1] * norm_bnd[1] + vel_ref[2] * norm_bnd[2];
-            prim_ghost[1] = prim_ghost[1] - 2.0 * vn_ref * norm_bnd[0];
-            prim_ghost[2] = prim_ghost[2] - 2.0 * vn_ref * norm_bnd[1];
-            prim_ghost[3] = prim_ghost[3] - 2.0 * vn_ref * norm_bnd[2];
+            prim_ghost[1] = vel_ref[0] - 2.0 * vn_ref * norm_bnd[0];
+            prim_ghost[2] = vel_ref[1] - 2.0 * vn_ref * norm_bnd[1];
+            prim_ghost[3] = vel_ref[2] - 2.0 * vn_ref * norm_bnd[2];
             double cons_ghost[5];
             GetGas()->Prim2Cons(prim_ghost, cons_ghost);
             for (int idx_eq = 0; idx_eq < 5; ++idx_eq)

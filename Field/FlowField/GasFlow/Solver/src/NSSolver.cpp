@@ -86,8 +86,8 @@ namespace zaran
 
 	void NSSolver::Solve()
 	{
-		BoundaryCondition();
 		TimeAdvance();
+		BoundaryCondition();
 	}
 
 	void NSSolver::CalcTimeStep()

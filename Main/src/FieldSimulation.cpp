@@ -118,6 +118,7 @@ void FieldSimulation::SolveField()
         PostSolve();
     }
     PostSolve();
+    SaveFieldData();
 }
 
 void FieldSimulation::CalcResidual()

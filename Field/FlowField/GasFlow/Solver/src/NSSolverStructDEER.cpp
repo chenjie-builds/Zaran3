@@ -12,10 +12,13 @@ namespace zaran
     }
     void NSSolverStructDEER::FluxDifference2nd()
     {
-        FlueDifference2nd_MoveMidNode();
-        return;
-        auto grid = GetGrid();
         auto para = GetPara();
+        if (para->GetInterSchme() == InterpolationScheme::Grad)
+        {
+            FlueDifference2nd_MoveMidNode();
+            return;
+        }
+        auto grid = GetGrid();
         auto data_manager = GetDataManager();
         auto node_metrics = GetNodeMetrics();
         auto idx_proxy = GetIdxProxy();
@@ -41,30 +44,27 @@ namespace zaran
             {
                 for (int i = is; i <= ie; ++i)
                 {
+                    idx = idx_proxy->GetIdx(i, j, k);
                     for (int iVal = 0; iVal < equ_num; ++iVal)
                     {
-                        res_tmp[iVal] = data_manager->GetResidual(iVal, idx_proxy->GetIdx(i, j, k));
+                        res_tmp[iVal] = data_manager->GetResidual(iVal, idx);
                     }
                     // i direction
-                    idx = idx_proxy->GetIdx(i, j, k);
-                    riemann_para[0].norm(0) = node_metrics->GetXi(idx)[0];
-                    riemann_para[0].norm(1) = node_metrics->GetXi(idx)[1];
-                    riemann_para[0].norm(2) = node_metrics->GetXi(idx)[2];
-                    riemann_para[0].nt = node_metrics->GetXi(idx)[3];
-                    riemann_para[1].norm(0) = node_metrics->GetXi(idx)[0];
-                    riemann_para[1].norm(1) = node_metrics->GetXi(idx)[1];
-                    riemann_para[1].norm(2) = node_metrics->GetXi(idx)[2];
-                    riemann_para[1].nt = node_metrics->GetXi(idx)[3];
+                    auto xi = node_metrics->GetXi(idx);
+                    for (int i = 0; i < 2; ++i)
+                    {
+                        riemann_para[i].norm(0) = xi[0];
+                        riemann_para[i].norm(1) = xi[1];
+                        riemann_para[i].norm(2) = xi[2];
+                        riemann_para[i].nt = xi[3];
+                    }
+                    int idx_left = idx_proxy->GetIdx(i - 1, j, k);
                     for (int iVal = 0; iVal < equ_num; ++iVal)
                     {
-                        riemann_para[0].prim_left(iVal) =
-                            data_manager->GetMidNodePrimLeft(iVal, 0, idx_proxy->GetIdx(i, j, k));
-                        riemann_para[0].prim_right(iVal) =
-                            data_manager->GetMidNodePrimRight(iVal, 0, idx_proxy->GetIdx(i, j, k));
-                        riemann_para[1].prim_left(iVal) =
-                            data_manager->GetMidNodePrimLeft(iVal, 0, idx_proxy->GetIdx(i - 1, j, k));
-                        riemann_para[1].prim_right(iVal) =
-                            data_manager->GetMidNodePrimRight(iVal, 0, idx_proxy->GetIdx(i - 1, j, k));
+                        riemann_para[0].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 0, idx);
+                        riemann_para[0].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 0, idx);
+                        riemann_para[1].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 0, idx_left);
+                        riemann_para[1].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 0, idx_left);
                     }
                     m_riemann_solver->Solver(riemann_para[0]);
                     m_riemann_solver->Solver(riemann_para[1]);
@@ -73,24 +73,22 @@ namespace zaran
                         res_tmp[iVal] -= (riemann_para[0].flux[iVal] - riemann_para[1].flux[iVal]);
                     }
                     // j direction
-                    riemann_para[2].norm(0) = node_metrics->GetEta(idx)[0];
-                    riemann_para[2].norm(1) = node_metrics->GetEta(idx)[1];
-                    riemann_para[2].norm(2) = node_metrics->GetEta(idx)[2];
-                    riemann_para[2].nt = node_metrics->GetEta(idx)[3];
-                    riemann_para[3].norm(0) = node_metrics->GetEta(idx)[0];
-                    riemann_para[3].norm(1) = node_metrics->GetEta(idx)[1];
-                    riemann_para[3].norm(2) = node_metrics->GetEta(idx)[2];
-                    riemann_para[3].nt = node_metrics->GetEta(idx)[3];
+                    // j direction
+                    auto eta = node_metrics->GetEta(idx);
+                    for (int i = 2; i < 4; ++i)
+                    {
+                        riemann_para[i].norm(0) = eta[0];
+                        riemann_para[i].norm(1) = eta[1];
+                        riemann_para[i].norm(2) = eta[2];
+                        riemann_para[i].nt = eta[3];
+                    }
+                    int idx_down = idx_proxy->GetIdx(i, j - 1, k);
                     for (int iVal = 0; iVal < equ_num; ++iVal)
                     {
-                        riemann_para[2].prim_left(iVal) =
-                            data_manager->GetMidNodePrimLeft(iVal, 1, idx_proxy->GetIdx(i, j, k));
-                        riemann_para[2].prim_right(iVal) =
-                            data_manager->GetMidNodePrimRight(iVal, 1, idx_proxy->GetIdx(i, j, k));
-                        riemann_para[3].prim_left(iVal) =
-                            data_manager->GetMidNodePrimLeft(iVal, 1, idx_proxy->GetIdx(i, j - 1, k));
-                        riemann_para[3].prim_right(iVal) =
-                            data_manager->GetMidNodePrimRight(iVal, 1, idx_proxy->GetIdx(i, j - 1, k));
+                        riemann_para[2].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 1, idx);
+                        riemann_para[2].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 1, idx);
+                        riemann_para[3].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 1, idx_down);
+                        riemann_para[3].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 1, idx_down);
                     }
                     m_riemann_solver->Solver(riemann_para[2]);
                     m_riemann_solver->Solver(riemann_para[3]);
@@ -101,29 +99,21 @@ namespace zaran
                     // k direction
                     if (grid->GetDim() == 3)
                     {
-                        riemann_para[4].norm(0) = node_metrics->GetZeta(idx)[0];
-                        riemann_para[4].norm(1) = node_metrics->GetZeta(idx)[1];
-                        riemann_para[4].norm(2) = node_metrics->GetZeta(idx)[2];
-                        riemann_para[4].nt = node_metrics->GetZeta(idx)[3];
-                        riemann_para[5].norm(0) = node_metrics->GetZeta(idx)[0];
-                        riemann_para[5].norm(1) = node_metrics->GetZeta(idx)[1];
-                        riemann_para[5].norm(2) = node_metrics->GetZeta(idx)[2];
-                        riemann_para[5].nt = node_metrics->GetZeta(idx)[3];
-                        idx_temp[0] = idx_proxy->GetIdx(i, j, k - 2);
-                        idx_temp[1] = idx_proxy->GetIdx(i, j, k - 1);
-                        idx_temp[2] = idx_proxy->GetIdx(i, j, k);
-                        idx_temp[3] = idx_proxy->GetIdx(i, j, k + 1);
-                        idx_temp[4] = idx_proxy->GetIdx(i, j, k + 2);
+                        auto zeta = node_metrics->GetZeta(idx);
+                        for (int i = 4; i < 6; ++i)
+                        {
+                            riemann_para[i].norm(0) = zeta[0];
+                            riemann_para[i].norm(1) = zeta[1];
+                            riemann_para[i].norm(2) = zeta[2];
+                            riemann_para[i].nt = zeta[3];
+                        }
+                        int idx_back = idx_proxy->GetIdx(i, j, k - 1);
                         for (int iVal = 0; iVal < equ_num; ++iVal)
                         {
-                            riemann_para[4].prim_left(iVal) =
-                                data_manager->GetMidNodePrimLeft(iVal, 2, idx_proxy->GetIdx(i, j, k));
-                            riemann_para[4].prim_right(iVal) =
-                                data_manager->GetMidNodePrimRight(iVal, 2, idx_proxy->GetIdx(i, j, k));
-                            riemann_para[5].prim_left(iVal) =
-                                data_manager->GetMidNodePrimLeft(iVal, 2, idx_proxy->GetIdx(i, j, k - 1));
-                            riemann_para[5].prim_right(iVal) =
-                                data_manager->GetMidNodePrimRight(iVal, 2, idx_proxy->GetIdx(i, j, k - 1));
+                            riemann_para[4].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 2, idx);
+                            riemann_para[4].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 2, idx);
+                            riemann_para[5].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, 2, idx_back);
+                            riemann_para[5].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, 2, idx_back);
                         }
                         m_riemann_solver->Solver(riemann_para[4]);
                         m_riemann_solver->Solver(riemann_para[5]);
@@ -231,9 +221,9 @@ namespace zaran
                     riemann_para[3].norm(1) = node_metrics->GetEta(idx)[1];
                     riemann_para[3].norm(2) = node_metrics->GetEta(idx)[2];
                     riemann_para[3].nt = node_metrics->GetEta(idx)[3];
-                    MidNodeGrad(idx_proxy->GetIdx(i, j, k), idx_proxy->GetIdx(i, j + 1, k), left_coord, mid_coord_left, coord,
+                    MidNodeGrad(idx_proxy->GetIdx(i, j, k), idx_proxy->GetIdx(i, j + 1, k), coord, mid_coord_right, right_coord,
                                 riemann_para[2].prim_left.data(), riemann_para[2].prim_right.data());
-                    MidNodeGrad(idx_proxy->GetIdx(i, j - 1, k), idx_proxy->GetIdx(i, j, k), coord, mid_coord_right, right_coord,
+                    MidNodeGrad(idx_proxy->GetIdx(i, j - 1, k), idx_proxy->GetIdx(i, j, k), left_coord, mid_coord_left, coord,
                                 riemann_para[3].prim_left.data(), riemann_para[3].prim_right.data());
                     m_riemann_solver->Solver(riemann_para[2]);
                     m_riemann_solver->Solver(riemann_para[3]);
@@ -470,17 +460,19 @@ namespace zaran
     {
         int equ_num = GetPara()->GetEqNum();
         auto data_manager = GetDataManager();
+
         for (int iVal = 0; iVal < equ_num; ++iVal)
         {
             value_left[iVal] = data_manager->GetPrim(iVal, idx_left);
-            for (int iDim = 0; iDim < 3; ++iDim)
-            {
-                value_left[iVal] += /*data_manager->GetLimiter(iVal, idx_left) **/ (mid_coord[iDim] - lef_coord[iDim]) * data_manager->GetPrimGrad(iVal, iDim, idx_left);
-            }
             value_right[iVal] = data_manager->GetPrim(iVal, idx_right);
+
             for (int iDim = 0; iDim < 3; ++iDim)
             {
-                value_right[iVal] += /*(mid_coord[iDim] - right_coord[iDim]) **/ (mid_coord[iDim] - right_coord[iDim]) * data_manager->GetPrimGrad(iVal, iDim, idx_right);
+                double left_grad = data_manager->GetPrimGrad(iVal, iDim, idx_left) * data_manager->GetLimiter(iVal, idx_left);
+                double right_grad = data_manager->GetPrimGrad(iVal, iDim, idx_right) * data_manager->GetLimiter(iVal, idx_right);
+
+                value_left[iVal] += (mid_coord[iDim] - lef_coord[iDim]) * left_grad;
+                value_right[iVal] += (mid_coord[iDim] - right_coord[iDim]) * right_grad;
             }
         }
     }

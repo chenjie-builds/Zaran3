@@ -58,5 +58,9 @@ namespace zaran
 	void CrossProduct(const double *A, const double *B, double *C);
 	// 计算两个向量的点乘
 	double DotProduct(const double *A, const double *B);
+	// 二维多点拟合直线：ax+by+c=0
+	void LineFit2D(const double **coord, int point_num, double &a, double &b, double &c);
+	// 三维多点拟合平面：Ax+By+Cz+D=0
+	void PlaneFit3D(const double **coord, int point_num, double &A, double &B, double &C, double &D);
 
 }

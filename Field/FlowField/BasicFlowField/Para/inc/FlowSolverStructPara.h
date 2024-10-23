@@ -37,6 +37,7 @@ namespace zaran
     {
         FirstOrder,
         MUSCL,
+        MUSCL_SV,
         WCNS5,
         Grad,
     };

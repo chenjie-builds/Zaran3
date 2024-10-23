@@ -9,7 +9,11 @@ namespace zaran
         m_model_manager = model_manager;
         m_block_grid = grid_master;
         m_fn_grid = grid;
-        m_idx_proxy = new StructIdxProxy(m_block_grid);
+        int ni, nj, nk;
+        ni = m_block_grid->GetNi();
+        nj = m_block_grid->GetNj();
+        nk = m_block_grid->GetNk();
+        m_idx_proxy = new StructIdxProxy(ni, nj, nk);
         m_layer_num = GlobalData::GetInt("projection_layer");
         TagBlockGrid();
         TagNodes();
@@ -244,8 +248,9 @@ namespace zaran
         m_node_type.resize(ni * nj * nk);
         for (int idx = 0; idx < ni * nj * nk; idx++)
         {
+            m_idx_proxy->SetIdx(idx);
             int i, j, k;
-            m_idx_proxy->GetIdxStruct(idx, i, j, k);
+            m_idx_proxy->GetIdxStruct(i, j, k);
             if (i < is || i >= ie || j < js || j >= je || k < ks || k >= ke)
             {
                 m_node_type[idx] = PhysicalType::Fluid;
@@ -976,7 +981,8 @@ namespace zaran
         for (auto &ref_node_idx : ref_node_idx_set)
         {
             int i, j, k;
-            m_idx_proxy->GetIdxStruct(ref_node_idx, i, j, k);
+            m_idx_proxy->SetIdx(ref_node_idx);
+            m_idx_proxy->GetIdxStruct(i, j, k);
             m_fn_info.node[0][idx].coord[0] = node->GetCoord(i, j, k)[0];
             m_fn_info.node[0][idx].coord[1] = node->GetCoord(i, j, k)[1];
             m_fn_info.node[0][idx].coord[2] = node->GetCoord(i, j, k)[2];
@@ -1021,7 +1027,8 @@ namespace zaran
         for (auto &trans_idx : trans_node_idx_set)
         {
             int i, j, k;
-            m_idx_proxy->GetIdxStruct(trans_idx, i, j, k);
+            m_idx_proxy->SetIdx(trans_idx);
+            m_idx_proxy->GetIdxStruct(i, j, k);
             m_fn_info.node[1][idx].coord[0] = node->GetCoord(i, j, k)[0];
             m_fn_info.node[1][idx].coord[1] = node->GetCoord(i, j, k)[1];
             m_fn_info.node[1][idx].coord[2] = node->GetCoord(i, j, k)[2];
@@ -1059,7 +1066,8 @@ namespace zaran
         for (int iNode = 0; iNode < m_node_type.size(); iNode++)
         {
             int i, j, k;
-            m_idx_proxy->GetIdxStruct(iNode, i, j, k);
+            m_idx_proxy->SetIdx(iNode);
+            m_idx_proxy->GetIdxStruct(i, j, k);
             if (m_node_type[iNode] != PhysicalType::FluidSolid)
                 continue;
             auto type_ip = m_node_type[m_idx_proxy->GetIdx(i + 1, j, k)];
@@ -1104,7 +1112,8 @@ namespace zaran
                 auto grid = GetBlockGrid();
                 auto node = grid->GetNode();
                 int i, j, k;
-                m_idx_proxy->GetIdxStruct(iNode, i, j, k);
+                m_idx_proxy->SetIdx(iNode);
+                m_idx_proxy->GetIdxStruct(i, j, k);
                 if (m_node_type[iNode] != PhysicalType::FluidSolid)
                     continue;
                 double dist = 0;
@@ -1640,7 +1649,8 @@ namespace zaran
         for (auto &nodes : m_trans_node)
         {
             int i, j, k;
-            m_idx_proxy->GetIdxStruct(nodes.idx_block, i, j, k);
+            m_idx_proxy->SetIdx(nodes.idx_block);
+            m_idx_proxy->GetIdxStruct(i, j, k);
             m_fn_info.node[1][nodes.idx_local_layer].neighbor_node[0] = m_idx_proxy->GetIdx(i - 1, j, k);
             m_fn_info.node[1][nodes.idx_local_layer].neighbor_node[1] = m_idx_proxy->GetIdx(i + 1, j, k);
             m_fn_info.node[1][nodes.idx_local_layer].neighbor_node[2] = m_idx_proxy->GetIdx(i, j - 1, k);
@@ -1689,7 +1699,8 @@ namespace zaran
                 if (!find)
                 {
                     int i, j, k;
-                    m_idx_proxy->GetIdxStruct(idx_master, i, j, k);
+                    m_idx_proxy->SetIdx(idx_master);
+                    m_idx_proxy->GetIdxStruct(i, j, k);
                     Log::error("Invalid node:{}, {},{},{}, type:{}", idx_master, i, j, k, int(m_node_type[idx_master]));
                 }
                 if (solid_num > 3)

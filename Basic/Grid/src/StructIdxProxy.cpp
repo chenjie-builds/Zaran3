@@ -1,35 +1,54 @@
 #include "StructIdxProxy.h"
 namespace zaran
 {
-    StructIdxProxy::StructIdxProxy(GridStruct* grid) :m_grid(grid)
+    StructIdxProxy::StructIdxProxy(int ni, int nj, int nk)
     {
+        m_ni = ni;
+        m_nj = nj;
+        m_nk = nk;
+    }
+
+    void StructIdxProxy::SetIdx(int i, int j, int k)
+    {
+        m_idx_i = i;
+        m_idx_j = j;
+        m_idx_k = k;
+        IdxProxy::SetIdx(i + j * m_ni + k * m_ni * m_nj);
+    }
+    void StructIdxProxy::SetI(int i)
+    {
+        m_idx_i = i;
+        IdxProxy::SetIdx(i + m_idx_j * m_ni + m_idx_k * m_ni * m_nj);
+    }
+    void StructIdxProxy::SetJ(int j)
+    {
+        m_idx_j = j;
+        IdxProxy::SetIdx(m_idx_i + j * m_ni + m_idx_k * m_ni * m_nj);
+    }
+    void StructIdxProxy::SetK(int k)
+    {
+        m_idx_k = k;
+        IdxProxy::SetIdx(m_idx_i + m_idx_j * m_ni + k * m_ni * m_nj);
     }
     StructIdxProxy::~StructIdxProxy()
     {
-
     }
     int StructIdxProxy::GetNi() const
     {
-        return m_grid->GetNi();
+        return m_ni;
     }
     int StructIdxProxy::GetNj() const
     {
-        return m_grid->GetNj();
+        return m_nj;
     }
     int StructIdxProxy::GetNk() const
     {
-        return m_grid->GetNk();
+        return m_nk;
     }
-    int StructIdxProxy::GetIdx(int i, int j, int k)const
+    void StructIdxProxy::GetIdxStruct(int &i, int &j, int &k) 
     {
-        return i + j * m_grid->GetNi() + k * m_grid->GetNi() * m_grid->GetNj();
-    }
-    void StructIdxProxy::GetIdxStruct(int idx, int& i, int& j, int& k) const
-    {
-        int ni = m_grid->GetNi();
-        int nj = m_grid->GetNj();
-        i = idx % ni;
-        j = (idx / ni) % nj;
-        k = idx / (ni * nj);
+        i = m_idx_i;
+        j = m_idx_j;
+        k = m_idx_k;
     }
 }

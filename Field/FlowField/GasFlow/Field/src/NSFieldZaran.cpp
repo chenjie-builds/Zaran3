@@ -40,7 +40,7 @@ namespace zaran
             delete m_solver;
         }
         auto para = GetSolverPara();
-        m_solver = new NSSolverBlock(1, "NS_Block", GetSolverPara(), GetGrid(), GetDataManager());
+        m_solver = new NSSolverBlock(GetIdx(), "NS_Block", GetSolverPara(), GetGrid(), GetDataManager());
     }
 
     void NSFieldZaran::AllocateDataManager()
@@ -63,7 +63,11 @@ namespace zaran
         {
             delete m_idx_proxy;
         }
-        m_idx_proxy = new StructIdxProxy(GetGrid());
+        int ni = GetGrid()->GetNi();
+        int nj = GetGrid()->GetNj();
+        int nk = GetGrid()->GetNk();
+
+        m_idx_proxy = new StructIdxProxy(ni, nj, nk);
     }
 
     void NSFieldZaran::AllocateSolverPara()
@@ -181,8 +185,8 @@ namespace zaran
         FieldDataCommInfo *block_comm_info = new FieldDataCommInfo(5, block_recv_num, block_recv_data_name, block_recv_node_idx_src.data(), block_recv_field_idx_tgt.data(), block_recv_node_idx_tgt.data());
         field_manager->SetFieldDataCommInfo(this->GetIdx(), block_comm_info);
         m_slave_field = new NSFieldFNFDM(grid);
-        m_slave_field->Allocate();
         field_manager->AddField(m_slave_field, fn_comm_info);
+        m_slave_field->Allocate();
     }
     //     void NSFieldZaran::CreateMasterGrid()
     //     {

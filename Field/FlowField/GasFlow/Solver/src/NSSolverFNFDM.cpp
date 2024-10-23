@@ -130,12 +130,12 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		int node_num = grid->GetTotalNodeNum();
-		const double *xRight, *xLeft, *yRight, *yLeft, *zRight, *zLeft;
-		xRight = xLeft = yRight = yLeft = zRight = zLeft = nullptr;
 		double max_jacobian = -LARGE_NUMBER;
 		double min_jacobian = LARGE_NUMBER;
 		int max_jacobian_node = -1;
 		int min_jacobian_node = -1;
+
+#pragma omp parallel for reduction(max : max_jacobian) reduction(min : min_jacobian)
 		for (int iNode = 0; iNode < node_num; ++iNode)
 		{
 			if (node->GetType(iNode) != NodeType::inner)
@@ -143,24 +143,24 @@ namespace zaran
 				continue;
 			}
 			auto neighbors = node->GetNeighborNode(iNode);
-			xLeft = node->GetCoord(neighbors[0]);
-			xRight = node->GetCoord(neighbors[1]);
-			yLeft = node->GetCoord(neighbors[2]);
-			yRight = node->GetCoord(neighbors[3]);
-			if (grid->GetDim() == 3)
-			{
-				zLeft = node->GetCoord(neighbors[4]);
-				zRight = node->GetCoord(neighbors[5]);
-			}
+			const double *xLeft = node->GetCoord(neighbors[0]);
+			const double *xRight = node->GetCoord(neighbors[1]);
+			const double *yLeft = node->GetCoord(neighbors[2]);
+			const double *yRight = node->GetCoord(neighbors[3]);
+			const double *zLeft = (grid->GetDim() == 3) ? node->GetCoord(neighbors[4]) : nullptr;
+			const double *zRight = (grid->GetDim() == 3) ? node->GetCoord(neighbors[5]) : nullptr;
+
 			m_node_metric->CalcMetric(iNode, xRight, xLeft, yRight, yLeft, zRight, zLeft);
-			if (m_node_metric->GetJacobian(iNode) > max_jacobian)
+
+			double jacobian = m_node_metric->GetJacobian(iNode);
+			if (jacobian > max_jacobian)
 			{
-				max_jacobian = m_node_metric->GetJacobian(iNode);
+				max_jacobian = jacobian;
 				max_jacobian_node = iNode;
 			}
-			if (m_node_metric->GetJacobian(iNode) < min_jacobian)
+			if (jacobian < min_jacobian)
 			{
-				min_jacobian = m_node_metric->GetJacobian(iNode);
+				min_jacobian = jacobian;
 				min_jacobian_node = iNode;
 			}
 		}
@@ -213,21 +213,19 @@ namespace zaran
 		const DArray &rk_coef = para->GetRKCoef();
 		int rkStage = rk_coef.size();
 		auto node = grid->GetNode();
-		int nInnerNode = grid->GetInnerNodeNum();
-		int nBoundNode = grid->GetBoundNodeNum();
-		double dt, jacobi;
+		int totalNodeNum = grid->GetTotalNodeNum();
 		for (int iStage = 0; iStage < rkStage; ++iStage)
 		{
 			CalcResidual();
-			for (int iVal = 0; iVal < 5; ++iVal)
+#pragma omp parallel for
+			for (int iNode = 0; iNode < totalNodeNum; ++iNode)
 			{
-#pragma omp parallel for private(dt, jacobi)
-				for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
+				if (node->GetType(iNode) != NodeType::inner)
+					continue;
+				double dt = data_manager->GetTimeStep(iNode);
+				double jacobi = m_node_metric->GetJacobian(iNode);
+				for (int iVal = 0; iVal < 5; ++iVal)
 				{
-					if (node->GetType(iNode) != NodeType::inner)
-						continue;
-					dt = data_manager->GetTimeStep(iNode);
-					jacobi = m_node_metric->GetJacobian(iNode);
 					data_manager->SetCons(iVal, iNode, data_manager->GetCons(iVal, iNode) + dt * rk_coef[iStage] * data_manager->GetResidual(iVal, iNode) * jacobi);
 				}
 			}
@@ -243,8 +241,11 @@ namespace zaran
 #pragma omp parallel for
 		for (int iNode = 0; iNode < node_num; ++iNode)
 		{
-			double prim[5] = {data_manager->GetPrim(0, iNode), data_manager->GetPrim(1, iNode), data_manager->GetPrim(2, iNode),
-							  data_manager->GetPrim(3, iNode), data_manager->GetPrim(4, iNode)};
+			double prim[5];
+			for (int iVal = 0; iVal < 5; ++iVal)
+			{
+				prim[iVal] = data_manager->GetPrim(iVal, iNode);
+			}
 			double cons[5];
 			gas->Prim2Cons(prim, cons);
 			for (int iVal = 0; iVal < 5; ++iVal)
@@ -259,15 +260,15 @@ namespace zaran
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		int node_num = grid->GetTotalNodeNum();
-		// #pragma omp parallel for
+#pragma omp parallel for
 		for (int iNode = 0; iNode < node_num; ++iNode)
 		{
 			double cons[5];
+			double prim[5];
 			for (int iVal = 0; iVal < 5; ++iVal)
 			{
 				cons[iVal] = data_manager->GetCons(iVal, iNode);
 			}
-			double prim[5];
 			GetGas()->Cons2Prim(cons, prim);
 			for (int iVal = 0; iVal < 5; ++iVal)
 			{
