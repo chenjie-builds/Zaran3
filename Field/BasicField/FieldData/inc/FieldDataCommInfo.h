@@ -25,7 +25,7 @@ namespace zaran
         double GetRecvDataCache(int idx_data_name,int idx_recv_node) { return m_recv_data_cache[idx_data_name][idx_recv_node]; }
 
     private:
-        /// @brief 接收数据的数量
+        /// @brief 接收数据的名称
         std::vector<std::string> m_recv_data_name;
         /// @brief 接收数据的node数量
         int m_recv_node_num;

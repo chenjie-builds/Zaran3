@@ -41,25 +41,10 @@ void FieldSimulation::Initialize()
 
 void FieldSimulation::SaveDataTecplot()
 {
-    for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
-    {
-        if (m_field_manager->GetField(iter_field)->GetFieldType() == FieldType::NS_Structured)
-        {
-            m_visual->WriteTecplotASCII(static_cast<NSFieldStruct *>(m_field_manager->GetField(iter_field)));
-        }
-        else if (m_field_manager->GetField(iter_field)->GetFieldType() == FieldType::NS_FlexibleNode)
-        {
-            m_visual->WriteTecplotBinary(static_cast<NSFieldFNFDM *>(m_field_manager->GetField(iter_field)));
-        }
-        else if (m_field_manager->GetField(iter_field)->GetFieldType() == FieldType::NS_Zaran)
-        {
-            m_visual->WriteTecplotBinary(static_cast<NSFieldZaran *>(m_field_manager->GetField(iter_field)));
-        }
-        else
-        {
-            Log::warn("Field type is not supported!");
-        }
-    }
+    // m_visual->WriteTecASCII(m_field_manager);
+    m_visual->WriteTecplotBinary(m_field_manager);
+
+
 }
 void FieldSimulation::SaveDataVTK(std::ostream &os)
 {

@@ -18,10 +18,13 @@ namespace zaran
 	class Visual
 	{
 	public:
-		void WriteTecplotBinary(Field *field);
-		void WriteTecplotASCII(NSFieldStruct *field);
-		void WriteTecplotASCII(NSFieldZaran *field);
-		void WriteTecplotBinary(NSFieldZaran *field);
-		void WriteVTK(Field *field);
+		void WriteTecASCII(FieldManager* field_manager);
+		void WriteTecplotASCII(NSFieldStruct* field, std::ostream& os);
+		void WriteTecplotASCII(NSFieldZaran* field, std::ostream& os);
+
+		void WriteTecplotBinary(FieldManager* field_manager);
+		void WriteTecplotBinary(NSFieldFNFDM* field);
+		void WriteTecplotBinary(NSFieldZaran* field);
+		void WriteTecplotBinary(NSFieldStruct* field);
 	};
 }
