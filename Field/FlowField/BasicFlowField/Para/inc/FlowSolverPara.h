@@ -22,9 +22,9 @@ namespace zaran
 	//梯度求解方法
 	enum class GradScheme
 	{
-		ufdm,//非结构有限差分法
-		wls,//最小二乘法
-		noGrad//不计算梯度
+		UFDM,//非结构有限差分法, 暂时不支持
+		WLS,//最小二乘法
+		NONE//不计算梯度,梯度为0
 	};
 	//流场初始化方式
 	enum class InitFieldType
@@ -32,7 +32,8 @@ namespace zaran
 		FarFlow,//远场
 		FarFlowNoVelocity,//远场无速度
 		Backup,//备份文件
-		Explosion//爆炸
+		Explosion,//爆炸
+		Vortex//等熵涡,仅用于测试
 	};
 	class FlowSolverPara :public SolverPara
 	{
@@ -61,9 +62,9 @@ namespace zaran
 		const double& GetInflowPressure()const;
 		const double& GetInflowTemperature()const;
 		const InitFieldType& GetInitFieldType()const;
-		 int GetIsViscous()const;
-		 int GetCurrentStep()const;
-		 double GetCflNumber()const;
+		int GetIsViscous()const;
+		int GetCurrentStep()const;
+		double GetCflNumber()const;
 		void ReduceCflNumber();
 		const DArray& GetRKCoef()const;
 		const GradScheme& GetGradScheme()const;

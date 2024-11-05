@@ -500,15 +500,15 @@ namespace zaran
 	void NSSolverFNFDM::CalcPrimGrad()
 	{
 		auto para = GetPara();
-		if (para->GetGradScheme() == GradScheme::wls)
+		if (para->GetGradScheme() == GradScheme::WLS)
 		{
 			CalcGradWLS();
 		}
-		else if (para->GetGradScheme() == GradScheme::ufdm)
+		else if (para->GetGradScheme() == GradScheme::UFDM)
 		{
 			CalcGradFNFDM();
 		}
-		else if (para->GetGradScheme() == GradScheme::noGrad)
+		else if (para->GetGradScheme() == GradScheme::NONE)
 		{
 			NoGradient();
 		}

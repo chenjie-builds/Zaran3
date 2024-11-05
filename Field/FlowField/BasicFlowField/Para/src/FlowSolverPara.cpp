@@ -89,15 +89,15 @@ void FlowSolverPara::Init()
 	int gradScheme = GlobalData::GetInt("gradScheme");
 	if (gradScheme == 0)
 	{
-		m_grad_scheme = GradScheme::wls;
+		m_grad_scheme = GradScheme::WLS;
 	}
 	else if (gradScheme == 1)
 	{
-		m_grad_scheme = GradScheme::ufdm;
+		m_grad_scheme = GradScheme::UFDM;
 	}
 	else if (gradScheme == -1)
 	{
-		m_grad_scheme = GradScheme::noGrad;
+		m_grad_scheme = GradScheme::NONE;
 	}
 	else
 	{
