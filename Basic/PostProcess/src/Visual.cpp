@@ -38,7 +38,7 @@ void zaran::Visual::WriteTecplotBinary(NSFieldFNFDM* field)
     INTEGER4 jCellMax = 0;
     INTEGER4 kCellMax = 0;
     double solution_time = GlobalData::GetDouble("currentTime");
-    INTEGER4 strandID = 0;
+    INTEGER4 strandID = 1;
     INTEGER4 parentZn = 0;
     INTEGER4 isBlock = 1;
     INTEGER4 nFConns = 0;
@@ -249,7 +249,7 @@ void zaran::Visual::WriteTecplotBinary(NSFieldZaran* field)
     INTEGER4 jCellMax = 0;
     INTEGER4 kCellMax = 0;
     double solution_time = GlobalData::GetDouble("currentTime");
-    INTEGER4 strandID = 0;
+    INTEGER4 strandID = 1;
     INTEGER4 parentZn = 0;
     INTEGER4 isBlock = 1;
     INTEGER4 nFConns = 0;
@@ -330,33 +330,45 @@ void zaran::Visual::WriteTecplotBinary(NSFieldStruct* field)
             }
         }
     }
-    INTEGER4 file_format = 0;
-    INTEGER4 debug = 0;
     INTEGER4 vIsDouble = 1;
-    INTEGER4 vIsInt = 0;
-    INTEGER4 fileType = 0;
-    string grid_name = "grid_" + grid->GetName();
-    string var_name = "x, y, z, density, velocity_x, velocity_y, velocity_z, pressure";
-    std::string file_name = "result/" + std::to_string(GlobalData::GetInt("currentIter")) + "-block.plt";
-    int i = TECINI142(grid_name.c_str(), var_name.c_str(), file_name.c_str(), (char*)".", &file_format, &fileType,
-        &debug, &vIsDouble);
     string zone_name = grid->GetName() + std::to_string(field->GetIdx());
-    INTEGER4 zone_type = 5; // Brick
+    INTEGER4 zone_type = 0; // Brick
     INTEGER4 face_num = 6;
     INTEGER4 iCellMax = 0;
     INTEGER4 jCellMax = 0;
     INTEGER4 kCellMax = 0;
     double solution_time = GlobalData::GetDouble("currentTime");
-    INTEGER4 strandID = 0;
+    INTEGER4 strandID = 1;
     INTEGER4 parentZn = 0;
     INTEGER4 isBlock = 1;
-    INTEGER4 nFConns = 0;
+    INTEGER4 TotalNumFaceNodes = 1;
+    INTEGER4 TotalNumBndryFaces = 1;
+    INTEGER4 TotalNumBndryConnections = 1;
+ INTEGER4 nFConns = 0;
     INTEGER4 FNMode = 0;
     int valueLocation[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
     int shrConn = 0;
-    i = TECZNE142((char*)zone_name.c_str(), &zone_type, &node_num, &cell_num, &face_num, &iCellMax, &jCellMax,
-        &kCellMax, &solution_time, &strandID, &parentZn, &isBlock, &nFConns, &FNMode, 0, 0, 0, NULL,
-        valueLocation, NULL, &shrConn);
+    int  i = TECZNE142((char*)zone_name.c_str(),
+        &zone_type,
+        &ni,
+        &nj,
+        &nk,
+        &iCellMax,
+        &jCellMax,
+        &kCellMax,
+        &solution_time,
+        &strandID,
+        &parentZn,
+        &isBlock,
+        &nFConns,
+        &FNMode,
+        &TotalNumFaceNodes,
+        &TotalNumBndryFaces,
+        &TotalNumBndryConnections,
+        NULL,
+        NULL,
+        NULL,
+        &shrConn);
 
     i = TECDAT142(&node_num, x.data(), &vIsDouble);
     i = TECDAT142(&node_num, y.data(), &vIsDouble);
@@ -366,28 +378,6 @@ void zaran::Visual::WriteTecplotBinary(NSFieldStruct* field)
     i = TECDAT142(&node_num, velocity_y.data(), &vIsDouble);
     i = TECDAT142(&node_num, velocity_z.data(), &vIsDouble);
     i = TECDAT142(&node_num, pressure.data(), &vIsDouble);
-    INTEGER4 connectivityCount = cell_num * 8;
-    std::vector<INTEGER4> cell_nodes(connectivityCount);
-    for (int k = 0; k < nk - 1; k++)
-    {
-        for (int j = 0; j < nj - 1; j++)
-        {
-            for (int i = 0; i < ni - 1; i++)
-            {
-                int idx = i + (ni - 1) * j + (ni - 1) * (nj - 1) * k;
-                int idx0 = i + ni * j + ni * nj * k;
-                cell_nodes[idx * 8] = idx0 + 1;
-                cell_nodes[idx * 8 + 1] = idx0 + 2;
-                cell_nodes[idx * 8 + 2] = idx0 + ni + 2;
-                cell_nodes[idx * 8 + 3] = idx0 + ni + 1;
-                cell_nodes[idx * 8 + 4] = idx0 + ni * nj + 1;
-                cell_nodes[idx * 8 + 5] = idx0 + ni * nj + 2;
-                cell_nodes[idx * 8 + 6] = idx0 + ni * nj + ni + 2;
-                cell_nodes[idx * 8 + 7] = idx0 + ni * nj + ni + 1;
-            }
-        }
-    }
-    i = TECNODE142(&connectivityCount, cell_nodes.data());
     delete idx_proxy;
 }
 void Visual::WriteTecASCII(FieldManager* field_manager)
