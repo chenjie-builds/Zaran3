@@ -19,6 +19,7 @@ namespace zaran
     FlowSolverStructPara *GetPara() override;
 
   protected:
+    void InitField() override;
     void InitFieldFarFlow() override;
     void InitFieldFarFieldNoVelocity() override;
     void InitFieldBackup() override;

@@ -30,7 +30,7 @@ namespace zaran
 	public:
 		Application() :
 			m_control_file("zaran.ini"),
-			m_min_ctrol_file_version("V3.3.6")
+			m_min_ctrol_file_version("V3.3.7")
 		{
 			GlobalData::Init();
 		}
@@ -42,7 +42,7 @@ namespace zaran
 		void InitTask();
 		void ShowInfo();
 		void SolveField();
-		void ConvertGrid();	
+		void ConvertGrid();
 		void ReadModel();
 	private:
 		TaskType m_task;
