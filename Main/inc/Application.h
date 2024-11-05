@@ -29,8 +29,8 @@ namespace zaran
 	{
 	public:
 		Application() :
-			globalDataFileName_("zaran.ini"),
-			minSupportCtrlFileVersion_("V3.3.6")
+			m_control_file("zaran.ini"),
+			m_min_ctrol_file_version("V3.3.6")
 		{
 			GlobalData::Init();
 		}
@@ -47,12 +47,12 @@ namespace zaran
 	private:
 		TaskType m_task;
 		//参数文件名
-		string globalDataFileName_;
+		string m_control_file;
 		//网格生成工厂
 		Ptr<GridFactory> gridListFatory_;
 		//程序支持的最小控制文件版本号, 如果读取的版本号低于此版本, 将不进行计算
 		//作用: 防止程序更新后，需要更多的控制文件信息，老版本控制文件未添加导致计算失败
-		string minSupportCtrlFileVersion_;
+		string m_min_ctrol_file_version;
 	};
 
 }

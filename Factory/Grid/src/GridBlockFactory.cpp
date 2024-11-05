@@ -28,7 +28,7 @@ namespace zaran
         int ni, nj, nk;
         grid->GetNodeNum(ni, nj, nk);
         int ghost_size = grid->GetGhostLevel();
-        auto bound_box = grid->GetBoundBox();
+        auto& bound_box = grid->GetBoundBox();
         double dx = (bound_box.x_max - bound_box.x_min) / (ni - 2 * ghost_size - 1);
         double dy = (bound_box.y_max - bound_box.y_min) / (nj - 2 * ghost_size - 1);
         double dz = (bound_box.z_max - bound_box.z_min) / (nk - 2 * ghost_size - 1);

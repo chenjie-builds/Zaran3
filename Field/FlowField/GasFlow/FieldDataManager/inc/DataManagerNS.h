@@ -26,6 +26,11 @@ namespace zaran
         /// @param idx_data 数据索引
         /// @param value 输入的值
         void SetCons(int idx_eq, int idx_data, double value);
+        //! @brief 设置上一个时间步守恒变量
+        /// @param idx_eq 变量索引
+        /// @param idx_data 数据索引
+        /// @param value 输入的值
+        void SetConsOld(int idx_eq, int idx_data, double value);
         //! @brief 设置残差
         /// @param idx_eq 变量索引
         /// @param idx_data 数据索引
@@ -93,7 +98,9 @@ namespace zaran
         double* GetTemperature();
         double GetTemperature(int idx_data);
         double* GetConservative(int idx_eq);
+        double* GetConsOld(int idx_eq);
         double GetCons(int idx_eq, int idx_data);
+        double GetConsOld(int idx_eq, int idx_data);
         double* GetResidual(int idx_eq);
         double GetResidual(int idx_eq, int idx_data);
         double* GetLimiter(int idx_eq);
@@ -112,6 +119,8 @@ namespace zaran
         double** m_prim;
         /// @brief 守恒变量, 1D 变量索引, 2D 数据索引
         double** m_cons;
+        /// @brief 上一个时间步原始变量, 用于Runge-Kutta, 1D 变量索引, 2D 数据索引
+        double** m_cons_old;
         /// @brief 时间步长
         double* m_dt;
         /// @brief 残差, 1D 变量索引, 2D 数据索引

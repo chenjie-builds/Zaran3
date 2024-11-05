@@ -307,19 +307,40 @@ void FieldSimulation::CommFieldData()
         {
             continue;
         }
+        auto &recv_data_name = comm_info->GetRecvDataName();
         int recv_node_num = comm_info->GetRecvNodeNum();
-        for (int iNode = 0; iNode < recv_node_num; iNode++)
+        for (int i_recv_node = 0; i_recv_node < recv_node_num; i_recv_node++)
         {
-            auto recv_field = m_field_manager->GetField(comm_info->GetRecvFieldIdxTarget()[iNode]);
-            auto recv_field_data = recv_field->GetFieldData();
-            int recv_node_idx_local = comm_info->GetRecvNodeIdxSource()[iNode];
-            int recv_field_idx_global = comm_info->GetRecvFieldIdxTarget()[iNode];
-            int recv_node_idx_global = comm_info->GetRecvNodeIdxTarget()[iNode];
-            auto &recv_data_name = comm_info->GetRecvDataName();
-            for (size_t i_recv_data = 0; i_recv_data < recv_data_name.size(); i_recv_data++)
+            auto send_field = m_field_manager->GetField(comm_info->GetIdxSendField()[i_recv_node]);
+            auto send_field_data = send_field->GetFieldData();
+            int idx_send_field = comm_info->GetIdxSendField()[i_recv_node];
+            int idx_send_node = comm_info->GetIdxSendNode()[i_recv_node];
+            for (size_t i_recv_name = 0; i_recv_name < recv_data_name.size(); i_recv_name++)
             {
-                std::string data_name = recv_data_name[i_recv_data];
-                field_data->GetData(data_name, recv_node_idx_local) = recv_field_data->GetData(data_name, recv_node_idx_global);
+                std::string data_name = recv_data_name[i_recv_name];
+                double data = send_field_data->GetData(data_name, idx_send_node);
+                comm_info->SetRecvDataCache(i_recv_name, i_recv_node, data);
+            }
+        }
+    }
+    for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
+    {
+        auto field = m_field_manager->GetField(iter_field);
+        auto field_data = field->GetFieldData();
+        auto comm_info = m_field_manager->GetFieldDataCommInfo(iter_field);
+        if (comm_info == nullptr)
+        {
+            continue;
+        }
+        auto &recv_data_name = comm_info->GetRecvDataName();
+        int recv_node_num = comm_info->GetRecvNodeNum();
+        auto recv_node = comm_info->GetIdxRecvNode();
+        for (int i_recv_node = 0; i_recv_node < recv_node_num; i_recv_node++)
+        {
+            for (size_t i_recv_name = 0; i_recv_name < recv_data_name.size(); i_recv_name++)
+            {
+                std::string data_name = recv_data_name[i_recv_name];
+                field_data->GetData(data_name, recv_node[i_recv_node]) = comm_info->GetRecvDataCache(i_recv_name, i_recv_node);
             }
         }
     }

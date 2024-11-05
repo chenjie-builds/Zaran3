@@ -57,12 +57,12 @@ namespace zaran
         /// @param i_bnd_tgt the index of the boundary in i direction of the target block
         /// @param j_bnd_tgt the index of the boundary in j direction of the target block
         /// @param k_bnd_tgt the index of the boundary in k direction of the target block
-        void GetIdxTgt(int &i_bnd_tgt, int &j_bnd_tgt, int &k_bnd_tgt);
+        void GetIdxTgt(int &i_bnd_tgt, int &j_bnd_tgt, int &k_bnd_tgt) const;
         /// @brief  get direction vector of the boundary in the target block
         /// @return a 3-element array, each element is -1, 0 or 1
         const int *GetDirectionTgt();
         void SetTargetBlock(const int &target_block);
-        int GetTargetBlock();
+        int GetTargetBlock() const;
 
     private:
         // 边界的索引，用于标记边界的位置, src(source)表示当前块，tgt(target)表示相邻块

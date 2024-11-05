@@ -435,7 +435,7 @@ namespace zaran
                 {
                     remove_node = temp_pair.node1;
                     remove_index = std::find(neighbor.begin(), neighbor.end(), remove_node) - neighbor.begin();
-                    for (auto i : node_pair_map)
+                    for (auto& i : node_pair_map)
                     {
                         if (i.second.node1 == neighbor[get_last_node(remove_index, neighbor)] &&
                             i.second.node2 == neighbor[remove_index])
@@ -449,7 +449,7 @@ namespace zaran
                 {
                     remove_node = temp_pair.node2;
                     remove_index = std::find(neighbor.begin(), neighbor.end(), remove_node) - neighbor.begin();
-                    for (auto i : node_pair_map)
+                    for (auto& i : node_pair_map)
                     {
                         if (i.second.node1 == neighbor[remove_index] &&
                             i.second.node2 == neighbor[get_next_node(remove_index, neighbor)])

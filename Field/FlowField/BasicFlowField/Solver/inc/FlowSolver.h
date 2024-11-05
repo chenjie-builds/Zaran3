@@ -16,11 +16,11 @@
 namespace zaran
 {
 /// @brief 流场求解器基类
-class FlowSolver : public FieldSolver
+class FlowFieldSolver : public FieldSolver
 {
   public:
-    FlowSolver(int index, string name, FlowSolverPara *para, GridBase *grid, DataManager *data_manager);
-    virtual ~FlowSolver();
+    FlowFieldSolver(int index, string name, FlowSolverPara *para, GridBase *grid, DataManager *data_manager);
+    virtual ~FlowFieldSolver();
   public:
     void InitField() override;
     void InitSolver() override;

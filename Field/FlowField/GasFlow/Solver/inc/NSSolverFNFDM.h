@@ -68,13 +68,13 @@ namespace zaran
 
 		void ZeroResidual() override;
 		// 计算流动通量
-		void CalcInviscidResidual() override;
+		void CalcConvectionResidual() override;
 		// 计算粘性通量
 		void CalcViscousResidual() override;
 		void CalcViscousFlux() override;
 		void CalcViscousFluxGrad() override;
 		// 计算源项
-		void SourceResidual() override;
+		void CalcSourceResidual() override;
 		/// 计算气动力
 		void CalcForce() override;
 		void BoundaryCondition() override;

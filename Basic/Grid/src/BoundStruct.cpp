@@ -89,7 +89,7 @@ namespace zaran
 			m_dir_tgt[i] = direction_tgt[i];
 		}
 	}
-	void BoundStruct::GetIdxTgt(int& i_bnd_tgt, int& j_bnd_tgt, int& k_bnd_tgt)
+	void BoundStruct::GetIdxTgt(int& i_bnd_tgt, int& j_bnd_tgt, int& k_bnd_tgt) const
 	{
 		i_bnd_tgt = m_i_bnd_tgt;
 		j_bnd_tgt = m_j_bnd_tgt;
@@ -103,7 +103,7 @@ namespace zaran
 	{
 		m_target_block = target_block;
 	}
-	int BoundStruct::GetTargetBlock()
+	int BoundStruct::GetTargetBlock() const
 	{
 		return m_target_block;
 	}

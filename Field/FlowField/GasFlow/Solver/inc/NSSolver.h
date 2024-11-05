@@ -16,7 +16,7 @@
 #include "DataManagerNS.h"
 namespace zaran
 {
-	class NSSolver : public FlowSolver
+	class NSSolver : public FlowFieldSolver
 	{
 	public:
 		NSSolver(int index, string name, FlowSolverPara *para, GridBase *grid, DataManagerNS *data_manager);
@@ -60,13 +60,13 @@ namespace zaran
 		virtual void Cons2Prim() {}
 		virtual void ZeroResidual() = 0;
 		// 计算流动通量残差
-		virtual void CalcInviscidResidual() = 0;
+		virtual void CalcConvectionResidual() = 0;
 		// 计算粘性通量残差
 		virtual void CalcViscousResidual() = 0;
 		virtual void CalcViscousFlux() = 0;
 		virtual void CalcViscousFluxGrad() = 0;
 		// 计算源项
-		virtual void SourceResidual() = 0;
+		virtual void CalcSourceResidual() = 0;
 		// 计算流场残差，即右端项
 		virtual void CalcResidual();
 		/// @brief 检查原始变量

@@ -19,9 +19,9 @@ namespace zaran
         FlowSolverPara::Init();
         InitMidMetricsScheme();
         InitMetricsType();
-        InitFluxDifferenceOrder();
+        InitFluxDifferenceScheme();
         InitInterSchme();
-        InitJacobianScheme();
+        InitJacobianType();
     }
 
     void FlowSolverStructPara::InitMidMetricsScheme()
@@ -37,7 +37,7 @@ namespace zaran
         }
         else
         {
-            Log::warn("MetricsScheme is not defined, use DEER as default");
+            Log::warn("MetricType is not defined, use DEER as default");
             m_mid_metrics_scheme = MidMetricsScheme::DEER;
         }
     }
@@ -47,42 +47,60 @@ namespace zaran
         string metrics_scheme = GlobalData::GetString("metrics_scheme");
         if (metrics_scheme == "S0")
         {
-            m_metrics_scheme = MetricsScheme::S0;
+            m_metric_type = MetricType::S0;
         }
         else if (metrics_scheme == "S1")
         {
-            m_metrics_scheme = MetricsScheme::S1;
+            m_metric_type = MetricType::S1;
         }
         else if (metrics_scheme == "S2")
         {
-            m_metrics_scheme = MetricsScheme::S2;
+            m_metric_type = MetricType::S2;
         }
         else if (metrics_scheme == "S3")
         {
-            m_metrics_scheme = MetricsScheme::S3;
+            m_metric_type = MetricType::S3;
         }
         else
         {
             Log::warn("MetricsType is not defined, use Originnal as default");
-            m_metrics_scheme = MetricsScheme::S0;
+            m_metric_type = MetricType::S0;
         }
     }
 
-    void FlowSolverStructPara::InitFluxDifferenceOrder()
+    void FlowSolverStructPara::InitFluxDifferenceScheme()
     {
-        int difference_scheme = GlobalData::GetInt("difference_scheme");
+        int difference_scheme = GlobalData::GetInt("flux_difference_scheme");
         if (difference_scheme == 2)
         {
-            m_difference_scheme = DifferenceScheme::SecondOrder;
+            m_flux_difference_scheme = FluxDifferenceScheme::SecondOrder;
         }
         else if (difference_scheme == 6)
         {
-            m_difference_scheme = DifferenceScheme::SixthOrder;
+            m_flux_difference_scheme = FluxDifferenceScheme::SixthOrder;
         }
         else
         {
             Log::warn("FluxDifferenceScheme is not defined, use SecondOrder as default");
-            m_difference_scheme = DifferenceScheme::SecondOrder;
+            m_flux_difference_scheme = FluxDifferenceScheme::SecondOrder;
+        }
+    }
+
+    void FlowSolverStructPara::InitMetricDifferenceScheme()
+    {
+        int metric_difference_scheme = GlobalData::GetInt("metric_difference_scheme");
+        if (metric_difference_scheme == 2)
+        {
+            m_metric_difference_scheme = MetricDifferenceScheme::SecondOrder;
+        }
+        else if (metric_difference_scheme == 6)
+        {
+            m_metric_difference_scheme = MetricDifferenceScheme::SixthOrder;
+        }
+        else
+        {
+            Log::warn("MetricDifferenceScheme is not defined, use SecondOrder as default");
+            m_metric_difference_scheme = MetricDifferenceScheme::SecondOrder;
         }
     }
 
@@ -116,25 +134,25 @@ namespace zaran
         }
     }
 
-    void FlowSolverStructPara::InitJacobianScheme()
+    void FlowSolverStructPara::InitJacobianType()
     {
         string jacobian_scheme = GlobalData::GetString("jacobian_scheme");
         if (jacobian_scheme == "V1")
         {
-            m_jacobian_scheme = JacobianScheme::V1;
+            m_jacobian_type = JacobianType::V1;
         }
         else if (jacobian_scheme == "V2")
         {
-            m_jacobian_scheme = JacobianScheme::V2;
+            m_jacobian_type = JacobianType::V2;
         }
         else if (jacobian_scheme == "V3")
         {
-            m_jacobian_scheme = JacobianScheme::V3;
+            m_jacobian_type = JacobianType::V3;
         }
         else
         {
-            Log::warn("JacobianScheme is not defined, use V1 as default");
-            m_jacobian_scheme = JacobianScheme::V1;
+            Log::warn("JacobianType is not defined, use V1 as default");
+            m_jacobian_type = JacobianType::V1;
         }
     }
 
@@ -143,14 +161,19 @@ namespace zaran
         return m_mid_metrics_scheme;
     }
 
-    const MetricsScheme& FlowSolverStructPara::GetMetricsScheme() const
+    const MetricType& FlowSolverStructPara::GetMetricsType() const
     {
-        return m_metrics_scheme;
+        return m_metric_type;
     }
 
-    const DifferenceScheme& FlowSolverStructPara::GetDifferenceScheme() const
+    const FluxDifferenceScheme& FlowSolverStructPara::GetFluxDifferenceScheme() const
     {
-        return m_difference_scheme;
+        return m_flux_difference_scheme;
+    }
+
+    const MetricDifferenceScheme& FlowSolverStructPara::GetMetricDifferenceScheme() const
+    {
+        return m_metric_difference_scheme;
     }
 
     const InterpolationScheme& FlowSolverStructPara::GetInterSchme() const
@@ -158,8 +181,8 @@ namespace zaran
         return m_inter_schme;
     }
 
-    const JacobianScheme &FlowSolverStructPara::GetJacobianScheme() const
+    const JacobianType &FlowSolverStructPara::GetJacobianType() const
     {
-        return m_jacobian_scheme;
+        return m_jacobian_type;
     }
 }

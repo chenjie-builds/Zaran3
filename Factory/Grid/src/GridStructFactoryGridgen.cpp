@@ -569,10 +569,24 @@ namespace zaran
                                 i_bnd_tgt = bound_info.is_t + iter_i * Sign(bound_info.ie_t - bound_info.is_t) + m_ghost_size;
                                 j_bnd_tgt = bound_info.js_t + iter_j * Sign(bound_info.je_t - bound_info.js_t) + m_ghost_size;
                                 k_bns_tgt = bound_info.ks_t + iter_k * Sign(bound_info.ke_t - bound_info.ks_t) + m_ghost_size;
-                                BoundStruct bound(i_bnd_src, j_bnd_src, k_bns_src, bound_info.dir_s, norm, i_bnd_tgt, j_bnd_tgt, k_bns_tgt, bound_info.dir_t, bound_info.block_indx_target);
-                                bnd_manager->AddBoundary(gridgen_bound[bound_info.bound_type], bound);
                                 auto grid_tgt = dynamic_cast<GridStruct *>(grid_list[bound_info.block_indx_target]);
                                 auto node_tgt = grid_tgt->GetNode();
+                                for (int iGhost = 0; iGhost < m_ghost_size; ++iGhost)
+                                {
+                                    i_bnd_src += bound_info.dir_s[0];
+                                    j_bnd_src += bound_info.dir_s[1];
+                                    k_bns_src += bound_info.dir_s[2];
+                                    i_bnd_tgt -= bound_info.dir_t[0];
+                                    j_bnd_tgt -= bound_info.dir_t[1];
+                                    k_bns_tgt -= bound_info.dir_t[2];
+                                    BoundStruct bound(i_bnd_src, j_bnd_src, k_bns_src, bound_info.dir_s, norm, i_bnd_tgt, j_bnd_tgt, k_bns_tgt, bound_info.dir_t, bound_info.block_indx_target);
+                                    bnd_manager->AddBoundary(gridgen_bound[bound_info.bound_type], bound);
+                                    node_src->SetCoord(i_bnd_src, j_bnd_src, k_bns_src, node_tgt->GetCoord(i_bnd_tgt, j_bnd_tgt, k_bns_tgt));
+
+                                }
+                                BoundStruct bound(i_bnd_src, j_bnd_src, k_bns_src, bound_info.dir_s, norm, i_bnd_tgt, j_bnd_tgt, k_bns_tgt, bound_info.dir_t, bound_info.block_indx_target);
+                                bnd_manager->AddBoundary(gridgen_bound[bound_info.bound_type], bound);
+
                             }
                             else
                             {

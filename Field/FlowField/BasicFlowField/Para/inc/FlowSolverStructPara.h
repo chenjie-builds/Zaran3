@@ -13,7 +13,7 @@ namespace zaran
     //S1:守恒形式1
     //S2:守恒形式2
     //S3:SCMM格式
-    enum class MetricsScheme
+    enum class MetricType
     {
         S0,
         S1,
@@ -23,7 +23,13 @@ namespace zaran
     //通量差分格式
     //SecondOrder:二阶格式
     //SixthOrder:六阶格式
-    enum class DifferenceScheme
+    enum class FluxDifferenceScheme
+    {
+        SecondOrder,
+        SixthOrder,
+    };
+    // 度量系数差分格式
+    enum class MetricDifferenceScheme
     {
         SecondOrder,
         SixthOrder,
@@ -45,7 +51,7 @@ namespace zaran
     //V1:原始格式
     //V2:守恒形式1
     //V3:守恒形式2
-    enum class JacobianScheme
+    enum class JacobianType
     {
         V1,
         V2,
@@ -60,20 +66,23 @@ namespace zaran
         void Init() override;
         void InitMidMetricsScheme();
         void InitMetricsType();
-        void InitFluxDifferenceOrder();
+        void InitFluxDifferenceScheme();
+        void InitMetricDifferenceScheme();
         void InitInterSchme();
-        void InitJacobianScheme();
+        void InitJacobianType();
     public:
         const MidMetricsScheme& GetMidMetricsScheme()const;
-        const MetricsScheme& GetMetricsScheme()const;
-        const DifferenceScheme& GetDifferenceScheme()const;
+        const MetricType& GetMetricsType()const;
+        const FluxDifferenceScheme& GetFluxDifferenceScheme()const;
+        const MetricDifferenceScheme& GetMetricDifferenceScheme()const;
         const InterpolationScheme& GetInterSchme()const;
-        const JacobianScheme& GetJacobianScheme()const;
+        const JacobianType& GetJacobianType()const;
     private:
         MidMetricsScheme m_mid_metrics_scheme;
-        MetricsScheme m_metrics_scheme;
-        DifferenceScheme m_difference_scheme;
+        MetricType m_metric_type;
+        FluxDifferenceScheme m_flux_difference_scheme;
+        MetricDifferenceScheme m_metric_difference_scheme;
         InterpolationScheme m_inter_schme;
-        JacobianScheme m_jacobian_scheme;
+        JacobianType m_jacobian_type;
     };
 }

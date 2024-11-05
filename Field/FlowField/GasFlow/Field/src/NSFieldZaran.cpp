@@ -181,8 +181,8 @@ namespace zaran
             i++;
         }
 
-        FieldDataCommInfo *fn_comm_info = new FieldDataCommInfo(5, fn_recv_num, fn_recv_data_name, fn_recv_node_idx_src.data(), fn_recv_field_idx_tgt.data(), fn_recv_node_idx_tgt.data());
-        FieldDataCommInfo *block_comm_info = new FieldDataCommInfo(5, block_recv_num, block_recv_data_name, block_recv_node_idx_src.data(), block_recv_field_idx_tgt.data(), block_recv_node_idx_tgt.data());
+        FieldDataCommInfo *fn_comm_info = new FieldDataCommInfo(fn_recv_num, fn_recv_data_name, fn_recv_node_idx_src.data(), fn_recv_field_idx_tgt.data(), fn_recv_node_idx_tgt.data());
+        FieldDataCommInfo *block_comm_info = new FieldDataCommInfo(block_recv_num, block_recv_data_name, block_recv_node_idx_src.data(), block_recv_field_idx_tgt.data(), block_recv_node_idx_tgt.data());
         field_manager->SetFieldDataCommInfo(this->GetIdx(), block_comm_info);
         m_slave_field = new NSFieldFNFDM(grid);
         field_manager->AddField(m_slave_field, fn_comm_info);

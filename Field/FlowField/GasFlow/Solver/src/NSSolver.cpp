@@ -9,7 +9,7 @@ namespace zaran
 {
 
 	NSSolver::NSSolver(int index, string name, FlowSolverPara *para, GridBase *grid, DataManagerNS *data_manager)
-		: FlowSolver(index, name, para, grid, data_manager)
+		: FlowFieldSolver(index, name, para, grid, data_manager)
 	{
 	}
 
@@ -61,7 +61,7 @@ namespace zaran
 	void NSSolver::InitSolver()
 	{
 		Log::info("Initialize NS Solver!");
-		FlowSolver::InitSolver();
+		FlowFieldSolver::InitSolver();
 		RiemannSolverBuilder riemann_solver_builder;
 		m_riemann_solver = riemann_solver_builder.Create(GetPara()->GetRiemannSolverType());
 		auto ref_value = GetPara()->GetDimensionless();
@@ -118,9 +118,9 @@ namespace zaran
 	void NSSolver::CalcResidual()
 	{
 		ZeroResidual();
-		CalcInviscidResidual();
+		CalcConvectionResidual();
 		CalcViscousResidual();
-		SourceResidual();
+		CalcSourceResidual();
 	}
 
 	void NSSolver::UpdateField()

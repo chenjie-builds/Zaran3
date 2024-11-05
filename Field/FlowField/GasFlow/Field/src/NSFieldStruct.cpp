@@ -58,13 +58,15 @@ namespace zaran
                     for (int i = is; i <= ie; i++)
                     {
                         int idx = m_idx_proxy->GetIdx(i, j, k);
-                        if (abs(res[idx]) > norm_inf)
+                        double res_val = abs(res[idx]);
+                        auto coord = node->GetCoord(i, j, k);
+                        if (res_val > norm_inf)
                         {
-                            norm_inf = abs(res[idx]);
+                            norm_inf = res_val;
                             norm_inf_node = idx;
                             for (int iDim = 0; iDim < grid->GetDim(); iDim++)
                             {
-                                norm_inf_coord[iDim] = node->GetCoord(i, j, k)[iDim];
+                                norm_inf_coord[iDim] = coord[iDim];
                             }
                         }
                         norm_l2 += res[idx] * res[idx];
@@ -88,6 +90,7 @@ namespace zaran
         if (m_res_info != nullptr)
         {
             delete m_res_info;
+            m_res_info = nullptr;
         }
         m_res_info = new ResInfo(GetSolverPara()->GetEqNum());
     }
@@ -96,6 +99,7 @@ namespace zaran
         if (m_solver != nullptr)
         {
             delete m_solver;
+            m_solver = nullptr;
         }
         auto para = GetSolverPara();
         if (para->GetMidMetricsScheme() == MidMetricsScheme::CMM)
@@ -109,7 +113,7 @@ namespace zaran
         else
         {
             Log::error("Invalid metrics scheme");
-            system("pause");
+            throw std::runtime_error("Invalid metrics scheme");
         }
     }
     void NSFieldStruct::AllocateDataManager()
@@ -117,6 +121,7 @@ namespace zaran
         if (m_data_manager != nullptr)
         {
             delete m_data_manager;
+            m_data_manager = nullptr;
         }
         int ni = GetGrid()->GetNi();
         int nj = GetGrid()->GetNj();
@@ -130,6 +135,7 @@ namespace zaran
         if (m_idx_proxy != nullptr)
         {
             delete m_idx_proxy;
+            m_idx_proxy = nullptr;
         }
         int ni = GetGrid()->GetNi();
         int nj = GetGrid()->GetNj();
@@ -141,6 +147,7 @@ namespace zaran
         if (m_solver_para != nullptr)
         {
             delete m_solver_para;
+            m_solver_para = nullptr;
         }
         m_solver_para = new FlowSolverStructPara();
         GetSolverPara()->Init();

@@ -35,12 +35,12 @@ namespace zaran
 
 	void Application::ReadGlobalData()
 	{
-		if (!IsFileExist(globalDataFileName_))
+		while (!IsFileExist(m_control_file))
 		{
-			Log::warn("Control File:{}, is NOT exist! Please Check!", globalDataFileName_);
+			Log::warn("Control File:{}, is NOT exist! Please Check!", m_control_file);
 			system("pause");
 		}
-		std::ifstream fin(globalDataFileName_);
+		std::ifstream fin(m_control_file);
 		std::string line;
 		std::string dataType;
 		std::string dataName;
@@ -108,10 +108,10 @@ namespace zaran
 	{
 		Log::info("********Zaran: A Totally Automatic CFD Software!********");
 		Log::info(">>>>>>>>Control File Version: {}<<<<<<<<", GlobalData::GetString("version"));
-		if (minSupportCtrlFileVersion_ > GlobalData::GetString("version"))
+		if (m_min_ctrol_file_version > GlobalData::GetString("version"))
 		{
 			Log::warn(">>>>>>>>Control File is too old, please use new Control File!<<<<<<<<");
-			Log::warn(">>>>>>>>The minus version Control File is:{}<<<<<<<<", minSupportCtrlFileVersion_);
+			Log::warn(">>>>>>>>The minus version Control File is:{}<<<<<<<<", m_min_ctrol_file_version);
 			system("pause");
 		}
 		Log::info(">>>>>>>>Simulation Task: {}<<<<<<<<", GlobalData::GetString("simulationTask"));

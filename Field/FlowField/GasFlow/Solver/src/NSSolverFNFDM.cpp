@@ -1020,7 +1020,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverFNFDM::CalcInviscidResidual()
+	void NSSolverFNFDM::CalcConvectionResidual()
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
@@ -1198,7 +1198,7 @@ namespace zaran
 			m_grad_wlsq->CalcGradient(grid, data_manager->GetViscousFlux(iEqu, 2), data_manager->GetViscousFluxGrad(iEqu, 2, 0), data_manager->GetViscousFluxGrad(iEqu, 2, 1), data_manager->GetViscousFluxGrad(iEqu, 2, 2));
 		}
 	}
-	void NSSolverFNFDM::SourceResidual()
+	void NSSolverFNFDM::CalcSourceResidual()
 	{
 	}
 
@@ -1235,6 +1235,6 @@ namespace zaran
 
 	GridFN *NSSolverFNFDM::GetGrid()
 	{
-		return static_cast<GridFN *>(FlowSolver::GetGrid());
+		return static_cast<GridFN *>(FlowFieldSolver::GetGrid());
 	}
 }

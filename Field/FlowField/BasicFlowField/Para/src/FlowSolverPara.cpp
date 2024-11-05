@@ -1,7 +1,7 @@
 #include "FlowSolverPara.h"
 #include "GlobalData.h"
-#include "Log.h"
 #include "PerfectGas.h"
+#include "Log.h"
 #include <iostream>
 using namespace zaran;
 FlowSolverPara::FlowSolverPara()
@@ -79,7 +79,7 @@ void FlowSolverPara::Init()
 	}
 	else if (rkStage == 5)
 	{
-		m_rk_coef = {0.0695, 0.1602, 0.2898, 0.5060};
+		m_rk_coef = {0.0695, 0.1602, 0.2898, 0.5060,1.0};
 	}
 	else
 	{

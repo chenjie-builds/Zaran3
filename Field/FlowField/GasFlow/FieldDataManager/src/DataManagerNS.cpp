@@ -9,6 +9,7 @@ namespace zaran
     {
         delete[] m_prim;
         delete[] m_cons;
+        delete[] m_cons_old;
         delete[] m_residual;
         delete[] m_limiter;
         for (int idx_eq = 0; idx_eq < m_equ_num; idx_eq++)
@@ -37,6 +38,10 @@ namespace zaran
     void DataManagerNS::SetCons(int idx_eq, int idx_data, double data_value)
     {
         m_cons[idx_eq][idx_data] = data_value;
+    }
+    void DataManagerNS::SetConsOld(int idx_eq, int idx_data, double data_value)
+    {
+        m_cons_old[idx_eq][idx_data] = data_value;
     }
 
     void DataManagerNS::SetResidual(int idx_eq, int idx_data, double data_value)
@@ -143,10 +148,18 @@ namespace zaran
     {
         return  m_cons[idx_eq];
     }
+    double* DataManagerNS::GetConsOld(int idx_eq)
+    {
+        return m_cons_old[idx_eq];
+    }
 
     double DataManagerNS::GetCons(int idx_eq, int idx_data)
     {
         return m_cons[idx_eq][idx_data];
+    }
+    double DataManagerNS::GetConsOld(int idx_eq, int idx_data)
+    {
+        return m_cons_old[idx_eq][idx_data];
     }
 
     double* DataManagerNS::GetResidual(int idx_eq)
@@ -223,6 +236,7 @@ namespace zaran
         {
             m_data->AddData("primitive_" + std::to_string(idx_eq), type, m_data_num);
             m_data->AddData("conservative_" + std::to_string(idx_eq), type, m_data_num);
+            m_data->AddData("conservative_old_" + std::to_string(idx_eq), type, m_data_num);
             m_data->AddData("residual_" + std::to_string(idx_eq), type, m_data_num);
             m_data->AddData("limiter_" + std::to_string(idx_eq), type, m_data_num);
             for (int idx_dim = 0;idx_dim < 3;idx_dim++)
@@ -247,6 +261,7 @@ namespace zaran
     {
         m_prim = new double* [m_equ_num];
         m_cons = new double* [m_equ_num];
+        m_cons_old = new double* [m_equ_num];
         m_residual = new double* [m_equ_num];
         m_limiter = new double* [m_equ_num];
         m_viscous_flux = new double** [m_equ_num];
@@ -269,6 +284,7 @@ namespace zaran
         {
             m_data->GetData("primitive_" + std::to_string(idx_eq), m_prim[idx_eq]);
             m_data->GetData("conservative_" + std::to_string(idx_eq), m_cons[idx_eq]);
+            m_data->GetData("conservative_old_" + std::to_string(idx_eq), m_cons_old[idx_eq]);
             m_data->GetData("residual_" + std::to_string(idx_eq), m_residual[idx_eq]);
             m_data->GetData("limiter_" + std::to_string(idx_eq), m_limiter[idx_eq]);
             for (int idx_dim = 0;idx_dim < 3;idx_dim++)

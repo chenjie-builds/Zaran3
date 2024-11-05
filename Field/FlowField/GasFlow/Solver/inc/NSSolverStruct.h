@@ -66,53 +66,60 @@ namespace zaran
     void Cons2Prim() override;
     void ZeroResidual() override;
     /// @brief 半点原始变量插值：一阶
-    void CalcMidNode1st();
+    void CalcPrimMidNode1st();
     /// @brief 半点原始变量插值：梯度二阶
-    void CalcMidNodeGrad();
+    void CalcPrimMidNodeGrad();
     /// @brief 半点原始变量插值：MUSCL
-    void CalcMidNodePrimMUSCL();
-    void CalcMidNodePrimMUSCL_SV();
+    void CalcPrimMidNodeMUSCL();
+    void CalcPrimMidNodeMUSCL_SV();
     /// @brief 虚拟节点半点原始变量插值：MUSCL
-    void CalcMidGhostNodePrimMUSCL();
-    void CalcMidGhostNodePrimMUSCL_SV();
+    void CalcPrimGhostMidNodeMUSCL();
+    void CalcPrimGhostMidNodeMUSCL_SV();
     /// @brief 半点原始变量插值：WCNS5
-    void CalcMidNodePrimWCNS5();
+    void CalcPrimMidNodeCNS5();
     /// @brief 虚拟节点半点原始变量插值：WCNS5
-    void CalcMidGhostNodePrimWCNS5();
-    /// @brief mid node value interpolate
+    void CalcPrimGhostMidNodeWCNS5();
+    /// @brief mid node primitive value interpolate use gradient
     /// @param idx_left left node index
     /// @param idx_right right node index
     /// @param coord_vec coordinate vector from left to right
     /// @param value_left interpolated value of left side at mid point
     /// @param value_right interpolated value of right side at mid point
-    void MidNodeGrad(int idx_left, int idx_right, double *coord_vec, double *value_left, double *value_right);
-    void MidNode1st(int idx_left, int idx_right, double *value_left, double *value_right);
-    /// @brief mid node (i+1/2) value interpolate use MUSCL
+    void InterPrimMidNodeGrad(int idx_left, int idx_right, double *coord_vec, double *value_left, double *value_right);
+    /// @brief mid node primitive value interpolate use 1st order
+    /// @param idx_left 
+    /// @param idx_right 
+    /// @param value_left 
+    /// @param value_right 
+    void InterPrimMidNode1st(int idx_left, int idx_right, double *value_left, double *value_right);
+    /// @brief mid node primitive value interpolate use MUSCL
     /// @param value values at node, size = 5,(i-2,i-1,i,i+1,i+2)
     /// @param value_left interpolated value of left side at mid point i+1/2
     /// @param value_right interpolated value of right side at mid point i+1/2
-    void MidNodeMUSCL(const double *value, double &value_left, double &value_right);
-    void MidNodeMUSCL_SV(const double *value,  double**coord, double &value_left, double &value_right);
-    /// @brief mid node value interpolate use WCNS5
+    void InterPrimMidNodeMUSCL(const double *value, double &value_left, double &value_right);
+    void InterPrimMidNodeMUSCL_SV(const double *value,  double**coord, double &value_left, double &value_right);
+    /// @brief mid node primitive value interpolate use WCNS5
     /// @param value values at node, size = 5,(i-2,i-1,i,i+1,i+2)
     /// @param value_left interpolated value of left side at mid point i+1/2
     /// @param value_right interpolated value of right side at mid point i+1/2
-    void MidNodeWCNS5(const double *value, double &value_left, double &value_right);
-    virtual void FluxDifference2nd() {};
-    virtual void FluxDifference6th() {};
+    void InterPrimMidNodeWCNS5(const double *value, double &value_left, double &value_right);
+    /// @brief flux difference: central 2nd order
+    virtual void CalcFluxDifference2ndOrder() {};
+    /// @brief flux difference: central 6th order
+    virtual void CalcFluxDifference6thOrder() {};
+    /// @brief calculate convection residual
+    void CalcConvectionResidual() override;
 
-    // 计算流动通量
-    void CalcInviscidResidual() override;
-    virtual void CalcInviscidResidual1st();
-    virtual void CalcInviscidResidualGrad();
-    virtual void CalcInviscidResidualMUSCL();
-    virtual void CalcInviscidResidualMUSCL_SV();
-    virtual void CalcInviscidResidualWCNS5();
+    virtual void CalcConvectionResidual1stUpwind();
+    virtual void CalcConvectionResidualGrad();
+    virtual void CalcConvectionResidualMUSCL();
+    virtual void CalcConvectionResidualMUSCL_SV();
+    virtual void CalcConvectionResidualWCNS5();
     // 计算粘性通量
     void CalcViscousResidual() override;
     void CalcViscousFlux() override;
     void CalcViscousFluxGrad() override;
-    void SourceResidual() override;
+    void CalcSourceResidual() override;
 
     void BoundaryCondition() override;
     void InletBC(BoundStruct &bound);

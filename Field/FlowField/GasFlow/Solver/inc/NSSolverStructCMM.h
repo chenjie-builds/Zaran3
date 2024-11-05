@@ -23,15 +23,15 @@ namespace zaran
     void CalcMidNodeMetrics6th();
     //! ^^^^ 以上是计算度量系数的函数 ^^^^
     //==================================================================
-    void CalcInviscidResidual1st() override;
-    void CalcInviscidResidualMUSCL() override;
-    void CalcInviscidResidualWCNS5() override;
+    void CalcConvectionResidual1stUpwind() override;
+    void CalcConvectionResidualMUSCL() override;
+    void CalcConvectionResidualWCNS5() override;
     //@brief 根据半点左右值计算数值通量
-    void CalcInviscidFlux();
+    void CalcConvectionFluxMidNode();
 
     //@brief 通量差分：二阶中心差分
-    void FluxDifference2nd() override;
+    void CalcFluxDifference2ndOrder() override;
     //@biref 通量差分：六阶中心差分
-    void FluxDifference6th() override;
+    void CalcFluxDifference6thOrder() override;
   };
 } // namespace zaran
