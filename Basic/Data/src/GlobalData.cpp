@@ -52,7 +52,7 @@ void GlobalData::Update(const string& varName, const dataVariant& varValue)
 	dataMap_[varName] = varValue;
 }
 
-void zaran::GlobalData::Backup(const string& back_folder)
+void GlobalData::Backup(const string& back_folder)
 {
 	std::string data_file = "zaran.ini";
 	std::ifstream fin(data_file);
