@@ -2,6 +2,7 @@
 #include "Log.h"
 #include "MathBasic.h"
 #include <omp.h>
+#include<cmath>
 namespace zaran {
 void GridFNFactoryZaran::CreateGrid(GridBlock *grid_master, GridFN *&grid,
                                     ModelManager *model_manager) {
@@ -1096,7 +1097,7 @@ bool GridFNFactoryZaran::CheckTransNode() {
         double cross[3];
         CrossProduct(vec1.data(), vec2.data(), cross);
         double volume2 = DotProduct(cross, vec3.data());
-        if (abs(volume) < 1e-5 || isnan(abs(volume)) || isinf(abs(volume))) {
+        if (abs(volume) < 1e-5 || std::isnan(fabs(volume)) || std::isinf(fabs(volume))) {
           m_cell_type[m_idx_proxy->GetIdx(i, j, k)] = PhysicalType::Solid;
           m_cell_type[m_idx_proxy->GetIdx(i, j, k - 1)] = PhysicalType::Solid;
           m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k)] = PhysicalType::Solid;
@@ -1548,7 +1549,7 @@ void GridFNFactoryZaran::CheckProjectNodeNeighbor() {
             node->GetCoord(neighbor[5])[i] - node->GetCoord(neighbor[4])[i];
       }
       volume = vec[0].cross(vec[1]).dot(vec[2]);
-      if (volume < 0 || isnan(abs(volume)) || isinf(abs(volume))) {
+      if (volume < 0 || std::isnan(abs(volume)) || std::isinf(abs(volume))) {
         Log::error("The node:{} is not right hand", idx);
       }
     }

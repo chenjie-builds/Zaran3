@@ -58,6 +58,10 @@ void FlowSolverPara::Init()
 	{
 		m_init_field_type = InitFieldType::Explosion;
 	}
+	else if (inflow_type == "Vortex")
+	{
+		m_init_field_type = InitFieldType::Vortex;
+	}
 	else
 	{
 		m_init_field_type = InitFieldType::FarFlow;

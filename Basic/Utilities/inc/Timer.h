@@ -14,9 +14,11 @@
 class Timer
 {
 private:
-	std::chrono::time_point<std::chrono::steady_clock> start,record, end;
+	std::chrono::high_resolution_clock::time_point start;
+	std::chrono::high_resolution_clock::time_point record;
+	std::chrono::high_resolution_clock::time_point end;
 public:
-	Timer(){}
+	Timer() {}
 	void StartRecord();
 	float DurationFromLastRecord();
 	float DurationFromStart();

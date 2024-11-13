@@ -1,6 +1,5 @@
 #include "CellFNFDM.h"
 #include "Log.h"
-#include <spdlog/spdlog.h>
 namespace zaran
 {
 

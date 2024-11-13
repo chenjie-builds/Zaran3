@@ -20,7 +20,8 @@ namespace zaran
         InitMidMetricsScheme();
         InitMetricsType();
         InitFluxDifferenceScheme();
-        InitInterSchme();
+        InitMetricDifferenceScheme();
+        InitInterScheme();
         InitJacobianType();
     }
 
@@ -104,7 +105,7 @@ namespace zaran
         }
     }
 
-    void FlowSolverStructPara::InitInterSchme()
+    void FlowSolverStructPara::InitInterScheme()
     {
         string inter_schme = GlobalData::GetString("inter_scheme");
         if (inter_schme == "FirstOrder")
@@ -129,7 +130,7 @@ namespace zaran
         }
         else
         {
-            Log::warn("InterSchme is not defined, use FirstOrder as default");
+            Log::warn("Interpolation Scheme:{} is not defined, use First Order as default", inter_schme);
             m_inter_schme = InterpolationScheme::FirstOrder;
         }
     }
@@ -151,7 +152,7 @@ namespace zaran
         }
         else
         {
-            Log::warn("JacobianType is not defined, use V1 as default");
+            Log::warn("JacobianType:{} is not defined, use V1 as default", jacobian_scheme);
             m_jacobian_type = JacobianType::V1;
         }
     }

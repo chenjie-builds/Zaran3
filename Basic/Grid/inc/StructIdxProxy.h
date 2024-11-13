@@ -22,6 +22,7 @@ namespace zaran
         StructIdxProxy(int ni, int nj, int nk);
         ~StructIdxProxy();
         void SetIdx(int i, int j, int k);
+        void SetIdx(int idx);
         void SetI(int i);
         void SetJ(int j);
         void SetK(int k);
@@ -29,7 +30,6 @@ namespace zaran
         int GetNj() const;
         int GetNk() const;
         void GetIdxStruct(int &i, int &j, int &k) ;
-        using IdxProxy::SetIdx;
         using IdxProxy::GetIdx;
         int GetIdx(int i, int j, int k) const
         {

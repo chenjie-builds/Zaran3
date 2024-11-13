@@ -72,6 +72,7 @@ namespace zaran
         if (init_type == InitFieldType::Vortex)
         {
             InitFieldVortex();
+            Prim2Cons();
         }
         else
         {
@@ -6719,7 +6720,7 @@ namespace zaran
                     }
                     lamda = lamda * jacobi;
                     data_manager->SetTimeStep(idx, cfl / lamda);
-                    // data_manager->SetTimeStep(idx, 0.002);
+                    data_manager->SetTimeStep(idx, 0.0002);
 
                     if (data_manager->GetTimeStep(idx) < min_dt)
                     {
@@ -7152,16 +7153,14 @@ namespace zaran
         auto nj = m_idx_proxy->GetNj();
         auto nk = m_idx_proxy->GetNk();
         double value[5];
-        double value_left[5], value_right[5];
         int is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
         int idx_temp[5];
         double left_value, right_value;
-        int i, j, k;
-        // #pragma omp parallel for private(value, value_left, value_right, idx_temp)
-        for (k = ks; k <= ke; ++k)
+#pragma omp parallel for private(value, left_value, right_value, idx_temp)
+        for (int k = ks; k <= ke; ++k)
         {
-            for (j = js; j <= je; ++j)
+            for (int j = js; j <= je; ++j)
             {
                 // i=is-1处的值
                 // 不存在i-2处的值且不参与计算,用i-1处的值代替，不影响计算结果
@@ -7182,10 +7181,10 @@ namespace zaran
                 }
             }
         }
-        // #pragma omp parallel for private(value, value_left, value_right, idx_temp)
-        for (k = ks; k <= ke; ++k)
+#pragma omp parallel for private(value, left_value, right_value, idx_temp)
+        for (int k = ks; k <= ke; ++k)
         {
-            for (i = is; i <= ie; ++i)
+            for (int i = is; i <= ie; ++i)
             {
                 // j=js-1处的值，(js-1/2)右值会用到，但(js-1/2)左值在计算中不会使用
                 // 不存在j-2处的值,用j-1处的值代替，不影响计算结果
@@ -7209,10 +7208,10 @@ namespace zaran
 
         if (grid->GetDim() == 3)
         {
-            // #pragma omp parallel for private(value, value_left, value_right, idx_temp)
-            for (j = js; j <= je; ++j)
+#pragma omp parallel for private(value, left_value, right_value, idx_temp)
+            for (int j = js; j <= je; ++j)
             {
-                for (i = is; i <= ie; ++i)
+                for (int i = is; i <= ie; ++i)
                 {
                     // k=ks-1处的值，(ks-1/2)右值会用到，但(ks-1/2)左值在计算中不会使用
                     // 不存在k-2处的值,用k-1处的值代替，不影响计算结果
@@ -7440,8 +7439,7 @@ namespace zaran
         int idx_temp_left[4], idx_temp_right[4];
         double left_value, right_value;
         int i, j, k;
-        // #pragma omp parallel for private(j, k, idx_temp_left, idx_temp_right, value_left, value_right, left_value,
-        // right_value)
+#pragma omp parallel for private(j, k, idx_temp_left, idx_temp_right, value_left, value_right, left_value,right_value)
         for (k = ks; k <= ke; ++k)
         {
             for (j = js; j <= je; ++j)
@@ -7479,8 +7477,7 @@ namespace zaran
                 }
             }
         }
-        // #pragma omp parallel for private(i, k, idx_temp_left, idx_temp_right, value_left, value_right, left_value,
-        // right_value)
+#pragma omp parallel for private(i, k, idx_temp_left, idx_temp_right, value_left, value_right, left_value,right_value)
         for (k = ks; k <= ke; ++k)
         {
             for (i = is; i <= ie; ++i)
@@ -7523,8 +7520,7 @@ namespace zaran
 
         if (grid->GetDim() == 3)
         {
-            // #pragma omp parallel for private(i, j, idx_temp_left, idx_temp_right, value_left, value_right, left_value,
-            // right_value)
+#pragma omp parallel for private(i, j, idx_temp_left, idx_temp_right, value_left, value_right, left_value, right_value)
             for (j = js; j <= je; ++j)
             {
                 for (i = is; i <= ie; ++i)
@@ -7612,7 +7608,7 @@ namespace zaran
         delta = LimiterVanLeer(delta_plus, delta_minus);
         value_right = value[3] - 0.125 * ((1.0 - k) * delta + (1.0 + k) * delta);
         // value_right = value[3] - 0.25 * ((1.0 - k) * delta_plus + (1.0 + k) * delta_minus);
-        if (isnan(value_left) || isnan(value_right))
+        if (std::isnan(value_left) || std::isnan(value_right))
         {
             Log::error("MUSCL interpolation failed!");
             Log::error("value[0] = {}, value[1] = {}, value[2] = {}, value[3] = {}, "
@@ -7650,7 +7646,7 @@ namespace zaran
         // delta = LimiterVanLeer(delta_plus, delta_minus);
         // value_right = value[3] - 0.125 * ((1.0 - k) * delta + (1.0 + k) * delta);
         value_right = value[3] - 0.25 * ((1.0 - k) * l_plus * delta_plus + (1.0 + k) * l_minus * delta_minus);
-        if (isnan(value_left) || isnan(value_right))
+        if (std::isnan(value_left) || std::isnan(value_right))
         {
             Log::error("MUSCL interpolation failed!");
             Log::error("value[0] = {}, value[1] = {}, value[2] = {}, value[3] = {}, "

@@ -38,7 +38,7 @@ void zaran::Visual::WriteTecplotBinary(NSFieldFNFDM* field)
     INTEGER4 jCellMax = 0;
     INTEGER4 kCellMax = 0;
     double solution_time = GlobalData::GetDouble("currentTime");
-    INTEGER4 strandID = 1;
+    INTEGER4 strandID = 0;
     INTEGER4 parentZn = 0;
     INTEGER4 isBlock = 1;
     INTEGER4 nFConns = 0;
@@ -119,7 +119,6 @@ void zaran::Visual::WriteTecplotBinary(NSFieldFNFDM* field)
 
     i = TECNODE142(&connectivityCount, face_nodes.data());
 
-    i = TECEND142();
 }
 
 void zaran::Visual::WriteTecplotASCII(NSFieldStruct* field, std::ostream& os)
@@ -147,12 +146,12 @@ void zaran::Visual::WriteTecplotASCII(NSFieldStruct* field, std::ostream& os)
 
     os << "TITLE=\"Flow Field\"\n";
     os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\"\n";
-    os << "ZONE I=" << ni << ", J=" << nj << ", K=" << nk << ", F=POINT\n";
+    os << "ZONE I=" << ni+6 << ", J=" << nj+6 << ", K=" << nk << ", F=POINT\n";
     for (int k = ks; k <= ke; ++k)
     {
-        for (int j = js; j <= je; ++j)
+        for (int j = js-3; j <= je+3; ++j)
         {
-            for (int i = is; i <= ie; ++i)
+            for (int i = is-3; i <= ie+3; ++i)
             {
                 int idx = idx_proxy->GetIdx(i, j, k);
                 os << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1] << " " << node->GetCoord(i, j, k)[2] << " " << density[idx] << " " << velocity_x[idx] << " " << velocity_y[idx] << " " << velocity_z[idx] << " " << pressure[idx] << "\n";
@@ -217,9 +216,9 @@ void zaran::Visual::WriteTecplotBinary(NSFieldZaran* field)
     auto idx_proxy = new StructIdxProxy(grid_ni, grid_nj, grid_nk);
     INTEGER4 node_num = ni * nj * nk;
     INTEGER4 cell_num = (ni - 1) * (nj - 1) * (nk - 1);
-    DArray x(node_num), y(node_num), z(node_num), density(node_num), velocity_x(node_num), velocity_y(node_num), velocity_z(node_num), pressure(node_num);
-
-    std::vector<int> iBlank(node_num);
+    DArray x(node_num), y(node_num), z(node_num), density(node_num),
+        velocity_x(node_num), velocity_y(node_num), velocity_z(node_num),
+        pressure(node_num), density_error(node_num);
     for (int k = 0; k < nk; ++k)
     {
         for (int j = 0; j < nj; ++j)
@@ -236,97 +235,11 @@ void zaran::Visual::WriteTecplotBinary(NSFieldZaran* field)
                 velocity_y[idx] = data_manager->GetVelocity(1, idx0);
                 velocity_z[idx] = data_manager->GetVelocity(2, idx0);
                 pressure[idx] = data_manager->GetPressure(idx0);
-                iBlank[idx] = (int)grid->GetIBlank(i + is, j + js, k + ks);
-            }
-        }
-    }
-    INTEGER4 vIsDouble = 1;
-    INTEGER4 vIsInt = 0;
-    string zone_name = grid->GetName() + std::to_string(field->GetIdx());
-    INTEGER4 zone_type = 5; // Brick
-    INTEGER4 face_num = 6;
-    INTEGER4 iCellMax = 0;
-    INTEGER4 jCellMax = 0;
-    INTEGER4 kCellMax = 0;
-    double solution_time = GlobalData::GetDouble("currentTime");
-    INTEGER4 strandID = 1;
-    INTEGER4 parentZn = 0;
-    INTEGER4 isBlock = 1;
-    INTEGER4 nFConns = 0;
-    INTEGER4 FNMode = 0;
-    int valueLocation[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-    int shrConn = 0;
-    int i = TECZNE142((char*)zone_name.c_str(), &zone_type, &node_num, &cell_num, &face_num, &iCellMax, &jCellMax,
-        &kCellMax, &solution_time, &strandID, &parentZn, &isBlock, &nFConns, &FNMode, 0, 0, 0, NULL,
-        valueLocation, NULL, &shrConn);
-
-    i = TECDAT142(&node_num, x.data(), &vIsDouble);
-    i = TECDAT142(&node_num, y.data(), &vIsDouble);
-    i = TECDAT142(&node_num, z.data(), &vIsDouble);
-    i = TECDAT142(&node_num, density.data(), &vIsDouble);
-    i = TECDAT142(&node_num, velocity_x.data(), &vIsDouble);
-    i = TECDAT142(&node_num, velocity_y.data(), &vIsDouble);
-    i = TECDAT142(&node_num, velocity_z.data(), &vIsDouble);
-    i = TECDAT142(&node_num, pressure.data(), &vIsDouble);
-    i = TECDAT142(&node_num, iBlank.data(), &vIsInt);
-    INTEGER4 connectivityCount = cell_num * 8;
-    std::vector<INTEGER4> cell_nodes(connectivityCount);
-    for (int k = 0; k < nk - 1; k++)
-    {
-        for (int j = 0; j < nj - 1; j++)
-        {
-            for (int i = 0; i < ni - 1; i++)
-            {
-                int idx = i + (ni - 1) * j + (ni - 1) * (nj - 1) * k;
-                int idx0 = i + ni * j + ni * nj * k;
-                cell_nodes[idx * 8] = idx0 + 1;
-                cell_nodes[idx * 8 + 1] = idx0 + 2;
-                cell_nodes[idx * 8 + 2] = idx0 + ni + 2;
-                cell_nodes[idx * 8 + 3] = idx0 + ni + 1;
-                cell_nodes[idx * 8 + 4] = idx0 + ni * nj + 1;
-                cell_nodes[idx * 8 + 5] = idx0 + ni * nj + 2;
-                cell_nodes[idx * 8 + 6] = idx0 + ni * nj + ni + 2;
-                cell_nodes[idx * 8 + 7] = idx0 + ni * nj + ni + 1;
-            }
-        }
-    }
-    i = TECNODE142(&connectivityCount, cell_nodes.data());
-    delete idx_proxy;
-    i = TECEND142();
-}
-void zaran::Visual::WriteTecplotBinary(NSFieldStruct* field)
-{
-    auto data_manager = field->GetDataManager();
-    auto grid = field->GetGrid();
-    auto node = grid->GetNode();
-    int is, ie, js, je, ks, ke;
-    grid->GetRange(is, ie, js, je, ks, ke);
-    int ni = ie - is + 1;
-    int nj = je - js + 1;
-    int nk = ke - ks + 1;
-    int grid_ni = grid->GetNi();
-    int grid_nj = grid->GetNj();
-    int grid_nk = grid->GetNk();
-    auto idx_proxy = new StructIdxProxy(grid_ni, grid_nj, grid_nk);
-    INTEGER4 node_num = ni * nj * nk;
-    INTEGER4 cell_num = (ni - 1) * (nj - 1) * (nk - 1);
-    DArray x(node_num), y(node_num), z(node_num), density(node_num), velocity_x(node_num), velocity_y(node_num), velocity_z(node_num), pressure(node_num);
-    for (int k = 0; k < nk; ++k)
-    {
-        for (int j = 0; j < nj; ++j)
-        {
-            for (int i = 0; i < ni; ++i)
-            {
-                int idx = i + ni * j + ni * nj * k;
-                x[idx] = node->GetCoord(i + is, j + js, k + ks)[0];
-                y[idx] = node->GetCoord(i + is, j + js, k + ks)[1];
-                z[idx] = node->GetCoord(i + is, j + js, k + ks)[2];
-                int idx0 = idx_proxy->GetIdx(i + is, j + js, k + ks);
-                density[idx] = data_manager->GetDensity(idx0);
-                velocity_x[idx] = data_manager->GetVelocity(0, idx0);
-                velocity_y[idx] = data_manager->GetVelocity(1, idx0);
-                velocity_z[idx] = data_manager->GetVelocity(2, idx0);
-                pressure[idx] = data_manager->GetPressure(idx0);
+                double gamma = 1.4;
+                double beta = 5.0;
+                double r2 = x[idx] * x[idx] + y[idx] * y[idx];
+                double density_exact = pow(1.0 - (gamma - 1.0) * beta * beta * exp(1.0 - r2) / (8.0 * gamma * PI * PI), 1.0 / (gamma - 1.0));
+                density_error[idx] = (density[idx] - density_exact) / density_exact;
             }
         }
     }
@@ -344,9 +257,8 @@ void zaran::Visual::WriteTecplotBinary(NSFieldStruct* field)
     INTEGER4 TotalNumFaceNodes = 1;
     INTEGER4 TotalNumBndryFaces = 1;
     INTEGER4 TotalNumBndryConnections = 1;
- INTEGER4 nFConns = 0;
+    INTEGER4 nFConns = 0;
     INTEGER4 FNMode = 0;
-    int valueLocation[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
     int shrConn = 0;
     int  i = TECZNE142((char*)zone_name.c_str(),
         &zone_type,
@@ -373,7 +285,99 @@ void zaran::Visual::WriteTecplotBinary(NSFieldStruct* field)
     i = TECDAT142(&node_num, x.data(), &vIsDouble);
     i = TECDAT142(&node_num, y.data(), &vIsDouble);
     i = TECDAT142(&node_num, z.data(), &vIsDouble);
-    i = TECDAT142(&node_num, density.data(), &vIsDouble);
+    i = TECDAT142(&node_num, density_error.data(), &vIsDouble);
+    i = TECDAT142(&node_num, velocity_x.data(), &vIsDouble);
+    i = TECDAT142(&node_num, velocity_y.data(), &vIsDouble);
+    i = TECDAT142(&node_num, velocity_z.data(), &vIsDouble);
+    i = TECDAT142(&node_num, pressure.data(), &vIsDouble);
+    delete idx_proxy;
+}
+void zaran::Visual::WriteTecplotBinary(NSFieldStruct* field)
+{
+    auto data_manager = field->GetDataManager();
+    auto grid = field->GetGrid();
+    auto node = grid->GetNode();
+    int is, ie, js, je, ks, ke;
+    grid->GetRange(is, ie, js, je, ks, ke);
+    int ni = ie - is + 1;
+    int nj = je - js + 1;
+    int nk = ke - ks + 1;
+    int grid_ni = grid->GetNi();
+    int grid_nj = grid->GetNj();
+    int grid_nk = grid->GetNk();
+    auto idx_proxy = new StructIdxProxy(grid_ni, grid_nj, grid_nk);
+    INTEGER4 node_num = ni * nj * nk;
+    INTEGER4 cell_num = (ni - 1) * (nj - 1) * (nk - 1);
+    DArray x(node_num), y(node_num), z(node_num), density(node_num),
+        velocity_x(node_num), velocity_y(node_num), velocity_z(node_num),
+        pressure(node_num), density_error(node_num);
+    for (int k = 0; k < nk; ++k)
+    {
+        for (int j = 0; j < nj; ++j)
+        {
+            for (int i = 0; i < ni; ++i)
+            {
+                int idx = i + ni * j + ni * nj * k;
+                x[idx] = node->GetCoord(i + is, j + js, k + ks)[0];
+                y[idx] = node->GetCoord(i + is, j + js, k + ks)[1];
+                z[idx] = node->GetCoord(i + is, j + js, k + ks)[2];
+                int idx0 = idx_proxy->GetIdx(i + is, j + js, k + ks);
+                density[idx] = data_manager->GetDensity(idx0);
+                velocity_x[idx] = data_manager->GetVelocity(0, idx0);
+                velocity_y[idx] = data_manager->GetVelocity(1, idx0);
+                velocity_z[idx] = data_manager->GetVelocity(2, idx0);
+                pressure[idx] = data_manager->GetPressure(idx0);
+                double gamma = 1.4;
+                double beta = 5.0;
+                double r2 = x[idx] * x[idx] + y[idx] * y[idx];
+                double density_exact = pow(1.0 - (gamma - 1.0) * beta * beta * exp(1.0 - r2) / (8.0 * gamma * PI * PI), 1.0 / (gamma - 1.0));
+                density_error[idx] = (density[idx] - density_exact) / density_exact;
+            }
+        }
+    }
+    INTEGER4 vIsDouble = 1;
+    string zone_name = grid->GetName() + std::to_string(field->GetIdx());
+    INTEGER4 zone_type = 0; // Brick
+    INTEGER4 face_num = 6;
+    INTEGER4 iCellMax = 0;
+    INTEGER4 jCellMax = 0;
+    INTEGER4 kCellMax = 0;
+    double solution_time = GlobalData::GetDouble("currentTime");
+    INTEGER4 strandID = 0;
+    INTEGER4 parentZn = 0;
+    INTEGER4 isBlock = 1;
+    INTEGER4 TotalNumFaceNodes = 1;
+    INTEGER4 TotalNumBndryFaces = 1;
+    INTEGER4 TotalNumBndryConnections = 1;
+    INTEGER4 nFConns = 0;
+    INTEGER4 FNMode = 0;
+    int shrConn = 0;
+    int  i = TECZNE142((char*)zone_name.c_str(),
+        &zone_type,
+        &ni,
+        &nj,
+        &nk,
+        &iCellMax,
+        &jCellMax,
+        &kCellMax,
+        &solution_time,
+        &strandID,
+        &parentZn,
+        &isBlock,
+        &nFConns,
+        &FNMode,
+        &TotalNumFaceNodes,
+        &TotalNumBndryFaces,
+        &TotalNumBndryConnections,
+        NULL,
+        NULL,
+        NULL,
+        &shrConn);
+
+    i = TECDAT142(&node_num, x.data(), &vIsDouble);
+    i = TECDAT142(&node_num, y.data(), &vIsDouble);
+    i = TECDAT142(&node_num, z.data(), &vIsDouble);
+    i = TECDAT142(&node_num, density_error.data(), &vIsDouble);
     i = TECDAT142(&node_num, velocity_x.data(), &vIsDouble);
     i = TECDAT142(&node_num, velocity_y.data(), &vIsDouble);
     i = TECDAT142(&node_num, velocity_z.data(), &vIsDouble);

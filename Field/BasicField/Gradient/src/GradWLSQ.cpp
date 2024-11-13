@@ -87,11 +87,11 @@ zaran::GradWLSQ::GradWLSQ(GridFN *grid) : m_grid(grid)
             // {
             //     Log::warn("GradWLSQ::GradWLSQ: omega is nan");
             // }
-            if (isnan(m_omega[iNode][iNeigh][0]))
+            if (std::isnan(m_omega[iNode][iNeigh][0]))
                 m_omega[iNode][iNeigh][0] = 0.0;
-            if (isnan(m_omega[iNode][iNeigh][1]))
+            if (std::isnan(m_omega[iNode][iNeigh][1]))
                 m_omega[iNode][iNeigh][1] = 0.0;
-            if (isnan(m_omega[iNode][iNeigh][2]))
+            if (std::isnan(m_omega[iNode][iNeigh][2]))
                 m_omega[iNode][iNeigh][2] = 0.0;
         }
     }
@@ -137,7 +137,7 @@ void GradWLSQ::CalcGradient(GridFN *grid, const double *data, double *grad_x, do
             grad_y[iNode] += m_omega[iNode][iNeigh][1] * (data[iNeighNode] - data[iNode]);
             grad_z[iNode] += m_omega[iNode][iNeigh][2] * (data[iNeighNode] - data[iNode]);
         }
-        if (isnan(grad_x[iNode]) || isnan(grad_y[iNode]) || isnan(grad_z[iNode]))
+        if (std::isnan(grad_x[iNode]) || std::isnan(grad_y[iNode]) || std::isnan(grad_z[iNode]))
         {
             // Log::warn("GradWLSQ::CalcGradient: grad is nan");
             grad_x[iNode] = grad_y[iNode] = grad_z[iNode] = 0.0;

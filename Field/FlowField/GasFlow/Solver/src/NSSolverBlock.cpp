@@ -43,7 +43,7 @@ namespace zaran
         double mid_coord_left[3], mid_coord_right[3]; // i-1/2,i+1/2
         double mid_coord[3];                          // i-1/2,i+1/2的中点
         double move_vector[3];                        // mid_coord到i的向量用于移动mid_coord_left和mid_coord_right
-        #pragma omp parallel for private(idx, idx_temp, value, res_tmp, mid_coord_left, mid_coord_right, mid_coord, move_vector, riemann_para)
+        // #pragma omp parallel for private(idx, idx_temp, value, res_tmp, mid_coord_left, mid_coord_right, mid_coord, move_vector, riemann_para)
         for (int k = ks; k <= ke; ++k)
         {
             for (int j = js; j <= je; ++j)

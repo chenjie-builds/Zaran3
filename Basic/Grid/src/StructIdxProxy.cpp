@@ -15,6 +15,13 @@ namespace zaran
         m_idx_k = k;
         IdxProxy::SetIdx(i + j * m_ni + k * m_ni * m_nj);
     }
+    void StructIdxProxy::SetIdx(int idx)
+    {
+        m_idx_i = idx % m_ni;
+        m_idx_j = (idx / m_ni) % m_nj;
+        m_idx_k = idx / (m_ni * m_nj);
+        IdxProxy::SetIdx(idx);
+    }
     void StructIdxProxy::SetI(int i)
     {
         m_idx_i = i;

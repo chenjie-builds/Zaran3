@@ -807,7 +807,7 @@ namespace zaran
 			{
 				for (int iVal = 0; iVal < equ_num; ++iVal)
 				{
-					if (isnan(data_manager->GetPrim(iVal, iNode)) || isinf(data_manager->GetPrim(iVal, iNode)))
+					if (std::isnan(data_manager->GetPrim(iVal, iNode)) || std::isinf(data_manager->GetPrim(iVal, iNode)))
 					{
 						exist_nonphysical = true;
 						break;
@@ -909,7 +909,7 @@ namespace zaran
 			}
 			for (int iVal = 0; iVal < equ_num; ++iVal)
 			{
-				if (isnan(data_manager->GetPrim(iVal, iNode)) || isinf(data_manager->GetPrim(iVal, iNode)))
+				if (std::isnan(data_manager->GetPrim(iVal, iNode)) || std::isinf(data_manager->GetPrim(iVal, iNode)))
 				{
 					data_manager->SetPrim(iVal, iNode, 0);
 					for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)

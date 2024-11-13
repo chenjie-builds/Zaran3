@@ -4,7 +4,7 @@
 #include <string>
 #include<map>
 #include<variant>
-#include <Eigen/Dense>
+#include "Eigen/Dense"
 namespace zaran
 {
 	using std::string;

@@ -94,12 +94,21 @@
         "xutility": "cpp",
         "*.txx": "cpp",
         "dense": "cpp",
-        "codecvt": "cpp"
+        "codecvt": "cpp",
+        "bitset": "cpp",
+        "cwctype": "cpp",
+        "memory_resource": "cpp",
+        "string_view": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "text_encoding": "cpp",
+        "cinttypes": "cpp",
+        "eigenvalues": "cpp",
+        "expected": "cpp",
+        "regex": "cpp",
+        "hash_map": "cpp",
+        "shared_mutex": "cpp"
     },
     "C_Cpp.intelliSenseEngineFallback": "enabled",
-    "cmake.generator": "Ninja",
-    "cmake.configureSettings": {
-        "CMAKE_MAKE_PROGRAM": "ninja.exe",
-    },
     
 }

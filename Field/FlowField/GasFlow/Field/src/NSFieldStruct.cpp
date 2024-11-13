@@ -6,7 +6,7 @@
 #include "Log.h"
 namespace zaran
 {
-    NSFieldStruct::NSFieldStruct(GridBase *grid)
+    NSFieldStruct::NSFieldStruct(GridBase* grid)
         : FieldNS(grid, FieldType::NS_Structured)
     {
         m_idx_proxy = nullptr;
@@ -16,21 +16,21 @@ namespace zaran
         if (m_idx_proxy != nullptr)
             delete m_idx_proxy;
     }
-    GridStruct *NSFieldStruct::GetGrid()
+    GridStruct* NSFieldStruct::GetGrid()
     {
-        return static_cast<GridStruct *>(Field::GetGrid());
+        return static_cast<GridStruct*>(Field::GetGrid());
     }
-    FlowSolverStructPara *NSFieldStruct::GetSolverPara()
+    FlowSolverStructPara* NSFieldStruct::GetSolverPara()
     {
-        return static_cast<FlowSolverStructPara *>(Field::GetSolverPara());
+        return static_cast<FlowSolverStructPara*>(Field::GetSolverPara());
     }
-    NSSolverStruct *NSFieldStruct::GetSolver()
+    NSSolverStruct* NSFieldStruct::GetSolver()
     {
-        return static_cast<NSSolverStruct *>(Field::GetSolver());
+        return static_cast<NSSolverStruct*>(Field::GetSolver());
     }
-    DataManagerNSStruct *NSFieldStruct::GetDataManager()
+    DataManagerNSStruct* NSFieldStruct::GetDataManager()
     {
-        return static_cast<DataManagerNSStruct *>(Field::GetDataManager());
+        return static_cast<DataManagerNSStruct*>(Field::GetDataManager());
     }
     void NSFieldStruct::CalcResidual()
     {
@@ -38,6 +38,7 @@ namespace zaran
         auto node = grid->GetNode();
         auto para = GetSolverPara();
         int equ_num = para->GetEqNum();
+        auto data_manager = GetDataManager();
         int is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
         int total_node_num = (ie - is + 1) * (je - js + 1) * (ke - ks + 1);
@@ -50,7 +51,7 @@ namespace zaran
             norm_inf = -LARGE_NUMBER;
             norm_l2 = 0;
             auto res = GetDataManager()->GetResidual(iEqu);
-#pragma omp parallel for reduction(max : norm_inf) reduction(+ : norm_l2)
+            #pragma omp parallel for reduction(max : norm_inf) reduction(+ : norm_l2)
             for (int k = ks; k <= ke; k++)
             {
                 for (int j = js; j <= je; j++)
@@ -60,6 +61,15 @@ namespace zaran
                         int idx = m_idx_proxy->GetIdx(i, j, k);
                         double res_val = abs(res[idx]);
                         auto coord = node->GetCoord(i, j, k);
+                        // if (iEqu == 0)
+                        // {
+                        //     double gamma = 1.4;
+                        //     double beta = 5.0;
+                        //     double r2 = coord[0] * coord[0] + coord[1] * coord[1];
+                        //     double density_num = data_manager->GetDensity(idx);
+                        //     double density_exact = pow(1.0 - (gamma - 1.0) * beta * beta * exp(1.0 - r2) / (8.0 * gamma * PI * PI), 1.0 / (gamma - 1.0));
+                        //     res_val = abs(density_num - density_exact) / density_exact;
+                        // }
                         if (res_val > norm_inf)
                         {
                             norm_inf = res_val;
@@ -69,7 +79,7 @@ namespace zaran
                                 norm_inf_coord[iDim] = coord[iDim];
                             }
                         }
-                        norm_l2 += res[idx] * res[idx];
+                        norm_l2 += res_val * res_val;
                     }
                 }
             }

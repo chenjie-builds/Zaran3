@@ -9,7 +9,7 @@
 #include <vtkPoints.h>
 #include <vtkPolyData.h>
 #include <vtkVertexGlyphFilter.h>
-
+#include <algorithm>
 namespace zaran
 {
 
@@ -563,7 +563,7 @@ namespace zaran
         {
             if (line.empty())
                 continue;
-            std::transform(line.begin(), line.end(), line.begin(), std::toupper);
+            std::transform(line.begin(), line.end(), line.begin(), [](unsigned char c) { return std::toupper(c); });
             line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
             size_t start_id_node_num = line.find("N=");
             if (start_id_node_num == std::string::npos)
@@ -1012,7 +1012,7 @@ namespace zaran
         {
             if (line.empty())
                 continue;
-            std::transform(line.begin(), line.end(), line.begin(), std::toupper);
+            std::transform(line.begin(), line.end(), line.begin(), [](unsigned char c) { return std::toupper(c); });
             line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
             size_t start_id_node_num = line.find("N=");
             if (start_id_node_num == std::string::npos)

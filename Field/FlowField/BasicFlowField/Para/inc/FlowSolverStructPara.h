@@ -68,7 +68,7 @@ namespace zaran
         void InitMetricsType();
         void InitFluxDifferenceScheme();
         void InitMetricDifferenceScheme();
-        void InitInterSchme();
+        void InitInterScheme();
         void InitJacobianType();
     public:
         const MidMetricsScheme& GetMidMetricsScheme()const;

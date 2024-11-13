@@ -19,7 +19,7 @@ namespace zaran
         NSSolverStruct *GetSolver() override;
         DataManagerNSStruct *GetDataManager() override;
         void CalcResidual() override;
-
+        StructIdxProxy& GetIdxProxy() { return *m_idx_proxy; }
     protected:
         void AllocateResInfo() override;
         void AllocateSolver() override;

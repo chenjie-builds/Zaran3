@@ -32,7 +32,6 @@ void HLLC::Solver(RiemannSolverPara &para)
     double a = sqrt(rhoL);
     double b = sqrt(rhoR);
     double c_roe = (a * para.c_left * para.c_left + b * para.c_right * para.c_right) / (a + b) + 0.5 * (a * b / std::pow(a + b, 2)) * (std::pow(uL - uR, 2) + std::pow(vL - vR, 2) + std::pow(wL - wR, 2)); // 声速的roe平均值
-
     double s_left = Min(para.vn_left - para.c_left, vn_roe - c_roe);
     double s_right = Max(para.vn_right + para.c_right, vn_roe + c_roe);
     // double s_left = para.vn_left - para.c_left;

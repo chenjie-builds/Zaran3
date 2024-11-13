@@ -1,6 +1,5 @@
 #include "NSSolver.h"
 #include "File.h"
-#include <corecrt_math.h>
 #include <fstream>
 #include "Log.h"
 #include "PerfectGas.h"
