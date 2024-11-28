@@ -10,7 +10,7 @@ namespace zaran
 {
     /// @brief Generate structured grid using gridgen generic
     /// Multi-block structured grid
-    class GridStructFactoryGridgen : public GridFactory
+    class GridStructFactoryGridgen : public GridBuilder
     {
     public:
         GridStructFactoryGridgen();

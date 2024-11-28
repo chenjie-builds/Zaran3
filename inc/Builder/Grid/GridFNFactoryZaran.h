@@ -54,7 +54,7 @@ namespace zaran
         std::vector<std::vector<int>> cell;
     };
 
-    class GridFNFactoryZaran : public GridFactory
+    class GridFNFactoryZaran : public GridBuilder
     {
     public:
         GridFNFactoryZaran() {}

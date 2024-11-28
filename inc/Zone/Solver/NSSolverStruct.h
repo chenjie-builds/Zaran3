@@ -102,8 +102,9 @@ namespace zaran
     /// @brief mid node primitive value interpolate use WCNS5
     /// @param value values at node, size = 5,(i-2,i-1,i,i+1,i+2)
     /// @param value_left interpolated value of left side at mid point i+1/2
-    /// @param value_right interpolated value of right side at mid point i+1/2
-    void InterPrimMidNodeWCNS5(const double *value, double &value_left, double &value_right);
+    /// @param value_right interpolated value of right side at mid point i-1/2
+    void InterPrimMidNodeWCNS5( double *value, double &value_left, double &value_right);
+    void CalcFluxDifference();
     /// @brief flux difference: central 2nd order
     virtual void CalcFluxDifference2ndOrder() {};
     /// @brief flux difference: central 6th order
@@ -116,6 +117,7 @@ namespace zaran
     virtual void CalcConvectionResidualMUSCL();
     virtual void CalcConvectionResidualMUSCL_SV();
     virtual void CalcConvectionResidualWCNS5();
+
     // 计算粘性通量
     void CalcViscousResidual() override;
     void CalcViscousFlux() override;

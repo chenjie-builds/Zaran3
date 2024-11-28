@@ -78,6 +78,7 @@ namespace zaran
 	void NSSolver::Postprocess()
 	{
 		UpdateField();
+		BoundaryCondition();
 		CheckPrimtive();
 		FixPrimtive();
 		CalcForce();
@@ -86,7 +87,6 @@ namespace zaran
 	void NSSolver::Solve()
 	{
 		TimeAdvance();
-		BoundaryCondition();
 	}
 
 	void NSSolver::CalcTimeStep()

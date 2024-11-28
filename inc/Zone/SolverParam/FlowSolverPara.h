@@ -47,7 +47,6 @@ namespace zaran
 	public:
 		void SetInitFieldType(InitFieldType& initflowType);
 		void SetIsViscous(const int& isViscous);
-		void SetRKCoef(const DArray& rkCoef);
 		void SetGradScheme(const GradScheme& gradScheme);
 		void SetLimiterType(const LimiterType& limiterType);
 		void SetBackupFieldFileName(const std::string& backupFieldFileName);
@@ -66,7 +65,8 @@ namespace zaran
 		int GetCurrentStep()const;
 		double GetCflNumber()const;
 		void ReduceCflNumber();
-		const DArray& GetRKCoef()const;
+		int GetRkStep()const;
+		const std::vector<double>& GetRkCoef(int iStage) const;
 		const GradScheme& GetGradScheme()const;
 		const LimiterType& GetLimiterType()const;
 		const std::string& GetBackupFieldFileName()const;
@@ -93,7 +93,7 @@ namespace zaran
 		int m_is_viscous;
 		CFL* m_cfl;
 		// RK步数
-		DArray m_rk_coef;
+		std::vector<std::vector<double>> m_rk_coef;
 		// 梯度方法
 		GradScheme m_grad_scheme;
 		// 限制器

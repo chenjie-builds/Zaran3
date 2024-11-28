@@ -12,7 +12,7 @@ namespace zaran
         std::string bound_type_j_minus, bound_type_j_plus;
         std::string bound_type_k_minus, bound_type_k_plus;
     };
-    class GridBlockFactory : public GridFactory
+    class GridBlockFactory : public GridBuilder
     {
     public:
         GridBlockFactory() {}

@@ -435,7 +435,15 @@ namespace zaran
     }
     void GridStructFactoryGridgen::SetBoundInfo(GridBase **grid_list, int &grid_num)
     {
-        std::map<int, string> gridgen_bound = {{-1, "connection"}, {0, "none"}, {1, "interblock_connection"}, {2, "wall"}, {3, "symmetry"}, {4, "farfield"}, {5, "inlet"}, {6, "outlet"}};
+        std::map<int, string> gridgen_bound = {
+            {-1, "connection"},
+            {0, "none"},
+            {1, "interblock_connection"}, 
+            {2, "wall"},
+            {3, "symmetry"},
+            {4, "farfield"},
+            {5, "inlet"}, 
+            {6, "outlet"}};
         for (int block_indx = 0; block_indx < GetBlockNum(); ++block_indx)
         {
             auto grid_src = dynamic_cast<GridStruct *>(grid_list[block_indx]);
@@ -1079,10 +1087,6 @@ namespace zaran
                                     }
                                 }
                                 node_src->SetCoord(i_ghost, j_ghost, k_ghost, ghost_node_coord);
-                                Log::info("Ghost Node ({},{},{}) coord: {}, {}, {}", i_ghost, j_ghost, k_ghost,
-                                          node_src->GetCoord(i_ghost, j_ghost, k_ghost)[0],
-                                          node_src->GetCoord(i_ghost, j_ghost, k_ghost)[1],
-                                          node_src->GetCoord(i_ghost, j_ghost, k_ghost)[2]);
                             }
                         }
                     }

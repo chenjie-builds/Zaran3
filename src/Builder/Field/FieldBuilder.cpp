@@ -16,7 +16,7 @@ FieldManager *FieldBuilder::Create() {
     return CreateFieldZaran();
   }
   FieldManager *field_manager = new FieldManager();
-  GridFactory *grid_factory;
+  GridBuilder *grid_factory;
   if (m_grid_type == GridType::Flexible) {
     grid_factory = new GridFNFactorySYSU();
   } else if (m_grid_type == GridType::Structured) {

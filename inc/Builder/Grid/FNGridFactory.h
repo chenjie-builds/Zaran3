@@ -22,7 +22,7 @@ namespace zaran
   /// @brief 读取中山大学网格数据
   /// @details 该数据分为三个文件，分别是node.dat, cell.dat, bound.dat
   /// @note 具体文件格式在文档中有详细说明
-  class GridFNFactorySYSU : public GridFactory
+  class GridFNFactorySYSU : public GridBuilder
   {
   public:
     GridFNFactorySYSU(const string &node_file_name = "node.dat", const string &ele_file_name = "cell.dat", const string &bnd_file_name = "bound.dat");

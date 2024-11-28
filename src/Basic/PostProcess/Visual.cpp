@@ -377,7 +377,7 @@ void zaran::Visual::WriteTecplotBinary(NSFieldStruct* field)
     i = TECDAT142(&node_num, x.data(), &vIsDouble);
     i = TECDAT142(&node_num, y.data(), &vIsDouble);
     i = TECDAT142(&node_num, z.data(), &vIsDouble);
-    i = TECDAT142(&node_num, density_error.data(), &vIsDouble);
+    i = TECDAT142(&node_num, density.data(), &vIsDouble);
     i = TECDAT142(&node_num, velocity_x.data(), &vIsDouble);
     i = TECDAT142(&node_num, velocity_y.data(), &vIsDouble);
     i = TECDAT142(&node_num, velocity_z.data(), &vIsDouble);

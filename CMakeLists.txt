@@ -66,7 +66,7 @@ find_package( Eigen3 CONFIG REQUIRED )
 # VTK库
 find_package( VTK REQUIRED )
 find_package( spdlog CONFIG REQUIRED )
-target_include_directories( ${EXECUTABLE_NAME} PRIVATE ${VTK_INCLUDE_DIRS} )
+#target_include_directories( ${EXECUTABLE_NAME} PRIVATE ${VTK_INCLUDE_DIRS} )
 target_include_directories( ${EXECUTABLE_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/tecio/inc )
 target_link_libraries( ${EXECUTABLE_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/tecio/lib/tecio.lib )
 target_link_libraries( ${EXECUTABLE_NAME} PRIVATE Eigen3::Eigen ${VTK_LIBRARIES} spdlog::spdlog spdlog::spdlog_header_only )

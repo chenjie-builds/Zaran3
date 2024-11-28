@@ -5,7 +5,7 @@
 #include "MathBasic.h"
 namespace zaran
 {
-	NSSolverFNFDM::NSSolverFNFDM(int index, string name, FlowSolverPara *para, GridFN *grid, DataManagerNS *data_manager)
+	NSSolverFNFDM::NSSolverFNFDM(int index, string name, FlowSolverPara* para, GridFN* grid, DataManagerNS* data_manager)
 		: NSSolver(index, name, para, grid, data_manager)
 	{
 		m_node_metric = new Metrics(grid->GetTotalNodeNum());
@@ -20,8 +20,8 @@ namespace zaran
 
 	void NSSolverFNFDM::InitFieldFarFlow()
 	{
-		GridFN *grid = GetGrid();
-		FlowSolverPara *para = GetPara();
+		GridFN* grid = GetGrid();
+		FlowSolverPara* para = GetPara();
 		auto data_manager = GetDataManager();
 		double prim_far[5];
 		prim_far[0] = para->GetInflowDensity();
@@ -77,8 +77,8 @@ namespace zaran
 	}
 	void NSSolverFNFDM::InitFieldExplosion()
 	{
-		GridFN *grid = GetGrid();
-		FlowSolverPara *para = GetPara();
+		GridFN* grid = GetGrid();
+		FlowSolverPara* para = GetPara();
 		auto data_manager = GetDataManager();
 		double prim_far[5];
 		prim_far[0] = para->GetInflowDensity();
@@ -106,8 +106,8 @@ namespace zaran
 			y = grid->GetNode()->GetCoord(iNode)[1];
 			z = grid->GetNode()->GetCoord(iNode)[2];
 			double distance = sqrt((x - explosion_center[0]) * (x - explosion_center[0]) +
-								   (y - explosion_center[1]) * (y - explosion_center[1]) +
-								   (z - explosion_center[2]) * (z - explosion_center[2]));
+				(y - explosion_center[1]) * (y - explosion_center[1]) +
+				(z - explosion_center[2]) * (z - explosion_center[2]));
 			if (distance < explosion_radius)
 			{
 				for (int iVal = 0; iVal < para->GetEqNum(); ++iVal)
@@ -143,12 +143,12 @@ namespace zaran
 				continue;
 			}
 			auto neighbors = node->GetNeighborNode(iNode);
-			const double *xLeft = node->GetCoord(neighbors[0]);
-			const double *xRight = node->GetCoord(neighbors[1]);
-			const double *yLeft = node->GetCoord(neighbors[2]);
-			const double *yRight = node->GetCoord(neighbors[3]);
-			const double *zLeft = (grid->GetDim() == 3) ? node->GetCoord(neighbors[4]) : nullptr;
-			const double *zRight = (grid->GetDim() == 3) ? node->GetCoord(neighbors[5]) : nullptr;
+			const double* xLeft = node->GetCoord(neighbors[0]);
+			const double* xRight = node->GetCoord(neighbors[1]);
+			const double* yLeft = node->GetCoord(neighbors[2]);
+			const double* yRight = node->GetCoord(neighbors[3]);
+			const double* zLeft = (grid->GetDim() == 3) ? node->GetCoord(neighbors[4]) : nullptr;
+			const double* zRight = (grid->GetDim() == 3) ? node->GetCoord(neighbors[5]) : nullptr;
 
 			m_node_metric->CalcMetric(iNode, xRight, xLeft, yRight, yLeft, zRight, zLeft);
 
@@ -181,7 +181,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverFNFDM::BackupField(std::string &back_folder)
+	void NSSolverFNFDM::BackupField(std::string& back_folder)
 	{
 		auto grid = GetGrid();
 		auto para = GetPara();
@@ -209,24 +209,36 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
-		FlowSolverPara *para = GetPara();
-		const DArray &rk_coef = para->GetRKCoef();
-		int rkStage = rk_coef.size();
+		FlowSolverPara* para = GetPara();
+		int rk_step = para->GetRkStep();
 		auto node = grid->GetNode();
 		int totalNodeNum = grid->GetTotalNodeNum();
-		for (int iStage = 0; iStage < rkStage; ++iStage)
-		{
-			CalcResidual();
 #pragma omp parallel for
+		for (int iNode = 0; iNode < totalNodeNum; ++iNode)
+		{
+			for (int iVal = 0; iVal < 5; ++iVal)
+			{
+				data_manager->SetConsOld(iVal, iNode, data_manager->GetCons(iVal, iNode));
+			}
+		}
+		for (int iStep = 0; iStep < rk_step; ++iStep)
+		{
+			auto& rk_coef = para->GetRkCoef(iStep);
+			CalcResidual();
+			BoundaryCondition();
+#pragma omp parallel for 
 			for (int iNode = 0; iNode < totalNodeNum; ++iNode)
 			{
 				if (node->GetType(iNode) != NodeType::inner)
 					continue;
 				double dt = data_manager->GetTimeStep(iNode);
 				double jacobi = m_node_metric->GetJacobian(iNode);
-				for (int iVal = 0; iVal < 5; ++iVal)
+				for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
 				{
-					data_manager->SetCons(iVal, iNode, data_manager->GetCons(iVal, iNode) + dt * rk_coef[iStage] * data_manager->GetResidual(iVal, iNode) * jacobi);
+					data_manager->SetCons(idx_eq, iNode,
+						rk_coef[0] * data_manager->GetConsOld(idx_eq, iNode) +
+						rk_coef[1] * data_manager->GetCons(idx_eq, iNode) +
+						rk_coef[2] * dt * jacobi * data_manager->GetResidual(idx_eq, iNode));
 				}
 			}
 		}
@@ -277,7 +289,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverFNFDM::MidPointReconstruct2ndOrder(int index_left, int index_right, double *value_rec_left, double *value_rec_right)
+	void NSSolverFNFDM::MidPointReconstruct2ndOrder(int index_left, int index_right, double* value_rec_left, double* value_rec_right)
 	{
 		int equ_num = GetPara()->GetEqNum();
 		auto grid = GetGrid();
@@ -290,17 +302,17 @@ namespace zaran
 		for (int iVal = 0; iVal < equ_num; ++iVal)
 		{
 			value_rec_left[iVal] = data_manager->GetPrim(iVal, index_left) + 0.5 * data_manager->GetLimiter(iVal, index_left) *
-																				 (vec_node2neighbor[0] * data_manager->GetPrimGrad(iVal, 0, index_left) +
-																				  vec_node2neighbor[1] * data_manager->GetPrimGrad(iVal, 1, index_left) +
-																				  vec_node2neighbor[2] * data_manager->GetPrimGrad(iVal, 2, index_left));
+				(vec_node2neighbor[0] * data_manager->GetPrimGrad(iVal, 0, index_left) +
+					vec_node2neighbor[1] * data_manager->GetPrimGrad(iVal, 1, index_left) +
+					vec_node2neighbor[2] * data_manager->GetPrimGrad(iVal, 2, index_left));
 			value_rec_right[iVal] = data_manager->GetPrim(iVal, index_right) - 0.5 * data_manager->GetLimiter(iVal, index_right) *
-																				   (vec_node2neighbor[0] * data_manager->GetPrimGrad(iVal, 0, index_right) +
-																					vec_node2neighbor[1] * data_manager->GetPrimGrad(iVal, 1, index_right) +
-																					vec_node2neighbor[2] * data_manager->GetPrimGrad(iVal, 2, index_right));
+				(vec_node2neighbor[0] * data_manager->GetPrimGrad(iVal, 0, index_right) +
+					vec_node2neighbor[1] * data_manager->GetPrimGrad(iVal, 1, index_right) +
+					vec_node2neighbor[2] * data_manager->GetPrimGrad(iVal, 2, index_right));
 		}
 	}
 
-	void NSSolverFNFDM::MidPointReconstruct1stOrder(int index_left, int index_right, double *value_rec_left, double *value_rec_right)
+	void NSSolverFNFDM::MidPointReconstruct1stOrder(int index_left, int index_right, double* value_rec_left, double* value_rec_right)
 	{
 		int equ_num = GetPara()->GetEqNum();
 		auto grid = GetGrid();
@@ -316,11 +328,11 @@ namespace zaran
 	void NSSolverFNFDM::BoundaryCondition()
 	{
 		auto grid = GetGrid();
-		BoundMapFN *bound_map = grid->GetBoundaryMap();
-		for (auto &boundary : bound_map->GetBoundaryMap())
+		BoundMapFN* bound_map = grid->GetBoundaryMap();
+		for (auto& boundary : bound_map->GetBoundaryMap())
 		{
-			auto &bound_name = boundary.first;
-			auto &bound = boundary.second;
+			auto& bound_name = boundary.first;
+			auto& bound = boundary.second;
 			if (bound_name == "hole")
 				continue;
 			if (bound_name == "riemann")
@@ -357,9 +369,9 @@ namespace zaran
 			}
 		}
 	}
-	void NSSolverFNFDM::InletBC(BoundFN &bound)
+	void NSSolverFNFDM::InletBC(BoundFN& bound)
 	{
-		FlowSolverPara *para = GetPara();
+		FlowSolverPara* para = GetPara();
 		auto data_manager = GetDataManager();
 		int bound_index = bound.GetIdxBound();
 		double prim_far[5];
@@ -377,7 +389,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverFNFDM::OutletBC(BoundFN &bound)
+	void NSSolverFNFDM::OutletBC(BoundFN& bound)
 	{
 		auto data_manager = GetDataManager();
 		int idx_bnd = bound.GetIdxBound();
@@ -395,7 +407,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverFNFDM::WallBC(BoundFN &bound)
+	void NSSolverFNFDM::WallBC(BoundFN& bound)
 	{
 		auto data_manager = GetDataManager();
 		int idx_ref = bound.GetIdxRef();
@@ -406,7 +418,7 @@ namespace zaran
 		{
 			prim_bnd[iVal] = data_manager->GetPrim(iVal, idx_ref);
 		}
-		double vel_bnd[3] = {prim_bnd[1], prim_bnd[2], prim_bnd[3]};
+		double vel_bnd[3] = { prim_bnd[1], prim_bnd[2], prim_bnd[3] };
 		double vn = vel_bnd[0] * norm_bnd[0] + vel_bnd[1] * norm_bnd[1] + vel_bnd[2] * norm_bnd[2];
 		prim_bnd[1] = prim_bnd[1] - 1.0 * vn * norm_bnd[0];
 		prim_bnd[2] = prim_bnd[2] - 1.0 * vn * norm_bnd[1];
@@ -420,25 +432,25 @@ namespace zaran
 		}
 	}
 
-	void NSSolverFNFDM::RiemannBC(BoundFN &bound)
+	void NSSolverFNFDM::RiemannBC(BoundFN& bound)
 	{
 		auto data_manager = GetDataManager();
 		int idx_ref = bound.GetIdxRef();
 		int idx_bnd = bound.GetIdxBound();
 		auto norm_bnd = bound.GetNormBound();
-		double prim_in[5] = {data_manager->GetPrim(0, idx_ref), data_manager->GetPrim(1, idx_ref), data_manager->GetPrim(2, idx_ref),
-							 data_manager->GetPrim(3, idx_ref), data_manager->GetPrim(4, idx_ref)};
-		double prim_bnd[5] = {data_manager->GetPrim(0, idx_bnd), data_manager->GetPrim(1, idx_bnd), data_manager->GetPrim(2, idx_bnd),
-							  data_manager->GetPrim(3, idx_bnd), data_manager->GetPrim(4, idx_bnd)};
-		FlowSolverPara *para = GetPara();
+		double prim_in[5] = { data_manager->GetPrim(0, idx_ref), data_manager->GetPrim(1, idx_ref), data_manager->GetPrim(2, idx_ref),
+							 data_manager->GetPrim(3, idx_ref), data_manager->GetPrim(4, idx_ref) };
+		double prim_bnd[5] = { data_manager->GetPrim(0, idx_bnd), data_manager->GetPrim(1, idx_bnd), data_manager->GetPrim(2, idx_bnd),
+							  data_manager->GetPrim(3, idx_bnd), data_manager->GetPrim(4, idx_bnd) };
+		FlowSolverPara* para = GetPara();
 		auto gas = GetGas();
 		double gamma = gas->GetGamma();
-		double prim_far[5] = {para->GetInflowDensity(), para->GetInflowVelocityX(), para->GetInflowVelocityY(),
-							  para->GetInflowVelocityZ(), para->GetInflowPressure()};
-		double vel_in[3] = {prim_in[1], prim_in[2], prim_in[3]};
+		double prim_far[5] = { para->GetInflowDensity(), para->GetInflowVelocityX(), para->GetInflowVelocityY(),
+							  para->GetInflowVelocityZ(), para->GetInflowPressure() };
+		double vel_in[3] = { prim_in[1], prim_in[2], prim_in[3] };
 		// 速度在边界法向上的投影
 		double vn_in = vel_in[0] * norm_bnd[0] + vel_in[1] * norm_bnd[1] + vel_in[2] * norm_bnd[2];
-		double vel_far[3] = {para->GetInflowVelocityX(), para->GetInflowVelocityY(), para->GetInflowVelocityZ()};
+		double vel_far[3] = { para->GetInflowVelocityX(), para->GetInflowVelocityY(), para->GetInflowVelocityZ() };
 		double vn_far = vel_far[0] * norm_bnd[0] + vel_far[1] * norm_bnd[1] + vel_far[2] * norm_bnd[2];
 		double c_in = sqrt(gamma * prim_in[4] / prim_in[0]);
 		double c_far = sqrt(gamma * para->GetInflowPressure() / para->GetInflowDensity());
@@ -523,12 +535,12 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
-		BoundMapFN *bound_map = grid->GetBoundaryMap();
-		auto &boundaryMap = bound_map->GetBoundaryMap();
-		for (auto &boundary : boundaryMap)
+		BoundMapFN* bound_map = grid->GetBoundaryMap();
+		auto& boundaryMap = bound_map->GetBoundaryMap();
+		for (auto& boundary : boundaryMap)
 		{
-			auto &boundName = boundary.first;
-			auto &bound = boundary.second;
+			auto& boundName = boundary.first;
+			auto& bound = boundary.second;
 			if (boundName == "hole")
 				continue;
 #pragma omp parallel for
@@ -536,8 +548,8 @@ namespace zaran
 			{
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
-					auto &bound_index = bound[iBound].GetIdxBound();
-					auto &inner_index = bound[iBound].GetIdxRef();
+					auto& bound_index = bound[iBound].GetIdxBound();
+					auto& inner_index = bound[iBound].GetIdxRef();
 					for (int iDim = 0; iDim < 3; ++iDim)
 					{
 						data_manager->SetPrimitiveGrad(iVal, iDim, bound_index, 0.0);
@@ -764,11 +776,11 @@ namespace zaran
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		auto boundaryMapPtr = grid->GetBoundaryMap();
-		auto &boundaryMap = boundaryMapPtr->GetBoundaryMap();
-		for (auto &boundary : boundaryMap)
+		auto& boundaryMap = boundaryMapPtr->GetBoundaryMap();
+		for (auto& boundary : boundaryMap)
 		{
-			auto &boundName = boundary.first;
-			auto &bound = boundary.second;
+			auto& boundName = boundary.first;
+			auto& bound = boundary.second;
 			if (boundName == "hole")
 				continue;
 			for (int iVal = 0; iVal < equ_num; ++iVal)
@@ -776,8 +788,8 @@ namespace zaran
 #pragma omp parallel for
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
-					auto &bound_index = bound[iBound].GetIdxBound();
-					auto &inner_index = bound[iBound].GetIdxRef();
+					auto& bound_index = bound[iBound].GetIdxBound();
+					auto& inner_index = bound[iBound].GetIdxRef();
 					data_manager->SetLimiter(iVal, bound_index, 0.0);
 				}
 			}
@@ -820,24 +832,24 @@ namespace zaran
 				nonphysical_node_num++;
 				Log::info("Step: {}, Non-physical Node: {}", GlobalData::GetInt("currentIter"), iNode);
 				Log::warn("Non-physical Node: {}, neighbor num: {}, prim: {:6E},{:6E},{:6E},{:6E},{:6E}", iNode,
-						  node->GetNeighborNodeNum(iNode), data_manager->GetPrim(0, iNode), data_manager->GetPrim(1, iNode),
-						  data_manager->GetPrim(2, iNode), data_manager->GetPrim(3, iNode), data_manager->GetPrim(4, iNode));
+					node->GetNeighborNodeNum(iNode), data_manager->GetPrim(0, iNode), data_manager->GetPrim(1, iNode),
+					data_manager->GetPrim(2, iNode), data_manager->GetPrim(3, iNode), data_manager->GetPrim(4, iNode));
 				Log::warn("Non-physical Node: {}, coord: {:6E}, {:6E}, {:6E}", iNode, node->GetCoord(iNode)[0],
-						  node->GetCoord(iNode)[1], node->GetCoord(iNode)[2]);
+					node->GetCoord(iNode)[1], node->GetCoord(iNode)[2]);
 				int neighbor_num = node->GetNeighborNodeNum(iNode);
 				for (int iNeighbor = 0; iNeighbor < neighbor_num; ++iNeighbor)
 				{
 					Log::warn("Neighbor Node: {}, index:{}, neighbor_num: {}, Jacobian: {:6E},\n prim: {:6E},{:6E},{:6E},{:6E},{:6E}\ndensity_grad: {:6E},{:6E},{:6E},\npressure_grad: {:6E},{:6E},{:6E},\n limiter: {:6E},{:6E},{:6E},{:6E},{:6E}\n",
-							  iNeighbor, node->GetNeighborNode(iNode)[iNeighbor], node->GetNeighborNodeNum(node->GetNeighborNode(iNode)[iNeighbor]),
-							  m_node_metric->GetJacobian(node->GetNeighborNode(iNode)[iNeighbor]),
-							  data_manager->GetPrim(0, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrim(1, node->GetNeighborNode(iNode)[iNeighbor]),
-							  data_manager->GetPrim(2, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrim(3, node->GetNeighborNode(iNode)[iNeighbor]),
-							  data_manager->GetPrim(4, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(0, 0, node->GetNeighborNode(iNode)[iNeighbor]),
-							  data_manager->GetPrimGrad(0, 1, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(0, 2, node->GetNeighborNode(iNode)[iNeighbor]),
-							  data_manager->GetPrimGrad(4, 0, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(4, 1, node->GetNeighborNode(iNode)[iNeighbor]),
-							  data_manager->GetPrimGrad(4, 2, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(0, node->GetNeighborNode(iNode)[iNeighbor]),
-							  data_manager->GetLimiter(1, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(2, node->GetNeighborNode(iNode)[iNeighbor]),
-							  data_manager->GetLimiter(3, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(4, node->GetNeighborNode(iNode)[iNeighbor]));
+						iNeighbor, node->GetNeighborNode(iNode)[iNeighbor], node->GetNeighborNodeNum(node->GetNeighborNode(iNode)[iNeighbor]),
+						m_node_metric->GetJacobian(node->GetNeighborNode(iNode)[iNeighbor]),
+						data_manager->GetPrim(0, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrim(1, node->GetNeighborNode(iNode)[iNeighbor]),
+						data_manager->GetPrim(2, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrim(3, node->GetNeighborNode(iNode)[iNeighbor]),
+						data_manager->GetPrim(4, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(0, 0, node->GetNeighborNode(iNode)[iNeighbor]),
+						data_manager->GetPrimGrad(0, 1, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(0, 2, node->GetNeighborNode(iNode)[iNeighbor]),
+						data_manager->GetPrimGrad(4, 0, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(4, 1, node->GetNeighborNode(iNode)[iNeighbor]),
+						data_manager->GetPrimGrad(4, 2, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(0, node->GetNeighborNode(iNode)[iNeighbor]),
+						data_manager->GetLimiter(1, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(2, node->GetNeighborNode(iNode)[iNeighbor]),
+						data_manager->GetLimiter(3, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(4, node->GetNeighborNode(iNode)[iNeighbor]));
 					// for (int jNeighbor = 0; jNeighbor < node->GetNeighborNodeNum(node->GetNeighborNode(iNode)[iNeighbor]); jNeighbor++)
 					// {
 					// 	Log::warn("Neighbor Node: {}, Neighbor: {}, index: {}, Jacobian: {:6E}",
@@ -936,7 +948,7 @@ namespace zaran
 					continue;
 				data_manager->SetPrim(4, iNode, data_manager->GetPrim(1, iNode) + data_manager->GetPrim(4, physical_neighbor[iNeighbor]) * weight[iNeighbor]);
 			}
-			double prim[5] = {data_manager->GetPrim(0, iNode), data_manager->GetPrim(1, iNode), data_manager->GetPrim(2, iNode), data_manager->GetPrim(3, iNode), data_manager->GetPrim(4, iNode)};
+			double prim[5] = { data_manager->GetPrim(0, iNode), data_manager->GetPrim(1, iNode), data_manager->GetPrim(2, iNode), data_manager->GetPrim(3, iNode), data_manager->GetPrim(4, iNode) };
 			double cons[5];
 			GetGas()->Prim2Cons(prim, cons);
 			for (int iVal = 0; iVal < 5; ++iVal)
@@ -963,7 +975,7 @@ namespace zaran
 		double gamma = para->GetGas()->GetGamma();
 		double cfl = para->GetCflNumber();
 		int inner_node_num = grid->GetInnerNodeNum();
-		int *inner_node = grid->GetInnerNode();
+		int* inner_node = grid->GetInnerNode();
 		double min_dt = LARGE_NUMBER;
 #pragma omp parallel for reduction(min : min_dt)
 		for (int iNode = 0; iNode < inner_node_num; ++iNode)
@@ -991,7 +1003,7 @@ namespace zaran
 		GlobalData::Update("dt", min_dt);
 	}
 
-	void NSSolverFNFDM::ReduceTimeStep(double &dt)
+	void NSSolverFNFDM::ReduceTimeStep(double& dt)
 	{
 		auto grid = GetGrid();
 		auto para = GetPara();
@@ -1027,7 +1039,7 @@ namespace zaran
 		auto data_manager = GetDataManager();
 		int equ_num = GetPara()->GetEqNum();
 		int inner_node_num = grid->GetInnerNodeNum();
-		int *inner_node = grid->GetInnerNode();
+		int* inner_node = grid->GetInnerNode();
 		RiemannSolverPara riemann_para[6];
 #pragma omp parallel for private(riemann_para)
 		for (int iNode = 0; iNode < inner_node_num; ++iNode)
@@ -1116,7 +1128,7 @@ namespace zaran
 		auto data_manager = GetDataManager();
 		int node_num = grid->GetTotalNodeNum();
 		int inner_node_num = grid->GetInnerNodeNum();
-		int *inner_node = grid->GetInnerNode();
+		int* inner_node = grid->GetInnerNode();
 		auto para = GetPara();
 		double res_vis;
 		for (int iNode = 0; iNode < inner_node_num; ++iNode)
@@ -1138,7 +1150,7 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		int node_num = grid->GetTotalNodeNum();
-		double *viscous_flux_x, *viscous_flux_y, *viscous_flux_z;
+		double* viscous_flux_x, * viscous_flux_y, * viscous_flux_z;
 		double tau_xx, tau_yy, tau_zz, tau_xy, tau_xz, tau_yz;
 		double grad_rho[3], grad_u[3], grad_v[3], grad_w[3], grad_p[3];
 		double vel[3];
@@ -1212,11 +1224,11 @@ namespace zaran
 		auto dimensionless = para->GetDimensionless();
 		int face_num = face->GetFaceNum();
 		double face_pressure;
-		double force[3] = {0};
+		double force[3] = { 0 };
 		for (int iFace = 0; iFace < face_num; ++iFace)
 		{
 			face_pressure = 0;
-			int *face2node = face->GetFace2Node(iFace);
+			int* face2node = face->GetFace2Node(iFace);
 			for (int iNode = 0; iNode < face->GetFaceNodeNum(iFace); ++iNode)
 			{
 				face_pressure += data_manager->GetPressure(face2node[iNode]);
@@ -1233,8 +1245,8 @@ namespace zaran
 		Log::info("Force: {}, {}, {}", force[0], force[1], force[2]);
 	}
 
-	GridFN *NSSolverFNFDM::GetGrid()
+	GridFN* NSSolverFNFDM::GetGrid()
 	{
-		return static_cast<GridFN *>(FlowFieldSolver::GetGrid());
+		return static_cast<GridFN*>(FlowFieldSolver::GetGrid());
 	}
 }
