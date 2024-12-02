@@ -33,3 +33,7 @@ bool DeleteFile(const std::string& fileName)
 		return true;
 	return false;
 }
+std::string GetCurPath()
+{
+	return std::filesystem::current_path().string();
+}

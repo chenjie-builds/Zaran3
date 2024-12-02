@@ -121,8 +121,8 @@ namespace zaran
 	{
 		std::string reslut_folder = GlobalData::GetString("resultFolder");
 		std::string backup_folder = GlobalData::GetString("backupFieldFolder");
-		CreateFolder(reslut_folder);
-		CreateFolder(backup_folder);
+		CreateFolder(m_work_dir + "/" + reslut_folder);
+		CreateFolder(m_work_dir + "/" + backup_folder);
 		string grid_type_name = GlobalData::GetString("gridType");
 		string solver_type_name = GlobalData::GetString("solverType");
 		GridType grid_type;

@@ -68,7 +68,7 @@ namespace zaran
 	void NSSolverStruct::InitField()
 	{
 		auto para = GetPara();
-		auto init_type = para->GetInitFieldType();
+		auto& init_type = para->GetInitFieldType();
 		if (init_type == InitFieldType::Vortex)
 		{
 			InitFieldVortex();
@@ -80,7 +80,7 @@ namespace zaran
 		}
 
 	}
-	void NSSolverStruct::InitFieldFarFlow()
+	void NSSolverStruct::InitFieldFarfield()
 	{
 		// InitFieldVortex();
 		// return;
@@ -105,29 +105,23 @@ namespace zaran
 		// prim_far[2] = 0;
 		// prim_far[3] = 0.0;
 		// prim_far[4] = 4.82466;
-		for (int idx_eq = 0; idx_eq < para->GetEqNum(); ++idx_eq)
+		for (int k = 0; k < nk; ++k)
 		{
-			for (int k = 0; k < nk; ++k)
+			for (int j = 0; j < nj; ++j)
 			{
-				for (int j = 0; j < nj; ++j)
+				for (int i = 0; i < ni; ++i)
 				{
-					for (int i = 0; i < ni; ++i)
-					{
-						m_idx_proxy->SetIdx(i, j, k);
-						int idx = m_idx_proxy->GetIdx();
-						//double x = grid->GetNode()->GetCoord(i, j, k)[0];
-						//double y = grid->GetNode()->GetCoord(i, j, k)[1];
-						//prim_far[0] = pow(x, 3.5) + pow(y, 1.1);
-						//prim_far[1] = pow(x, 2.5) + pow(y, 0.1);
-						//prim_far[2] = pow(x, 1.0) + pow(y, 0.1);
-						//prim_far[3] = 0.0;
-						//prim_far[4] = pow(x, 0.2) + pow(y, 1.2);
+					m_idx_proxy->SetIdx(i, j, k);
+					int idx = m_idx_proxy->GetIdx();
+					//double x = grid->GetNode()->GetCoord(i, j, k)[0];
+					//double y = grid->GetNode()->GetCoord(i, j, k)[1];
+					//prim_far[0] = pow(x, 3.5) + pow(y, 1.1);
+					//prim_far[1] = pow(x, 2.5) + pow(y, 0.1);
+					//prim_far[2] = pow(x, 1.0) + pow(y, 0.1);
+					//prim_far[3] = 0.0;
+					//prim_far[4] = pow(x, 0.2) + pow(y, 1.2);
 
-						for (int idx_eq = 0; idx_eq < para->GetEqNum(); ++idx_eq)
-						{
-							data_manager->SetPrim(idx_eq, idx, prim_far[idx_eq]);
-						}
-					}
+					data_manager->SetPrim(idx, prim_far);
 				}
 			}
 		}
@@ -151,8 +145,8 @@ namespace zaran
 		// prim_far[2] = 0.0;
 		// prim_far[3] = 0.0;
 		// prim_far[4] = 1.4;
-		// double prim_left[5] = { 8.0,8.25 * cos(30.0 / 180.0 * PI),-8.25 * sin(30.0 / 180.0 * PI),0.0,116.5 };
-		double prim_left[5] = { 6.4,3.125,0,0,18.5 };
+		double prim_left[5] = { 8.0,8.25 * cos(30.0 / 180.0 * PI),-8.25 * sin(30.0 / 180.0 * PI),0.0,116.5 };
+		//double prim_left[5] = { 6.4,3.125,0,0,18.5 };
 		double prim_right[5] = { 1.4,0.0,0.0,0.0,1.0 };
 		for (int k = 0; k < nk; ++k)
 		{
@@ -164,28 +158,17 @@ namespace zaran
 					int idx = m_idx_proxy->GetIdx();
 					// double y = grid->GetNode()->GetCoord(i, j, k)[1];
 					// prim_far[0] = 1.0 + 0.01 * y;
-					for (int idx_eq = 0; idx_eq < para->GetEqNum(); ++idx_eq)
-					{
-						data_manager->SetPrim(idx_eq, idx, prim_far[idx_eq]);
-					}
+					data_manager->SetPrim(idx, prim_far);
 					auto x = node->GetCoord(i, j, k)[0];
 					auto y = node->GetCoord(i, j, k)[1];
-					// if (x < 1.0 / 6.0 + y / tan(60.0 / 180.0 * PI))
-					if (x <= 0.1)
+					if (x <= 1.0 / 6.0 + y / tan(60.0 / 180.0 * PI))
+						//if (x <= 0.1)
 					{
-						data_manager->SetPrim(0, idx, prim_left[0]);
-						data_manager->SetPrim(1, idx, prim_left[1]);
-						data_manager->SetPrim(2, idx, prim_left[2]);
-						data_manager->SetPrim(3, idx, prim_left[3]);
-						data_manager->SetPrim(4, idx, prim_left[4]);
+						data_manager->SetPrim(idx, prim_left);
 					}
 					else
 					{
-						data_manager->SetPrim(0, idx, prim_right[0]);
-						data_manager->SetPrim(1, idx, prim_right[1]);
-						data_manager->SetPrim(2, idx, prim_right[2]);
-						data_manager->SetPrim(3, idx, prim_right[3]);
-						data_manager->SetPrim(4, idx, prim_right[4]);
+						data_manager->SetPrim(idx, prim_right);
 					}
 				}
 			}
@@ -226,10 +209,7 @@ namespace zaran
 					prim[1] = beta * exp(0.5 * (1.0 - r2)) / (2.0 * PI) * (-y);
 					prim[2] = beta * exp(0.5 * (1.0 - r2)) / (2.0 * PI) * (x);
 					prim[3] = 0.0;
-					for (int idx_eq = 0; idx_eq < para->GetEqNum(); ++idx_eq)
-					{
-						data_manager->SetPrim(idx_eq, idx, prim[idx_eq]);
-					}
+					data_manager->SetPrim(idx, prim);
 				}
 			}
 		}
@@ -261,36 +241,27 @@ namespace zaran
 		explosion_center[2] = GlobalData::GetDouble("explosion_center_z");
 		double explosion_radius = GlobalData::GetDouble("explosion_radius");
 		double x, y, z;
-		for (int idx_eq = 0; idx_eq < para->GetEqNum(); ++idx_eq)
+		for (int k = 0; k < nk; ++k)
 		{
-			for (int k = 0; k < nk; ++k)
+			for (int j = 0; j < nj; ++j)
 			{
-				for (int j = 0; j < nj; ++j)
+				for (int i = 0; i < ni; ++i)
 				{
-					for (int i = 0; i < ni; ++i)
+					m_idx_proxy->SetIdx(i, j, k);
+					int idx = m_idx_proxy->GetIdx();
+					x = grid->GetNode()->GetCoord(i, j, k)[0];
+					y = grid->GetNode()->GetCoord(i, j, k)[1];
+					z = grid->GetNode()->GetCoord(i, j, k)[2];
+					double dist = sqrt((x - explosion_center[0]) * (x - explosion_center[0]) +
+						(y - explosion_center[1]) * (y - explosion_center[1]) +
+						(z - explosion_center[2]) * (z - explosion_center[2]));
+					if (dist < explosion_radius)
 					{
-						m_idx_proxy->SetIdx(i, j, k);
-						int idx = m_idx_proxy->GetIdx();
-						x = grid->GetNode()->GetCoord(i, j, k)[0];
-						y = grid->GetNode()->GetCoord(i, j, k)[1];
-						z = grid->GetNode()->GetCoord(i, j, k)[2];
-						double dist = sqrt((x - explosion_center[0]) * (x - explosion_center[0]) +
-							(y - explosion_center[1]) * (y - explosion_center[1]) +
-							(z - explosion_center[2]) * (z - explosion_center[2]));
-						if (dist < explosion_radius)
-						{
-							for (int idx_eq = 0; idx_eq < para->GetEqNum(); ++idx_eq)
-							{
-								data_manager->SetPrim(idx_eq, idx, prim_explosion[idx_eq]);
-							}
-						}
-						else
-						{
-							for (int idx_eq = 0; idx_eq < para->GetEqNum(); ++idx_eq)
-							{
-								data_manager->SetPrim(idx_eq, idx, prim_far[idx_eq]);
-							}
-						}
+						data_manager->SetPrim(idx, prim_explosion);
+					}
+					else
+					{
+						data_manager->SetPrim(idx, prim_far);
 					}
 				}
 			}
@@ -6702,8 +6673,7 @@ namespace zaran
 		auto para = GetPara();
 		double cfl = para->GetCflNumber();
 		double gamma = GetGas()->GetGamma();
-		double min_dt = LARGE_NUMBER;
-#pragma omp parallel for reduction(min : min_dt)
+#pragma omp parallel for
 		for (int k = ks; k <= ke; ++k)
 		{
 			for (int j = js; j <= je; ++j)
@@ -6735,6 +6705,28 @@ namespace zaran
 					data_manager->SetTimeStep(idx, cfl / lamda);
 					// data_manager->SetTimeStep(idx, 0.0002);
 
+				}
+			}
+		}
+	}
+	void NSSolverStruct::CalcMinTimeStep(double& dt)
+	{
+		auto grid = GetGrid();
+		auto data_manager = GetDataManager();
+		int is, ie, js, je, ks, ke;
+		grid->GetRange(is, ie, js, je, ks, ke);
+		auto para = GetPara();
+		double cfl = para->GetCflNumber();
+		double gamma = GetGas()->GetGamma();
+		double min_dt = LARGE_NUMBER;
+#pragma omp parallel for reduction(min : min_dt)
+		for (int k = ks; k <= ke; ++k)
+		{
+			for (int j = js; j <= je; ++j)
+			{
+				for (int i = is; i <= ie; ++i)
+				{
+					int idx = m_idx_proxy->GetIdx(i, j, k);
 					if (data_manager->GetTimeStep(idx) < min_dt)
 					{
 						min_dt = data_manager->GetTimeStep(idx);
@@ -6742,7 +6734,7 @@ namespace zaran
 				}
 			}
 		}
-		GlobalData::Update("dt", min_dt);
+		dt = min_dt;
 	}
 	void NSSolverStruct::ReduceTimeStep(double& dt)
 	{
@@ -6751,9 +6743,9 @@ namespace zaran
 		auto ni = m_idx_proxy->GetNi();
 		auto nj = m_idx_proxy->GetNj();
 		auto nk = m_idx_proxy->GetNk();
-#pragma omp parallel for
 		for (int k = 0; k < nk; ++k)
 		{
+#pragma omp parallel for
 			for (int j = 0; j < nj; ++j)
 			{
 				for (int i = 0; i < ni; ++i)
@@ -6772,9 +6764,9 @@ namespace zaran
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		int rk_step = para->GetRkStep();
-#pragma omp parallel for
 		for (int k = ks; k <= ke; ++k)
 		{
+#pragma omp parallel for
 			for (int j = js; j <= je; ++j)
 			{
 				for (int i = is; i <= ie; ++i)
@@ -6792,9 +6784,9 @@ namespace zaran
 			BoundaryCondition();
 			CalcResidual();
 			auto& rk_coef = para->GetRkCoef(iStep);
-#pragma omp parallel for
 			for (int k = ks; k <= ke; ++k)
 			{
+#pragma omp parallel for
 				for (int j = js; j <= je; ++j)
 				{
 					for (int i = is; i <= ie; ++i)
@@ -6824,9 +6816,9 @@ namespace zaran
 		auto nj = m_idx_proxy->GetNj();
 		auto nk = m_idx_proxy->GetNk();
 		double prim[5], cons[5];
-#pragma omp parallel for private(prim, cons)
 		for (int k = 0; k < nk; ++k)
 		{
+#pragma omp parallel for private(prim, cons)
 			for (int j = 0; j < nj; ++j)
 			{
 				for (int i = 0; i < ni; ++i)
@@ -6837,10 +6829,7 @@ namespace zaran
 						prim[idx_eq] = data_manager->GetPrim(idx_eq, idx);
 					}
 					gas->Prim2Cons(prim, cons);
-					for (int iEqu = 0; iEqu < GetPara()->GetEqNum(); ++iEqu)
-					{
-						data_manager->SetCons(iEqu, idx, cons[iEqu]);
-					}
+					data_manager->SetCons(idx, cons);
 				}
 			}
 		}
@@ -6854,9 +6843,9 @@ namespace zaran
 		auto nj = m_idx_proxy->GetNj();
 		auto nk = m_idx_proxy->GetNk();
 		double prim[5], cons[5];
-#pragma omp parallel for private(prim, cons)
 		for (int k = 0; k < nk; ++k)
 		{
+#pragma omp parallel for private(prim, cons)
 			for (int j = 0; j < nj; ++j)
 			{
 				for (int i = 0; i < ni; ++i)
@@ -6867,10 +6856,7 @@ namespace zaran
 						cons[idx_eq] = data_manager->GetCons(idx_eq, idx);
 					}
 					gas->Cons2Prim(cons, prim);
-					for (int iEqu = 0; iEqu < GetPara()->GetEqNum(); ++iEqu)
-					{
-						data_manager->SetPrim(iEqu, idx, prim[iEqu]);
-					}
+					data_manager->SetPrim(idx, prim);
 				}
 			}
 		}
@@ -6882,18 +6868,16 @@ namespace zaran
 		auto ni = m_idx_proxy->GetNi();
 		auto nj = m_idx_proxy->GetNj();
 		auto nk = m_idx_proxy->GetNk();
-#pragma omp parallel for
+		double res[5] = { 0.0 };
 		for (int k = 0; k < nk; ++k)
 		{
+#pragma omp parallel for
 			for (int j = 0; j < nj; ++j)
 			{
 				for (int i = 0; i < ni; ++i)
 				{
 					int idx = m_idx_proxy->GetIdx(i, j, k);
-					for (int idx_eq = 0; idx_eq < GetPara()->GetEqNum(); ++idx_eq)
-					{
-						data_manager->SetResidual(idx_eq, idx, 0.0);
-					}
+					data_manager->SetResidual(idx, res);
 				}
 			}
 		}
@@ -7009,9 +6993,9 @@ namespace zaran
 		double left_value, right_value;
 		///@note
 		/// 从ks-1开始，到ke结束，因为对第一个计算点ks进行通量差分时，需要使用ks-1/2处的值
-#pragma omp parallel for private(value_temp, idx_temp, i_temp, j_temp, k_temp, left_value, right_value)
 		for (int k = ks; k <= ke; ++k)
 		{
+#pragma omp parallel for private(value_temp, idx_temp, i_temp, j_temp, k_temp, left_value, right_value)
 			for (int j = js; j <= je; ++j)
 			{
 				for (int i = is; i <= ie; ++i)
@@ -7172,9 +7156,9 @@ namespace zaran
 		grid->GetRange(is, ie, js, je, ks, ke);
 		int idx_temp[5];
 		double left_value, right_value;
-#pragma omp parallel for private(value, left_value, right_value, idx_temp)
 		for (int k = ks; k <= ke; ++k)
 		{
+#pragma omp parallel for private(value, left_value, right_value, idx_temp)
 			for (int j = js; j <= je; ++j)
 			{
 				// i=is-1处的值
@@ -7196,9 +7180,9 @@ namespace zaran
 				}
 			}
 		}
-#pragma omp parallel for private(value, left_value, right_value, idx_temp)
 		for (int k = ks; k <= ke; ++k)
 		{
+#pragma omp parallel for private(value, left_value, right_value, idx_temp)
 			for (int i = is; i <= ie; ++i)
 			{
 				// j=js-1处的值，(js-1/2)右值会用到，但(js-1/2)左值在计算中不会使用
@@ -7377,10 +7361,15 @@ namespace zaran
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		double left_value[5]{}, right_value[5]{};
+		double min_density = SMALL_NUMBER;
+		double max_density = LARGE_NUMBER;
+		double min_pressure = SMALL_NUMBER;
+		double max_pressure = LARGE_NUMBER;
+
 		/// 从ks-1开始，到ke结束，因为对第一个计算点ks进行通量差分时，需要使用ks-1/2处的值
-#pragma omp parallel for private(idx_temp, value_temp, left_value, right_value)
 		for (int k = ks - 1; k <= ke + 1; ++k)
 		{
+#pragma omp parallel for private(idx_temp, value_temp, left_value, right_value)
 			for (int j = js - 1; j <= je + 1; ++j)
 			{
 				for (int i = is - 1; i <= ie + 1; ++i)
@@ -7397,20 +7386,20 @@ namespace zaran
 						}
 						InterPrimMidNodeWCNS5(value_temp, left_value[idx_eq], right_value[idx_eq]);
 					}
-					//if (left_value[0] < SMALL_NUMBER || left_value[4] < SMALL_NUMBER)
-					//{
-					//	for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-					//	{
-					//		left_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
-					//	}
-					//}
-					//if (right_value[0] < SMALL_NUMBER || right_value[4] < SMALL_NUMBER)
-					//{
-					//	for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-					//	{
-					//		right_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
-					//	}
-					//}
+					if (left_value[0] < SMALL_NUMBER || left_value[4] < SMALL_NUMBER || left_value[0]>max_density || left_value[4]>max_pressure)
+					{
+						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+						{
+							left_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
+						}
+					}
+					if (right_value[0] < SMALL_NUMBER || right_value[4] < SMALL_NUMBER || right_value[0]>max_density || right_value[4]>max_pressure)
+					{
+						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+						{
+							right_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
+						}
+					}
 					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 					{
 						data_manager->SetMidNodePrimLeft(idx_eq, 0, idx_temp[2], left_value[idx_eq]);
@@ -7430,20 +7419,20 @@ namespace zaran
 						}
 						InterPrimMidNodeWCNS5(value_temp, left_value[idx_eq], right_value[idx_eq]);
 					}
-					//if (left_value[0] < SMALL_NUMBER || left_value[4] < SMALL_NUMBER)
-					//{
-					//	for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-					//	{
-					//		left_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
-					//	}
-					//}
-					//if (right_value[0] < SMALL_NUMBER || right_value[4] < SMALL_NUMBER)
-					//{
-					//	for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-					//	{
-					//		right_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
-					//	}
-					//}
+					if (left_value[0] < SMALL_NUMBER || left_value[4] < SMALL_NUMBER || left_value[0]>max_density || left_value[4]>max_pressure)
+					{
+						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+						{
+							left_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
+						}
+					}
+					if (right_value[0] < SMALL_NUMBER || right_value[4] < SMALL_NUMBER || right_value[0]>max_density || right_value[4]>max_pressure)
+					{
+						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+						{
+							right_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
+						}
+					}
 					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 					{
 						data_manager->SetMidNodePrimLeft(idx_eq, 1, idx_temp[2], left_value[idx_eq]);
@@ -7464,20 +7453,20 @@ namespace zaran
 							}
 							InterPrimMidNodeWCNS5(value_temp, left_value[idx_eq], right_value[idx_eq]);
 						}
-						//if (left_value[0] < SMALL_NUMBER || left_value[4] < SMALL_NUMBER)
-						//{
-						//	for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-						//	{
-						//		left_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
-						//	}
-						//}
-						//if (right_value[0] < SMALL_NUMBER || right_value[4] < SMALL_NUMBER)
-						//{
-						//	for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-						//	{
-						//		right_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
-						//	}
-						//}
+						if (left_value[0] < SMALL_NUMBER || left_value[4] < SMALL_NUMBER || left_value[0]>max_density || left_value[4]>max_pressure)
+						{
+							for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+							{
+								left_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
+							}
+						}
+						if (right_value[0] < SMALL_NUMBER || right_value[4] < SMALL_NUMBER || right_value[0]>max_density || right_value[4]>max_pressure)
+						{
+							for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+							{
+								right_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
+							}
+						}
 						{
 							for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 							{
@@ -7783,6 +7772,10 @@ namespace zaran
 		{
 			CalcFluxDifference2ndOrder();
 		}
+		else if (flux_difference_scheme == FluxDifferenceScheme::FourthOrder)
+		{
+			CalcFluxDifference4thOrder();
+		}
 		else if (flux_difference_scheme == FluxDifferenceScheme::SixthOrder)
 		{
 			CalcFluxDifference6thOrder();
@@ -7827,7 +7820,7 @@ namespace zaran
 	{
 		CalcPrimMidNode1st();
 		CalcPrimGhostMidNodeWCNS5();
-		CalcFluxDifference();
+		CalcFluxDifference2ndOrder();
 	}
 	void NSSolverStruct::CalcConvectionResidualGrad()
 	{
@@ -7848,8 +7841,9 @@ namespace zaran
 	}
 	void NSSolverStruct::CalcConvectionResidualWCNS5()
 	{
-		auto step = GlobalData::GetInt("currentIter");
-		if (step < 1)
+		int firstOrderSteps = GlobalData::GetInt("firstOrderSteps");
+		int currentIter = GlobalData::GetInt("currentIter");
+		if (currentIter < firstOrderSteps)
 		{
 			CalcConvectionResidual1stUpwind();
 		}
@@ -7897,7 +7891,7 @@ namespace zaran
 #pragma omp parallel for
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
-					RiemannBC(bound[iBound]);
+					BCFarfield(bound[iBound]);
 				}
 			}
 			else if (bound_name == "inlet")
@@ -7905,7 +7899,7 @@ namespace zaran
 #pragma omp parallel for
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
-					InletBC(bound[iBound]);
+					BCInlow(bound[iBound]);
 				}
 			}
 			else if (bound_name == "outlet")
@@ -7913,7 +7907,7 @@ namespace zaran
 #pragma omp parallel for
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
-					OutletBC(bound[iBound]);
+					BCOutflow(bound[iBound]);
 				}
 			}
 			else if (bound_name == "wall")
@@ -7921,12 +7915,12 @@ namespace zaran
 #pragma omp parallel for
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
-					WallBC(bound[iBound]);
+					BCWall(bound[iBound]);
 				}
 			}
 		}
 	}
-	void NSSolverStruct::InletBC(BoundStruct& bound)
+	void NSSolverStruct::BCInlow(BoundStruct& bound)
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
@@ -7938,8 +7932,8 @@ namespace zaran
 		//double prim_far[5] = { GetPara()->GetInflowDensity(), GetPara()->GetInflowVelocityX(),
 		//					  GetPara()->GetInflowVelocityY(), GetPara()->GetInflowVelocityZ(),
 		//					  GetPara()->GetInflowPressure() };
-		// double prim_far[5] = { 8.0,8.25 * cos(30.0 / 180.0 * PI),-8.25 * sin(30.0 / 180.0 * PI),0.0,116.5 };
-		double prim_far[5] = { 6.4,3.125,0,0,18.5 };
+		double prim_far[5] = { 8.0,8.25 * cos(30.0 / 180.0 * PI),-8.25 * sin(30.0 / 180.0 * PI),0.0,116.5 };
+		//double prim_far[5] = { 6.4,3.125,0,0,18.5 };
 		double cons_far[5];
 		GetGas()->Prim2Cons(prim_far, cons_far);
 		for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
@@ -7951,15 +7945,15 @@ namespace zaran
 			//double y = node->GetCoord(i_ghost, j_ghost, k_ghost)[1];
 			//prim_far[0] = 1 + 0.1 * y*y;
 			//GetGas()->Prim2Cons(prim_far, cons_far);
-			for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
-			{
-				data_manager->SetPrim(idx_eq, idx_ghost, prim_far[idx_eq]);
-				data_manager->SetCons(idx_eq, idx_ghost, cons_far[idx_eq]);
-			}
+			data_manager->SetPrim(idx_ghost, prim_far);
+			data_manager->SetCons(idx_ghost, cons_far);
 		}
 	}
-	void NSSolverStruct::OutletBC(BoundStruct& bound)
+	void NSSolverStruct::BCOutflow(BoundStruct& bound)
 	{
+		BCDoubleMach(bound);
+		return;
+
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		int ghost_size = grid->GetGhostLevel();
@@ -7968,7 +7962,6 @@ namespace zaran
 		int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
 		auto bound_direction = bound.GetDirection();
 		std::vector<double> prim_vals(5), cons_vals(5);
-
 		// 预先获取边界的原始变量和守恒变量
 		for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
 		{
@@ -7981,15 +7974,11 @@ namespace zaran
 			int j_ghost = j_bound + iGhost * bound_direction[1];
 			int k_ghost = k_bound + iGhost * bound_direction[2];
 			int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
-
-			for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
-			{
-				data_manager->SetPrim(idx_eq, idx_ghost, prim_vals[idx_eq]);
-				data_manager->SetCons(idx_eq, idx_ghost, cons_vals[idx_eq]);
-			}
+			data_manager->SetPrim(idx_ghost, prim_vals.data());
+			data_manager->SetCons(idx_ghost, cons_vals.data());
 		}
 	}
-	void NSSolverStruct::WallBC(BoundStruct& bound)
+	void NSSolverStruct::BCWall(BoundStruct& bound)
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
@@ -8002,13 +7991,6 @@ namespace zaran
 		int i_ghost, j_ghost, k_ghost;
 		auto node = grid->GetNode();
 		auto bound_coord = node->GetCoord(i_bound, j_bound, k_bound);
-		double prim_bnd[5];
-		for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
-		{
-			prim_bnd[idx_eq] = data_manager->GetPrim(idx_eq, idx_bound);
-		}
-		//Log::info("wall: ({},{},{}), prim_bnd = ({},{},{},{},{})", i_bound, j_bound, k_bound, prim_bnd[0], prim_bnd[1], prim_bnd[2], prim_bnd[3], prim_bnd[4]);
-
 		for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
 		{
 			i_ghost = i_bound + iGhost * bound.GetDirection()[0];
@@ -8031,14 +8013,11 @@ namespace zaran
 			prim_ghost[3] = vel_ref[2] - 2.0 * vn_ref * norm_bnd[2];
 			double cons_ghost[5];
 			GetGas()->Prim2Cons(prim_ghost, cons_ghost);
-			for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
-			{
-				data_manager->SetPrim(idx_eq, idx_ghost, prim_ghost[idx_eq]);
-				data_manager->SetCons(idx_eq, idx_ghost, cons_ghost[idx_eq]);
-			}
+			data_manager->SetPrim(idx_ghost, prim_ghost);
+			data_manager->SetCons(idx_ghost, cons_ghost);
 		}
 	}
-	void NSSolverStruct::RiemannBC(BoundStruct& bound)
+	void NSSolverStruct::BCFarfield(BoundStruct& bound)
 	{
 		auto data_manager = GetDataManager();
 		int i_bound, j_bound, k_bound;
@@ -8125,17 +8104,15 @@ namespace zaran
 			j_ghost = j_bound + iGhost * bound.GetDirection()[1];
 			k_ghost = k_bound + iGhost * bound.GetDirection()[2];
 			int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
-			for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
-			{
-				data_manager->SetPrim(idx_eq, idx_ghost, prim_bnd[idx_eq]);
-				data_manager->SetCons(idx_eq, idx_ghost, cons_bound[idx_eq]);
-			}
+			data_manager->SetPrim(idx_ghost, prim_bnd);
+			data_manager->SetCons(idx_ghost, cons_bound);
 		}
 	}
-	void NSSolverStruct::SymmetryBC(BoundStruct& bound)
+	void NSSolverStruct::BCSymmetry(BoundStruct& bound)
 	{
+		BCWall(bound);
 	}
-	void NSSolverStruct::VortexBC(BoundStruct& bound)
+	void NSSolverStruct::BCVortex(BoundStruct& bound)
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
@@ -8166,14 +8143,49 @@ namespace zaran
 			prim[1] = beta * exp(0.5 * (1.0 - r2)) / (2.0 * PI) * (-y);
 			prim[2] = beta * exp(0.5 * (1.0 - r2)) / (2.0 * PI) * (x);
 			prim[3] = 0.0;
-			for (int idx_eq = 0; idx_eq < para->GetEqNum(); ++idx_eq)
+			data_manager->SetPrim(idx_ghost, prim);
+		}
+	}
+	void NSSolverStruct::BCDoubleMach(BoundStruct& bound)
+	{
+		double current_time = GlobalData::GetDouble("currentTime");
+		double shock_velocity = 10.0 / sin(PI / 3.0);
+		double shock_x = 1.0 / 6.0 + 1.0 / tan(PI / 3.0) + shock_velocity * current_time;
+		double prim_left[5] = { 8.0,8.25 * cos(30.0 / 180.0 * PI),-8.25 * sin(30.0 / 180.0 * PI),0.0,116.5 };
+		double prim_right[5] = { 1.4,0.0,0.0,0.0,1.0 };
+		double cons_left[5], cons_right[5];
+		GetGas()->Prim2Cons(prim_left, cons_left);
+		GetGas()->Prim2Cons(prim_right, cons_right);
+		auto grid = GetGrid();
+		auto data_manager = GetDataManager();
+		int ghost_size = grid->GetGhostLevel();
+		int i_bound, j_bound, k_bound;
+		bound.GetIdx(i_bound, j_bound, k_bound);
+		int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+		auto bound_direction = bound.GetDirection();
+		for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
+		{
+			int i_ghost = i_bound + iGhost * bound_direction[0];
+			int j_ghost = j_bound + iGhost * bound_direction[1];
+			int k_ghost = k_bound + iGhost * bound_direction[2];
+			int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+			double x = grid->GetNode()->GetCoord(i_ghost, j_ghost, k_ghost)[0];
+			if (x <= shock_x)
 			{
-				data_manager->SetPrim(idx_eq, idx_ghost, prim[idx_eq]);
+				data_manager->SetPrim(idx_ghost, prim_left);
+				data_manager->SetCons(idx_ghost, cons_left);
+			}
+			else
+			{
+				data_manager->SetPrim(idx_ghost, prim_right);
+				data_manager->SetCons(idx_ghost, cons_right);
 			}
 		}
+
 	}
 	void NSSolverStruct::CheckPrimtive()
 	{
+
 	}
 	void NSSolverStruct::CheckResidual()
 	{

@@ -25,7 +25,7 @@ namespace zaran
 		~NSSolverFNFDM();
 
 	protected:
-		void InitFieldFarFlow() override;
+		void InitFieldFarfield() override;
 		void InitFieldFarFieldNoVelocity() override;
 		void InitFieldBackup() override;
 		void InitFieldExplosion() override;
@@ -35,6 +35,7 @@ namespace zaran
 	protected:
 		void Preprocess() override;
 		void CalcTimeStepLocal() override;
+		void CalcMinTimeStep(double& dt) override;
 		void ReduceTimeStep(double &dt) override;
 		void RungeKutta() override;
 		void Prim2Cons() override;
@@ -79,13 +80,13 @@ namespace zaran
 		void CalcForce() override;
 		void BoundaryCondition() override;
 		// 超声速入口边界条件
-		virtual void InletBC(BoundFN &bound);
+		virtual void BCInlow(BoundFN &bound);
 		// 超声速出口边界条件
-		virtual void OutletBC(BoundFN &bound);
+		virtual void BCOutflow(BoundFN &bound);
 		// 壁面边界条件
-		virtual void WallBC(BoundFN &bound);
+		virtual void BCWall(BoundFN &bound);
 		// 黎曼边界条件
-		virtual void RiemannBC(BoundFN &bound);
+		virtual void BCFarfield(BoundFN &bound);
 
 	protected:
 		virtual GridFN *GetGrid() override;

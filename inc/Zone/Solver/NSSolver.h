@@ -26,7 +26,7 @@ namespace zaran
 		DataManagerNS *GetDataManager() override;
 
 	protected:
-		virtual void InitFieldFarFlow() = 0;
+		virtual void InitFieldFarfield() = 0;
 		virtual void InitFieldFarFieldNoVelocity() = 0;
 		virtual void InitFieldBackup() = 0;
 		virtual void InitFieldExplosion() = 0;
@@ -48,6 +48,8 @@ namespace zaran
 		void TimeAdvance() override;
 		// 计算当地时间步
 		virtual void CalcTimeStepLocal() = 0;
+		// 统计全局最小时间步
+		virtual void CalcMinTimeStep(double& min_dt) = 0;
 		// 龙格库塔法
 		virtual void RungeKutta() = 0;
 		/**
@@ -59,6 +61,8 @@ namespace zaran
 		// 守恒变量到原始变量
 		virtual void Cons2Prim() {}
 		virtual void ZeroResidual() = 0;
+		// 计算流场残差，即右端项
+		virtual void CalcResidual();
 		// 计算流动通量残差
 		virtual void CalcConvectionResidual() = 0;
 		// 计算粘性通量残差
@@ -67,8 +71,6 @@ namespace zaran
 		virtual void CalcViscousFluxGrad() = 0;
 		// 计算源项
 		virtual void CalcSourceResidual() = 0;
-		// 计算流场残差，即右端项
-		virtual void CalcResidual();
 		/// @brief 检查原始变量
 		virtual void CheckPrimtive() = 0;
 		/// @brief 检查残差

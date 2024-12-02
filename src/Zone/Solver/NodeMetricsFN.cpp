@@ -11,6 +11,14 @@ namespace zaran
     {
         delete[] m_metric;
     }
+	double* Metrics::GetInvMetrics(int dim, int iNode)
+	{
+		return m_metric + iNode * m_metric_num + dim * 4;
+	}
+	double* Metrics::GetMetrics(int  dim, int iNode)
+    {
+        return m_metric + iNode * m_metric_num + dim * 4 + 16;
+    }
     double *Metrics::GetX(int iNode)
     {
         return m_metric + iNode * m_metric_num;

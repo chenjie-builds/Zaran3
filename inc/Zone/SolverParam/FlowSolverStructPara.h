@@ -26,6 +26,7 @@ namespace zaran
     enum class FluxDifferenceScheme
     {
         SecondOrder,
+		FourthOrder,
         SixthOrder,
     };
     // 度量系数差分格式

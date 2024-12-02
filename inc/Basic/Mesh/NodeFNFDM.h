@@ -68,20 +68,20 @@ namespace zaran
     // 节点类型
     NodeType *m_type;
     /// @brief m_node_num[idx] 第iNode节点包含的邻居节点个数
-    int *m_neighor_node_num;
+    int *m_node_num;
     /// @brief m_node[idx] 第iNode节点包含的邻居节点在m_neighor_node中的起始位置
-    int *m_neighor_node_index;
-    /// @brief m_neighor_node[m_node[idx]] 第iNode节点的邻居节点
+    int *m_node_offset;
+    /// @brief m_node_idx[m_node[idx]] 第iNode节点的邻居节点
     /// @brief 前6个为差分模板, 剩下为其他邻居
-    int *m_neighor_node;
+    int *m_node_idx;
     /// @brief m_face_num[idx] 第iNode节点包含的面元个数
-    int *m_neighor_face_num;
+    int *m_face_num;
     /// @brief m_face[m_face_num[idx]] 第iNode节点包含的面元编号
-    int *m_neighor_face_index;
+    int *m_face_idx;
     /// @brief m_neighor_face[m_face[idx]] 第iNode节点包含的面元的邻居面元
     int *m_neighor_face;
     /// @brief m_cell_num[idx] 第iNode节点包含的单元个数
-    int *m_neighor_cell_num;
+    int *m_cell_num;
     /// @brief m_cell_index[m_cell_num[idx]] 第iNode节点包含的单元编号
     int *m_neighor_cell_index;
     /// @brief m_neighor_cell[m_cell_index[idx]] 第iNode节点包含的单元的邻居单元

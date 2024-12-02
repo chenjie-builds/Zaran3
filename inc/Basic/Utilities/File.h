@@ -20,3 +20,4 @@ bool CreateFolder(const std::string& folderName);
 bool CopyFile(const std::string& src_file, const std::string& dest_file);
 //删除文件
 bool DeleteFile(const std::string& fileName);
+std::string GetCurPath();

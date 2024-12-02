@@ -20,7 +20,7 @@ namespace zaran
 
   protected:
     void InitField() override;
-    void InitFieldFarFlow() override;
+    void InitFieldFarfield() override;
     void InitFieldFarFieldNoVelocity() override;
     void InitFieldBackup() override;
     void InitFieldVortex();
@@ -61,6 +61,7 @@ namespace zaran
     void CalcPrimGradWLS3D();
     void CalcLimiterVK();
     void CalcTimeStepLocal() override;
+	void CalcMinTimeStep(double& dt) override;
     void ReduceTimeStep(double &dt) override;
     void RungeKutta() override;
     void Prim2Cons() override;
@@ -107,6 +108,8 @@ namespace zaran
     void CalcFluxDifference();
     /// @brief flux difference: central 2nd order
     virtual void CalcFluxDifference2ndOrder() {};
+	/// @brief flux difference: central 4th order
+	virtual void CalcFluxDifference4thOrder() {};
     /// @brief flux difference: central 6th order
     virtual void CalcFluxDifference6thOrder() {};
     /// @brief calculate convection residual
@@ -125,12 +128,14 @@ namespace zaran
     void CalcSourceResidual() override;
 
     void BoundaryCondition() override;
-    void InletBC(BoundStruct &bound);
-    void OutletBC(BoundStruct &bound);
-    void WallBC(BoundStruct &bound);
-    void RiemannBC(BoundStruct &bound);
-    void SymmetryBC(BoundStruct &bound);
-    void VortexBC(BoundStruct &bound);
+    void BCInlow(BoundStruct &bound);
+    void BCOutflow(BoundStruct &bound);
+    void BCWall(BoundStruct &bound);
+    void BCFarfield(BoundStruct &bound);
+    void BCSymmetry(BoundStruct &bound);
+    void BCVortex(BoundStruct &bound);
+    //双马赫反射
+	void BCDoubleMach(BoundStruct& bound);
 
   protected:
     void CheckPrimtive() override;

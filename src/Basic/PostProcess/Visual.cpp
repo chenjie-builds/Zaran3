@@ -386,7 +386,10 @@ void zaran::Visual::WriteTecplotBinary(NSFieldStruct* field)
 }
 void Visual::WriteTecASCII(FieldManager* field_manager)
 {
-    std::ofstream out("result/" + std::to_string(GlobalData::GetInt("currentIter")) + ".dat");
+    std::string work_dir = GlobalData::GetString("work_dir");
+    std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + ".dat";
+    file_name = work_dir + "\\" + file_name;
+    std::ofstream out(file_name);
     out << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\"\n";
     out << "TITLE=\"Flow Field\"\n";
     double solution_time = GlobalData::GetDouble("currentTime");
@@ -423,7 +426,10 @@ void zaran::Visual::WriteTecplotBinary(FieldManager* field_manager)
     INTEGER4 fileType = 0;
     string grid_name = "grid";
     string var_name = "x, y, z, density, velocity_x, velocity_y, velocity_z, pressure";
-    std::string file_name = "result/" + std::to_string(GlobalData::GetInt("currentIter")) + ".plt";
+	std::string work_dir = GlobalData::GetString("work_dir");
+    std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + ".plt";
+	file_name = work_dir + "\\" + file_name;
+	Log::info("Write Tecplot file: {}", file_name);
     int i = TECINI142(grid_name.c_str(), var_name.c_str(), file_name.c_str(), (char*)".", &file_format, &fileType,
         &debug, &vIsDouble);
     for (size_t iter_field = 0; iter_field < field_manager->GetFieldNum(); iter_field++)

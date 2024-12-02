@@ -7,7 +7,7 @@
 namespace zaran
 {
 
-	NSSolver::NSSolver(int index, string name, FlowSolverPara *para, GridBase *grid, DataManagerNS *data_manager)
+	NSSolver::NSSolver(int index, string name, FlowSolverPara* para, GridBase* grid, DataManagerNS* data_manager)
 		: FlowFieldSolver(index, name, para, grid, data_manager)
 	{
 	}
@@ -34,7 +34,7 @@ namespace zaran
 		}
 		else if (init_type == InitFieldType::FarFlow)
 		{
-			InitFieldFarFlow();
+			InitFieldFarfield();
 		}
 		else if (init_type == InitFieldType::Backup)
 		{
@@ -53,9 +53,9 @@ namespace zaran
 		Prim2Cons();
 		Log::info("Flow Field Initialize Finished!");
 	}
-	DataManagerNS *NSSolver::GetDataManager()
+	DataManagerNS* NSSolver::GetDataManager()
 	{
-		return static_cast<DataManagerNS *>(FieldSolver::GetDataManager());
+		return static_cast<DataManagerNS*>(FieldSolver::GetDataManager());
 	}
 	void NSSolver::InitSolver()
 	{
@@ -73,12 +73,12 @@ namespace zaran
 		auto para = GetPara();
 		para->SetCurrentStep(para->GetCurrentStep() + 1);
 		CalcTimeStep();
+		//BoundaryCondition();
 	}
 
 	void NSSolver::Postprocess()
 	{
 		UpdateField();
-		BoundaryCondition();
 		CheckPrimtive();
 		FixPrimtive();
 		CalcForce();
@@ -92,21 +92,23 @@ namespace zaran
 	void NSSolver::CalcTimeStep()
 	{
 		CalcTimeStepLocal();
-		double dt = GlobalData::GetDouble("dt");
+		double min_dt;
+		CalcMinTimeStep(min_dt);
+		GlobalData::Update("dt", min_dt);
 		double current_time = GlobalData::GetDouble("currentTime");
 		double end_time = GlobalData::GetDouble("endTime");
-		if (current_time + dt > end_time)
+		if (current_time + min_dt > end_time)
 		{
-			dt = end_time - current_time;
+			min_dt = end_time - current_time;
 			current_time = end_time;
 		}
 		else
-			current_time += dt;
+			current_time += min_dt;
 		GlobalData::Update("currentTime", current_time);
 		int isSteady = GlobalData::GetInt("isSteady");
 		if (isSteady == 0)
 		{
-			ReduceTimeStep(dt);
+			ReduceTimeStep(min_dt);
 		}
 	}
 	void NSSolver::TimeAdvance()

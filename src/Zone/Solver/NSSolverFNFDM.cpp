@@ -18,7 +18,7 @@ namespace zaran
 		delete[] m_grad_wlsq;
 	}
 
-	void NSSolverFNFDM::InitFieldFarFlow()
+	void NSSolverFNFDM::InitFieldFarfield()
 	{
 		GridFN* grid = GetGrid();
 		FlowSolverPara* para = GetPara();
@@ -212,9 +212,9 @@ namespace zaran
 		FlowSolverPara* para = GetPara();
 		int rk_step = para->GetRkStep();
 		auto node = grid->GetNode();
-		int totalNodeNum = grid->GetTotalNodeNum();
+		int n_node = grid->GetTotalNodeNum();
 #pragma omp parallel for
-		for (int iNode = 0; iNode < totalNodeNum; ++iNode)
+		for (int iNode = 0; iNode < n_node; ++iNode)
 		{
 			for (int iVal = 0; iVal < 5; ++iVal)
 			{
@@ -223,11 +223,11 @@ namespace zaran
 		}
 		for (int iStep = 0; iStep < rk_step; ++iStep)
 		{
-			auto& rk_coef = para->GetRkCoef(iStep);
-			CalcResidual();
 			BoundaryCondition();
+			CalcResidual();
+			auto& rk_coef = para->GetRkCoef(iStep);
 #pragma omp parallel for 
-			for (int iNode = 0; iNode < totalNodeNum; ++iNode)
+			for (int iNode = 0; iNode < n_node; ++iNode)
 			{
 				if (node->GetType(iNode) != NodeType::inner)
 					continue;
@@ -340,7 +340,7 @@ namespace zaran
 #pragma omp parallel for
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
-					RiemannBC(bound[iBound]);
+					BCFarfield(bound[iBound]);
 				}
 			}
 			else if (bound_name == "inlet")
@@ -348,7 +348,7 @@ namespace zaran
 #pragma omp parallel for
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
-					InletBC(bound[iBound]);
+					BCInlow(bound[iBound]);
 				}
 			}
 			else if (bound_name == "outlet")
@@ -356,7 +356,7 @@ namespace zaran
 #pragma omp parallel for
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
-					OutletBC(bound[iBound]);
+					BCOutflow(bound[iBound]);
 				}
 			}
 			else if (bound_name == "wall")
@@ -364,12 +364,12 @@ namespace zaran
 #pragma omp parallel for
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
-					WallBC(bound[iBound]);
+					BCWall(bound[iBound]);
 				}
 			}
 		}
 	}
-	void NSSolverFNFDM::InletBC(BoundFN& bound)
+	void NSSolverFNFDM::BCInlow(BoundFN& bound)
 	{
 		FlowSolverPara* para = GetPara();
 		auto data_manager = GetDataManager();
@@ -389,7 +389,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverFNFDM::OutletBC(BoundFN& bound)
+	void NSSolverFNFDM::BCOutflow(BoundFN& bound)
 	{
 		auto data_manager = GetDataManager();
 		int idx_bnd = bound.GetIdxBound();
@@ -407,7 +407,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverFNFDM::WallBC(BoundFN& bound)
+	void NSSolverFNFDM::BCWall(BoundFN& bound)
 	{
 		auto data_manager = GetDataManager();
 		int idx_ref = bound.GetIdxRef();
@@ -432,7 +432,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverFNFDM::RiemannBC(BoundFN& bound)
+	void NSSolverFNFDM::BCFarfield(BoundFN& bound)
 	{
 		auto data_manager = GetDataManager();
 		int idx_ref = bound.GetIdxRef();
@@ -976,8 +976,7 @@ namespace zaran
 		double cfl = para->GetCflNumber();
 		int inner_node_num = grid->GetInnerNodeNum();
 		int* inner_node = grid->GetInnerNode();
-		double min_dt = LARGE_NUMBER;
-#pragma omp parallel for reduction(min : min_dt)
+#pragma omp parallel for 
 		for (int iNode = 0; iNode < inner_node_num; ++iNode)
 		{
 			int idx = inner_node[iNode];
@@ -995,12 +994,29 @@ namespace zaran
 			double lamda = abs(u_xi) + abs(u_eta) + abs(u_zeta) + c * (norm_xi + norm_eta + norm_zeta);
 			lamda = lamda * jacobi;
 			data_manager->SetTimeStep(idx, cfl / lamda);
+		}
+	}
+	void NSSolverFNFDM::CalcMinTimeStep(double& dt)
+	{
+		auto grid = GetGrid();
+		auto node = grid->GetNode();
+		auto para = GetPara();
+		auto data_manager = GetDataManager();
+		double gamma = para->GetGas()->GetGamma();
+		double cfl = para->GetCflNumber();
+		int inner_node_num = grid->GetInnerNodeNum();
+		int* inner_node = grid->GetInnerNode();
+		double min_dt = LARGE_NUMBER;
+#pragma omp parallel for reduction(min : min_dt)
+		for (int iNode = 0; iNode < inner_node_num; ++iNode)
+		{
+			int idx = inner_node[iNode];
 			if (min_dt > data_manager->GetTimeStep(idx))
 			{
 				min_dt = data_manager->GetTimeStep(idx);
 			}
 		}
-		GlobalData::Update("dt", min_dt);
+		dt = min_dt;
 	}
 
 	void NSSolverFNFDM::ReduceTimeStep(double& dt)

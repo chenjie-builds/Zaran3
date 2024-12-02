@@ -25,7 +25,7 @@ namespace zaran
   class GridFNFactorySYSU : public GridBuilder
   {
   public:
-    GridFNFactorySYSU(const string &node_file_name = "node.dat", const string &ele_file_name = "cell.dat", const string &bnd_file_name = "bound.dat");
+    GridFNFactorySYSU(const string &node_file_name, const string &ele_file_name, const string &bnd_file_name);
     void CreateGrid(GridBase **&grid_list, int &grid_num) override;
     void CreateGrid(GridFN *&grid);
 

@@ -127,6 +127,8 @@ void FieldSimulation::SaveFieldData()
 	std::string back_dir = GlobalData::GetString("backupFieldFolder");
 	int currentIter = GlobalData::GetInt("currentIter");
 	back_dir += "/iter=" + std::to_string(currentIter);
+	std::string work_dir = GlobalData::GetString("work_dir");
+	back_dir = work_dir + "/" + back_dir;
 	CreateFolder(back_dir);
 	BackupFieldData(back_dir);
 	BackupResidual(back_dir);
@@ -147,9 +149,9 @@ void FieldSimulation::BackupResidual(std::string& back_folder)
 {
 	std::string residual_file = GlobalData::GetString("residualFileName");
 	std::string residual_file_back = back_folder + "/" + residual_file;
-	if (IsFileExist(residual_file) == false)
+	if (IsFileExist(residual_file_back) == false)
 	{
-		Log::warn("residual file:{} is not exist!", residual_file);
+		Log::warn("residual file:{} is not exist!", residual_file_back);
 		return;
 	}
 	if (IsFileExist(residual_file_back) == true)
@@ -163,9 +165,9 @@ void FieldSimulation::BackupLog(std::string& back_folder)
 {
 	std::string log_file = "log.txt";
 	std::string log_file_back = back_folder + "/" + log_file;
-	if (IsFileExist(log_file) == false)
+	if (IsFileExist(log_file_back) == false)
 	{
-		Log::warn("logFile:{} is not exist!", log_file);
+		Log::warn("logFile:{} is not exist!", log_file_back);
 		return;
 	}
 	if (IsFileExist(log_file_back) == true)
@@ -179,9 +181,9 @@ void FieldSimulation::BackupGlobalData(std::string& back_folder)
 {
 	std::string global_file = "zaran.ini";
 	std::string global_file_back = back_folder + "/" + global_file;
-	if (IsFileExist(global_file) == false)
+	if (IsFileExist(global_file_back) == false)
 	{
-		Log::warn("gloabal data file:{} is not exist!", global_file);
+		Log::warn("gloabal data file:{} is not exist!", global_file_back);
 		return;
 	}
 	if (IsFileExist(global_file_back) == true)
@@ -223,6 +225,8 @@ void FieldSimulation::SaveResidual()
 {
 	int current_iter = GlobalData::GetInt("currentIter");
 	string residual_file = GlobalData::GetString("residualFileName");
+	string work_dir = GlobalData::GetString("work_dir");
+	residual_file = work_dir + "/" + residual_file;
 
 	if (current_iter == 0)
 	{

@@ -31,13 +31,15 @@ namespace zaran
     class Application
     {
     public:
-        Application() :
-            m_control_file("zaran.ini"),
+        Application(std::string work_dir) :
+			m_work_dir(work_dir),
+			m_control_file(work_dir + "/zaran.ini"),
             m_min_ctrol_file_version("V3.3.7"),
             m_grid_builder(nullptr),
             m_task(TaskType::SOLVE_FIELD) // Ensure m_task is initialized
         {
             GlobalData::Init();
+			GlobalData::Update("work_dir", work_dir);
         }
         ~Application() {};
         void Run();
@@ -50,6 +52,7 @@ namespace zaran
         void ConvertGrid();
         void ReadModel();
     private:
+		string m_work_dir;
         TaskType m_task;
         //参数文件名
         string m_control_file;

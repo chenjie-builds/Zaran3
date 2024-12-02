@@ -133,7 +133,7 @@ namespace zaran
 		bool is_same_x = true;
 		for (int i = 1; i < point_num; i++)
 		{
-			if (coord[i][0] != coord[0][0])
+			if (abs(coord[i][0] - coord[0][0]) > EPSILON_NUMBER)
 			{
 				is_same_x = false;
 				break;
@@ -149,7 +149,7 @@ namespace zaran
 		bool is_same_y = true;
 		for (int i = 1; i < point_num; i++)
 		{
-			if (coord[i][1] != coord[0][1])
+			if (abs(coord[i][1] - coord[0][1]) > EPSILON_NUMBER)
 			{
 				is_same_y = false;
 				break;
@@ -200,7 +200,7 @@ namespace zaran
 		bool is_same_x = true;
 		for (int i = 1; i < point_num; i++)
 		{
-			if (coord[i][0] != coord[0][0])
+			if (abs(coord[i][0] - coord[0][0]) > EPSILON_NUMBER)
 			{
 				is_same_x = false;
 				break;
@@ -210,7 +210,7 @@ namespace zaran
 		bool is_same_y = true;
 		for (int i = 1; i < point_num; i++)
 		{
-			if (coord[i][1] != coord[0][1])
+			if (abs(coord[i][1] - coord[0][1]) > EPSILON_NUMBER)
 			{
 				is_same_y = false;
 				break;
@@ -220,7 +220,7 @@ namespace zaran
 		bool is_same_z = true;
 		for (int i = 1; i < point_num; i++)
 		{
-			if (coord[i][2] != coord[0][2])
+			if (abs(coord[i][2] - coord[0][2]) > EPSILON_NUMBER)
 			{
 				is_same_z = false;
 				break;

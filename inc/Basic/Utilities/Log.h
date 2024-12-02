@@ -19,9 +19,9 @@ namespace Log = spdlog;
 class Logger
 {
 public:
-	static Logger& Start();
+	static Logger& Start(const std::string& work_dir);
 private:
-	Logger();
+	Logger(const std::string& work_dir);
 	~Logger();
 };
 

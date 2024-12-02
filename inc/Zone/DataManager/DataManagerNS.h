@@ -21,11 +21,13 @@ namespace zaran
         /// @param idx_data 数据索引 
         /// @param value 输入的值 
         void SetPrim(int idx_eq, int idx_data, double value);
+		void SetPrim(int idx_data, const double* value);
         //! @brief 设置守恒变量
         /// @param idx_eq 变量索引
         /// @param idx_data 数据索引
         /// @param value 输入的值
         void SetCons(int idx_eq, int idx_data, double value);
+		void SetCons(int idx_data, const double* value);
         //! @brief 设置上一个时间步守恒变量
         /// @param idx_eq 变量索引
         /// @param idx_data 数据索引
@@ -36,6 +38,7 @@ namespace zaran
         /// @param idx_data 数据索引
         /// @param value 输入的值
         void SetResidual(int idx_eq, int idx_data, double value);
+        void SetResidual(int idx_data, const double* value);
         //! @brief 设置限制器系数
         /// @param idx_eq 变量索引
         /// @param idx_data 数据索引

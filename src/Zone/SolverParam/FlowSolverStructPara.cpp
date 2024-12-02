@@ -76,6 +76,10 @@ namespace zaran
         {
             m_flux_difference_scheme = FluxDifferenceScheme::SecondOrder;
         }
+		else if (difference_scheme == 4)
+		{
+			m_flux_difference_scheme = FluxDifferenceScheme::FourthOrder;
+		}
         else if (difference_scheme == 6)
         {
             m_flux_difference_scheme = FluxDifferenceScheme::SixthOrder;

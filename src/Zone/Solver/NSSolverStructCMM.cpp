@@ -433,7 +433,7 @@ namespace zaran
 		CalcPrimMidNode1st();
 		CalcPrimGhostMidNodeMUSCL();
 		CalcConvectionFluxMidNode();
-		CalcFluxDifference();
+		CalcFluxDifference2ndOrder();
 	}
 
 	void NSSolverStructCMM::CalcConvectionResidualMUSCL()
@@ -446,8 +446,9 @@ namespace zaran
 
 	void NSSolverStructCMM::CalcConvectionResidualWCNS5()
 	{
-		auto step = GlobalData::GetInt("currentIter");
-		if (step < 1)
+		int firstOrderSteps = GlobalData::GetInt("firstOrderSteps");
+		int currentIter = GlobalData::GetInt("currentIter");
+		if (currentIter < firstOrderSteps)
 		{
 			CalcConvectionResidual1stUpwind();
 		}
@@ -475,9 +476,9 @@ namespace zaran
 		nj = idx_proxy->GetNj();
 		nk = idx_proxy->GetNk();
 		RiemannSolverPara riemann_para;
-#pragma omp parallel for private(riemann_para)
 		for (int k = 0; k < nk - 1; ++k)
 		{
+#pragma omp parallel for private(riemann_para)
 			for (int j = 0; j < nj - 1; ++j)
 			{
 				for (int i = 0; i < ni - 1; ++i)
@@ -565,58 +566,39 @@ namespace zaran
 		auto equ_num = para->GetEqNum();
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
-		// 当前节点的编号
-		int idx;
 		// 差分模板的编号
-		int idx_temp[5];
+		int idx_temp[3];
 		// 残差的临时变量
 		double res_tmp[5];
-#pragma omp parallel for private(idx, idx_temp, res_tmp)
+		double direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
 		for (int k = ks; k <= ke; ++k)
 		{
+#pragma omp parallel for private( idx_temp, res_tmp)
 			for (int j = js; j <= je; ++j)
 			{
 				for (int i = is; i <= ie; ++i)
 				{
-					for (int iVal = 0; iVal < equ_num; ++iVal)
+					int idx = idx_proxy->GetIdx(i, j, k);
+					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 					{
-						res_tmp[iVal] = data_manager->GetResidual(iVal, idx_proxy->GetIdx(i, j, k));
+						res_tmp[idx_eq] = data_manager->GetResidual(idx_eq, idx);
 					}
-					// i direction
-					idx = idx_proxy->GetIdx(i, j, k);
-					idx_temp[0] = idx_proxy->GetIdx(i - 1, j, k);
-					idx_temp[1] = idx_proxy->GetIdx(i, j, k);
-					idx_temp[2] = idx_proxy->GetIdx(i + 1, j, k);
-					for (int iVal = 0; iVal < equ_num; ++iVal)
+					for (int dim = 0; dim < grid->GetDim(); ++dim)
 					{
-						res_tmp[iVal] -= (data_manager->GetMidNodeFlux(iVal, 0, idx_temp[1]) -
-							data_manager->GetMidNodeFlux(iVal, 0, idx_temp[0]));
-					}
-					// j direction
-					idx_temp[0] = idx_proxy->GetIdx(i, j - 1, k);
-					idx_temp[1] = idx_proxy->GetIdx(i, j, k);
-					idx_temp[2] = idx_proxy->GetIdx(i, j + 1, k);
-					for (int iVal = 0; iVal < equ_num; ++iVal)
-					{
-						res_tmp[iVal] -= (data_manager->GetMidNodeFlux(iVal, 1, idx_temp[1]) -
-							data_manager->GetMidNodeFlux(iVal, 1, idx_temp[0]));
-					}
-					// k direction
-					if (grid->GetDim() == 3)
-					{
-						idx_temp[0] = idx_proxy->GetIdx(i, j, k - 1);
-						idx_temp[1] = idx_proxy->GetIdx(i, j, k);
-						idx_temp[2] = idx_proxy->GetIdx(i, j, k + 1);
-						for (int iVal = 0; iVal < equ_num; ++iVal)
+						for (int iTemp = 0; iTemp < 3; iTemp++)
 						{
-							res_tmp[iVal] -= (data_manager->GetMidNodeFlux(iVal, 2, idx_temp[1]) -
-								data_manager->GetMidNodeFlux(iVal, 2, idx_temp[0]));
+							idx_temp[iTemp] = idx_proxy->GetIdx(
+								i + (iTemp - 1) * direction[dim][0],
+								j + (iTemp - 1) * direction[dim][1],
+								k + (iTemp - 1) * direction[dim][2]);
+						}
+						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+						{
+							res_tmp[idx_eq] -=
+								data_manager->GetMidNodeFlux(idx_eq, dim, idx_temp[1]) - data_manager->GetMidNodeFlux(idx_eq, dim, idx_temp[0]);
 						}
 					}
-					for (int iVar = 0; iVar < equ_num; ++iVar)
-					{
-						data_manager->SetResidual(iVar, idx, res_tmp[iVar]);
-					}
+					data_manager->SetResidual(idx, res_tmp);
 				}
 			}
 		}
@@ -632,83 +614,43 @@ namespace zaran
 		auto equ_num = para->GetEqNum();
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
-		RiemannSolverPara riemann_para[6];
-
-		// 当前节点的编号
-		int idx;
 		// 差分模板的编号
 		int idx_temp[6];
-		// 差分模板的值
-		double value[5];
 		double res_tmp[5];
 		double coef1 = 75.0 / 64.0;
 		double coef2 = -25.0 / 384.0;
 		double coef3 = 3.0 / 640.0;
-#pragma omp parallel for private(riemann_para, idx, idx_temp, res_tmp)
+		double direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
 		for (int k = ks; k <= ke; ++k)
 		{
+#pragma omp parallel for private(  idx_temp, res_tmp)
 			for (int j = js; j <= je; ++j)
 			{
 				for (int i = is; i <= ie; ++i)
 				{
-					for (int i = 0; i < 6; ++i)
+					int idx = idx_proxy->GetIdx(i, j, k);
+					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 					{
-						riemann_para[i].gamma_left = riemann_para[i].gamma_right = gas->GetGamma();
+						res_tmp[idx_eq] = data_manager->GetResidual(idx_eq, idx);
 					}
-					for (int iEq = 0; iEq < equ_num; ++iEq)
+					for (int dim = 0; dim < grid->GetDim(); ++dim)
 					{
-						res_tmp[iEq] = data_manager->GetResidual(iEq, idx_proxy->GetIdx(i, j, k));
-					}
-					// i direction
-					idx = idx_proxy->GetIdx(i, j, k);
-					idx_temp[0] = idx_proxy->GetIdx(i - 3, j, k);
-					idx_temp[1] = idx_proxy->GetIdx(i - 2, j, k);
-					idx_temp[2] = idx_proxy->GetIdx(i - 1, j, k);
-					idx_temp[3] = idx_proxy->GetIdx(i, j, k);
-					idx_temp[4] = idx_proxy->GetIdx(i + 1, j, k);
-					idx_temp[5] = idx_proxy->GetIdx(i + 2, j, k);
-					for (int iEq = 0; iEq < equ_num; ++iEq)
-					{
-						res_tmp[iEq] -=
-							coef1 * (data_manager->GetMidNodeFlux(iEq, 0, idx_temp[3]) - data_manager->GetMidNodeFlux(iEq, 0, idx_temp[2])) +
-							coef2 * (data_manager->GetMidNodeFlux(iEq, 0, idx_temp[4]) - data_manager->GetMidNodeFlux(iEq, 0, idx_temp[1])) +
-							coef3 * (data_manager->GetMidNodeFlux(iEq, 0, idx_temp[5]) - data_manager->GetMidNodeFlux(iEq, 0, idx_temp[0]));
-					}
-					// j direction
-					idx_temp[0] = idx_proxy->GetIdx(i, j - 3, k);
-					idx_temp[1] = idx_proxy->GetIdx(i, j - 2, k);
-					idx_temp[2] = idx_proxy->GetIdx(i, j - 1, k);
-					idx_temp[3] = idx_proxy->GetIdx(i, j, k);
-					idx_temp[4] = idx_proxy->GetIdx(i, j + 1, k);
-					idx_temp[5] = idx_proxy->GetIdx(i, j + 2, k);
-					for (int iEq = 0; iEq < equ_num; ++iEq)
-					{
-						res_tmp[iEq] -=
-							coef1 * (data_manager->GetMidNodeFlux(iEq, 1, idx_temp[3]) - data_manager->GetMidNodeFlux(iEq, 1, idx_temp[2])) +
-							coef2 * (data_manager->GetMidNodeFlux(iEq, 1, idx_temp[4]) - data_manager->GetMidNodeFlux(iEq, 1, idx_temp[1])) +
-							coef3 * (data_manager->GetMidNodeFlux(iEq, 1, idx_temp[5]) - data_manager->GetMidNodeFlux(iEq, 1, idx_temp[0]));
-					}
-					// k direction
-					if (grid->GetDim() == 3)
-					{
-						idx_temp[0] = idx_proxy->GetIdx(i, j, k - 3);
-						idx_temp[1] = idx_proxy->GetIdx(i, j, k - 2);
-						idx_temp[2] = idx_proxy->GetIdx(i, j, k - 1);
-						idx_temp[3] = idx_proxy->GetIdx(i, j, k);
-						idx_temp[4] = idx_proxy->GetIdx(i, j, k + 1);
-						idx_temp[5] = idx_proxy->GetIdx(i, j, k + 2);
-						for (int iEq = 0; iEq < equ_num; ++iEq)
+						for (int iTemp = 0; iTemp < 6; iTemp++)
 						{
-							res_tmp[iEq] -=
-								coef1 * (data_manager->GetMidNodeFlux(iEq, 2, idx_temp[3]) - data_manager->GetMidNodeFlux(iEq, 2, idx_temp[2])) +
-								coef2 * (data_manager->GetMidNodeFlux(iEq, 2, idx_temp[4]) - data_manager->GetMidNodeFlux(iEq, 2, idx_temp[1])) +
-								coef3 * (data_manager->GetMidNodeFlux(iEq, 2, idx_temp[5]) - data_manager->GetMidNodeFlux(iEq, 2, idx_temp[0]));
+							idx_temp[iTemp] = idx_proxy->GetIdx(
+								i + (iTemp - 3) * direction[dim][0],
+								j + (iTemp - 3) * direction[dim][1],
+								k + (iTemp - 3) * direction[dim][2]);
+						}
+						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+						{
+							res_tmp[idx_eq] -=
+								coef1 * (data_manager->GetMidNodeFlux(idx_eq, dim, idx_temp[3]) - data_manager->GetMidNodeFlux(idx_eq, dim, idx_temp[2])) +
+								coef2 * (data_manager->GetMidNodeFlux(idx_eq, dim, idx_temp[4]) - data_manager->GetMidNodeFlux(idx_eq, dim, idx_temp[1])) +
+								coef3 * (data_manager->GetMidNodeFlux(idx_eq, dim, idx_temp[5]) - data_manager->GetMidNodeFlux(idx_eq, dim, idx_temp[0]));
 						}
 					}
-					for (int iEq = 0; iEq < equ_num; ++iEq)
-					{
-						data_manager->SetResidual(iEq, idx, res_tmp[iEq]);
-					}
+					data_manager->SetResidual(idx, res_tmp);
 				}
 			}
 		}

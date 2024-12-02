@@ -2,11 +2,35 @@
 #include "Log.h"
 #include "BasicType.h"
 #include <iostream>
-int main()
+#include"File.h"
+int main(int argc,char**argv)
 {
+	std::string work_dir = "";
+	std::string control_file = "zaran.ini";
+	if (argc == 1)
+	{
+		work_dir = GetCurPath();
+		control_file = work_dir + "/" + control_file;
+		if (IsFileExist(control_file))
+		{
+			Log::info("Use default control file: {}", control_file);
+		}
+		else
+		{
+			Log::error("Default control file are not exist!");
+			Log::warn("Use \"Zaran.exe path_to_work_dir\"");
+			exit(0);
+		}
+	}
+	else
+	{
+		work_dir = argv[1];
+		control_file = work_dir + "/" + control_file;
+		Log::info("Controll file:{}", control_file);
+	}
 	using namespace zaran;
-	Logger::Start();
-	Application* app = new Application();
+	Logger::Start(work_dir);
+	Application* app = new Application(work_dir);
 	app->Run();
 	delete app;
 	for (int i = 10; i > 0; i--)
