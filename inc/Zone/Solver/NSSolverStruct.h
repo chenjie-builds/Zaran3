@@ -14,14 +14,14 @@ namespace zaran
     NSSolverStruct(int index, string name, FlowSolverPara *para, GridStruct *grid, DataManagerNSStruct *data_manager);
     ~NSSolverStruct();
     DataManagerNSStruct *GetDataManager() override;
-    Metrics *GetNodeMetrics();
+    Metric *GetNodeMetrics();
     StructIdxProxy *GetIdxProxy();
     FlowSolverStructPara *GetPara() override;
 
   protected:
     void InitField() override;
     void InitFieldFarfield() override;
-    void InitFieldFarFieldNoVelocity() override;
+    void InitFieldFarFieldZeroVel() override;
     void InitFieldBackup() override;
     void InitFieldVortex();
     void InitFieldExplosion() override;
@@ -68,58 +68,58 @@ namespace zaran
     void Cons2Prim() override;
     void ZeroResidual() override;
     /// @brief 半点原始变量插值：一阶
-    void CalcPrimMidNode1st();
+    void InterMidNodePrim_1st();
     /// @brief 半点原始变量插值：梯度二阶
-    void CalcPrimMidNodeGrad();
+    void InterMidNodePrim_Grad();
     /// @brief 半点原始变量插值：MUSCL
-    void CalcPrimMidNodeMUSCL();
-    void CalcPrimMidNodeMUSCL_SV();
+    void InterMidNodePrim_MUSCL();
+    void InterMidNodePrim_MUSCLSV();
     /// @brief 虚拟节点半点原始变量插值：MUSCL
-    void CalcPrimGhostMidNodeMUSCL();
+    void InterGhostMidNode_MUSCL();
     void CalcPrimGhostMidNodeMUSCL_SV();
     /// @brief 半点原始变量插值：WCNS5
-    void CalcPrimMidNodeCNS5();
+    void InterMidNodePrim_WCNS5();
     /// @brief 虚拟节点半点原始变量插值：WCNS5
-    void CalcPrimGhostMidNodeWCNS5();
+    void InterGhostMidNodePrim_WCNS5();
     /// @brief mid node primitive value interpolate use gradient
     /// @param idx_left left node index
     /// @param idx_right right node index
     /// @param coord_vec coordinate vector from left to right
     /// @param value_left interpolated value of left side at mid point
     /// @param value_right interpolated value of right side at mid point
-    void InterPrimMidNodeGrad(int idx_left, int idx_right, double *coord_vec, double *value_left, double *value_right);
+    void InterMidNodePrim_Grad(int idx_left, int idx_right, double *coord_vec, double *value_left, double *value_right);
     /// @brief mid node primitive value interpolate use 1st order
     /// @param idx_left 
     /// @param idx_right 
     /// @param value_left 
     /// @param value_right 
-    void InterPrimMidNode1st(int idx_left, int idx_right, double *value_left, double *value_right);
+    void InterMidNodePrim_1st(int idx_left, int idx_right, double *value_left, double *value_right);
     /// @brief mid node primitive value interpolate use MUSCL
     /// @param value values at node, size = 5,(i-2,i-1,i,i+1,i+2)
     /// @param value_left interpolated value of left side at mid point i+1/2
     /// @param value_right interpolated value of right side at mid point i+1/2
-    void InterPrimMidNodeMUSCL(const double *value, double &value_left, double &value_right);
-    void InterPrimMidNodeMUSCL_SV(const double *value,  double**coord, double &value_left, double &value_right);
+    void InterMidNodePrim_MUSCL(const double *value, double &value_left, double &value_right);
+    void InterMidNodePrim_MUSCLSV(const double *value,  double**coord, double &value_left, double &value_right);
     /// @brief mid node primitive value interpolate use WCNS5
     /// @param value values at node, size = 5,(i-2,i-1,i,i+1,i+2)
     /// @param value_left interpolated value of left side at mid point i+1/2
     /// @param value_right interpolated value of right side at mid point i-1/2
-    void InterPrimMidNodeWCNS5( double *value, double &value_left, double &value_right);
-    void CalcFluxDifference();
+    void InterPrimMidNode_WCNS5( double *value, double &value_left, double &value_right);
+    void FluxDifference();
     /// @brief flux difference: central 2nd order
-    virtual void CalcFluxDifference2ndOrder() {};
+    virtual void FluxDifference2nd() {};
 	/// @brief flux difference: central 4th order
-	virtual void CalcFluxDifference4thOrder() {};
+	virtual void FluxDifference4th() {};
     /// @brief flux difference: central 6th order
-    virtual void CalcFluxDifference6thOrder() {};
+    virtual void FluxDifference6th() {};
     /// @brief calculate convection residual
     void CalcConvectionResidual() override;
 
-    virtual void CalcConvectionResidual1stUpwind();
-    virtual void CalcConvectionResidualGrad();
-    virtual void CalcConvectionResidualMUSCL();
-    virtual void CalcConvectionResidualMUSCL_SV();
-    virtual void CalcConvectionResidualWCNS5();
+    virtual void CalcConvectionRes_1st();
+    virtual void CalcConvectionRes_Grad();
+    virtual void CalcConvectionRes_MUSCL();
+    virtual void CalcConvectionRes_MUSCLSV();
+    virtual void CalcConvectionRes_WCNS5();
 
     // 计算粘性通量
     void CalcViscousResidual() override;
@@ -145,9 +145,9 @@ namespace zaran
 
   protected:
     GridStruct *GetGrid() override;
-    Metrics *GetMidMetricsI();
-    Metrics *GetMidMetricsJ();
-    Metrics *GetMidMetricsK();
+    Metric *GetMidMetricsI();
+    Metric *GetMidMetricsJ();
+    Metric *GetMidMetricsK();
 
   protected:
     //@brief 节点差分：二阶中心差分
@@ -211,11 +211,11 @@ namespace zaran
 
   private:
     /// @brief 节点度量
-    Metrics *m_node_metrics;
+    Metric *m_node_metrics;
     /// @brief 索引代理，用于将结构节点索引转换为场数据索引
     StructIdxProxy *m_idx_proxy;
-    Metrics *m_metrics_half_i; // 半点度量系数(i+1/2)
-    Metrics *m_metrics_half_j; // 半点度量系数(j+1/2)
-    Metrics *m_metrics_half_k; // 半点度量系数(k+1/2)
+    Metric *m_metrics_half_i; // 半点度量系数(i+1/2)
+    Metric *m_metrics_half_j; // 半点度量系数(j+1/2)
+    Metric *m_metrics_half_k; // 半点度量系数(k+1/2)
   };
 } // namespace zaran

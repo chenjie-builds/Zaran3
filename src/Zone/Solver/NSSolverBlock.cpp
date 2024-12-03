@@ -16,7 +16,7 @@ namespace zaran
         return static_cast<GridBlock *>(NSSolverStruct::GetGrid());
     }
 
-    void NSSolverBlock::CalcFluxDifference2ndOrder()
+    void NSSolverBlock::FluxDifference2nd()
     {
         auto grid = GetGrid();
         auto node = grid->GetNode();

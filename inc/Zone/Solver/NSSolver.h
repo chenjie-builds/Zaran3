@@ -27,7 +27,7 @@ namespace zaran
 
 	protected:
 		virtual void InitFieldFarfield() = 0;
-		virtual void InitFieldFarFieldNoVelocity() = 0;
+		virtual void InitFieldFarFieldZeroVel() = 0;
 		virtual void InitFieldBackup() = 0;
 		virtual void InitFieldExplosion() = 0;
 		void InitSolver() override;

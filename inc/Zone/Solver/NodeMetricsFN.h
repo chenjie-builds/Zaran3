@@ -4,11 +4,11 @@ namespace zaran
 {
     /// @brief 网格度量类
     /// @details 用于计算网格度量
-    class Metrics
+    class Metric
     {
     public:
-        Metrics(int node_num);
-        ~Metrics();
+        Metric(int node_num);
+        ~Metric();
 		/// @brief 获取逆度量系数
 		/// @param dim 维度索引, 0:x, 1:y, 2:z, 3:t
 		/// @param iNode 节点索引

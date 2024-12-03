@@ -9,7 +9,7 @@ namespace zaran
 	NSSolverStructDEER::~NSSolverStructDEER()
 	{
 	}
-	void NSSolverStructDEER::CalcFluxDifference2ndOrder()
+	void NSSolverStructDEER::FluxDifference2nd()
 	{
 		auto para = GetPara();
 		if (para->GetInterSchme() == InterpolationScheme::Grad)
@@ -217,7 +217,7 @@ namespace zaran
 			}
 		}
 	}
-	void NSSolverStructDEER::CalcFluxDifference4thOrder()
+	void NSSolverStructDEER::FluxDifference4th()
 	{
 		auto grid = GetGrid();
 		auto para = GetPara();
@@ -280,7 +280,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverStructDEER::CalcFluxDifference6thOrder()
+	void NSSolverStructDEER::FluxDifference6th()
 	{
 		auto grid = GetGrid();
 		auto para = GetPara();

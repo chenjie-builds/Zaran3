@@ -41,7 +41,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
-		Metrics* coef_mid[3];
+		Metric* coef_mid[3];
 		coef_mid[0] = GetMidMetricsI();
 		coef_mid[1] = GetMidMetricsJ();
 		coef_mid[2] = GetMidMetricsK();
@@ -169,7 +169,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
-		Metrics* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
+		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
 		auto idx_proxy = GetIdxProxy();
 		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
 		int ni = grid->GetNi();
@@ -428,37 +428,37 @@ namespace zaran
 		}
 	}
 
-	void NSSolverStructCMM::CalcConvectionResidual1stUpwind()
+	void NSSolverStructCMM::CalcConvectionRes_1st()
 	{
-		CalcPrimMidNode1st();
-		CalcPrimGhostMidNodeMUSCL();
+		InterMidNodePrim_1st();
+		InterGhostMidNode_MUSCL();
 		CalcConvectionFluxMidNode();
-		CalcFluxDifference2ndOrder();
+		FluxDifference2nd();
 	}
 
-	void NSSolverStructCMM::CalcConvectionResidualMUSCL()
+	void NSSolverStructCMM::CalcConvectionRes_MUSCL()
 	{
-		CalcPrimMidNodeMUSCL();
-		CalcPrimGhostMidNodeMUSCL();
+		InterMidNodePrim_MUSCL();
+		InterGhostMidNode_MUSCL();
 		CalcConvectionFluxMidNode();
-		CalcFluxDifference();
+		FluxDifference();
 	}
 
-	void NSSolverStructCMM::CalcConvectionResidualWCNS5()
+	void NSSolverStructCMM::CalcConvectionRes_WCNS5()
 	{
 		int firstOrderSteps = GlobalData::GetInt("firstOrderSteps");
 		int currentIter = GlobalData::GetInt("currentIter");
 		if (currentIter < firstOrderSteps)
 		{
-			CalcConvectionResidual1stUpwind();
+			CalcConvectionRes_1st();
 		}
 		else
 		{
 
-			CalcPrimMidNodeCNS5();
-			CalcPrimGhostMidNodeWCNS5();
+			InterMidNodePrim_WCNS5();
+			InterGhostMidNodePrim_WCNS5();
 			CalcConvectionFluxMidNode();
-			CalcFluxDifference();
+			FluxDifference();
 		}
 	}
 
@@ -555,7 +555,7 @@ namespace zaran
 			}
 		}
 	}
-	void NSSolverStructCMM::CalcFluxDifference2ndOrder()
+	void NSSolverStructCMM::FluxDifference2nd()
 	{
 		auto grid = GetGrid();
 		auto para = GetPara();
@@ -603,7 +603,7 @@ namespace zaran
 			}
 		}
 	}
-	void NSSolverStructCMM::CalcFluxDifference6thOrder()
+	void NSSolverStructCMM::FluxDifference6th()
 	{
 		auto grid = GetGrid();
 		auto para = GetPara();

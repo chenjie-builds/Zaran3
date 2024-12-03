@@ -12,7 +12,7 @@ namespace zaran
     protected:
         GridBlock *GetGrid() override;
 
-        void CalcFluxDifference2ndOrder() override;
+        void FluxDifference2nd() override;
         /// @brief mid node value interpolate
         /// @param idx_left left node index
         /// @param idx_right right node index

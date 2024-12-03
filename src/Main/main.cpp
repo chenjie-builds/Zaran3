@@ -26,7 +26,7 @@ int main(int argc,char**argv)
 	{
 		work_dir = argv[1];
 		control_file = work_dir + "/" + control_file;
-		Log::info("Controll file:{}", control_file);
+		Log::info("Control file:{}", control_file);
 	}
 	using namespace zaran;
 	Logger::Start(work_dir);

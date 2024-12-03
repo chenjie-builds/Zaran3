@@ -26,7 +26,7 @@ namespace zaran
 
 	protected:
 		void InitFieldFarfield() override;
-		void InitFieldFarFieldNoVelocity() override;
+		void InitFieldFarFieldZeroVel() override;
 		void InitFieldBackup() override;
 		void InitFieldExplosion() override;
 		void CalcCoordTransCoef() override;
@@ -93,6 +93,6 @@ namespace zaran
 
 	private:
 		GradWLSQ *m_grad_wlsq;
-		Metrics *m_node_metric;
+		Metric *m_node_metric;
 	};
 }

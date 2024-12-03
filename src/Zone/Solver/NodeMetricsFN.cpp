@@ -2,64 +2,64 @@
 #include "Log.h"
 namespace zaran
 {
-    Metrics::Metrics(int node_num)
+    Metric::Metric(int node_num)
     {
         m_metric = new double[node_num * m_metric_num];
     }
 
-    Metrics::~Metrics()
+    Metric::~Metric()
     {
         delete[] m_metric;
     }
-	double* Metrics::GetInvMetrics(int dim, int iNode)
+	double* Metric::GetInvMetrics(int dim, int iNode)
 	{
 		return m_metric + iNode * m_metric_num + dim * 4;
 	}
-	double* Metrics::GetMetrics(int  dim, int iNode)
+	double* Metric::GetMetrics(int  dim, int iNode)
     {
         return m_metric + iNode * m_metric_num + dim * 4 + 16;
     }
-    double *Metrics::GetX(int iNode)
+    double *Metric::GetX(int iNode)
     {
         return m_metric + iNode * m_metric_num;
     }
-    double *Metrics::GetY(int iNode)
+    double *Metric::GetY(int iNode)
     {
         return m_metric + iNode * m_metric_num + 4;
     }
-    double *Metrics::GetZ(int iNode)
+    double *Metric::GetZ(int iNode)
     {
         return m_metric + iNode * m_metric_num + 8;
     }
-    double *Metrics::GetT(int iNode)
+    double *Metric::GetT(int iNode)
     {
         return m_metric + iNode * m_metric_num + 12;
     }
-    double *Metrics::GetXi(int iNode)
+    double *Metric::GetXi(int iNode)
     {
         return m_metric + iNode * m_metric_num + 16;
     }
 
-    double *Metrics::GetEta(int iNode)
+    double *Metric::GetEta(int iNode)
     {
         return m_metric + iNode * m_metric_num + 20;
     }
 
-    double *Metrics::GetZeta(int iNode)
+    double *Metric::GetZeta(int iNode)
     {
         return m_metric + iNode * m_metric_num + 24;
     }
 
-    double *Metrics::GetTau(int iNode)
+    double *Metric::GetTau(int iNode)
     {
         return m_metric + iNode * m_metric_num + 28;
     }
-    double &Metrics::GetJacobian(int iNode)
+    double &Metric::GetJacobian(int iNode)
     {
         return m_metric[iNode * m_metric_num + 32];
     }
 
-    void Metrics::CalcMetric(int iNode, const double *iRight, const double *iLeft, const double *jRight, const double *jLeft, const double *kRight, const double *kLeft)
+    void Metric::CalcMetric(int iNode, const double *iRight, const double *iLeft, const double *jRight, const double *jLeft, const double *kRight, const double *kLeft)
     {
         double coef_x[4], coef_y[4], coef_z[4], coef_t[4];
         double *coef_xi = GetXi(iNode);

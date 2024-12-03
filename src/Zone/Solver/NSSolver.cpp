@@ -30,7 +30,7 @@ namespace zaran
 		auto init_type = para->GetInitFieldType();
 		if (init_type == InitFieldType::FarFlowNoVelocity)
 		{
-			InitFieldFarFieldNoVelocity();
+			InitFieldFarFieldZeroVel();
 		}
 		else if (init_type == InitFieldType::FarFlow)
 		{

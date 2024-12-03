@@ -14,12 +14,12 @@ namespace zaran
     protected:
         //==================================================================
         //@brief 通量差分：二阶中心差分
-        void CalcFluxDifference2ndOrder() override;
+        void FluxDifference2nd() override;
         //@brief 通量差分：二阶中心差分,移动中间节点,用于梯度插值得到中间节点值
         void FlueDifference2nd_MoveMidNode();
-		void CalcFluxDifference4thOrder() override;
+		void FluxDifference4th() override;
         //@biref 通量差分：六阶中心差分
-        void CalcFluxDifference6thOrder() override;
+        void FluxDifference6th() override;
         /// @brief mid node value interpolate
         /// @param idx_left left node index
         /// @param idx_right right node index

@@ -16,10 +16,10 @@ namespace zaran
 		nk = grid->GetNk();
 		m_idx_proxy = new StructIdxProxy(ni, nj, nk);
 		int node_num = ni * nj * nk;
-		m_node_metrics = new Metrics(node_num);
-		m_metrics_half_i = new Metrics(node_num);
-		m_metrics_half_j = new Metrics(node_num);
-		m_metrics_half_k = new Metrics(node_num);
+		m_node_metrics = new Metric(node_num);
+		m_metrics_half_i = new Metric(node_num);
+		m_metrics_half_j = new Metric(node_num);
+		m_metrics_half_k = new Metric(node_num);
 	}
 	NSSolverStruct::~NSSolverStruct()
 	{
@@ -53,7 +53,7 @@ namespace zaran
 	{
 		return static_cast<DataManagerNSStruct*>(NSSolver::GetDataManager());
 	}
-	Metrics* NSSolverStruct::GetNodeMetrics()
+	Metric* NSSolverStruct::GetNodeMetrics()
 	{
 		return m_node_metrics;
 	}
@@ -126,7 +126,7 @@ namespace zaran
 			}
 		}
 	}
-	void NSSolverStruct::InitFieldFarFieldNoVelocity()
+	void NSSolverStruct::InitFieldFarFieldZeroVel()
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
@@ -291,7 +291,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
-		Metrics* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
+		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
 		auto idx_proxy = GetIdxProxy();
 		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
 		int ni = grid->GetNi();
@@ -401,7 +401,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
-		Metrics* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
+		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
 		auto idx_proxy = GetIdxProxy();
 		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
 		int ni = grid->GetNi();
@@ -1428,7 +1428,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
-		Metrics* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
+		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
 		auto idx_proxy = GetIdxProxy();
 		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
 		int ni = grid->GetNi();
@@ -1783,7 +1783,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
-		Metrics* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
+		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
 		auto idx_proxy = GetIdxProxy();
 		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
 		int ni = grid->GetNi();
@@ -2922,7 +2922,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
-		Metrics* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
+		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
 		auto idx_proxy = GetIdxProxy();
 		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
 		int ni = grid->GetNi();
@@ -3285,7 +3285,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
-		Metrics* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
+		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
 		auto idx_proxy = GetIdxProxy();
 		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
 		int ni = grid->GetNi();
@@ -4423,7 +4423,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
-		Metrics* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
+		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
 		auto idx_proxy = GetIdxProxy();
 		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
 		int ni = grid->GetNi();
@@ -4908,7 +4908,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
-		Metrics* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
+		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
 		auto idx_proxy = GetIdxProxy();
 		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
 		int ni = grid->GetNi();
@@ -6883,7 +6883,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverStruct::CalcPrimMidNode1st()
+	void NSSolverStruct::InterMidNodePrim_1st()
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
@@ -6924,7 +6924,7 @@ namespace zaran
 			}
 		}
 	}
-	void NSSolverStruct::CalcPrimMidNodeGrad()
+	void NSSolverStruct::InterMidNodePrim_Grad()
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
@@ -6946,7 +6946,7 @@ namespace zaran
 					coord_vec[0] = node->GetCoord(i + 1, j, k)[0] - node->GetCoord(i, j, k)[0];
 					coord_vec[1] = node->GetCoord(i + 1, j, k)[1] - node->GetCoord(i, j, k)[1];
 					coord_vec[2] = node->GetCoord(i + 1, j, k)[2] - node->GetCoord(i, j, k)[2];
-					InterPrimMidNodeGrad(idx, idx_right, coord_vec, value_left, value_right);
+					InterMidNodePrim_Grad(idx, idx_right, coord_vec, value_left, value_right);
 					for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
 					{
 						data_manager->SetMidNodePrim(idx_eq, 0, idx, value_left[idx_eq], value_right[idx_eq]);
@@ -6956,7 +6956,7 @@ namespace zaran
 					coord_vec[0] = node->GetCoord(i, j + 1, k)[0] - node->GetCoord(i, j, k)[0];
 					coord_vec[1] = node->GetCoord(i, j + 1, k)[1] - node->GetCoord(i, j, k)[1];
 					coord_vec[2] = node->GetCoord(i, j + 1, k)[2] - node->GetCoord(i, j, k)[2];
-					InterPrimMidNodeGrad(idx, idx_right, coord_vec, value_left, value_right);
+					InterMidNodePrim_Grad(idx, idx_right, coord_vec, value_left, value_right);
 					for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
 					{
 						data_manager->SetMidNodePrim(idx_eq, 1, idx, value_left[idx_eq], value_right[idx_eq]);
@@ -6967,7 +6967,7 @@ namespace zaran
 						coord_vec[0] = node->GetCoord(i, j, k + 1)[0] - node->GetCoord(i, j, k)[0];
 						coord_vec[1] = node->GetCoord(i, j, k + 1)[1] - node->GetCoord(i, j, k)[1];
 						coord_vec[2] = node->GetCoord(i, j, k + 1)[2] - node->GetCoord(i, j, k)[2];
-						InterPrimMidNodeGrad(idx, idx_right, coord_vec, value_left, value_right);
+						InterMidNodePrim_Grad(idx, idx_right, coord_vec, value_left, value_right);
 						for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
 						{
 							data_manager->SetMidNodePrim(idx_eq, 2, idx, value_left[idx_eq], value_right[idx_eq]);
@@ -6977,7 +6977,7 @@ namespace zaran
 			}
 		}
 	}
-	void NSSolverStruct::CalcPrimMidNodeMUSCL()
+	void NSSolverStruct::InterMidNodePrim_MUSCL()
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
@@ -7011,7 +7011,7 @@ namespace zaran
 							value_temp[iTemp] = data_manager->GetPrim(
 								idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
 						}
-						InterPrimMidNodeMUSCL(value_temp, left_value, right_value);
+						InterMidNodePrim_MUSCL(value_temp, left_value, right_value);
 						data_manager->SetMidNodePrim(idx_eq, 0, idx, left_value, right_value);
 					}
 					i_temp[0] = i_temp[1] = i_temp[2] = i_temp[3] = i_temp[4] = i;
@@ -7024,7 +7024,7 @@ namespace zaran
 							value_temp[iTemp] = data_manager->GetPrim(
 								idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
 						}
-						InterPrimMidNodeMUSCL(value_temp, left_value, right_value);
+						InterMidNodePrim_MUSCL(value_temp, left_value, right_value);
 						data_manager->SetMidNodePrim(idx_eq, 1, idx, left_value, right_value);
 					}
 
@@ -7040,7 +7040,7 @@ namespace zaran
 								value_temp[iTemp] = data_manager->GetPrim(
 									idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
 							}
-							InterPrimMidNodeMUSCL(value_temp, left_value, right_value);
+							InterMidNodePrim_MUSCL(value_temp, left_value, right_value);
 							data_manager->SetMidNodePrim(idx_eq, 2, idx, left_value, right_value);
 						}
 					}
@@ -7049,7 +7049,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverStruct::CalcPrimMidNodeMUSCL_SV()
+	void NSSolverStruct::InterMidNodePrim_MUSCLSV()
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
@@ -7092,7 +7092,7 @@ namespace zaran
 								coord_temp[iTemp][iDim] = node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[iDim];
 							}
 						}
-						InterPrimMidNodeMUSCL_SV(value_temp, coord_temp, left_value, right_value);
+						InterMidNodePrim_MUSCLSV(value_temp, coord_temp, left_value, right_value);
 						data_manager->SetMidNodePrim(idx_eq, 0, idx, left_value, right_value);
 					}
 					i_temp[0] = i_temp[1] = i_temp[2] = i_temp[3] = i_temp[4] = i;
@@ -7109,7 +7109,7 @@ namespace zaran
 								coord_temp[iTemp][iDim] = node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[iDim];
 							}
 						}
-						InterPrimMidNodeMUSCL_SV(value_temp, coord_temp, left_value, right_value);
+						InterMidNodePrim_MUSCLSV(value_temp, coord_temp, left_value, right_value);
 						data_manager->SetMidNodePrim(idx_eq, 1, idx, left_value, right_value);
 					}
 
@@ -7130,7 +7130,7 @@ namespace zaran
 										node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[iDim];
 								}
 							}
-							InterPrimMidNodeMUSCL_SV(value_temp, coord_temp, left_value, right_value);
+							InterMidNodePrim_MUSCLSV(value_temp, coord_temp, left_value, right_value);
 							data_manager->SetMidNodePrim(idx_eq, 2, idx, left_value, right_value);
 						}
 					}
@@ -7143,7 +7143,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverStruct::CalcPrimGhostMidNodeMUSCL()
+	void NSSolverStruct::InterGhostMidNode_MUSCL()
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
@@ -7175,7 +7175,7 @@ namespace zaran
 					value[2] = data_manager->GetPrim(idx_eq, idx_temp[2]);
 					value[3] = data_manager->GetPrim(idx_eq, idx_temp[3]);
 					value[4] = data_manager->GetPrim(idx_eq, idx_temp[4]);
-					InterPrimMidNodeMUSCL(value, left_value, right_value);
+					InterMidNodePrim_MUSCL(value, left_value, right_value);
 					data_manager->SetMidNodePrim(idx_eq, 0, idx_temp[2], left_value, right_value);
 				}
 			}
@@ -7199,7 +7199,7 @@ namespace zaran
 					value[2] = data_manager->GetPrim(idx_eq, idx_temp[2]);
 					value[3] = data_manager->GetPrim(idx_eq, idx_temp[3]);
 					value[4] = data_manager->GetPrim(idx_eq, idx_temp[4]);
-					InterPrimMidNodeMUSCL(value, left_value, right_value);
+					InterMidNodePrim_MUSCL(value, left_value, right_value);
 					data_manager->SetMidNodePrim(idx_eq, 1, idx_temp[2], left_value, right_value);
 				}
 			}
@@ -7226,7 +7226,7 @@ namespace zaran
 						value[2] = data_manager->GetPrim(idx_eq, idx_temp[2]);
 						value[3] = data_manager->GetPrim(idx_eq, idx_temp[3]);
 						value[4] = data_manager->GetPrim(idx_eq, idx_temp[4]);
-						InterPrimMidNodeMUSCL(value, left_value, right_value);
+						InterMidNodePrim_MUSCL(value, left_value, right_value);
 						data_manager->SetMidNodePrim(idx_eq, 2, idx_temp[2], left_value, right_value);
 					}
 				}
@@ -7278,7 +7278,7 @@ namespace zaran
 						}
 					}
 					// MidNodeMUSCL(value_temp, left_value, right_value);
-					InterPrimMidNodeMUSCL_SV(value_temp, coord_temp, left_value, right_value);
+					InterMidNodePrim_MUSCLSV(value_temp, coord_temp, left_value, right_value);
 					data_manager->SetMidNodePrim(idx_eq, 0, idx, left_value, right_value);
 				}
 			}
@@ -7307,7 +7307,7 @@ namespace zaran
 						}
 					}
 					// MidNodeMUSCL(value_temp, left_value, right_value);
-					InterPrimMidNodeMUSCL_SV(value_temp, coord_temp, left_value, right_value);
+					InterMidNodePrim_MUSCLSV(value_temp, coord_temp, left_value, right_value);
 					data_manager->SetMidNodePrim(idx_eq, 1, idx, left_value, right_value);
 				}
 			}
@@ -7338,7 +7338,7 @@ namespace zaran
 							}
 						}
 						// MidNodeMUSCL(value_temp, left_value, right_value);
-						InterPrimMidNodeMUSCL_SV(value_temp, coord_temp, left_value, right_value);
+						InterMidNodePrim_MUSCLSV(value_temp, coord_temp, left_value, right_value);
 						data_manager->SetMidNodePrim(idx_eq, 2, idx, left_value, right_value);
 					}
 				}
@@ -7347,7 +7347,7 @@ namespace zaran
 		delete[] coord_temp;
 	}
 
-	void NSSolverStruct::CalcPrimMidNodeCNS5()
+	void NSSolverStruct::InterMidNodePrim_WCNS5()
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
@@ -7384,7 +7384,7 @@ namespace zaran
 						{
 							value_temp[iTemp] = data_manager->GetPrim(idx_eq, idx_temp[iTemp]);
 						}
-						InterPrimMidNodeWCNS5(value_temp, left_value[idx_eq], right_value[idx_eq]);
+						InterPrimMidNode_WCNS5(value_temp, left_value[idx_eq], right_value[idx_eq]);
 					}
 					if (left_value[0] < SMALL_NUMBER || left_value[4] < SMALL_NUMBER || left_value[0]>max_density || left_value[4]>max_pressure)
 					{
@@ -7417,7 +7417,7 @@ namespace zaran
 						{
 							value_temp[iTemp] = data_manager->GetPrim(idx_eq, idx_temp[iTemp]);
 						}
-						InterPrimMidNodeWCNS5(value_temp, left_value[idx_eq], right_value[idx_eq]);
+						InterPrimMidNode_WCNS5(value_temp, left_value[idx_eq], right_value[idx_eq]);
 					}
 					if (left_value[0] < SMALL_NUMBER || left_value[4] < SMALL_NUMBER || left_value[0]>max_density || left_value[4]>max_pressure)
 					{
@@ -7451,7 +7451,7 @@ namespace zaran
 							{
 								value_temp[iTemp] = data_manager->GetPrim(idx_eq, idx_temp[iTemp]);
 							}
-							InterPrimMidNodeWCNS5(value_temp, left_value[idx_eq], right_value[idx_eq]);
+							InterPrimMidNode_WCNS5(value_temp, left_value[idx_eq], right_value[idx_eq]);
 						}
 						if (left_value[0] < SMALL_NUMBER || left_value[4] < SMALL_NUMBER || left_value[0]>max_density || left_value[4]>max_pressure)
 						{
@@ -7480,7 +7480,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverStruct::CalcPrimGhostMidNodeWCNS5()
+	void NSSolverStruct::InterGhostMidNodePrim_WCNS5()
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
@@ -7613,7 +7613,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverStruct::InterPrimMidNodeGrad(int idx_left, int idx_right, double* coord_vec, double* value_left,
+	void NSSolverStruct::InterMidNodePrim_Grad(int idx_left, int idx_right, double* coord_vec, double* value_left,
 		double* value_right)
 	{
 		int equ_num = GetPara()->GetEqNum();
@@ -7632,7 +7632,7 @@ namespace zaran
 					coord_vec[2] * data_manager->GetPrimGrad(idx_eq, 2, idx_right));
 		}
 	}
-	void NSSolverStruct::InterPrimMidNode1st(int index_left, int index_right, double* value_rec_left,
+	void NSSolverStruct::InterMidNodePrim_1st(int index_left, int index_right, double* value_rec_left,
 		double* value_rec_right)
 	{
 		int equ_num = GetPara()->GetEqNum();
@@ -7645,7 +7645,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverStruct::InterPrimMidNodeMUSCL(const double* value, double& value_left, double& value_right)
+	void NSSolverStruct::InterMidNodePrim_MUSCL(const double* value, double& value_left, double& value_right)
 	{
 		double k = -1.0;
 		double delta_plus = value[3] - value[2];
@@ -7668,7 +7668,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverStruct::InterPrimMidNodeMUSCL_SV(const double* value, double** coord, double& value_left,
+	void NSSolverStruct::InterMidNodePrim_MUSCLSV(const double* value, double** coord, double& value_left,
 		double& value_right)
 	{
 		double k = -1.0;
@@ -7707,7 +7707,7 @@ namespace zaran
 	}
 
 	// 参考《计算空气动力学》pp.84
-	void NSSolverStruct::InterPrimMidNodeWCNS5(double* value, double& value_left, double& value_right)
+	void NSSolverStruct::InterPrimMidNode_WCNS5(double* value, double& value_left, double& value_right)
 	{
 		//double ref_value = value[2];
 		//if (abs(ref_value) > SMALL_NUMBER)
@@ -7764,26 +7764,26 @@ namespace zaran
 		//	value_right = value_right * ref_value;
 		//}
 	}
-	void NSSolverStruct::CalcFluxDifference()
+	void NSSolverStruct::FluxDifference()
 	{
 		auto para = GetPara();
 		auto flux_difference_scheme = para->GetFluxDifferenceScheme();
 		if (flux_difference_scheme == FluxDifferenceScheme::SecondOrder)
 		{
-			CalcFluxDifference2ndOrder();
+			FluxDifference2nd();
 		}
 		else if (flux_difference_scheme == FluxDifferenceScheme::FourthOrder)
 		{
-			CalcFluxDifference4thOrder();
+			FluxDifference4th();
 		}
 		else if (flux_difference_scheme == FluxDifferenceScheme::SixthOrder)
 		{
-			CalcFluxDifference6thOrder();
+			FluxDifference6th();
 		}
 		else
 		{
 			Log::error("Flux difference scheme not found!");
-			CalcFluxDifference2ndOrder();
+			FluxDifference2nd();
 		}
 	}
 	void NSSolverStruct::CalcConvectionResidual()
@@ -7792,66 +7792,66 @@ namespace zaran
 		auto inter_scheme = para->GetInterSchme();
 		if (inter_scheme == InterpolationScheme::FirstOrder)
 		{
-			CalcConvectionResidual1stUpwind();
+			CalcConvectionRes_1st();
 		}
 		else if (inter_scheme == InterpolationScheme::MUSCL)
 		{
-			CalcConvectionResidualMUSCL();
+			CalcConvectionRes_MUSCL();
 		}
 		else if (inter_scheme == InterpolationScheme::MUSCL_SV)
 		{
-			CalcConvectionResidualMUSCL_SV();
+			CalcConvectionRes_MUSCLSV();
 		}
 		else if (inter_scheme == InterpolationScheme::WCNS5)
 		{
-			CalcConvectionResidualWCNS5();
+			CalcConvectionRes_WCNS5();
 		}
 		else if (inter_scheme == InterpolationScheme::Grad)
 		{
-			CalcConvectionResidualGrad();
+			CalcConvectionRes_Grad();
 		}
 		else
 		{
 			Log::error("Interpolation scheme not found!");
-			CalcConvectionResidual1stUpwind();
+			CalcConvectionRes_1st();
 		}
 	}
-	void NSSolverStruct::CalcConvectionResidual1stUpwind()
+	void NSSolverStruct::CalcConvectionRes_1st()
 	{
-		CalcPrimMidNode1st();
-		CalcPrimGhostMidNodeWCNS5();
-		CalcFluxDifference2ndOrder();
+		InterMidNodePrim_1st();
+		InterGhostMidNodePrim_WCNS5();
+		FluxDifference2nd();
 	}
-	void NSSolverStruct::CalcConvectionResidualGrad()
+	void NSSolverStruct::CalcConvectionRes_Grad()
 	{
-		CalcPrimMidNodeGrad();
-		CalcFluxDifference();
+		InterMidNodePrim_Grad();
+		FluxDifference();
 	}
-	void NSSolverStruct::CalcConvectionResidualMUSCL()
+	void NSSolverStruct::CalcConvectionRes_MUSCL()
 	{
-		CalcPrimMidNodeMUSCL();
-		CalcPrimGhostMidNodeMUSCL();
-		CalcFluxDifference();
+		InterMidNodePrim_MUSCL();
+		InterGhostMidNode_MUSCL();
+		FluxDifference();
 	}
-	void NSSolverStruct::CalcConvectionResidualMUSCL_SV()
+	void NSSolverStruct::CalcConvectionRes_MUSCLSV()
 	{
-		CalcPrimMidNodeMUSCL_SV();
+		InterMidNodePrim_MUSCLSV();
 		CalcPrimGhostMidNodeMUSCL_SV();
-		CalcFluxDifference();
+		FluxDifference();
 	}
-	void NSSolverStruct::CalcConvectionResidualWCNS5()
+	void NSSolverStruct::CalcConvectionRes_WCNS5()
 	{
 		int firstOrderSteps = GlobalData::GetInt("firstOrderSteps");
 		int currentIter = GlobalData::GetInt("currentIter");
 		if (currentIter < firstOrderSteps)
 		{
-			CalcConvectionResidual1stUpwind();
+			CalcConvectionRes_1st();
 		}
 		else
 		{
-			CalcPrimMidNodeCNS5();
-			CalcPrimGhostMidNodeWCNS5();
-			CalcFluxDifference();
+			InterMidNodePrim_WCNS5();
+			InterGhostMidNodePrim_WCNS5();
+			FluxDifference();
 		}
 	}
 	void NSSolverStruct::CalcViscousResidual()
@@ -8201,17 +8201,17 @@ namespace zaran
 		return static_cast<GridStruct*>(FlowFieldSolver::GetGrid());
 	}
 
-	Metrics* NSSolverStruct::GetMidMetricsI()
+	Metric* NSSolverStruct::GetMidMetricsI()
 	{
 		return m_metrics_half_i;
 	}
 
-	Metrics* NSSolverStruct::GetMidMetricsJ()
+	Metric* NSSolverStruct::GetMidMetricsJ()
 	{
 		return m_metrics_half_j;
 	}
 
-	Metrics* NSSolverStruct::GetMidMetricsK()
+	Metric* NSSolverStruct::GetMidMetricsK()
 	{
 		return m_metrics_half_k;
 	}

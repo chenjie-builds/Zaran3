@@ -8,7 +8,7 @@ namespace zaran
 	NSSolverFNFDM::NSSolverFNFDM(int index, string name, FlowSolverPara* para, GridFN* grid, DataManagerNS* data_manager)
 		: NSSolver(index, name, para, grid, data_manager)
 	{
-		m_node_metric = new Metrics(grid->GetTotalNodeNum());
+		m_node_metric = new Metric(grid->GetTotalNodeNum());
 		m_grad_wlsq = new GradWLSQ(grid);
 	}
 
@@ -36,7 +36,7 @@ namespace zaran
 				data_manager->SetPrim(iVal, iNode, prim_far[iVal]);
 		}
 	}
-	void NSSolverFNFDM::InitFieldFarFieldNoVelocity()
+	void NSSolverFNFDM::InitFieldFarFieldZeroVel()
 	{
 		auto grid = GetGrid();
 		auto para = GetPara();
