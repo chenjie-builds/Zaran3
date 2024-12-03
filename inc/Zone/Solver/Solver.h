@@ -20,13 +20,13 @@ namespace zaran
 	class Solver
 	{
 	public:
-		Solver(int index, string name, SolverPara* para, GridBase* grid);
+		Solver(int index, string name, SolverParam* para, GridBase* grid);
 		virtual ~Solver();
 	public:
 		const string& GetName()const { return name_; }
 		virtual GridBase* GetGrid() { return m_grid; }
 		const int& GetIndex()const { return index_; }
-		virtual SolverPara* GetPara();
+		virtual SolverParam* GetPara();
 	public:
 		virtual void Init() ;
 		virtual void Solve() = 0;
@@ -41,6 +41,6 @@ namespace zaran
 		// 全场网格数组
 		GridBase* m_grid;
 		// solver 的参数
-		SolverPara* m_para;
+		SolverParam* m_para;
 	};
 }

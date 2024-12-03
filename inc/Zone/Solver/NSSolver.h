@@ -19,7 +19,7 @@ namespace zaran
 	class NSSolver : public FlowFieldSolver
 	{
 	public:
-		NSSolver(int index, string name, FlowSolverPara *para, GridBase *grid, DataManagerNS *data_manager);
+		NSSolver(int index, string name, FlowSolverParam *para, GridBase *grid, DataManagerNS *data_manager);
 		~NSSolver();
 		void Init() override;
 		void InitField() override;

@@ -7,7 +7,7 @@
 namespace zaran
 {
 
-	NSSolver::NSSolver(int index, string name, FlowSolverPara* para, GridBase* grid, DataManagerNS* data_manager)
+	NSSolver::NSSolver(int index, string name, FlowSolverParam* para, GridBase* grid, DataManagerNS* data_manager)
 		: FlowFieldSolver(index, name, para, grid, data_manager)
 	{
 	}

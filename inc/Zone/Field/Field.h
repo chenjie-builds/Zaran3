@@ -43,7 +43,7 @@ namespace zaran
 		virtual GridBase *GetGrid() { return m_grid; }
 		virtual FieldSolver *GetSolver() { return m_solver; }
 		virtual FieldData *GetFieldData() { return m_data; }
-		virtual SolverPara *GetSolverPara() { return m_solver_para; }
+		virtual SolverParam *GetSolverPara() { return m_solver_para; }
 		virtual DataManager *GetDataManager() { return m_data_manager; }
 		FieldType GetFieldType() { return m_fieldType; }
 
@@ -63,7 +63,7 @@ namespace zaran
 		/// @brief 场的数据，包含场的值，梯度等
 		FieldData *m_data;
 		/// @brief 场的求解器参数，用于设置求解器的参数
-		SolverPara *m_solver_para;
+		SolverParam *m_solver_para;
 		/// @brief 场的数据管理器，用于管理场的数据
 		DataManager *m_data_manager;
 		/// @brief 场的类型

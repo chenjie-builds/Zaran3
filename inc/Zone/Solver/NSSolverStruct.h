@@ -3,7 +3,7 @@
 #include "FlowSolverStructPara.h"
 #include "GridStruct.h"
 #include "NSSolver.h"
-#include "NodeMetricsFN.h"
+#include "Metric.h"
 #include "StructIdxProxy.h"
 
 namespace zaran
@@ -11,12 +11,12 @@ namespace zaran
   class NSSolverStruct : public NSSolver
   {
   public:
-    NSSolverStruct(int index, string name, FlowSolverPara *para, GridStruct *grid, DataManagerNSStruct *data_manager);
+    NSSolverStruct(int index, string name, FlowSolverParam *para, GridStruct *grid, DataManagerNSStruct *data_manager);
     ~NSSolverStruct();
     DataManagerNSStruct *GetDataManager() override;
     Metric *GetNodeMetrics();
-    StructIdxProxy *GetIdxProxy();
-    FlowSolverStructPara *GetPara() override;
+    IdxStruct *GetIdxProxy();
+    FlowSolverParamStruct *GetPara() override;
 
   protected:
     void InitField() override;
@@ -213,9 +213,9 @@ namespace zaran
     /// @brief 节点度量
     Metric *m_node_metrics;
     /// @brief 索引代理，用于将结构节点索引转换为场数据索引
-    StructIdxProxy *m_idx_proxy;
-    Metric *m_metrics_half_i; // 半点度量系数(i+1/2)
-    Metric *m_metrics_half_j; // 半点度量系数(j+1/2)
-    Metric *m_metrics_half_k; // 半点度量系数(k+1/2)
+    IdxStruct *m_idx_proxy;
+    Metric *m_metrics_mid_i; // 半点度量系数(i+1/2)
+    Metric *m_metrics_mid_j; // 半点度量系数(j+1/2)
+    Metric *m_metrics_mid_k; // 半点度量系数(k+1/2)
   };
 } // namespace zaran

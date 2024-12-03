@@ -8,6 +8,7 @@ namespace zaran
 		m_face = nullptr;
 		m_cell = nullptr;
 		m_bound_map = nullptr;
+		m_idx_proxy = nullptr;
 	}
 	GridStruct::~GridStruct()
 	{
@@ -30,6 +31,11 @@ namespace zaran
 		{
 			delete[] m_bound_map;
 			m_bound_map = nullptr;
+		}
+		if (m_idx_proxy)
+		{
+			delete[] m_idx_proxy;
+			m_idx_proxy = nullptr;
 		}
 	}
 	void GridStruct::Allocate(int ni, int nj, int nk, int ghost_level)
@@ -61,6 +67,7 @@ namespace zaran
 		m_cell = new CellStruct();
 		m_cell->Allocate(ni + ghost_level * 2 - 1, nj + ghost_level * 2 - 1, nk + ghost_level * 2 - 1);
 		m_bound_map = new BoundManagerStruct();
+		m_idx_proxy = new IdxStruct(ni + ghost_level * 2, nj + ghost_level * 2, nk + ghost_level * 2);
 	}
 	int GridStruct::GetNi()const
 	{
@@ -85,6 +92,10 @@ namespace zaran
 	int GridStruct::GetTotalNodeNum()
 	{
 		return m_node->GetCount();
+	}
+	IdxStruct* GridStruct::GetIdxProxy()
+	{
+		return m_idx_proxy;
 	}
 	void GridStruct::GetRange(int &is, int &ie, int &js, int &je, int &ks, int &ke)
 	{

@@ -13,7 +13,7 @@ namespace zaran
         ~FieldNS();
         void Allocate() override;
     public:
-        FlowSolverPara* GetSolverPara() override;
+        FlowSolverParam* GetSolverPara() override;
         DataManagerNS* GetDataManager() override;
         ResInfo* GetResInfo() { return m_res_info; }
         virtual void CalcResidual() = 0;

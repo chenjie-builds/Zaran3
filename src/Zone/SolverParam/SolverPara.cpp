@@ -1,17 +1,17 @@
 #include "SolverPara.h"
 using namespace zaran;
-SolverPara::SolverPara()
+SolverParam::SolverParam()
 {
 }
 
-SolverPara::~SolverPara()
+SolverParam::~SolverParam()
 {
 
 }
 
 
 
-void SolverPara::Init()
+void SolverParam::Init()
 {
 
 }

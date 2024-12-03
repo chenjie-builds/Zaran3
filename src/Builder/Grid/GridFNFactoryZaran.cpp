@@ -13,7 +13,7 @@ namespace zaran {
 		ni = m_block_grid->GetNi();
 		nj = m_block_grid->GetNj();
 		nk = m_block_grid->GetNk();
-		m_idx_proxy = new StructIdxProxy(ni, nj, nk);
+		m_idx_proxy = new IdxStruct(ni, nj, nk);
 		m_layer_num = GlobalData::GetInt("projection_layer");
 		TagBlockGrid();
 		TagNodes();

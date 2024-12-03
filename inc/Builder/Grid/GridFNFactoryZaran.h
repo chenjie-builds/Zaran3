@@ -65,7 +65,7 @@ namespace zaran
         GridBlock *GetBlockGrid() { return m_block_grid; }
         GridFN *GetFNGrid() { return m_fn_grid; }
         ModelManager *GetModelManager() { return m_model_manager; }
-        StructIdxProxy *GetIdxProxy() { return m_idx_proxy; }
+        IdxStruct *GetIdxProxy() { return m_idx_proxy; }
         std::vector<PhysicalType> &GetCellType() { return m_cell_type; }
         std::vector<PhysicalType> &GetNodeType() { return m_node_type; }
         std::vector<TransFace> &GetTransFace() { return m_trans_face; }
@@ -121,7 +121,7 @@ namespace zaran
         GridBlock *m_block_grid;
         GridFN *m_fn_grid;
         ModelManager *m_model_manager;
-        StructIdxProxy *m_idx_proxy;
+        IdxStruct *m_idx_proxy;
         std::vector<PhysicalType> m_cell_type;
         std::vector<PhysicalType> m_node_type;
         std::vector<TransFace> m_trans_face;

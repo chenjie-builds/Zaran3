@@ -15,12 +15,12 @@ namespace zaran
 {
     // 三维结构网格索引代理类
     // 用于计算三维结构网格的索引，便于和其他网格类型统一
-    class StructIdxProxy : public IdxProxy
+    class IdxStruct : public Idx
     {
     public:
-        StructIdxProxy() = default;
-        StructIdxProxy(int ni, int nj, int nk);
-        ~StructIdxProxy();
+        IdxStruct() = default;
+        IdxStruct(int ni, int nj, int nk);
+        ~IdxStruct();
         void SetIdx(int i, int j, int k);
         void SetIdx(int idx);
         void SetI(int i);
@@ -30,13 +30,12 @@ namespace zaran
         int GetNj() const;
         int GetNk() const;
         void GetIdxStruct(int &i, int &j, int &k) ;
-        using IdxProxy::GetIdx;
+        using Idx::GetIdx;
         int GetIdx(int i, int j, int k) const
         {
             return i + j * m_ni + k * m_ni * m_nj;
         }
     private:
-        GridStruct *m_grid;
         int m_ni, m_nj, m_nk;
         int m_idx_i, m_idx_j, m_idx_k;
     };

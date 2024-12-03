@@ -5,7 +5,7 @@
 //*	License																		||
 //*	This file is part of ZaRan.													||
 //*																				||
-//*	@file	FlowSolverPara.h													||
+//*	@file	FlowSolverParam.h													||
 //*	@brief	流场求解器参数类,定义了流场求解器正常进行的一些参数	 					||
 //*	@author	Chen Jie.															||
 //==============================================================================||
@@ -35,11 +35,11 @@ namespace zaran
 		Explosion,//爆炸
 		Vortex//等熵涡,仅用于测试
 	};
-	class FlowSolverPara :public SolverPara
+	class FlowSolverParam :public SolverParam
 	{
 	public:
-		FlowSolverPara();
-		virtual ~FlowSolverPara();
+		FlowSolverParam();
+		virtual ~FlowSolverParam();
 		// 根据GlobalData初始化
 		void Init() override;
 		void InitCflNumber();

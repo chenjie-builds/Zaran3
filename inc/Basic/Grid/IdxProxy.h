@@ -5,22 +5,21 @@
 //*	License																		||
 //*	This file is part of ZaRan.													||
 //*																				||
-//*	@file	IdxProxy.h													||
+//*	@file	Idx.h													||
 //*	@brief							||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include "GridStruct.h"
 namespace zaran
 {
     /// @brief 索引代理类
     /// 用于不同网格类型的索引转换
-    class IdxProxy
+    class Idx
     {
     public:
-        IdxProxy() = default;
-        IdxProxy(int idx);
-        ~IdxProxy();
+        Idx() = default;
+        Idx(int idx);
+        ~Idx();
         int GetIdx() const;
         void SetIdx(int idx);
     private:

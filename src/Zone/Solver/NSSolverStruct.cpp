@@ -1,12 +1,13 @@
 #include "NSSolverStruct.h"
 #include "FlowSolverStructPara.h"
-#include "Log.h"
 #include "MathBasic.h"
+#include"Log.h"
 #include <omp.h>
+#include "Metric.h"
 
 namespace zaran
 {
-	NSSolverStruct::NSSolverStruct(int index, string name, FlowSolverPara* para, GridStruct* grid,
+	NSSolverStruct::NSSolverStruct(int index, string name, FlowSolverParam* para, GridStruct* grid,
 		DataManagerNSStruct* data_manager)
 		: NSSolver(index, name, para, grid, data_manager)
 	{
@@ -14,12 +15,12 @@ namespace zaran
 		ni = grid->GetNi();
 		nj = grid->GetNj();
 		nk = grid->GetNk();
-		m_idx_proxy = new StructIdxProxy(ni, nj, nk);
+		m_idx_proxy = new IdxStruct(ni, nj, nk);
 		int node_num = ni * nj * nk;
 		m_node_metrics = new Metric(node_num);
-		m_metrics_half_i = new Metric(node_num);
-		m_metrics_half_j = new Metric(node_num);
-		m_metrics_half_k = new Metric(node_num);
+		m_metrics_mid_i = new Metric(node_num);
+		m_metrics_mid_j = new Metric(node_num);
+		m_metrics_mid_k = new Metric(node_num);
 	}
 	NSSolverStruct::~NSSolverStruct()
 	{
@@ -33,20 +34,20 @@ namespace zaran
 			delete m_node_metrics;
 			m_node_metrics = nullptr;
 		}
-		if (m_metrics_half_i)
+		if (m_metrics_mid_i)
 		{
-			delete m_metrics_half_i;
-			m_metrics_half_i = nullptr;
+			delete m_metrics_mid_i;
+			m_metrics_mid_i = nullptr;
 		}
-		if (m_metrics_half_j)
+		if (m_metrics_mid_j)
 		{
-			delete m_metrics_half_j;
-			m_metrics_half_j = nullptr;
+			delete m_metrics_mid_j;
+			m_metrics_mid_j = nullptr;
 		}
-		if (m_metrics_half_k)
+		if (m_metrics_mid_k)
 		{
-			delete m_metrics_half_k;
-			m_metrics_half_k = nullptr;
+			delete m_metrics_mid_k;
+			m_metrics_mid_k = nullptr;
 		}
 	}
 	DataManagerNSStruct* NSSolverStruct::GetDataManager()
@@ -57,13 +58,13 @@ namespace zaran
 	{
 		return m_node_metrics;
 	}
-	StructIdxProxy* NSSolverStruct::GetIdxProxy()
+	IdxStruct* NSSolverStruct::GetIdxProxy()
 	{
 		return m_idx_proxy;
 	}
-	FlowSolverStructPara* NSSolverStruct::GetPara()
+	FlowSolverParamStruct* NSSolverStruct::GetPara()
 	{
-		return static_cast<FlowSolverStructPara*>(NSSolver::GetPara());
+		return static_cast<FlowSolverParamStruct*>(NSSolver::GetPara());
 	}
 	void NSSolverStruct::InitField()
 	{
@@ -89,7 +90,7 @@ namespace zaran
 		auto ni = m_idx_proxy->GetNi();
 		auto nj = m_idx_proxy->GetNj();
 		auto nk = m_idx_proxy->GetNk();
-		FlowSolverPara* para = GetPara();
+		FlowSolverParam* para = GetPara();
 		double prim_far[5];
 		prim_far[0] = para->GetInflowDensity();
 		prim_far[1] = para->GetInflowVelocityX();
@@ -134,7 +135,7 @@ namespace zaran
 		auto ni = m_idx_proxy->GetNi();
 		auto nj = m_idx_proxy->GetNj();
 		auto nk = m_idx_proxy->GetNk();
-		FlowSolverPara* para = GetPara();
+		FlowSolverParam* para = GetPara();
 		double prim_far[5];
 		prim_far[0] = para->GetInflowDensity();
 		prim_far[1] = 0.0;
@@ -159,10 +160,9 @@ namespace zaran
 					// double y = grid->GetNode()->GetCoord(i, j, k)[1];
 					// prim_far[0] = 1.0 + 0.01 * y;
 					data_manager->SetPrim(idx, prim_far);
-					auto x = node->GetCoord(i, j, k)[0];
-					auto y = node->GetCoord(i, j, k)[1];
-					if (x <= 1.0 / 6.0 + y / tan(60.0 / 180.0 * PI))
-						//if (x <= 0.1)
+					auto coord = node->GetCoord(m_idx_proxy);
+					if (coord[0] <= 1.0 / 6.0 + coord[1] / tan(60.0 / 180.0 * PI))
+						//if (coord[0] <= 0.1)
 					{
 						data_manager->SetPrim(idx, prim_left);
 					}
@@ -185,7 +185,7 @@ namespace zaran
 		auto ni = m_idx_proxy->GetNi();
 		auto nj = m_idx_proxy->GetNj();
 		auto nk = m_idx_proxy->GetNk();
-		FlowSolverPara* para = GetPara();
+		FlowSolverParam* para = GetPara();
 		double beta = 5.0;
 		double x, y, z;
 		double r2;
@@ -217,11 +217,12 @@ namespace zaran
 	void NSSolverStruct::InitFieldExplosion()
 	{
 		auto grid = GetGrid();
+		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		auto ni = m_idx_proxy->GetNi();
 		auto nj = m_idx_proxy->GetNj();
 		auto nk = m_idx_proxy->GetNk();
-		FlowSolverPara* para = GetPara();
+		FlowSolverParam* para = GetPara();
 		double prim_far[5];
 		prim_far[0] = para->GetInflowDensity();
 		prim_far[1] = 0.0;
@@ -249,12 +250,10 @@ namespace zaran
 				{
 					m_idx_proxy->SetIdx(i, j, k);
 					int idx = m_idx_proxy->GetIdx();
-					x = grid->GetNode()->GetCoord(i, j, k)[0];
-					y = grid->GetNode()->GetCoord(i, j, k)[1];
-					z = grid->GetNode()->GetCoord(i, j, k)[2];
-					double dist = sqrt((x - explosion_center[0]) * (x - explosion_center[0]) +
-						(y - explosion_center[1]) * (y - explosion_center[1]) +
-						(z - explosion_center[2]) * (z - explosion_center[2]));
+					auto coord = node->GetCoord(m_idx_proxy);
+					double dist = sqrt(pow(coord[0] - explosion_center[0], 2) 
+						+ pow(coord[1] - explosion_center[1], 2) 
+						+ pow(coord[2] - explosion_center[2], 2));
 					if (dist < explosion_radius)
 					{
 						data_manager->SetPrim(idx, prim_explosion);
@@ -7928,7 +7927,7 @@ namespace zaran
 		int ghost_size = grid->GetGhostLevel();
 		int i_bound, j_bound, k_bound;
 		bound.GetIdx(i_bound, j_bound, k_bound);
-		auto bound_direction = bound.GetDirection();
+		auto bound_direction = bound.GetDirectionSrc();
 		//double prim_far[5] = { GetPara()->GetInflowDensity(), GetPara()->GetInflowVelocityX(),
 		//					  GetPara()->GetInflowVelocityY(), GetPara()->GetInflowVelocityZ(),
 		//					  GetPara()->GetInflowPressure() };
@@ -7960,7 +7959,7 @@ namespace zaran
 		int i_bound, j_bound, k_bound;
 		bound.GetIdx(i_bound, j_bound, k_bound);
 		int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
-		auto bound_direction = bound.GetDirection();
+		auto bound_direction = bound.GetDirectionSrc();
 		std::vector<double> prim_vals(5), cons_vals(5);
 		// 预先获取边界的原始变量和守恒变量
 		for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
@@ -7993,13 +7992,13 @@ namespace zaran
 		auto bound_coord = node->GetCoord(i_bound, j_bound, k_bound);
 		for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
 		{
-			i_ghost = i_bound + iGhost * bound.GetDirection()[0];
-			j_ghost = j_bound + iGhost * bound.GetDirection()[1];
-			k_ghost = k_bound + iGhost * bound.GetDirection()[2];
+			i_ghost = i_bound + iGhost * bound.GetDirectionSrc()[0];
+			j_ghost = j_bound + iGhost * bound.GetDirectionSrc()[1];
+			k_ghost = k_bound + iGhost * bound.GetDirectionSrc()[2];
 			int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
-			i_ref = i_bound - iGhost * bound.GetDirection()[0];
-			j_ref = j_bound - iGhost * bound.GetDirection()[1];
-			k_ref = k_bound - iGhost * bound.GetDirection()[2];
+			i_ref = i_bound - iGhost * bound.GetDirectionSrc()[0];
+			j_ref = j_bound - iGhost * bound.GetDirectionSrc()[1];
+			k_ref = k_bound - iGhost * bound.GetDirectionSrc()[2];
 			int idx_ref = m_idx_proxy->GetIdx(i_ref, j_ref, k_ref);
 			double prim_ghost[5];
 			for (int idx_eq = 0; idx_eq < data_manager->GetEqNum(); ++idx_eq)
@@ -8024,9 +8023,9 @@ namespace zaran
 		bound.GetIdx(i_bound, j_bound, k_bound);
 		int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
 		int i_ghost, j_ghost, k_ghost;
-		i_ghost = i_bound + bound.GetDirection()[0];
-		j_ghost = j_bound + bound.GetDirection()[1];
-		k_ghost = k_bound + bound.GetDirection()[2];
+		i_ghost = i_bound + bound.GetDirectionSrc()[0];
+		j_ghost = j_bound + bound.GetDirectionSrc()[1];
+		k_ghost = k_bound + bound.GetDirectionSrc()[2];
 
 		int idx_ref = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
 		int idx_bnd = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
@@ -8037,7 +8036,7 @@ namespace zaran
 		double prim_bnd[5] = { data_manager->GetPrim(0, idx_bnd), data_manager->GetPrim(1, idx_bnd),
 							  data_manager->GetPrim(2, idx_bnd), data_manager->GetPrim(3, idx_bnd),
 							  data_manager->GetPrim(4, idx_bnd) };
-		FlowSolverPara* para = GetPara();
+		FlowSolverParam* para = GetPara();
 		auto gas = GetGas();
 		double gamma = gas->GetGamma();
 		double prim_far[5] = { para->GetInflowDensity(), para->GetInflowVelocityX(), para->GetInflowVelocityY(),
@@ -8100,9 +8099,9 @@ namespace zaran
 		int ghost_size = grid->GetGhostLevel();
 		for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
 		{
-			i_ghost = i_bound + iGhost * bound.GetDirection()[0];
-			j_ghost = j_bound + iGhost * bound.GetDirection()[1];
-			k_ghost = k_bound + iGhost * bound.GetDirection()[2];
+			i_ghost = i_bound + iGhost * bound.GetDirectionSrc()[0];
+			j_ghost = j_bound + iGhost * bound.GetDirectionSrc()[1];
+			k_ghost = k_bound + iGhost * bound.GetDirectionSrc()[2];
 			int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
 			data_manager->SetPrim(idx_ghost, prim_bnd);
 			data_manager->SetCons(idx_ghost, cons_bound);
@@ -8130,9 +8129,9 @@ namespace zaran
 		double gamma = 1.4;
 		for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
 		{
-			i_ghost = i_bound + iGhost * bound.GetDirection()[0];
-			j_ghost = j_bound + iGhost * bound.GetDirection()[1];
-			k_ghost = k_bound + iGhost * bound.GetDirection()[2];
+			i_ghost = i_bound + iGhost * bound.GetDirectionSrc()[0];
+			j_ghost = j_bound + iGhost * bound.GetDirectionSrc()[1];
+			k_ghost = k_bound + iGhost * bound.GetDirectionSrc()[2];
 			int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
 			x = node->GetCoord(i_ghost, j_ghost, k_ghost)[0];
 			y = node->GetCoord(i_ghost, j_ghost, k_ghost)[1];
@@ -8162,7 +8161,7 @@ namespace zaran
 		int i_bound, j_bound, k_bound;
 		bound.GetIdx(i_bound, j_bound, k_bound);
 		int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
-		auto bound_direction = bound.GetDirection();
+		auto bound_direction = bound.GetDirectionSrc();
 		for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
 		{
 			int i_ghost = i_bound + iGhost * bound_direction[0];
@@ -8203,17 +8202,17 @@ namespace zaran
 
 	Metric* NSSolverStruct::GetMidMetricsI()
 	{
-		return m_metrics_half_i;
+		return m_metrics_mid_i;
 	}
 
 	Metric* NSSolverStruct::GetMidMetricsJ()
 	{
-		return m_metrics_half_j;
+		return m_metrics_mid_j;
 	}
 
 	Metric* NSSolverStruct::GetMidMetricsK()
 	{
-		return m_metrics_half_k;
+		return m_metrics_mid_k;
 	}
 
 	double NSSolverStruct::NodeDifferece2nd(double* mid_data)

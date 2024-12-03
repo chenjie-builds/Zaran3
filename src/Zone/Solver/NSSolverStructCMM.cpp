@@ -1,11 +1,11 @@
 #include "NSSolverStructCMM.h"
 #include "Log.h"
 #include "NSSolverStruct.h"
-#include "NodeMetricsFN.h"
+#include "Metric.h"
 
 namespace zaran
 {
-	NSSolverStructCMM::NSSolverStructCMM(int index, string name, FlowSolverPara* para, GridStruct* grid,
+	NSSolverStructCMM::NSSolverStructCMM(int index, string name, FlowSolverParam* para, GridStruct* grid,
 		DataManagerNSStruct* data_manager)
 		: NSSolverStruct(index, name, para, grid, data_manager)
 	{

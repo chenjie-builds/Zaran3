@@ -2,7 +2,7 @@
 #include "GlobalData.h"
 using namespace zaran;
 
-FlowFieldSolver::FlowFieldSolver(int index, string name, FlowSolverPara *para, GridBase *grid, DataManager *data_manager) : FieldSolver(index, name, para, grid, data_manager)
+FlowFieldSolver::FlowFieldSolver(int index, string name, FlowSolverParam *para, GridBase *grid, DataManager *data_manager) : FieldSolver(index, name, para, grid, data_manager)
 {
 }
 FlowFieldSolver::~FlowFieldSolver()
@@ -29,7 +29,7 @@ double FlowFieldSolver::ComputeCFL()
 	return GlobalData::GetDouble("cfl");
 }
 
-FlowSolverPara *FlowFieldSolver::GetPara()
+FlowSolverParam *FlowFieldSolver::GetPara()
 {
-	return dynamic_cast<FlowSolverPara *>(m_para);
+	return dynamic_cast<FlowSolverParam *>(m_para);
 }

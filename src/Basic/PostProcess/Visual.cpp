@@ -131,7 +131,7 @@ void zaran::Visual::WriteTecplotASCII(NSFieldStruct* field, std::ostream& os)
     int grid_ni = grid->GetNi();
     int grid_nj = grid->GetNj();
     int grid_nk = grid->GetNk();
-    StructIdxProxy* idx_proxy = new StructIdxProxy(grid_ni, grid_nj, grid_nk);
+    IdxStruct* idx_proxy = new IdxStruct(grid_ni, grid_nj, grid_nk);
     int is, ie, js, je, ks, ke;
     grid->GetRange(is, ie, js, je, ks, ke);
     int ni = ie - is + 1;
@@ -170,7 +170,7 @@ void zaran::Visual::WriteTecplotASCII(NSFieldZaran* field, std::ostream& os)
     int grid_ni = grid->GetNi();
     int grid_nj = grid->GetNj();
     int grid_nk = grid->GetNk();
-    StructIdxProxy* idx_proxy = new StructIdxProxy(grid_ni, grid_nj, grid_nk);
+    IdxStruct* idx_proxy = new IdxStruct(grid_ni, grid_nj, grid_nk);
     int is, ie, js, je, ks, ke;
     grid->GetRange(is, ie, js, je, ks, ke);
     int ni = ie - is + 1;
@@ -213,7 +213,7 @@ void zaran::Visual::WriteTecplotBinary(NSFieldZaran* field)
     int grid_ni = grid->GetNi();
     int grid_nj = grid->GetNj();
     int grid_nk = grid->GetNk();
-    auto idx_proxy = new StructIdxProxy(grid_ni, grid_nj, grid_nk);
+    auto idx_proxy = new IdxStruct(grid_ni, grid_nj, grid_nk);
     INTEGER4 node_num = ni * nj * nk;
     INTEGER4 cell_num = (ni - 1) * (nj - 1) * (nk - 1);
     DArray x(node_num), y(node_num), z(node_num), density(node_num),
@@ -305,7 +305,7 @@ void zaran::Visual::WriteTecplotBinary(NSFieldStruct* field)
     int grid_ni = grid->GetNi();
     int grid_nj = grid->GetNj();
     int grid_nk = grid->GetNk();
-    auto idx_proxy = new StructIdxProxy(grid_ni, grid_nj, grid_nk);
+    auto idx_proxy = new IdxStruct(grid_ni, grid_nj, grid_nk);
     INTEGER4 node_num = ni * nj * nk;
     INTEGER4 cell_num = (ni - 1) * (nj - 1) * (nk - 1);
     DArray x(node_num), y(node_num), z(node_num), density(node_num),

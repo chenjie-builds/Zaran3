@@ -15,6 +15,7 @@
 #include "FaceStruct.h"
 #include "CellStruct.h"
 #include "BoundMapStruct.h"
+#include "StructIdxProxy.h"
 namespace zaran
 {
 	class GridStruct : public GridBase
@@ -43,7 +44,8 @@ namespace zaran
 		BoundManagerStruct *GetBoundMap() { return m_bound_map; }
 		/// @brief 获取ghost节点层数
 		/// @return  ghost节点层数
-		int GetGhostLevel() { return m_ghost_level; }
+		int GetGhostLevel() const { return m_ghost_level; }
+		IdxStruct* GetIdxProxy();
 
 	public:
 		/// @brief 返回用于计算的节点范围,不包含ghost节点
@@ -66,5 +68,6 @@ namespace zaran
 		CellStruct *m_cell;
 		/// @brief 	边界条件
 		BoundManagerStruct *m_bound_map;
+		IdxStruct* m_idx_proxy;
 	};
 }

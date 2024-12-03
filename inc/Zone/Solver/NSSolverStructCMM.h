@@ -1,6 +1,6 @@
 #pragma once
 #include "NSSolverStruct.h"
-#include "NodeMetricsFN.h"
+#include "Metric.h"
 namespace zaran
 {
   // 使用CMM方法求解结构网格流动问题
@@ -9,7 +9,7 @@ namespace zaran
   class NSSolverStructCMM : public NSSolverStruct
   {
   public:
-    NSSolverStructCMM(int index, string name, FlowSolverPara *para, GridStruct *grid,
+    NSSolverStructCMM(int index, string name, FlowSolverParam *para, GridStruct *grid,
                       DataManagerNSStruct *data_manager);
     ~NSSolverStructCMM();
 

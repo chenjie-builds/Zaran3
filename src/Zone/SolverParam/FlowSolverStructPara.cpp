@@ -6,17 +6,17 @@ namespace zaran
 
 
 
-    FlowSolverStructPara::FlowSolverStructPara()
+    FlowSolverParamStruct::FlowSolverParamStruct()
     {
     }
 
-    FlowSolverStructPara::~FlowSolverStructPara()
+    FlowSolverParamStruct::~FlowSolverParamStruct()
     {
     }
 
-    void FlowSolverStructPara::Init()
+    void FlowSolverParamStruct::Init()
     {
-        FlowSolverPara::Init();
+        FlowSolverParam::Init();
         InitMidMetricsScheme();
         InitMetricsType();
         InitFluxDifferenceScheme();
@@ -25,7 +25,7 @@ namespace zaran
         InitJacobianType();
     }
 
-    void FlowSolverStructPara::InitMidMetricsScheme()
+    void FlowSolverParamStruct::InitMidMetricsScheme()
     {
         string mid_metric_method = GlobalData::GetString("mid_metric_method");
         if (mid_metric_method == "DEER")
@@ -43,7 +43,7 @@ namespace zaran
         }
     }
 
-    void FlowSolverStructPara::InitMetricsType()
+    void FlowSolverParamStruct::InitMetricsType()
     {
         string metrics_scheme = GlobalData::GetString("metrics_scheme");
         if (metrics_scheme == "S0")
@@ -69,7 +69,7 @@ namespace zaran
         }
     }
 
-    void FlowSolverStructPara::InitFluxDifferenceScheme()
+    void FlowSolverParamStruct::InitFluxDifferenceScheme()
     {
         int difference_scheme = GlobalData::GetInt("flux_difference_scheme");
         if (difference_scheme == 2)
@@ -91,7 +91,7 @@ namespace zaran
         }
     }
 
-    void FlowSolverStructPara::InitMetricDifferenceScheme()
+    void FlowSolverParamStruct::InitMetricDifferenceScheme()
     {
         int metric_difference_scheme = GlobalData::GetInt("metric_difference_scheme");
         if (metric_difference_scheme == 2)
@@ -109,7 +109,7 @@ namespace zaran
         }
     }
 
-    void FlowSolverStructPara::InitInterScheme()
+    void FlowSolverParamStruct::InitInterScheme()
     {
         string inter_schme = GlobalData::GetString("inter_scheme");
         if (inter_schme == "FirstOrder")
@@ -139,7 +139,7 @@ namespace zaran
         }
     }
 
-    void FlowSolverStructPara::InitJacobianType()
+    void FlowSolverParamStruct::InitJacobianType()
     {
         string jacobian_scheme = GlobalData::GetString("jacobian_scheme");
         if (jacobian_scheme == "V1")
@@ -161,32 +161,32 @@ namespace zaran
         }
     }
 
-    const MidMetricsScheme& FlowSolverStructPara::GetMidMetricsScheme() const
+    const MidMetricsScheme& FlowSolverParamStruct::GetMidMetricsScheme() const
     {
         return m_mid_metrics_scheme;
     }
 
-    const MetricType& FlowSolverStructPara::GetMetricsType() const
+    const MetricType& FlowSolverParamStruct::GetMetricsType() const
     {
         return m_metric_type;
     }
 
-    const FluxDifferenceScheme& FlowSolverStructPara::GetFluxDifferenceScheme() const
+    const FluxDifferenceScheme& FlowSolverParamStruct::GetFluxDifferenceScheme() const
     {
         return m_flux_difference_scheme;
     }
 
-    const MetricDifferenceScheme& FlowSolverStructPara::GetMetricDifferenceScheme() const
+    const MetricDifferenceScheme& FlowSolverParamStruct::GetMetricDifferenceScheme() const
     {
         return m_metric_difference_scheme;
     }
 
-    const InterpolationScheme& FlowSolverStructPara::GetInterSchme() const
+    const InterpolationScheme& FlowSolverParamStruct::GetInterSchme() const
     {
         return m_inter_schme;
     }
 
-    const JacobianType &FlowSolverStructPara::GetJacobianType() const
+    const JacobianType &FlowSolverParamStruct::GetJacobianType() const
     {
         return m_jacobian_type;
     }

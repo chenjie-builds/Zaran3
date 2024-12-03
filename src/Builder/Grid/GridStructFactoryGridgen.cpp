@@ -455,7 +455,7 @@ namespace zaran
 			int i_bnd_src, j_bnd_src, k_bns_src;
 			int i_bnd_tgt, j_bnd_tgt, k_bns_tgt;
 			double norm[3];
-			int iter_bnd_s, iter_bnd_e;
+			int iter_bnd_s = 0, iter_bnd_e = 0;
 			for (auto& bound_info : m_block[block_indx].bound_info)
 			{
 				for (int k = bound_info.ks_s; k <= bound_info.ke_s; ++k)
@@ -1020,7 +1020,7 @@ namespace zaran
 						bound[iBound].GetIdx(i_bnd_src, j_bnd_src, k_bnd_src);
 						for (int iGhost = 0; iGhost < m_ghost_size; ++iGhost)
 						{
-							auto dir_src = bound[iBound].GetDirection();
+							auto dir_src = bound[iBound].GetDirectionSrc();
 							i_ghost = i_bnd_src + dir_src[0] * (iGhost + 1);
 							j_ghost = i_bnd_src + dir_src[1] * (iGhost + 1);
 							k_ghost = i_bnd_src + dir_src[2] * (iGhost + 1);
@@ -1049,7 +1049,7 @@ namespace zaran
 					{
 						bound[iBound].GetIdx(i_bnd_src, j_bnd_src, k_bnd_src);
 						auto bound_norm = bound[iBound].GetNorm();
-						auto dir_src = bound[iBound].GetDirection();
+						auto dir_src = bound[iBound].GetDirectionSrc();
 						for (int iGhost = 0; iGhost < m_ghost_size; ++iGhost)
 						{
 							i_ghost = i_bnd_src + dir_src[0] * (iGhost + 1);

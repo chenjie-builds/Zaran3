@@ -5,7 +5,7 @@
 #include "MathBasic.h"
 namespace zaran
 {
-	NSSolverFNFDM::NSSolverFNFDM(int index, string name, FlowSolverPara* para, GridFN* grid, DataManagerNS* data_manager)
+	NSSolverFNFDM::NSSolverFNFDM(int index, string name, FlowSolverParam* para, GridFN* grid, DataManagerNS* data_manager)
 		: NSSolver(index, name, para, grid, data_manager)
 	{
 		m_node_metric = new Metric(grid->GetTotalNodeNum());
@@ -21,7 +21,7 @@ namespace zaran
 	void NSSolverFNFDM::InitFieldFarfield()
 	{
 		GridFN* grid = GetGrid();
-		FlowSolverPara* para = GetPara();
+		FlowSolverParam* para = GetPara();
 		auto data_manager = GetDataManager();
 		double prim_far[5];
 		prim_far[0] = para->GetInflowDensity();
@@ -78,7 +78,7 @@ namespace zaran
 	void NSSolverFNFDM::InitFieldExplosion()
 	{
 		GridFN* grid = GetGrid();
-		FlowSolverPara* para = GetPara();
+		FlowSolverParam* para = GetPara();
 		auto data_manager = GetDataManager();
 		double prim_far[5];
 		prim_far[0] = para->GetInflowDensity();
@@ -209,7 +209,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
-		FlowSolverPara* para = GetPara();
+		FlowSolverParam* para = GetPara();
 		int rk_step = para->GetRkStep();
 		auto node = grid->GetNode();
 		int n_node = grid->GetTotalNodeNum();
@@ -371,7 +371,7 @@ namespace zaran
 	}
 	void NSSolverFNFDM::BCInlow(BoundFN& bound)
 	{
-		FlowSolverPara* para = GetPara();
+		FlowSolverParam* para = GetPara();
 		auto data_manager = GetDataManager();
 		int bound_index = bound.GetIdxBound();
 		double prim_far[5];
@@ -442,7 +442,7 @@ namespace zaran
 							 data_manager->GetPrim(3, idx_ref), data_manager->GetPrim(4, idx_ref) };
 		double prim_bnd[5] = { data_manager->GetPrim(0, idx_bnd), data_manager->GetPrim(1, idx_bnd), data_manager->GetPrim(2, idx_bnd),
 							  data_manager->GetPrim(3, idx_bnd), data_manager->GetPrim(4, idx_bnd) };
-		FlowSolverPara* para = GetPara();
+		FlowSolverParam* para = GetPara();
 		auto gas = GetGas();
 		double gamma = gas->GetGamma();
 		double prim_far[5] = { para->GetInflowDensity(), para->GetInflowVelocityX(), para->GetInflowVelocityY(),

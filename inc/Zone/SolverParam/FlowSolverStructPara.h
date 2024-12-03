@@ -59,11 +59,11 @@ namespace zaran
         V3,
     };
 
-    class FlowSolverStructPara :public FlowSolverPara
+    class FlowSolverParamStruct :public FlowSolverParam
     {
     public:
-        FlowSolverStructPara();
-        virtual ~FlowSolverStructPara();
+        FlowSolverParamStruct();
+        virtual ~FlowSolverParamStruct();
         void Init() override;
         void InitMidMetricsScheme();
         void InitMetricsType();

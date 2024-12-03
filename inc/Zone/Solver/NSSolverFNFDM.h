@@ -15,13 +15,13 @@
 #include "DataManagerNS.h"
 #include "Residual.h"
 #include "GradWLSQ.h"
-#include "NodeMetricsFN.h"
+#include "Metric.h"
 namespace zaran
 {
 	class NSSolverFNFDM : public NSSolver
 	{
 	public:
-		NSSolverFNFDM(int index, string name, FlowSolverPara *para, GridFN *grid, DataManagerNS *data_manager);
+		NSSolverFNFDM(int index, string name, FlowSolverParam *para, GridFN *grid, DataManagerNS *data_manager);
 		~NSSolverFNFDM();
 
 	protected:

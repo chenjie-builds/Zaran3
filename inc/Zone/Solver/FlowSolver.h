@@ -19,7 +19,7 @@ namespace zaran
 class FlowFieldSolver : public FieldSolver
 {
   public:
-    FlowFieldSolver(int index, string name, FlowSolverPara *para, GridBase *grid, DataManager *data_manager);
+    FlowFieldSolver(int index, string name, FlowSolverParam *para, GridBase *grid, DataManager *data_manager);
     virtual ~FlowFieldSolver();
   public:
     void InitField() override;
@@ -37,7 +37,7 @@ class FlowFieldSolver : public FieldSolver
 
   protected:
     // 返回当前求解器的参数
-    FlowSolverPara *GetPara() override;
+    FlowSolverParam *GetPara() override;
   public:
     // 时间推进
     virtual void TimeAdvance() = 0;

@@ -23,11 +23,11 @@ namespace zaran
         /// @param i_bnd the index of the boundary in i direction
         /// @param j_bnd the index of the boundary in j direction
         /// @param k_bnd the index of the boundary in k direction
-        void SetIdx(const int &i_bnd, const int &j_bnd, const int &k_bnd);
+        void SetIdxSrc(const int &i_bnd, const int &j_bnd, const int &k_bnd);
         /// @brief set direction vector of the boundary
         /// @param direction a 3-element array, each element is -1, 0 or 1
         /// @details -1: left boundary, 0: not boundary, 1: right boundary
-        void SetDirection(const int *direction);
+        void SetDirectionSrc(const int *direction);
         /// @brief set norm vector of the boundary
         /// @param norm a 3-element array, representing the norm vector of the boundary in 3D space
         void SetNorm(const double *norm);
@@ -38,7 +38,7 @@ namespace zaran
         void GetIdx(int &i_bnd, int &j_bnd, int &k_bnd);
         /// @brief  get direction vector of the boundary
         /// @return a 3-element array, each element is -1, 0 or 1
-        const int *GetDirection();
+        const int *GetDirectionSrc();
         /// @brief get norm vector of the boundary
         /// @return a 3-element array, representing the norm vector of the boundary in 3D space
         const double *GetNorm();

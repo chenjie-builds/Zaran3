@@ -25,7 +25,7 @@ namespace zaran
 	class FieldSolver :public Solver
 	{
 	public:
-		FieldSolver(int index, string name, SolverPara* para, GridBase* grid, DataManager* data_manager) ;
+		FieldSolver(int index, string name, SolverParam* para, GridBase* grid, DataManager* data_manager) ;
 		virtual ~FieldSolver();
 	public:
 		// 初始化流场数据

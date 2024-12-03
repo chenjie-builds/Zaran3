@@ -2,7 +2,7 @@
 #include <omp.h>
 namespace zaran
 {
-    NSSolverBlock::NSSolverBlock(int index, string name, FlowSolverPara *para, GridStruct *grid, DataManagerNSStruct *data_manager)
+    NSSolverBlock::NSSolverBlock(int index, string name, FlowSolverParam *para, GridStruct *grid, DataManagerNSStruct *data_manager)
         : NSSolverStructDEER(index, name, para, grid, data_manager)
     {
     }
@@ -80,9 +80,9 @@ namespace zaran
                     riemann_para[1].norm(1) = node_metrics->GetXi(idx)[1];
                     riemann_para[1].norm(2) = node_metrics->GetXi(idx)[2];
                     riemann_para[1].nt = node_metrics->GetXi(idx)[3];
-                    MidNodeGrad(idx_proxy->GetIdx(i, j, k), idx_proxy->GetIdx(i + 1, j, k), coord, mid_coord_right, right_coord,
+                    InterMidNodePrim_Grad(idx_proxy->GetIdx(i, j, k), idx_proxy->GetIdx(i + 1, j, k), coord, mid_coord_right, right_coord,
                                 riemann_para[0].prim_left.data(), riemann_para[0].prim_right.data());
-                    MidNodeGrad(idx_proxy->GetIdx(i - 1, j, k), idx_proxy->GetIdx(i, j, k), left_coord, mid_coord_left, coord,
+                    InterMidNodePrim_Grad(idx_proxy->GetIdx(i - 1, j, k), idx_proxy->GetIdx(i, j, k), left_coord, mid_coord_left, coord,
                                 riemann_para[1].prim_left.data(), riemann_para[1].prim_right.data());
                     m_riemann_solver->Solver(riemann_para[0]);
                     m_riemann_solver->Solver(riemann_para[1]);
@@ -111,9 +111,9 @@ namespace zaran
                     riemann_para[3].norm(1) = node_metrics->GetEta(idx)[1];
                     riemann_para[3].norm(2) = node_metrics->GetEta(idx)[2];
                     riemann_para[3].nt = node_metrics->GetEta(idx)[3];
-                    MidNodeGrad(idx_proxy->GetIdx(i, j, k), idx_proxy->GetIdx(i, j + 1, k), left_coord, mid_coord_left, coord,
+                    InterMidNodePrim_Grad(idx_proxy->GetIdx(i, j, k), idx_proxy->GetIdx(i, j + 1, k), left_coord, mid_coord_left, coord,
                                 riemann_para[2].prim_left.data(), riemann_para[2].prim_right.data());
-                    MidNodeGrad(idx_proxy->GetIdx(i, j - 1, k), idx_proxy->GetIdx(i, j, k), coord, mid_coord_right, right_coord,
+                    InterMidNodePrim_Grad(idx_proxy->GetIdx(i, j - 1, k), idx_proxy->GetIdx(i, j, k), coord, mid_coord_right, right_coord,
                                 riemann_para[3].prim_left.data(), riemann_para[3].prim_right.data());
                     m_riemann_solver->Solver(riemann_para[2]);
                     m_riemann_solver->Solver(riemann_para[3]);
@@ -144,9 +144,9 @@ namespace zaran
                         riemann_para[5].norm(1) = node_metrics->GetZeta(idx)[1];
                         riemann_para[5].norm(2) = node_metrics->GetZeta(idx)[2];
                         riemann_para[5].nt = node_metrics->GetZeta(idx)[3];
-                        MidNodeGrad(idx_proxy->GetIdx(i, j, k), idx_proxy->GetIdx(i, j, k + 1), left_coord, mid_coord_left, coord,
+                        InterMidNodePrim_Grad(idx_proxy->GetIdx(i, j, k), idx_proxy->GetIdx(i, j, k + 1), left_coord, mid_coord_left, coord,
                                     riemann_para[4].prim_left.data(), riemann_para[4].prim_right.data());
-                        MidNodeGrad(idx_proxy->GetIdx(i, j, k - 1), idx_proxy->GetIdx(i, j, k), coord, mid_coord_right, right_coord,
+                        InterMidNodePrim_Grad(idx_proxy->GetIdx(i, j, k - 1), idx_proxy->GetIdx(i, j, k), coord, mid_coord_right, right_coord,
                                     riemann_para[5].prim_left.data(), riemann_para[5].prim_right.data());
                         m_riemann_solver->Solver(riemann_para[4]);
                         m_riemann_solver->Solver(riemann_para[5]);
@@ -164,7 +164,7 @@ namespace zaran
         }
     }
 
-    void NSSolverBlock::MidNodeGrad(int idx_left, int idx_right, const double *lef_coord, const double *mid_coord, const double *right_coord, double *value_left, double *value_right)
+    void NSSolverBlock::InterMidNodePrim_Grad(int idx_left, int idx_right, const double *lef_coord, const double *mid_coord, const double *right_coord, double *value_left, double *value_right)
     {
         int equ_num = GetPara()->GetEqNum();
         auto data_manager = GetDataManager();

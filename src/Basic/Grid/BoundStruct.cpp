@@ -35,14 +35,14 @@ namespace zaran
 	{
 	}
 
-	void BoundStruct::SetIdx(const int& i_bound, const int& j_bound, const int& k_bound)
+	void BoundStruct::SetIdxSrc(const int& i_bound, const int& j_bound, const int& k_bound)
 	{
 		m_i_bnd_src = i_bound;
 		m_j_bnd_src = j_bound;
 		m_k_bnd_src = k_bound;
 	}
 
-	void BoundStruct::SetDirection(const int* direction)
+	void BoundStruct::SetDirectionSrc(const int* direction)
 	{
 		for (int i = 0; i < 3; i++)
 		{
@@ -64,7 +64,7 @@ namespace zaran
 		j = m_j_bnd_src;
 		k = m_k_bnd_src;
 	}
-	const int* BoundStruct::GetDirection()
+	const int* BoundStruct::GetDirectionSrc()
 	{
 		return m_dir_src;
 	}

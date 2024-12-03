@@ -10,9 +10,9 @@ namespace zaran
         if (m_res_info != nullptr)
             delete m_res_info;
     }
-    FlowSolverPara* FieldNS::GetSolverPara()
+    FlowSolverParam* FieldNS::GetSolverPara()
     {
-        return static_cast<FlowSolverPara*>(Field::GetSolverPara());
+        return static_cast<FlowSolverParam*>(Field::GetSolverPara());
     }
     DataManagerNS* FieldNS::GetDataManager()
     {
@@ -24,7 +24,7 @@ namespace zaran
         {
             delete m_solver_para;
         }
-        m_solver_para = new FlowSolverPara();
+        m_solver_para = new FlowSolverParam();
         GetSolverPara()->Init();
     }
     void FieldNS::Allocate()

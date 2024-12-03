@@ -74,8 +74,8 @@ namespace zaran
                 j_bnd = idx_j;
                 k_bnd = idx_k;
                 auto &bnd_info = bnd_im[bnd_idx++];
-                bnd_info.SetIdx(i_bnd, j_bnd, k_bnd);
-                bnd_info.SetDirection(dir);
+                bnd_info.SetIdxSrc(i_bnd, j_bnd, k_bnd);
+                bnd_info.SetDirectionSrc(dir);
                 bnd_info.SetNorm(norm);
             }
         }
@@ -96,8 +96,8 @@ namespace zaran
                 j_bnd = idx_j;
                 k_bnd = idx_k;
                 auto &bnd_info = bnd_ip[bnd_idx++];
-                bnd_info.SetIdx(i_bnd, j_bnd, k_bnd);
-                bnd_info.SetDirection(dir);
+                bnd_info.SetIdxSrc(i_bnd, j_bnd, k_bnd);
+                bnd_info.SetDirectionSrc(dir);
                 bnd_info.SetNorm(norm);
             }
         }
@@ -118,8 +118,8 @@ namespace zaran
                 j_bnd = js;
                 k_bnd = idx_k;
                 auto &bnd_info = bnd_jm[bnd_idx++];
-                bnd_info.SetIdx(i_bnd, j_bnd, k_bnd);
-                bnd_info.SetDirection(dir);
+                bnd_info.SetIdxSrc(i_bnd, j_bnd, k_bnd);
+                bnd_info.SetDirectionSrc(dir);
                 bnd_info.SetNorm(norm);
             }
         }
@@ -140,8 +140,8 @@ namespace zaran
                 j_bnd = je;
                 k_bnd = idx_k;
                 auto &bnd_info = bnd_jp[bnd_idx++];
-                bnd_info.SetIdx(i_bnd, j_bnd, k_bnd);
-                bnd_info.SetDirection(dir);
+                bnd_info.SetIdxSrc(i_bnd, j_bnd, k_bnd);
+                bnd_info.SetDirectionSrc(dir);
                 bnd_info.SetNorm(norm);
             }
         }
@@ -162,8 +162,8 @@ namespace zaran
                 j_bnd = idx_j;
                 k_bnd = ks;
                 auto &bnd_info = bnd_km[bnd_idx++];
-                bnd_info.SetIdx(i_bnd, j_bnd, k_bnd);
-                bnd_info.SetDirection(dir);
+                bnd_info.SetIdxSrc(i_bnd, j_bnd, k_bnd);
+                bnd_info.SetDirectionSrc(dir);
                 bnd_info.SetNorm(norm);
             }
         }
@@ -184,8 +184,8 @@ namespace zaran
                 j_bnd = idx_j;
                 k_bnd = ke;
                 auto &bnd_info = bnd_kp[bnd_idx++];
-                bnd_info.SetIdx(i_bnd, j_bnd, k_bnd);
-                bnd_info.SetDirection(dir);
+                bnd_info.SetIdxSrc(i_bnd, j_bnd, k_bnd);
+                bnd_info.SetDirectionSrc(dir);
                 bnd_info.SetNorm(norm);
             }
         }

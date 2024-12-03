@@ -67,7 +67,7 @@ namespace zaran
         int nj = GetGrid()->GetNj();
         int nk = GetGrid()->GetNk();
 
-        m_idx_proxy = new StructIdxProxy(ni, nj, nk);
+        m_idx_proxy = new IdxStruct(ni, nj, nk);
     }
 
     void NSFieldZaran::AllocateSolverPara()
@@ -76,7 +76,7 @@ namespace zaran
         {
             delete m_solver_para;
         }
-        m_solver_para = new FlowSolverStructPara();
+        m_solver_para = new FlowSolverParamStruct();
         GetSolverPara()->Init();
     }
 
@@ -84,9 +84,9 @@ namespace zaran
     {
         return static_cast<GridBlock *>(Field::GetGrid());
     }
-    FlowSolverStructPara *NSFieldZaran::GetSolverPara()
+    FlowSolverParamStruct *NSFieldZaran::GetSolverPara()
     {
-        return static_cast<FlowSolverStructPara *>(Field::GetSolverPara());
+        return static_cast<FlowSolverParamStruct *>(Field::GetSolverPara());
     }
     DataManagerNSStruct *NSFieldZaran::GetDataManager()
     {
@@ -225,7 +225,7 @@ namespace zaran
     //         int ghost_size = 3;
     //         GridStruct *grid = new GridStruct("ZaranMasterGrid", 1, 3);
     //         auto node = grid->GetNode();
-    //         m_idx_proxy = new StructIdxProxy(grid);
+    //         m_idx_proxy = new IdxStruct(grid);
     //         grid->Allocate(nx, ny, nz, ghost_size);
     //         SetGrid(grid);
     //         m_cell_type = new PhysicalType[(nx + 2 * ghost_size) * (ny + 2 * ghost_size) * (nz + 2 * ghost_size)];

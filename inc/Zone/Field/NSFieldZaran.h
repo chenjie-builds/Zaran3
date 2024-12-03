@@ -27,7 +27,7 @@ namespace zaran
     public:
         void SetModelManager(ModelManager *model_manager);
         GridBlock *GetGrid() override;
-        FlowSolverStructPara *GetSolverPara() override;
+        FlowSolverParamStruct *GetSolverPara() override;
         DataManagerNSStruct *GetDataManager() override;
         ModelManager *GetModelManager() { return m_model_manager; }
         NSFieldFNFDM *GetSlaveField() { return m_slave_field; }
@@ -44,6 +44,6 @@ namespace zaran
         NSFieldFNFDM *m_slave_field;
         /// @brief
         ModelManager *m_model_manager;
-        StructIdxProxy *m_idx_proxy;
+        IdxStruct *m_idx_proxy;
     };
 }

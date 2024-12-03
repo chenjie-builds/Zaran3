@@ -15,17 +15,17 @@ namespace zaran
 
     public:
         GridStruct *GetGrid() override;
-        FlowSolverStructPara *GetSolverPara() override;
+        FlowSolverParamStruct *GetSolverPara() override;
         NSSolverStruct *GetSolver() override;
         DataManagerNSStruct *GetDataManager() override;
         void CalcResidual() override;
-        StructIdxProxy& GetIdxProxy() { return *m_idx_proxy; }
+        IdxStruct& GetIdxProxy() { return *m_idx_proxy; }
     protected:
         void AllocateResInfo() override;
         void AllocateSolver() override;
         void AllocateDataManager() override;
         void AllocateIdxProxy();
         void AllocateSolverPara() override;
-        StructIdxProxy *m_idx_proxy;
+        IdxStruct *m_idx_proxy;
     };
 }

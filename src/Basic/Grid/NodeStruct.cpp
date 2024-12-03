@@ -38,6 +38,10 @@ const double *NodeStruct::GetCoord(int idx_i, int idx_j, int idx_k) const
 {
     return m_coord + 3 * GetIdx(idx_i, idx_j, idx_k);
 }
+const double* NodeStruct::GetCoord(IdxStruct* idx_proxy) const
+{
+	return m_coord + 3 * idx_proxy->GetIdx();
+}
 int NodeStruct::GetIdx(int idx_i, int idx_j, int idx_k) const
 {
     return idx_i + idx_j * m_i_num + idx_k * m_i_num * m_j_num;

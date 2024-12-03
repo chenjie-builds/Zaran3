@@ -20,9 +20,9 @@ namespace zaran
     {
         return static_cast<GridStruct*>(Field::GetGrid());
     }
-    FlowSolverStructPara* NSFieldStruct::GetSolverPara()
+    FlowSolverParamStruct* NSFieldStruct::GetSolverPara()
     {
-        return static_cast<FlowSolverStructPara*>(Field::GetSolverPara());
+        return static_cast<FlowSolverParamStruct*>(Field::GetSolverPara());
     }
     NSSolverStruct* NSFieldStruct::GetSolver()
     {
@@ -150,7 +150,7 @@ namespace zaran
         int ni = GetGrid()->GetNi();
         int nj = GetGrid()->GetNj();
         int nk = GetGrid()->GetNk();
-        m_idx_proxy = new StructIdxProxy(ni, nj, nk);
+        m_idx_proxy = new IdxStruct(ni, nj, nk);
     }
     void NSFieldStruct::AllocateSolverPara()
     {
@@ -159,7 +159,7 @@ namespace zaran
             delete m_solver_para;
             m_solver_para = nullptr;
         }
-        m_solver_para = new FlowSolverStructPara();
+        m_solver_para = new FlowSolverParamStruct();
         GetSolverPara()->Init();
     }
 } // namespace zaran
