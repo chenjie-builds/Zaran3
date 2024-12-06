@@ -251,8 +251,8 @@ namespace zaran
 					m_idx_proxy->SetIdx(i, j, k);
 					int idx = m_idx_proxy->GetIdx();
 					auto coord = node->GetCoord(m_idx_proxy);
-					double dist = sqrt(pow(coord[0] - explosion_center[0], 2) 
-						+ pow(coord[1] - explosion_center[1], 2) 
+					double dist = sqrt(pow(coord[0] - explosion_center[0], 2)
+						+ pow(coord[1] - explosion_center[1], 2)
 						+ pow(coord[2] - explosion_center[2], 2));
 					if (dist < explosion_radius)
 					{
@@ -6986,52 +6986,29 @@ namespace zaran
 		auto nk = m_idx_proxy->GetNk();
 		// MUSCL整点变量(i-2,i-1,i,i+1,i+2)的值
 		double value_temp[5];
-		int idx_temp[5], i_temp[5], j_temp[5], k_temp[5];
+		int i_temp[5], j_temp[5], k_temp[5];
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		double left_value, right_value;
+		int direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
 		///@note
 		/// 从ks-1开始，到ke结束，因为对第一个计算点ks进行通量差分时，需要使用ks-1/2处的值
 		for (int k = ks; k <= ke; ++k)
 		{
-#pragma omp parallel for private(value_temp, idx_temp, i_temp, j_temp, k_temp, left_value, right_value)
+#pragma omp parallel for private(value_temp, i_temp, j_temp, k_temp, left_value, right_value)
 			for (int j = js; j <= je; ++j)
 			{
 				for (int i = is; i <= ie; ++i)
 				{
-					i_temp[0] = i - 2, i_temp[1] = i - 1, i_temp[2] = i, i_temp[3] = i + 1, i_temp[4] = i + 2;
-					j_temp[0] = j_temp[1] = j_temp[2] = j_temp[3] = j_temp[4] = j;
-					k_temp[0] = k_temp[1] = k_temp[2] = k_temp[3] = k_temp[4] = k;
-					auto idx = m_idx_proxy->GetIdx(i, j, k);
-					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+					for (int iDim = 0; iDim < grid->GetDim(); ++iDim)
 					{
 						for (int iTemp = 0; iTemp < 5; ++iTemp)
 						{
-							value_temp[iTemp] = data_manager->GetPrim(
-								idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
+							i_temp[iTemp] = i + direction[iDim][0] * (iTemp - 2);
+							j_temp[iTemp] = j + direction[iDim][1] * (iTemp - 2);
+							k_temp[iTemp] = k + direction[iDim][2] * (iTemp - 2);
 						}
-						InterMidNodePrim_MUSCL(value_temp, left_value, right_value);
-						data_manager->SetMidNodePrim(idx_eq, 0, idx, left_value, right_value);
-					}
-					i_temp[0] = i_temp[1] = i_temp[2] = i_temp[3] = i_temp[4] = i;
-					j_temp[0] = j - 2, j_temp[1] = j - 1, j_temp[2] = j, j_temp[3] = j + 1, j_temp[4] = j + 2;
-					k_temp[0] = k_temp[1] = k_temp[2] = k_temp[3] = k_temp[4] = k;
-					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-					{
-						for (int iTemp = 0; iTemp < 5; ++iTemp)
-						{
-							value_temp[iTemp] = data_manager->GetPrim(
-								idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
-						}
-						InterMidNodePrim_MUSCL(value_temp, left_value, right_value);
-						data_manager->SetMidNodePrim(idx_eq, 1, idx, left_value, right_value);
-					}
-
-					if (grid->GetDim() == 3)
-					{
-						i_temp[0] = i_temp[1] = i_temp[2] = i_temp[3] = i_temp[4] = i;
-						j_temp[0] = j_temp[1] = j_temp[2] = j_temp[3] = j_temp[4] = j;
-						k_temp[0] = k - 2, k_temp[1] = k - 1, k_temp[2] = k, k_temp[3] = k + 1, k_temp[4] = k + 2;
+						auto idx = m_idx_proxy->GetIdx(i, j, k);
 						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 						{
 							for (int iTemp = 0; iTemp < 5; ++iTemp)
@@ -7040,7 +7017,7 @@ namespace zaran
 									idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
 							}
 							InterMidNodePrim_MUSCL(value_temp, left_value, right_value);
-							data_manager->SetMidNodePrim(idx_eq, 2, idx, left_value, right_value);
+							data_manager->SetMidNodePrim(idx_eq, iDim, idx, left_value, right_value);
 						}
 					}
 				}
@@ -7068,6 +7045,8 @@ namespace zaran
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		double left_value, right_value;
+		int direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
+
 		///@note
 		/// 从ks-1开始，到ke结束，因为对第一个计算点ks进行通量差分时，需要使用ks-1/2处的值
 		for (int k = ks; k <= ke; ++k)
@@ -7076,70 +7055,38 @@ namespace zaran
 			{
 				for (int i = is; i <= ie; ++i)
 				{
-					i_temp[0] = i - 2, i_temp[1] = i - 1, i_temp[2] = i, i_temp[3] = i + 1, i_temp[4] = i + 2;
-					j_temp[0] = j_temp[1] = j_temp[2] = j_temp[3] = j_temp[4] = j;
-					k_temp[0] = k_temp[1] = k_temp[2] = k_temp[3] = k_temp[4] = k;
-					auto idx = m_idx_proxy->GetIdx(i, j, k);
-					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+					for (int iDim = 0; iDim < grid->GetDim(); ++iDim)
 					{
 						for (int iTemp = 0; iTemp < 5; ++iTemp)
 						{
-							value_temp[iTemp] = data_manager->GetPrim(
-								idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
-							for (int iDim = 0; iDim < 3; ++iDim)
-							{
-								coord_temp[iTemp][iDim] = node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[iDim];
-							}
+							i_temp[iTemp] = i + direction[iDim][0] * (iTemp - 2);
+							j_temp[iTemp] = j + direction[iDim][1] * (iTemp - 2);
+							k_temp[iTemp] = k + direction[iDim][2] * (iTemp - 2);
 						}
-						InterMidNodePrim_MUSCLSV(value_temp, coord_temp, left_value, right_value);
-						data_manager->SetMidNodePrim(idx_eq, 0, idx, left_value, right_value);
-					}
-					i_temp[0] = i_temp[1] = i_temp[2] = i_temp[3] = i_temp[4] = i;
-					j_temp[0] = j - 2, j_temp[1] = j - 1, j_temp[2] = j, j_temp[3] = j + 1, j_temp[4] = j + 2;
-					k_temp[0] = k_temp[1] = k_temp[2] = k_temp[3] = k_temp[4] = k;
-					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-					{
-						for (int iTemp = 0; iTemp < 5; ++iTemp)
-						{
-							value_temp[iTemp] = data_manager->GetPrim(
-								idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
-							for (int iDim = 0; iDim < 3; ++iDim)
-							{
-								coord_temp[iTemp][iDim] = node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[iDim];
-							}
-						}
-						InterMidNodePrim_MUSCLSV(value_temp, coord_temp, left_value, right_value);
-						data_manager->SetMidNodePrim(idx_eq, 1, idx, left_value, right_value);
-					}
-
-					if (grid->GetDim() == 3)
-					{
-						i_temp[0] = i_temp[1] = i_temp[2] = i_temp[3] = i_temp[4] = i;
-						j_temp[0] = j_temp[1] = j_temp[2] = j_temp[3] = j_temp[4] = j;
-						k_temp[0] = k - 2, k_temp[1] = k - 1, k_temp[2] = k, k_temp[3] = k + 1, k_temp[4] = k + 2;
+						auto idx = m_idx_proxy->GetIdx(i, j, k);
 						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 						{
 							for (int iTemp = 0; iTemp < 5; ++iTemp)
 							{
 								value_temp[iTemp] = data_manager->GetPrim(
 									idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
-								for (int iDim = 0; iDim < 3; ++iDim)
+								for (int jDim = 0; jDim < 3; ++jDim)
 								{
-									coord_temp[iTemp][iDim] =
-										node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[iDim];
+									coord_temp[iTemp][jDim] = node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[jDim];
 								}
 							}
 							InterMidNodePrim_MUSCLSV(value_temp, coord_temp, left_value, right_value);
-							data_manager->SetMidNodePrim(idx_eq, 2, idx, left_value, right_value);
+							data_manager->SetMidNodePrim(idx_eq, iDim, idx, left_value, right_value);
 						}
 					}
 				}
 			}
-			for (int i = 0; i < 5; ++i)
-			{
-				delete[] coord_temp[i];
-			}
 		}
+		for (int i = 0; i < 5; ++i)
+		{
+			delete[] coord_temp[i];
+		}
+		delete[] coord_temp;
 	}
 
 	void NSSolverStruct::InterGhostMidNode_MUSCL()
@@ -7364,7 +7311,7 @@ namespace zaran
 		double max_density = LARGE_NUMBER;
 		double min_pressure = SMALL_NUMBER;
 		double max_pressure = LARGE_NUMBER;
-
+		int direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
 		/// 从ks-1开始，到ke结束，因为对第一个计算点ks进行通量差分时，需要使用ks-1/2处的值
 		for (int k = ks - 1; k <= ke + 1; ++k)
 		{
@@ -7373,105 +7320,44 @@ namespace zaran
 			{
 				for (int i = is - 1; i <= ie + 1; ++i)
 				{
-					for (int iTemp = 0; iTemp < 5; ++iTemp)
-					{
-						idx_temp[iTemp] = m_idx_proxy->GetIdx(i - 2 + iTemp, j, k);
-					}
-					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+					for (int iDim = 0; iDim < grid->GetDim(); ++iDim)
 					{
 						for (int iTemp = 0; iTemp < 5; ++iTemp)
 						{
-							value_temp[iTemp] = data_manager->GetPrim(idx_eq, idx_temp[iTemp]);
+							idx_temp[iTemp] = m_idx_proxy->GetIdx(i + direction[iDim][0] * (iTemp - 2),
+								j + direction[iDim][1] * (iTemp - 2), k + direction[iDim][2] * (iTemp - 2));
 						}
-						InterPrimMidNode_WCNS5(value_temp, left_value[idx_eq], right_value[idx_eq]);
-					}
-					if (left_value[0] < SMALL_NUMBER || left_value[4] < SMALL_NUMBER || left_value[0]>max_density || left_value[4]>max_pressure)
-					{
-						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-						{
-							left_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
-						}
-					}
-					if (right_value[0] < SMALL_NUMBER || right_value[4] < SMALL_NUMBER || right_value[0]>max_density || right_value[4]>max_pressure)
-					{
-						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-						{
-							right_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
-						}
-					}
-					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-					{
-						data_manager->SetMidNodePrimLeft(idx_eq, 0, idx_temp[2], left_value[idx_eq]);
-						data_manager->SetMidNodePrimRight(idx_eq, 0, idx_temp[1], right_value[idx_eq]);
-					}
-
-					for (int iTemp = 0; iTemp < 5; ++iTemp)
-					{
-						idx_temp[iTemp] = m_idx_proxy->GetIdx(i, j - 2 + iTemp, k);
-					}
-
-					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-					{
-						for (int iTemp = 0; iTemp < 5; ++iTemp)
-						{
-							value_temp[iTemp] = data_manager->GetPrim(idx_eq, idx_temp[iTemp]);
-						}
-						InterPrimMidNode_WCNS5(value_temp, left_value[idx_eq], right_value[idx_eq]);
-					}
-					if (left_value[0] < SMALL_NUMBER || left_value[4] < SMALL_NUMBER || left_value[0]>max_density || left_value[4]>max_pressure)
-					{
-						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-						{
-							left_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
-						}
-					}
-					if (right_value[0] < SMALL_NUMBER || right_value[4] < SMALL_NUMBER || right_value[0]>max_density || right_value[4]>max_pressure)
-					{
-						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-						{
-							right_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
-						}
-					}
-					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-					{
-						data_manager->SetMidNodePrimLeft(idx_eq, 1, idx_temp[2], left_value[idx_eq]);
-						data_manager->SetMidNodePrimRight(idx_eq, 1, idx_temp[1], right_value[idx_eq]);
-					}
-
-					if (grid->GetDim() == 3)
-					{
-						for (int iTemp = 0; iTemp < 5; ++iTemp)
-						{
-							idx_temp[iTemp] = m_idx_proxy->GetIdx(i, j, k - 2 + iTemp);
-						}
+						double value_base[5];
+						value_base[0] = data_manager->GetPrim(0, idx_temp[2]);
+						value_base[4] = data_manager->GetPrim(4, idx_temp[2]);
+						value_base[1] = value_base[2] = value_base[3] = sqrt(value_base[4] / value_base[0]);
 						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 						{
 							for (int iTemp = 0; iTemp < 5; ++iTemp)
 							{
-								value_temp[iTemp] = data_manager->GetPrim(idx_eq, idx_temp[iTemp]);
+								value_temp[iTemp] = data_manager->GetPrim(idx_eq, idx_temp[iTemp]) / value_base[idx_eq];
 							}
-							InterPrimMidNode_WCNS5(value_temp, left_value[idx_eq], right_value[idx_eq]);
+							InterMidNodePrim_WCNS5(value_temp, left_value[idx_eq], right_value[idx_eq]);
 						}
-						if (left_value[0] < SMALL_NUMBER || left_value[4] < SMALL_NUMBER || left_value[0]>max_density || left_value[4]>max_pressure)
+						//if (left_value[0] < min_density || left_value[4] < min_pressure || left_value[0]>max_density || left_value[4]>max_pressure)
+						//{
+						//	for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+						//	{
+						//		left_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
+						//	}
+						//}
+						//if (right_value[0] < min_density || right_value[4] < min_pressure || right_value[0]>max_density || right_value[4]>max_pressure)
+						//{
+						//	for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+						//	{
+						//		right_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
+						//	}
+						//}
+						auto idx = m_idx_proxy->GetIdx(i, j, k);
+						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 						{
-							for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-							{
-								left_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
-							}
-						}
-						if (right_value[0] < SMALL_NUMBER || right_value[4] < SMALL_NUMBER || right_value[0]>max_density || right_value[4]>max_pressure)
-						{
-							for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-							{
-								right_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
-							}
-						}
-						{
-							for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
-							{
-								data_manager->SetMidNodePrimLeft(idx_eq, 2, idx_temp[2], left_value[idx_eq]);
-								data_manager->SetMidNodePrimRight(idx_eq, 2, idx_temp[1], right_value[idx_eq]);
-							}
+							data_manager->SetMidNodePrimLeft(idx_eq, iDim, idx_temp[2], left_value[idx_eq] * value_base[idx_eq]);
+							data_manager->SetMidNodePrimRight(idx_eq, iDim, idx_temp[1], right_value[idx_eq] * value_base[idx_eq]);
 						}
 					}
 				}
@@ -7706,7 +7592,7 @@ namespace zaran
 	}
 
 	// 参考《计算空气动力学》pp.84
-	void NSSolverStruct::InterPrimMidNode_WCNS5(double* value, double& value_left, double& value_right)
+	void NSSolverStruct::InterMidNodePrim_WCNS5(double* value, double& value_left, double& value_right)
 	{
 		//double ref_value = value[2];
 		//if (abs(ref_value) > SMALL_NUMBER)

@@ -104,7 +104,7 @@ namespace zaran
     /// @param value values at node, size = 5,(i-2,i-1,i,i+1,i+2)
     /// @param value_left interpolated value of left side at mid point i+1/2
     /// @param value_right interpolated value of right side at mid point i-1/2
-    void InterPrimMidNode_WCNS5( double *value, double &value_left, double &value_right);
+    void InterMidNodePrim_WCNS5( double *value, double &value_left, double &value_right);
     void FluxDifference();
     /// @brief flux difference: central 2nd order
     virtual void FluxDifference2nd() {};

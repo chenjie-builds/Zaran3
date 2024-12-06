@@ -58,13 +58,13 @@ namespace zaran
 
 	void FieldData::AddData(const string &name, FieldDataType type, int num)
 	{
-#ifdef DEBUG
+#ifdef DEBUG_MODE
 		if (HasData(name))
 		{
-			cout << "FieldData::AddData: " << name << " is already exist" << endl;
+			std::cout << "FieldData::AddData: " << name << " is already exist" << std::endl;
 			exit(0);
 		}
-#endif // DEBUG
+#endif // DEBUG_MODE
 		m_name_id[name] = m_data_type.size();
 		m_data_type.push_back(type);
 		m_data_num.push_back(num);
@@ -89,47 +89,47 @@ namespace zaran
 	void FieldData::GetData(const string &name, double *&data)
 	{
 		int id = m_name_id[name];
-#ifdef DEBUG
+#ifdef DEBUG_MODE
 		if (HasData(name) == false)
 		{
-			cout << "FieldData::GetData: " << name << " is not exist" << endl;
+			std::cout << "FieldData::GetData: " << name << " is not exist" << std::endl;
 			exit(0);
 		}
 		if (m_data_type[id] != FieldDataType::real)
 		{
-			cout << "FieldData::GetData: " << name << " is not real type" << endl;
+			std::cout << "FieldData::GetData: " << name << " is not real type" << std::endl;
 			exit(0);
 		}
-#endif // DEBUG
+#endif // DEBUG_MODE
 		data = (double *)m_data[id];
 	}
 	void FieldData::GetData(const string &name, int *&data)
 	{
 		int id = m_name_id[name];
-#ifdef DEBUG
+#ifdef DEBUG_MODE
 		if (HasData(name) == false)
 		{
-			cout << "FieldData::GetData: " << name << " is not exist" << endl;
+			std::cout << "FieldData::GetData: " << name << " is not exist" << std::endl;
 			exit(0);
 		}
 		if (m_data_type[id] != FieldDataType::integer)
 		{
-			cout << "FieldData::GetData: " << name << " is not integer type" << endl;
+			std::cout << "FieldData::GetData: " << name << " is not integer type" << std::endl;
 			exit(0);
 		}
-#endif // DEBUG
+#endif // DEBUG_MODE
 		data = (int *)m_data[id];
 	}
 	void FieldData::GetDataSize(const string &name, int &num)
 	{
 		int id = m_name_id[name];
-#ifdef DEBUG
+#ifdef DEBUG_MODE
 		if (HasData(name) == false)
 		{
-			cout << "FieldData::GetData: " << name << " is not exist" << endl;
+			std::cout << "FieldData::GetData: " << name << " is not exist" << std::endl;
 			exit(0);
 		}
-#endif // DEBUG
+#endif // DEBUG_MODE
 		num = m_data_num[id];
 	}
 	double &FieldData::GetData(const string &name, int idx_data)
