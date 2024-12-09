@@ -6,32 +6,14 @@
 #include "Log.h"
 namespace zaran
 {
-    NSFieldStruct::NSFieldStruct(GridBase* grid)
+    NSFieldStruct::NSFieldStruct(std::shared_ptr<GridStruct> grid)
         : FieldNS(grid, FieldType::NS_Structured)
     {
-        m_idx_proxy = nullptr;
     }
     NSFieldStruct::~NSFieldStruct()
     {
-        if (m_idx_proxy != nullptr)
-            delete m_idx_proxy;
     }
-    GridStruct* NSFieldStruct::GetGrid()
-    {
-        return static_cast<GridStruct*>(Field::GetGrid());
-    }
-    FlowSolverParamStruct* NSFieldStruct::GetSolverPara()
-    {
-        return static_cast<FlowSolverParamStruct*>(Field::GetSolverPara());
-    }
-    NSSolverStruct* NSFieldStruct::GetSolver()
-    {
-        return static_cast<NSSolverStruct*>(Field::GetSolver());
-    }
-    DataManagerNSStruct* NSFieldStruct::GetDataManager()
-    {
-        return static_cast<DataManagerNSStruct*>(Field::GetDataManager());
-    }
+
     void NSFieldStruct::CalcResidual()
     {
         auto grid = GetGrid();
@@ -58,7 +40,7 @@ namespace zaran
                 {
                     for (int i = is; i <= ie; i++)
                     {
-                        int idx = m_idx_proxy->GetIdx(i, j, k);
+                        int idx = GetIdxProxy().GetIdx(i, j, k);
                         double res_val = abs(res[idx]);
                         auto coord = node->GetCoord(i, j, k);
                         // if (iEqu == 0)
@@ -93,9 +75,29 @@ namespace zaran
     void NSFieldStruct::Allocate()
     {
         FieldNS::Allocate();
-        AllocateIdxProxy();
     }
-    void NSFieldStruct::AllocateResInfo()
+
+	std::shared_ptr<zaran::GridStruct> NSFieldStruct::GetGrid()
+	{
+		return std::static_pointer_cast<zaran::GridStruct>(Field::GetGrid());
+	}
+
+	std::shared_ptr<zaran::FlowSolverParamStruct> NSFieldStruct::GetSolverPara()
+	{
+		return std::static_pointer_cast<zaran::FlowSolverParamStruct>(Field::GetSolverPara());
+	}
+
+	std::shared_ptr<zaran::NSSolverStruct> NSFieldStruct::GetSolver()
+	{
+		return std::static_pointer_cast<zaran::NSSolverStruct>(Field::GetSolver());
+	}
+
+	std::shared_ptr<zaran::DataManagerNSStruct> NSFieldStruct::GetDataManager()
+	{
+		return std::static_pointer_cast<zaran::DataManagerNSStruct>(Field::GetDataManager());
+	}
+
+	void NSFieldStruct::AllocateResInfo()
     {
         if (m_res_info != nullptr)
         {
@@ -106,19 +108,14 @@ namespace zaran
     }
     void NSFieldStruct::AllocateSolver()
     {
-        if (m_solver != nullptr)
-        {
-            delete m_solver;
-            m_solver = nullptr;
-        }
         auto para = GetSolverPara();
         if (para->GetMidMetricsScheme() == MidMetricsScheme::CMM)
         {
-            m_solver = new NSSolverStructCMM(GetIdx(), "NS_Struct", GetSolverPara(), GetGrid(), GetDataManager());
+			m_solver = std::make_shared<NSSolverStructCMM>(GetIdx(), "NS_Struct", GetSolverPara(), GetGrid(), GetDataManager());
         }
         else if (para->GetMidMetricsScheme() == MidMetricsScheme::DEER)
         {
-            m_solver = new NSSolverStructDEER(GetIdx(), "NS_Struct", GetSolverPara(), GetGrid(), GetDataManager());
+			m_solver = std::make_shared<NSSolverStructDEER>(GetIdx(), "NS_Struct", GetSolverPara(), GetGrid(), GetDataManager());
         }
         else
         {
@@ -128,38 +125,16 @@ namespace zaran
     }
     void NSFieldStruct::AllocateDataManager()
     {
-        if (m_data_manager != nullptr)
-        {
-            delete m_data_manager;
-            m_data_manager = nullptr;
-        }
         int ni = GetGrid()->GetNi();
         int nj = GetGrid()->GetNj();
         int nk = GetGrid()->GetNk();
-        m_data_manager = new DataManagerNSStruct(GetFieldData(), ni, nj, nk);
+		m_data_manager = std::make_shared<DataManagerNSStruct>(GetData(), ni, nj, nk);
         m_data_manager->CreateData();
         m_data_manager->RegisterData();
     }
-    void NSFieldStruct::AllocateIdxProxy()
-    {
-        if (m_idx_proxy != nullptr)
-        {
-            delete m_idx_proxy;
-            m_idx_proxy = nullptr;
-        }
-        int ni = GetGrid()->GetNi();
-        int nj = GetGrid()->GetNj();
-        int nk = GetGrid()->GetNk();
-        m_idx_proxy = new IdxStruct(ni, nj, nk);
-    }
     void NSFieldStruct::AllocateSolverPara()
     {
-        if (m_solver_para != nullptr)
-        {
-            delete m_solver_para;
-            m_solver_para = nullptr;
-        }
-        m_solver_para = new FlowSolverParamStruct();
+		m_solver_para = std::make_shared<FlowSolverParamStruct>();
         GetSolverPara()->Init();
     }
 } // namespace zaran

@@ -9,7 +9,7 @@ set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 project( Zaran LANGUAGES CXX )
 set( PROJECT_VERSION_MAJOR 3 )
 set( PROJECT_VERSION_MINOR 7 )
-set( PROJECT_VERSION_PATCH 3 )
+set( PROJECT_VERSION_PATCH 4 )
 set( PROJECT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} )
 set( EXECUTABLE_NAME ${PROJECT_NAME}${PROJECT_VERSION} )
 set( CMAKE_CXX_STANDARD 17 )
@@ -19,8 +19,8 @@ set( inc_dir
     ${PROJECT_SOURCE_DIR}/inc/Zone/Field
     ${PROJECT_SOURCE_DIR}/inc/Zone/Solver
     ${PROJECT_SOURCE_DIR}/inc/Zone/SolverParam
-    ${PROJECT_SOURCE_DIR}/inc/Builder/Field
-    ${PROJECT_SOURCE_DIR}/inc/Builder/Grid
+    ${PROJECT_SOURCE_DIR}/inc/Generator/Field
+    ${PROJECT_SOURCE_DIR}/inc/Generator/Grid
     ${PROJECT_SOURCE_DIR}/inc/Basic/Common
     ${PROJECT_SOURCE_DIR}/inc/Basic/Data
     ${PROJECT_SOURCE_DIR}/inc/Basic/Math
@@ -40,7 +40,7 @@ file( GLOB_RECURSE
 )
 message( STATUS "source files:" ${src_file} )
 message( STATUS "include directories:" ${inc_dir} )
-target_sources( ${EXECUTABLE_NAME} PRIVATE ${src_file} )
+target_sources( ${EXECUTABLE_NAME} PUBLIC ${src_file})
 target_include_directories( ${EXECUTABLE_NAME} PRIVATE ${inc_dir} )
 message( STATUS "CMAKE_BUILD_TYPE:" ${CMAKE_BUILD_TYPE} )
 # 程序DEBUG模式

@@ -13,6 +13,7 @@
 #include "SolverPara.h"
 #include "GlobalData.h"
 #include "GridList.h"
+#include <memory>
 namespace zaran
 {
 
@@ -20,27 +21,26 @@ namespace zaran
 	class Solver
 	{
 	public:
-		Solver(int index, string name, SolverParam* para, GridBase* grid);
+		Solver(Id index, string name, std::shared_ptr<SolverParam>para, std::shared_ptr<GridBase>grid);
 		virtual ~Solver();
 	public:
 		const string& GetName()const { return name_; }
-		virtual GridBase* GetGrid() { return m_grid; }
+		std::shared_ptr<GridBase> GetGrid() { return m_grid; }
 		const int& GetIndex()const { return index_; }
-		virtual SolverParam* GetPara();
+		std::shared_ptr<SolverParam> GetPara() { return m_para; }
 	public:
-		virtual void Init() ;
+		virtual void Init();
 		virtual void Solve() = 0;
 		virtual void Preprocess() = 0;
 		virtual void Postprocess() = 0;
 		// 初始化自己
 		virtual void InitSolver() = 0;
-	protected:
+	private:
 		// solver index
 		int index_;
 		string name_;
-		// 全场网格数组
-		GridBase* m_grid;
+		std::shared_ptr<GridBase> m_grid;
 		// solver 的参数
-		SolverParam* m_para;
+		std::shared_ptr<SolverParam> m_para;
 	};
 }

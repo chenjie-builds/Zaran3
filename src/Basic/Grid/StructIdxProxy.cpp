@@ -1,58 +1,32 @@
 #include "StructIdxProxy.h"
 namespace zaran
 {
-    IdxStruct::IdxStruct(int ni, int nj, int nk)
+    IdProxyStruct::IdProxyStruct(Id ni, Id nj, Id nk)
     {
         m_ni = ni;
         m_nj = nj;
         m_nk = nk;
     }
 
-    void IdxStruct::SetIdx(int i, int j, int k)
+    void IdProxyStruct::SetIdx(Id i, Id j, Id k)
     {
         m_idx_i = i;
         m_idx_j = j;
         m_idx_k = k;
-        Idx::SetIdx(i + j * m_ni + k * m_ni * m_nj);
+        IdProxy::SetIdx(i + j * m_ni + k * m_ni * m_nj);
     }
-    void IdxStruct::SetIdx(int idx)
+    void IdProxyStruct::SetIdx(Id idx)
     {
         m_idx_i = idx % m_ni;
         m_idx_j = (idx / m_ni) % m_nj;
         m_idx_k = idx / (m_ni * m_nj);
-        Idx::SetIdx(idx);
+        IdProxy::SetIdx(idx);
     }
-    void IdxStruct::SetI(int i)
-    {
-        m_idx_i = i;
-        Idx::SetIdx(i + m_idx_j * m_ni + m_idx_k * m_ni * m_nj);
-    }
-    void IdxStruct::SetJ(int j)
-    {
-        m_idx_j = j;
-        Idx::SetIdx(m_idx_i + j * m_ni + m_idx_k * m_ni * m_nj);
-    }
-    void IdxStruct::SetK(int k)
-    {
-        m_idx_k = k;
-        Idx::SetIdx(m_idx_i + m_idx_j * m_ni + k * m_ni * m_nj);
-    }
-    IdxStruct::~IdxStruct()
+    IdProxyStruct::~IdProxyStruct()
     {
     }
-    int IdxStruct::GetNi() const
-    {
-        return m_ni;
-    }
-    int IdxStruct::GetNj() const
-    {
-        return m_nj;
-    }
-    int IdxStruct::GetNk() const
-    {
-        return m_nk;
-    }
-    void IdxStruct::GetIdxStruct(int &i, int &j, int &k) 
+
+    void IdProxyStruct::GetIdxStruct(Id &i, Id&j, Id&k) const
     {
         i = m_idx_i;
         j = m_idx_j;

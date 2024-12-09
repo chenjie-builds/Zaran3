@@ -7,7 +7,7 @@
 #include "NSFieldFN.h"
 using namespace zaran;
 
-FieldSimulation::FieldSimulation(FieldManager* global_Field)
+FieldSimulation::FieldSimulation(std::shared_ptr<FieldManager> global_Field)
 {
 	m_field_manager = global_Field;
 	m_res_flag = false;
@@ -15,11 +15,7 @@ FieldSimulation::FieldSimulation(FieldManager* global_Field)
 
 FieldSimulation::~FieldSimulation()
 {
-	if (m_field_manager != nullptr)
-	{
-		delete m_field_manager;
-		m_field_manager = nullptr;
-	}
+
 }
 
 void FieldSimulation::Initialize()
@@ -112,7 +108,7 @@ void FieldSimulation::CalcResidual()
 	m_res_ave = 0;
 	for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
 	{
-		auto field = dynamic_cast<FieldNS*>(m_field_manager->GetField(iter_field));
+		auto field = std::static_pointer_cast<FieldNS>(m_field_manager->GetField(iter_field));
 		field->CalcResidual();
 		auto res_info = field->GetResInfo();
 		m_res_max = Max(m_res_max, res_info->GetInfNorm(0));
@@ -140,7 +136,7 @@ void FieldSimulation::BackupFieldData(std::string& back_folder)
 {
 	for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
 	{
-		FieldSolver* solver = m_field_manager->GetField(iter_field)->GetSolver();
+		auto solver = m_field_manager->GetField(iter_field)->GetSolver();
 		solver->BackupField(back_folder);
 	}
 }
@@ -246,7 +242,7 @@ void FieldSimulation::SolveOneStep()
 {
 	for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
 	{
-		FieldSolver* solver = m_field_manager->GetField(iter_field)->GetSolver();
+		auto solver = m_field_manager->GetField(iter_field)->GetSolver();
 		solver->Solve();
 	}
 }
@@ -257,7 +253,7 @@ void FieldSimulation::PreSolve()
 	GlobalData::Update("currentIter", ++currentIter);
 	for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
 	{
-		FieldSolver* solver = m_field_manager->GetField(iter_field)->GetSolver();
+		auto solver = m_field_manager->GetField(iter_field)->GetSolver();
 		solver->Preprocess();
 	}
 }
@@ -266,7 +262,7 @@ void FieldSimulation::PostSolve()
 {
 	for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
 	{
-		FieldSolver* solver = m_field_manager->GetField(iter_field)->GetSolver();
+		auto solver = m_field_manager->GetField(iter_field)->GetSolver();
 		solver->Postprocess();
 	}
 	CommFieldData();
@@ -292,7 +288,7 @@ void FieldSimulation::CommFieldData()
 	for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
 	{
 		auto field = m_field_manager->GetField(iter_field);
-		auto field_data = field->GetFieldData();
+		auto field_data = field->GetData();
 		auto comm_info = m_field_manager->GetFieldDataCommInfo(iter_field);
 		if (comm_info == nullptr)
 		{
@@ -303,7 +299,7 @@ void FieldSimulation::CommFieldData()
 		for (int i_recv_node = 0; i_recv_node < recv_node_num; i_recv_node++)
 		{
 			auto send_field = m_field_manager->GetField(comm_info->GetIdxSendField()[i_recv_node]);
-			auto send_field_data = send_field->GetFieldData();
+			auto send_field_data = send_field->GetData();
 			int idx_send_field = comm_info->GetIdxSendField()[i_recv_node];
 			int idx_send_node = comm_info->GetIdxSendNode()[i_recv_node];
 			for (size_t i_recv_name = 0; i_recv_name < recv_data_name.size(); i_recv_name++)
@@ -317,7 +313,7 @@ void FieldSimulation::CommFieldData()
 	for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
 	{
 		auto field = m_field_manager->GetField(iter_field);
-		auto field_data = field->GetFieldData();
+		auto field_data = field->GetData();
 		auto comm_info = m_field_manager->GetFieldDataCommInfo(iter_field);
 		if (comm_info == nullptr)
 		{

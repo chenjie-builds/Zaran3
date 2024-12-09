@@ -13,22 +13,26 @@
 //==============================================================================||
 #pragma once
 #include "GlobalField.h"
-namespace zaran {
-class FieldBuilder {
-public:
-  FieldBuilder(GridType grid_type, FieldSolverType solver_type, Dimension dim)
-      : m_grid_type(grid_type), m_solver_type(solver_type), m_dim(dim) {};
-  FieldManager *Create();
+namespace zaran
+{
+	class FieldGenerator
+	{
+	public:
+		FieldGenerator(GridType grid_type, FieldSolverType solver_type, Dimension dim)
+			: m_grid_type(grid_type), m_solver_type(solver_type), m_dim(dim) {
+		};
+		virtual std::shared_ptr<FieldManager> Create();
 
-private:
-  void CreateGrid();
-  void CreateField();
-  void CreateSolver();
-  FieldManager *CreateFieldZaran();
+	private:
+		void CreateGrid();
+		void CreateField();
+		void CreateSolver();
+		std::shared_ptr<FieldManager> CreateFieldZaran();
+		std::shared_ptr<FieldManager>CreateFieldExplosion();
 
-private:
-  GridType m_grid_type;
-  FieldSolverType m_solver_type;
-  Dimension m_dim;
-};
+	private:
+		GridType m_grid_type;
+		FieldSolverType m_solver_type;
+		Dimension m_dim;
+	};
 } // namespace zaran

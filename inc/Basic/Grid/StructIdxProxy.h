@@ -10,33 +10,29 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
+#include "BasicType.h"
 #include "IdxProxy.h"
 namespace zaran
 {
     // 三维结构网格索引代理类
     // 用于计算三维结构网格的索引，便于和其他网格类型统一
-    class IdxStruct : public Idx
+    class IdProxyStruct : public IdProxy
     {
     public:
-        IdxStruct() = default;
-        IdxStruct(int ni, int nj, int nk);
-        ~IdxStruct();
-        void SetIdx(int i, int j, int k);
-        void SetIdx(int idx);
-        void SetI(int i);
-        void SetJ(int j);
-        void SetK(int k);
-        int GetNi() const;
-        int GetNj() const;
-        int GetNk() const;
-        void GetIdxStruct(int &i, int &j, int &k) ;
-        using Idx::GetIdx;
-        int GetIdx(int i, int j, int k) const
+        IdProxyStruct() = default;
+        IdProxyStruct(Id ni, Id nj, Id nk);
+        ~IdProxyStruct();
+        void SetIdx(Id i, Id j, Id k);
+        void SetIdx(Id idx);
+        void GetIdxStruct(Id&i, Id&j, Id&k) const ;
+        using IdProxy::GetIdx;
+        Id GetIdx(Id i, Id j, Id k) const
         {
             return i + j * m_ni + k * m_ni * m_nj;
         }
     private:
-        int m_ni, m_nj, m_nk;
-        int m_idx_i, m_idx_j, m_idx_k;
+        Id m_idx_i, m_idx_j, m_idx_k;
+		// 网格的节点个数
+        Id m_ni, m_nj, m_nk;
     };
 }

@@ -7,15 +7,13 @@
 namespace zaran
 {
 
-	NSSolver::NSSolver(int index, string name, FlowSolverParam* para, GridBase* grid, DataManagerNS* data_manager)
-		: FlowFieldSolver(index, name, para, grid, data_manager)
+	NSSolver::NSSolver(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridBase> grid, std::shared_ptr < DataManagerNS>data_manager) :
+		FlowFieldSolver(index, name, para, grid, data_manager)
 	{
 	}
 
 	NSSolver::~NSSolver()
 	{
-		delete[] m_riemann_solver;
-		delete[] m_gas;
 	}
 
 	void NSSolver::Init()
@@ -53,18 +51,18 @@ namespace zaran
 		Prim2Cons();
 		Log::info("Flow Field Initialize Finished!");
 	}
-	DataManagerNS* NSSolver::GetDataManager()
+	std::shared_ptr<DataManagerNS> NSSolver::GetDataManager()
 	{
-		return static_cast<DataManagerNS*>(FieldSolver::GetDataManager());
+		return std::static_pointer_cast<DataManagerNS>(FlowFieldSolver::GetDataManager());
 	}
 	void NSSolver::InitSolver()
 	{
 		Log::info("Initialize NS Solver!");
 		FlowFieldSolver::InitSolver();
 		RiemannSolverBuilder riemann_solver_builder;
-		m_riemann_solver = riemann_solver_builder.Create(GetPara()->GetRiemannSolverType());
-		auto ref_value = GetPara()->GetDimensionless();
-		m_gas = new PerfectGas(ref_value.GetRefMw(), ref_value.GetRefGamma(), ref_value);
+		m_riemann_solver = riemann_solver_builder.CreateUnique(GetPara()->GetRiemannSolverType());
+		auto& ref_value = GetPara()->GetDimensionless();
+		m_gas = std::make_shared<PerfectGas>(ref_value.GetRefMw(), ref_value.GetRefGamma(), ref_value);
 		Log::info("NS Solver Initialize Finished!");
 	}
 

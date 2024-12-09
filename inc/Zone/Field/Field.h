@@ -32,20 +32,20 @@ namespace zaran
 	class Field
 	{
 	public:
-		Field(GridBase *grid=nullptr, FieldType fieldType = FieldType::Unset);
+		Field(std::shared_ptr<GridBase> grid = nullptr, FieldType fieldType = FieldType::Unset);
 		virtual ~Field();
 
 	public:
 		virtual void Allocate();
-		void SetIdx(int idx) { m_idx = idx; }
-		void SetGrid(GridBase *grid) { m_grid = grid; }
-		int GetIdx() { return m_idx; }
-		virtual GridBase *GetGrid() { return m_grid; }
-		virtual FieldSolver *GetSolver() { return m_solver; }
-		virtual FieldData *GetFieldData() { return m_data; }
-		virtual SolverParam *GetSolverPara() { return m_solver_para; }
-		virtual DataManager *GetDataManager() { return m_data_manager; }
-		FieldType GetFieldType() { return m_fieldType; }
+		void SetIdx(Id idx) { m_idx = idx; }
+		void SetGrid(std::shared_ptr<GridBase> grid) { m_grid = grid; }
+		Id GetIdx() const { return m_idx; }
+		std::shared_ptr<GridBase> GetGrid() const { return m_grid; }
+		std::shared_ptr<FieldSolver> GetSolver() const { return m_solver; }
+		std::shared_ptr<FieldData> GetData() const { return m_data; }
+		std::shared_ptr<SolverParam> GetSolverPara() const { return m_solver_para; }
+		std::shared_ptr<DataManager> GetDataManager() const { return m_data_manager; }
+		FieldType GetFieldType() const { return m_fieldType; }
 
 	protected:
 		virtual void AllocateFieldData();
@@ -55,17 +55,17 @@ namespace zaran
 
 	protected:
 		/// @brief 本场在全场数组中的索引
-		int m_idx;
+		Id m_idx;
 		/// @brief 场的网格，可能是结构化网格，也可能是非结构化网格
-		GridBase *m_grid;
+		std::shared_ptr<GridBase> m_grid;
 		/// @brief 场的求解器，用于求解场
-		FieldSolver *m_solver;
+		std::shared_ptr<FieldSolver> m_solver;
 		/// @brief 场的数据，包含场的值，梯度等
-		FieldData *m_data;
+		std::shared_ptr<FieldData> m_data;
 		/// @brief 场的求解器参数，用于设置求解器的参数
-		SolverParam *m_solver_para;
+		std::shared_ptr<SolverParam> m_solver_para;
 		/// @brief 场的数据管理器，用于管理场的数据
-		DataManager *m_data_manager;
+		std::shared_ptr<DataManager> m_data_manager;
 		/// @brief 场的类型
 		FieldType m_fieldType;
 	};

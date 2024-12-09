@@ -6,11 +6,11 @@ namespace zaran
     class NSSolverBlock : public NSSolverStructDEER
     {
     public:
-        NSSolverBlock(int index, string name, FlowSolverParam *para, GridStruct *grid, DataManagerNSStruct *data_manager);
+        NSSolverBlock(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridBlock> grid, std::shared_ptr < DataManagerNSStruct>data_manager);
         ~NSSolverBlock();
 
     protected:
-        GridBlock *GetGrid() override;
+        std::shared_ptr<GridBlock>GetGrid();
 
         void FluxDifference2nd() override;
         /// @brief mid node value interpolate
@@ -23,4 +23,4 @@ namespace zaran
         /// @param value_right interpolated value of right side at mid point
         virtual void InterMidNodePrim_Grad(int idx_left, int idx_right, const double *lef_coord, const double *mid_coord, const double *right_coord, double *value_left, double *value_right)override;
     };
-}
+} // namespace zaran

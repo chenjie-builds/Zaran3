@@ -10,24 +10,21 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include "FaceFNFDM.h"
-#include "GridFactory.h"
-#include "NodeFNFDM.h"
+#include "GridGenerator.h"
+#include "GridFNFDM.h"
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "GridFNFDM.h"
 namespace zaran
 {
   /// @brief 读取中山大学网格数据
   /// @details 该数据分为三个文件，分别是node.dat, cell.dat, bound.dat
   /// @note 具体文件格式在文档中有详细说明
-  class GridFNFactorySYSU : public GridBuilder
+  class GridBuilderSYSU_FN : public GridGenerator
   {
   public:
-    GridFNFactorySYSU(const string &node_file_name, const string &ele_file_name, const string &bnd_file_name);
-    void CreateGrid(GridBase **&grid_list, int &grid_num) override;
-    void CreateGrid(GridFN *&grid);
+    GridBuilderSYSU_FN(const string &node_file_name, const string &ele_file_name, const string &bnd_file_name);
+    void CreateGrid(Array<std::shared_ptr<GridBase>>& grid_list) override;
 
   private:
     void ReadNodeFile();
@@ -41,20 +38,20 @@ namespace zaran
     void AddSelfToNeighbor();
     // 将内部节点的邻居节点加入到边界节点的邻居节点中
     void SetBoundNeighbor();
-    void ConvertToGrid(GridFN *&grid);
+    void ConvertToGrid(std::shared_ptr<GridFN>grid);
 
   private:
     struct BoundNode
     {
       std::string type;
-      int bound_index;
-      int ref_index;
+      Id bound_index;
+      Id ref_index;
       double normal[3];
     };
     struct BoundFace
     {
-      std::vector<int> face_node;
-      std::vector<int> face_cell;
+      std::vector<Id> face_node;
+      std::vector<Id> face_cell;
       std::vector<double> normal;
       double area;
     };
@@ -64,10 +61,10 @@ namespace zaran
     string m_ele_file_name;
     string m_bnd_file_name;
     std::vector<std::vector<double>> m_node_coord;
-    std::vector<std::vector<int>> m_node_neibor;
+    std::vector<std::vector<Id>> m_node_neibor;
     std::vector<NodeType> m_node_type;
     std::vector<BoundNode> m_bound_node;
-    std::vector<std::vector<int>> m_cell_node;
+    std::vector<std::vector<Id>> m_cell_node;
     std::vector<BoundFace> m_bound_face;
   };
 } // namespace zaran

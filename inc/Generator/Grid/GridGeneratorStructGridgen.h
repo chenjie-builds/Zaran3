@@ -1,5 +1,5 @@
 #pragma once
-#include "GridFactory.h"
+#include "GridGenerator.h"
 #include "GridStruct.h"
 #include "NodeStruct.h"
 #include "FaceStruct.h"
@@ -10,24 +10,24 @@ namespace zaran
 {
     /// @brief Generate structured grid using gridgen generic
     /// Multi-block structured grid
-    class GridStructFactoryGridgen : public GridBuilder
+    class GridBuilderStructGridgen : public GridGenerator
     {
     public:
-        GridStructFactoryGridgen();
-        void CreateGrid(GridBase **&grid_list, int &grid_num) override;
-        void AllocateGridMemory(GridBase **&grid_list, int &grid_num);
+        GridBuilderStructGridgen();
+        void CreateGrid(Array<std::shared_ptr<GridBase>>& grid_list) override;
+        void AllocateGridMemory(Array<std::shared_ptr<GridBase>>& grid_list);
 
     private:
         void ReadNodeFile();
         void ReadBoundFile();
         void SetMultiBlockInfo();
-        void SetBoundInfo(GridBase **grid_list, int &grid_num);
-        void SetNodeCoord(GridBase **grid_list, int &grid_num);
-        void SetGhostNodeCoord(GridBase **grid_list, int &grid_num);
-        void SetGhostNodeCoord3D(GridBase **grid_list, int &grid_num);
-        void SetGhostNodeCoord2D(GridBase **grid_list, int &grid_num);
+        void SetBoundInfo(Array<std::shared_ptr<GridBase>>& grid_list);
+        void SetNodeCoord(Array<std::shared_ptr<GridBase>>& grid_list);
+        void SetGhostNodeCoord(Array<std::shared_ptr<GridBase>>& grid_list);
+        void SetGhostNodeCoord3D(Array<std::shared_ptr<GridBase>>& grid_list);
+        void SetGhostNodeCoord2D(Array<std::shared_ptr<GridBase>>& grid_list);
         size_t GetBlockNum() { return m_block.size(); };
-        void WriteGridTest(GridBase **grid_list, int &grid_num);
+        void WriteGridTest(Array<std::shared_ptr<GridBase>>& grid_list);
         struct NodeCoord
         {
             double coord[3];

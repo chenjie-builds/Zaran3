@@ -2,7 +2,7 @@
 
 namespace zaran
 {
-    NSFieldFNFDM::NSFieldFNFDM(GridBase* grid)
+    NSFieldFNFDM::NSFieldFNFDM(std::shared_ptr<GridFN> grid)
         : FieldNS(grid, FieldType::NS_FlexibleNode)
     {
 
@@ -13,17 +13,17 @@ namespace zaran
 
     }
 
-    GridFN* NSFieldFNFDM::GetGrid()
-    {
-        return static_cast<GridFN*>(Field::GetGrid());
-    }
+	std::shared_ptr<zaran::GridFN> NSFieldFNFDM::GetGrid()
+	{
+		return std::static_pointer_cast<GridFN>(FieldNS::GetGrid());
+	}
 
+	std::shared_ptr<zaran::NSSolverFNFDM> NSFieldFNFDM::GetSolver()
+	{
+		return std::static_pointer_cast<NSSolverFNFDM>(FieldNS::GetSolver());
+	}
 
-    NSSolverFNFDM* NSFieldFNFDM::GetSolver()
-    {
-        return static_cast<NSSolverFNFDM*>(Field::GetSolver());
-    }
-    void NSFieldFNFDM::CalcResidual()
+	void NSFieldFNFDM::CalcResidual()
     {
         auto grid = GetGrid();
         auto node = grid->GetNode();
@@ -65,20 +65,12 @@ namespace zaran
 
     void NSFieldFNFDM::AllocateSolver()
     {
-        if (m_solver != nullptr)
-        {
-            delete m_solver;
-        }
-        m_solver = new NSSolverFNFDM(1, "NS_FNFDM", GetSolverPara(), GetGrid(), GetDataManager());
+		m_solver = std::make_shared<NSSolverFNFDM>(1, "NS_FNFDM", GetSolverPara(), GetGrid(), GetDataManager());
     }
     void NSFieldFNFDM::AllocateDataManager()
     {
-        if (m_data_manager != nullptr)
-        {
-            delete m_data_manager;
-        }
-        m_data_manager = new DataManagerNS(GetFieldData(), GetGrid()->GetTotalNodeNum());
+		m_data_manager = std::make_shared<DataManagerNS>(GetData(), GetGrid()->GetTotalNodeNum());
         m_data_manager->CreateData();
         m_data_manager->RegisterData();
     }
-}
+} // namespace zaran

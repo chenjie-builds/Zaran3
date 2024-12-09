@@ -1,4 +1,4 @@
-#include "FNGridFactory.h"
+#include "GridGeneratorFlexibleSYSU.h"
 #include "BasicType.h"
 #include "Log.h"
 #include "MathBasic.h"
@@ -13,11 +13,11 @@
 namespace zaran
 {
 
-	GridFNFactorySYSU::GridFNFactorySYSU(const string& node_file_name, const string& ele_file_name, const string& bnd_file_name) : m_node_file_name(node_file_name), m_ele_file_name(ele_file_name), m_bnd_file_name(bnd_file_name)
+	GridBuilderSYSU_FN::GridBuilderSYSU_FN(const string& node_file_name, const string& ele_file_name, const string& bnd_file_name) : m_node_file_name(node_file_name), m_ele_file_name(ele_file_name), m_bnd_file_name(bnd_file_name)
 	{
 	}
 
-	void GridFNFactorySYSU::CreateGrid(GridBase**& grid_list, int& grid_num)
+	void GridBuilderSYSU_FN::CreateGrid(Array<std::shared_ptr<GridBase>>& grid_list)
 	{
 		ReadNodeFile();
 		ReadCellFile();
@@ -29,33 +29,13 @@ namespace zaran
 		SetBoundNeighbor();
 		AddSelfToNeighbor();
 		CheckNeighborNum();
-		grid_num = 1;
-		grid_list = new GridBase * [grid_num];
-		for (int i = 0; i < grid_num; i++)
-		{
-			grid_list[i] = new GridFN("FNFDM", 0, 3);
-			auto grid = static_cast<GridFN*>(grid_list[i]);
-			ConvertToGrid(grid);
-		}
-	}
-
-	void GridFNFactorySYSU::CreateGrid(GridFN*& grid)
-	{
-		ReadNodeFile();
-		ReadCellFile();
-		ReadBoundFile();
-		// SortNeiborNode();
-		// ExtendNeighborNode();
-		CheckNode();
-		CheckUnkownNode();
-		SetBoundNeighbor();
-		AddSelfToNeighbor();
-		CheckNeighborNum();
-		grid = new GridFN("FNFDM", 0, 3);
+		grid_list.resize(1);
+		grid_list[0] = std::make_shared<GridFN>("FNFDM", 0, 3);
+		auto grid = std::static_pointer_cast<GridFN>(grid_list[0]);
 		ConvertToGrid(grid);
 	}
 
-	void GridFNFactorySYSU::ReadNodeFile()
+	void GridBuilderSYSU_FN::ReadNodeFile()
 	{
 		std::ifstream fin(m_node_file_name);
 		int node_num = 0;
@@ -270,7 +250,7 @@ namespace zaran
 		fin.close();
 	}
 
-	void GridFNFactorySYSU::SortNeiborNode()
+	void GridBuilderSYSU_FN::SortNeiborNode()
 	{
 		struct node_pair
 		{
@@ -391,7 +371,7 @@ namespace zaran
 			}
 			node_pair_map.clear();
 			// 获取下一个点的lamda表达�?
-			auto get_next_node = [&](int iNode, IArray neiborNode) -> int
+			auto get_next_node = [&](Id iNode, std::vector<Id> neiborNode) -> int
 				{
 					if (iNode == neiborNode.size() - 1)
 						return 0;
@@ -399,7 +379,7 @@ namespace zaran
 						return iNode + 1;
 				};
 			// 获取上一个点的lamda表达�?
-			auto get_last_node = [&](int iNode, IArray neiborNode) -> int
+			auto get_last_node = [&](Id iNode, std::vector<Id> neiborNode) -> int
 				{
 					if (iNode == 0)
 						return neiborNode.size() - 1;
@@ -407,7 +387,7 @@ namespace zaran
 						return iNode - 1;
 				};
 
-			for (int i = 0; i < neighbor.size(); ++i)
+			for (size_t i = 0; i < neighbor.size(); ++i)
 			{
 				node_pair temp;
 				temp.node1 = neighbor[i];
@@ -478,7 +458,7 @@ namespace zaran
 		}
 	}
 
-	void GridFNFactorySYSU::ExtendNeighborNode()
+	void GridBuilderSYSU_FN::ExtendNeighborNode()
 	{
 		// 构建节点KD?
 		// 初始化vtk?
@@ -551,7 +531,7 @@ namespace zaran
 		}
 	}
 
-	void GridFNFactorySYSU::ReadCellFile()
+	void GridBuilderSYSU_FN::ReadCellFile()
 	{
 		std::ifstream fin;
 		fin.open("cell.dat");
@@ -603,7 +583,7 @@ namespace zaran
 		fin.close();
 	}
 
-	void GridFNFactorySYSU::CheckNode()
+	void GridBuilderSYSU_FN::CheckNode()
 	{
 		double delta = 1e-5;
 		double min_angle = LARGE_NUMBER;
@@ -750,7 +730,7 @@ namespace zaran
 			m_node_coord[min_angle_index_k][2]);
 		Log::info("-------- Neighbor: {}, {}, {}, {}, {}, {}", m_node_neibor[min_angle_index_k][0], m_node_neibor[min_angle_index_k][1], m_node_neibor[min_angle_index_k][2], m_node_neibor[min_angle_index_k][3], m_node_neibor[min_angle_index_k][4], m_node_neibor[min_angle_index_k][5]);
 	}
-	void GridFNFactorySYSU::CheckUnkownNode()
+	void GridBuilderSYSU_FN::CheckUnkownNode()
 	{
 		int node_num = m_node_coord.size();
 		for (size_t i = 0; i < node_num; i++)
@@ -762,7 +742,7 @@ namespace zaran
 		}
 		Log::info("Check undefined node done");
 	}
-	void GridFNFactorySYSU::CheckNeighborNum()
+	void GridBuilderSYSU_FN::CheckNeighborNum()
 	{
 		int node_num = m_node_coord.size();
 		int min_neibor_num = 1E5;
@@ -786,7 +766,7 @@ namespace zaran
 		Log::info("min neibor num:{} max neibor num:{}", min_neibor_num, max_neibor_num);
 		Log::info("min neibor index:{} max neibor index:{}", min_neibor_index, max_neibor_index);
 	}
-	void GridFNFactorySYSU::AddSelfToNeighbor()
+	void GridBuilderSYSU_FN::AddSelfToNeighbor()
 	{
 		int node_num = m_node_coord.size();
 		for (int iNode = 0; iNode < node_num; iNode++)
@@ -804,7 +784,7 @@ namespace zaran
 		}
 		Log::info("Add self to neibor node's neibor node done");
 	}
-	void GridFNFactorySYSU::SetBoundNeighbor()
+	void GridBuilderSYSU_FN::SetBoundNeighbor()
 	{
 		return;
 		// 构建节点KD?
@@ -932,20 +912,20 @@ namespace zaran
 		}
 		Log::info("Add inner node's neibor node to bound done");
 	}
-	void GridFNFactorySYSU::ConvertToGrid(GridFN*& grid)
+	void GridBuilderSYSU_FN::ConvertToGrid(std::shared_ptr<GridFN> grid)
 	{
-		int node_num = m_node_coord.size();
-		std::vector<int> neighbor_node_num(node_num);
-		std::vector<int> neighbor_face_num(node_num);
-		std::vector<int> neighbor_cell_num(node_num);
-		for (int iNode = 0; iNode < node_num; iNode++)
+		Id node_num = m_node_coord.size();
+		std::vector<Id> neighbor_node_num(node_num);
+		std::vector<Id> neighbor_face_num(node_num);
+		std::vector<Id> neighbor_cell_num(node_num);
+		for (Id iNode = 0; iNode < node_num; iNode++)
 		{
 			neighbor_node_num[iNode] = m_node_neibor[iNode].size();
 			neighbor_face_num[iNode] = 0;
 			neighbor_cell_num[iNode] = 0;
 		}
 		NodeFN* node = new NodeFN(node_num, neighbor_node_num.data(), neighbor_face_num.data(), neighbor_cell_num.data());
-		for (int iNode = 0; iNode < m_node_coord.size(); iNode++)
+		for (size_t iNode = 0; iNode < m_node_coord.size(); iNode++)
 		{
 			node->SetCoord(iNode, m_node_coord[iNode].data());
 			node->SetType(iNode, m_node_type[iNode]);
@@ -956,20 +936,20 @@ namespace zaran
 		grid->SetNode(node);
 		CellFN* cell = new CellFN(m_cell_node.size());
 		cell->SetNode(m_cell_node);
-		std::vector<std::vector<int>> cell_node_face(m_cell_node.size());
+		std::vector<std::vector<Id>> cell_node_face(m_cell_node.size());
 		cell->SetFace(cell_node_face);
 		double center[3];
-		for (int iCell = 0; iCell < m_cell_node.size(); iCell++)
+		for (Id iCell = 0; iCell < m_cell_node.size(); iCell++)
 		{
 			center[0] = center[1] = center[2] = 0;
-			for (int iNode = 0; iNode < m_cell_node[iCell].size(); iNode++)
+			for (Id iNode = 0; iNode < m_cell_node[iCell].size(); iNode++)
 			{
-				for (int i = 0; i < 3; i++)
+				for (Id i = 0; i < 3; i++)
 				{
 					center[i] += m_node_coord[m_cell_node[iCell][iNode]][i];
 				}
 			}
-			for (int i = 0; i < 3; i++)
+			for (Id i = 0; i < 3; i++)
 			{
 				center[i] /= m_cell_node[iCell].size();
 			}
@@ -979,13 +959,13 @@ namespace zaran
 
 		FaceFN* face = new FaceFN();
 
-		std::vector<int> face_node_num(m_bound_face.size());
-		for (int iFace = 0; iFace < m_bound_face.size(); iFace++)
+		std::vector<Id> face_node_num(m_bound_face.size());
+		for (Id iFace = 0; iFace < m_bound_face.size(); iFace++)
 		{
 			face_node_num[iFace] = m_bound_face[iFace].face_node.size();
 		}
 		face->Allocate(m_bound_face.size(), face_node_num.data());
-		for (int iFace = 0; iFace < m_bound_face.size(); iFace++)
+		for (Id iFace = 0; iFace < m_bound_face.size(); iFace++)
 		{
 			face->SetFace2Node(iFace, m_bound_face[iFace].face_node.data(), m_bound_face[iFace].face_node.size());
 			face->SetNormal(iFace, m_bound_face[iFace].normal.data());
@@ -1000,7 +980,7 @@ namespace zaran
 		}
 		grid->SetBoundaryMap(boundary_map);
 	}
-	void GridFNFactorySYSU::ReadBoundFile()
+	void GridBuilderSYSU_FN::ReadBoundFile()
 	{
 		std::ifstream fin;
 		fin.open("bound.dat");

@@ -7,33 +7,23 @@
 
 namespace zaran
 {
-	NSSolverStruct::NSSolverStruct(int index, string name, FlowSolverParam* para, GridStruct* grid,
-		DataManagerNSStruct* data_manager)
+	NSSolverStruct::NSSolverStruct(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridStruct> grid, std::shared_ptr < DataManagerNSStruct>data_manager)
 		: NSSolver(index, name, para, grid, data_manager)
 	{
 		int ni, nj, nk;
 		ni = grid->GetNi();
 		nj = grid->GetNj();
 		nk = grid->GetNk();
-		m_idx_proxy = new IdxStruct(ni, nj, nk);
+		m_idx_proxy = std::make_shared<IdProxyStruct>(ni, nj, nk);
 		int node_num = ni * nj * nk;
-		m_node_metrics = new Metric(node_num);
+		m_node_metrics = std::make_shared<Metric>(node_num);
 		m_metrics_mid_i = new Metric(node_num);
 		m_metrics_mid_j = new Metric(node_num);
 		m_metrics_mid_k = new Metric(node_num);
 	}
 	NSSolverStruct::~NSSolverStruct()
 	{
-		if (m_idx_proxy)
-		{
-			delete m_idx_proxy;
-			m_idx_proxy = nullptr;
-		}
-		if (m_node_metrics)
-		{
-			delete m_node_metrics;
-			m_node_metrics = nullptr;
-		}
+
 		if (m_metrics_mid_i)
 		{
 			delete m_metrics_mid_i;
@@ -50,21 +40,21 @@ namespace zaran
 			m_metrics_mid_k = nullptr;
 		}
 	}
-	DataManagerNSStruct* NSSolverStruct::GetDataManager()
+	std::shared_ptr < DataManagerNSStruct> NSSolverStruct::GetDataManager()
 	{
-		return static_cast<DataManagerNSStruct*>(NSSolver::GetDataManager());
+		return std::static_pointer_cast<DataManagerNSStruct>(NSSolver::GetDataManager());
 	}
-	Metric* NSSolverStruct::GetNodeMetrics()
+	std::shared_ptr<Metric> NSSolverStruct::GetNodeMetrics()
 	{
 		return m_node_metrics;
 	}
-	IdxStruct* NSSolverStruct::GetIdxProxy()
+	std::shared_ptr<IdProxyStruct> NSSolverStruct::GetIdxProxy()
 	{
 		return m_idx_proxy;
 	}
-	FlowSolverParamStruct* NSSolverStruct::GetPara()
+	std::shared_ptr<FlowSolverParamStruct>	 NSSolverStruct::GetPara()
 	{
-		return static_cast<FlowSolverParamStruct*>(NSSolver::GetPara());
+		return std::static_pointer_cast<FlowSolverParamStruct>(NSSolver::GetPara());
 	}
 	void NSSolverStruct::InitField()
 	{
@@ -87,10 +77,10 @@ namespace zaran
 		// return;
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
-		auto ni = m_idx_proxy->GetNi();
-		auto nj = m_idx_proxy->GetNj();
-		auto nk = m_idx_proxy->GetNk();
-		FlowSolverParam* para = GetPara();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
+		auto para = GetPara();
 		double prim_far[5];
 		prim_far[0] = para->GetInflowDensity();
 		prim_far[1] = para->GetInflowVelocityX();
@@ -132,10 +122,10 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
-		auto ni = m_idx_proxy->GetNi();
-		auto nj = m_idx_proxy->GetNj();
-		auto nk = m_idx_proxy->GetNk();
-		FlowSolverParam* para = GetPara();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
+		auto para = GetPara();
 		double prim_far[5];
 		prim_far[0] = para->GetInflowDensity();
 		prim_far[1] = 0.0;
@@ -155,12 +145,11 @@ namespace zaran
 			{
 				for (int i = 0; i < ni; ++i)
 				{
-					m_idx_proxy->SetIdx(i, j, k);
-					int idx = m_idx_proxy->GetIdx();
+					auto idx = m_idx_proxy->GetIdx();
 					// double y = grid->GetNode()->GetCoord(i, j, k)[1];
 					// prim_far[0] = 1.0 + 0.01 * y;
 					data_manager->SetPrim(idx, prim_far);
-					auto coord = node->GetCoord(m_idx_proxy);
+					auto coord = node->GetCoord(idx);
 					if (coord[0] <= 1.0 / 6.0 + coord[1] / tan(60.0 / 180.0 * PI))
 						//if (coord[0] <= 0.1)
 					{
@@ -182,10 +171,10 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
-		auto ni = m_idx_proxy->GetNi();
-		auto nj = m_idx_proxy->GetNj();
-		auto nk = m_idx_proxy->GetNk();
-		FlowSolverParam* para = GetPara();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
+		auto para = GetPara();
 		double beta = 5.0;
 		double x, y, z;
 		double r2;
@@ -219,10 +208,10 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
-		auto ni = m_idx_proxy->GetNi();
-		auto nj = m_idx_proxy->GetNj();
-		auto nk = m_idx_proxy->GetNk();
-		FlowSolverParam* para = GetPara();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
+		auto para = GetPara();
 		double prim_far[5];
 		prim_far[0] = para->GetInflowDensity();
 		prim_far[1] = 0.0;
@@ -248,9 +237,8 @@ namespace zaran
 			{
 				for (int i = 0; i < ni; ++i)
 				{
-					m_idx_proxy->SetIdx(i, j, k);
-					int idx = m_idx_proxy->GetIdx();
-					auto coord = node->GetCoord(m_idx_proxy);
+					auto idx = m_idx_proxy->GetIdx();
+					auto coord = node->GetCoord(idx);
 					double dist = sqrt(pow(coord[0] - explosion_center[0], 2)
 						+ pow(coord[1] - explosion_center[1], 2)
 						+ pow(coord[2] - explosion_center[2], 2));
@@ -6417,10 +6405,9 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto idx_proxy = GetIdxProxy();
 		auto data_manager = GetDataManager();
-		int ni, nj, nk;
-		ni = idx_proxy->GetNi();
-		nj = idx_proxy->GetNj();
-		nk = idx_proxy->GetNk();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
 		Matrix2d A, A_inv;
 		DVector2D b, grad;
 		int neighbor_num = 4;
@@ -6490,10 +6477,9 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto idx_proxy = GetIdxProxy();
 		auto data_manager = GetDataManager();
-		int ni, nj, nk;
-		ni = idx_proxy->GetNi();
-		nj = idx_proxy->GetNj();
-		nk = idx_proxy->GetNk();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
 		Matrix3d A, A_inv;
 		DVector3D b, grad;
 		int neighbor_num = 6;
@@ -6578,10 +6564,9 @@ namespace zaran
 		auto idx_proxy = GetIdxProxy();
 		double eps = 1e-6;
 		double vk_coef = 1.0e-5;
-		int ni, nj, nk;
-		ni = idx_proxy->GetNi();
-		nj = idx_proxy->GetNj();
-		nk = idx_proxy->GetNk();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
 		double max_val, min_val;
 		int neighbor_num = 4;
 		std::vector<int> temp_i, temp_j, temp_k;
@@ -6739,9 +6724,9 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
-		auto ni = m_idx_proxy->GetNi();
-		auto nj = m_idx_proxy->GetNj();
-		auto nk = m_idx_proxy->GetNk();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
 		for (int k = 0; k < nk; ++k)
 		{
 #pragma omp parallel for
@@ -6811,9 +6796,9 @@ namespace zaran
 		auto gas = GetGas();
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
-		auto ni = m_idx_proxy->GetNi();
-		auto nj = m_idx_proxy->GetNj();
-		auto nk = m_idx_proxy->GetNk();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
 		double prim[5], cons[5];
 		for (int k = 0; k < nk; ++k)
 		{
@@ -6838,9 +6823,9 @@ namespace zaran
 		auto gas = GetGas();
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
-		auto ni = m_idx_proxy->GetNi();
-		auto nj = m_idx_proxy->GetNj();
-		auto nk = m_idx_proxy->GetNk();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
 		double prim[5], cons[5];
 		for (int k = 0; k < nk; ++k)
 		{
@@ -6864,9 +6849,9 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
-		auto ni = m_idx_proxy->GetNi();
-		auto nj = m_idx_proxy->GetNj();
-		auto nk = m_idx_proxy->GetNk();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
 		double res[5] = { 0.0 };
 		for (int k = 0; k < nk; ++k)
 		{
@@ -6886,9 +6871,9 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
-		auto ni = m_idx_proxy->GetNi();
-		auto nj = m_idx_proxy->GetNj();
-		auto nk = m_idx_proxy->GetNk();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
 		double value[5];
 		double value_left[5], value_right[5];
 		for (int k = 1; k < nk - 1; ++k)
@@ -6928,9 +6913,9 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
-		auto ni = m_idx_proxy->GetNi();
-		auto nj = m_idx_proxy->GetNj();
-		auto nk = m_idx_proxy->GetNk();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
 		double value[5];
 		double coord_vec[3];
 		double value_left[5], value_right[5];
@@ -6981,9 +6966,9 @@ namespace zaran
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		int equ_num = GetPara()->GetEqNum();
-		auto ni = m_idx_proxy->GetNi();
-		auto nj = m_idx_proxy->GetNj();
-		auto nk = m_idx_proxy->GetNk();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
 		// MUSCL整点变量(i-2,i-1,i,i+1,i+2)的值
 		double value_temp[5];
 		int i_temp[5], j_temp[5], k_temp[5];
@@ -7031,9 +7016,9 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		int equ_num = GetPara()->GetEqNum();
-		auto ni = m_idx_proxy->GetNi();
-		auto nj = m_idx_proxy->GetNj();
-		auto nk = m_idx_proxy->GetNk();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
 		double** coord_temp = new double* [5];
 		for (int i = 0; i < 5; ++i)
 		{
@@ -7094,9 +7079,9 @@ namespace zaran
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		int equ_num = GetPara()->GetEqNum();
-		auto ni = m_idx_proxy->GetNi();
-		auto nj = m_idx_proxy->GetNj();
-		auto nk = m_idx_proxy->GetNk();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
 		double value[5];
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
@@ -7186,9 +7171,9 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		int equ_num = GetPara()->GetEqNum();
-		auto ni = m_idx_proxy->GetNi();
-		auto nj = m_idx_proxy->GetNj();
-		auto nk = m_idx_proxy->GetNk();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
 		double value_temp[5];
 		double value_left[5], value_right[5];
 		int is, ie, js, je, ks, ke;
@@ -7298,9 +7283,9 @@ namespace zaran
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		int equ_num = GetPara()->GetEqNum();
-		auto ni = m_idx_proxy->GetNi();
-		auto nj = m_idx_proxy->GetNj();
-		auto nk = m_idx_proxy->GetNk();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
 		// WCNS整点变量(i-2,i-1,i,i+1,i+2)的值
 		double value_temp[5];
 		int idx_temp[5];
@@ -7370,9 +7355,9 @@ namespace zaran
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		int equ_num = GetPara()->GetEqNum();
-		auto ni = m_idx_proxy->GetNi();
-		auto nj = m_idx_proxy->GetNj();
-		auto nk = m_idx_proxy->GetNk();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
 		double value_left[5]{}, value_right[5]{};
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
@@ -7760,9 +7745,9 @@ namespace zaran
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		auto bound_map = grid->GetBoundMap();
-		int ni = m_idx_proxy->GetNi();
-		int nj = m_idx_proxy->GetNj();
-		int nk = m_idx_proxy->GetNk();
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
 		for (auto& boundary : bound_map->GetBoundaryMap())
 		{
 			auto& bound_name = boundary.first;
@@ -7922,7 +7907,7 @@ namespace zaran
 		double prim_bnd[5] = { data_manager->GetPrim(0, idx_bnd), data_manager->GetPrim(1, idx_bnd),
 							  data_manager->GetPrim(2, idx_bnd), data_manager->GetPrim(3, idx_bnd),
 							  data_manager->GetPrim(4, idx_bnd) };
-		FlowSolverParam* para = GetPara();
+		auto para = GetPara();
 		auto gas = GetGas();
 		double gamma = gas->GetGamma();
 		double prim_far[5] = { para->GetInflowDensity(), para->GetInflowVelocityX(), para->GetInflowVelocityY(),
@@ -8081,9 +8066,9 @@ namespace zaran
 	void NSSolverStruct::BackupField(std::string& back_folder)
 	{
 	}
-	GridStruct* NSSolverStruct::GetGrid()
+	std::shared_ptr<GridStruct> NSSolverStruct::GetGrid()
 	{
-		return static_cast<GridStruct*>(FlowFieldSolver::GetGrid());
+		return std::static_pointer_cast<GridStruct>(NSSolver::GetGrid());
 	}
 
 	Metric* NSSolverStruct::GetMidMetricsI()

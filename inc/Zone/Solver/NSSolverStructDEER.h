@@ -8,7 +8,7 @@ namespace zaran
     class NSSolverStructDEER : public NSSolverStruct
     {
     public:
-        NSSolverStructDEER(int index, string name, FlowSolverParam *para, GridStruct *grid, DataManagerNSStruct *data_manager);
+        NSSolverStructDEER(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridStruct> grid, std::shared_ptr < DataManagerNSStruct>data_manager);
         ~NSSolverStructDEER();
 
     protected:

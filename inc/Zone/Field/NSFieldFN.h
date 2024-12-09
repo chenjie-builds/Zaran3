@@ -10,11 +10,11 @@ namespace zaran
     class NSFieldFNFDM :public FieldNS
     {
     public:
-        NSFieldFNFDM(GridBase* grid);
+        NSFieldFNFDM(std::shared_ptr<GridFN> grid);
         ~NSFieldFNFDM();
     public:
-        GridFN* GetGrid() override;
-        NSSolverFNFDM* GetSolver() override;
+		std::shared_ptr<GridFN> GetGrid();
+		std::shared_ptr<NSSolverFNFDM> GetSolver();
         void CalcResidual() override;
     protected:
         void AllocateSolver() override;

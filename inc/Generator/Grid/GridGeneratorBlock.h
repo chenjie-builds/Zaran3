@@ -1,6 +1,6 @@
 #pragma once
 #include "CommonPara.h"
-#include "GridFactory.h"
+#include "GridGenerator.h"
 #include "GridBlock.h"
 namespace zaran
 {
@@ -12,20 +12,21 @@ namespace zaran
         std::string bound_type_j_minus, bound_type_j_plus;
         std::string bound_type_k_minus, bound_type_k_plus;
     };
-    class GridBlockFactory : public GridBuilder
+	// 网格生成器：块结构网格，均匀正交结构网格
+    class GridGeneratorBlock : public GridGenerator
     {
     public:
-        GridBlockFactory() {}
-        void CreateGrid(GridBlock *&grid, GridBlockInfo &grid_info);
+        GridGeneratorBlock() {}
+       void CreateGrid(std::shared_ptr<GridBlock> grid, GridBlockInfo &grid_info);
 
-    private:
+	protected:
         void AllocateGrid();
         void CreateNode();
         void CreateBound();
-        GridBlock *GetGrid() { return m_grid; }
+        std::shared_ptr<GridBlock> GetGrid() { return m_grid; }
 
     private:
         GridBlockInfo m_grid_info;
-        GridBlock *m_grid;
+        std::shared_ptr<GridBlock> m_grid;
     };
 }

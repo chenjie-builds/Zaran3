@@ -7,7 +7,7 @@
 #include <vector>
 #include "NSFieldFN.h"
 using namespace zaran;
-void zaran::Visual::WriteTecplotBinary(NSFieldFNFDM* field)
+void zaran::Visual::WriteTecplotBinary(std::shared_ptr<NSFieldFNFDM> field)
 {
     auto data_manager = field->GetDataManager();
     auto grid = field->GetGrid();
@@ -102,7 +102,7 @@ void zaran::Visual::WriteTecplotBinary(NSFieldFNFDM* field)
     Array<INTEGER4> face_nodes(connectivityCount);
     for (int iFace = 0; iFace < cell_num; ++iFace)
     {
-        int* face2node = face_topo->GetFace2Node(iFace);
+        auto face2node = face_topo->GetFace2Node(iFace);
         int n_node = face_topo->GetFaceNodeNum(iFace);
         for (int iNode = 0; iNode < n_node; ++iNode)
         {
@@ -121,7 +121,7 @@ void zaran::Visual::WriteTecplotBinary(NSFieldFNFDM* field)
 
 }
 
-void zaran::Visual::WriteTecplotASCII(NSFieldStruct* field, std::ostream& os)
+void zaran::Visual::WriteTecplotASCII(std::shared_ptr<NSFieldStruct> field, std::ostream& os)
 {
     auto grid = field->GetGrid();
     auto node = grid->GetNode();
@@ -131,7 +131,7 @@ void zaran::Visual::WriteTecplotASCII(NSFieldStruct* field, std::ostream& os)
     int grid_ni = grid->GetNi();
     int grid_nj = grid->GetNj();
     int grid_nk = grid->GetNk();
-    IdxStruct* idx_proxy = new IdxStruct(grid_ni, grid_nj, grid_nk);
+    IdProxyStruct* idx_proxy = new IdProxyStruct(grid_ni, grid_nj, grid_nk);
     int is, ie, js, je, ks, ke;
     grid->GetRange(is, ie, js, je, ks, ke);
     int ni = ie - is + 1;
@@ -161,7 +161,7 @@ void zaran::Visual::WriteTecplotASCII(NSFieldStruct* field, std::ostream& os)
     delete idx_proxy;
 }
 
-void zaran::Visual::WriteTecplotASCII(NSFieldZaran* field, std::ostream& os)
+void zaran::Visual::WriteTecplotASCII(std::shared_ptr<NSFieldZaran> field, std::ostream& os)
 {
     auto grid = field->GetGrid();
     auto node = grid->GetNode();
@@ -170,7 +170,7 @@ void zaran::Visual::WriteTecplotASCII(NSFieldZaran* field, std::ostream& os)
     int grid_ni = grid->GetNi();
     int grid_nj = grid->GetNj();
     int grid_nk = grid->GetNk();
-    IdxStruct* idx_proxy = new IdxStruct(grid_ni, grid_nj, grid_nk);
+    IdProxyStruct* idx_proxy = new IdProxyStruct(grid_ni, grid_nj, grid_nk);
     int is, ie, js, je, ks, ke;
     grid->GetRange(is, ie, js, je, ks, ke);
     int ni = ie - is + 1;
@@ -200,7 +200,7 @@ void zaran::Visual::WriteTecplotASCII(NSFieldZaran* field, std::ostream& os)
     }
     delete idx_proxy;
 }
-void zaran::Visual::WriteTecplotBinary(NSFieldZaran* field)
+void zaran::Visual::WriteTecplotBinary(std::shared_ptr<NSFieldZaran> field)
 {
     auto data_manager = field->GetDataManager();
     auto grid = field->GetGrid();
@@ -213,7 +213,7 @@ void zaran::Visual::WriteTecplotBinary(NSFieldZaran* field)
     int grid_ni = grid->GetNi();
     int grid_nj = grid->GetNj();
     int grid_nk = grid->GetNk();
-    auto idx_proxy = new IdxStruct(grid_ni, grid_nj, grid_nk);
+    auto idx_proxy = new IdProxyStruct(grid_ni, grid_nj, grid_nk);
     INTEGER4 node_num = ni * nj * nk;
     INTEGER4 cell_num = (ni - 1) * (nj - 1) * (nk - 1);
     DArray x(node_num), y(node_num), z(node_num), density(node_num),
@@ -292,7 +292,7 @@ void zaran::Visual::WriteTecplotBinary(NSFieldZaran* field)
     i = TECDAT142(&node_num, pressure.data(), &vIsDouble);
     delete idx_proxy;
 }
-void zaran::Visual::WriteTecplotBinary(NSFieldStruct* field)
+void zaran::Visual::WriteTecplotBinary(std::shared_ptr<NSFieldStruct> field)
 {
     auto data_manager = field->GetDataManager();
     auto grid = field->GetGrid();
@@ -305,7 +305,7 @@ void zaran::Visual::WriteTecplotBinary(NSFieldStruct* field)
     int grid_ni = grid->GetNi();
     int grid_nj = grid->GetNj();
     int grid_nk = grid->GetNk();
-    auto idx_proxy = new IdxStruct(grid_ni, grid_nj, grid_nk);
+    auto idx_proxy = new IdProxyStruct(grid_ni, grid_nj, grid_nk);
     INTEGER4 node_num = ni * nj * nk;
     INTEGER4 cell_num = (ni - 1) * (nj - 1) * (nk - 1);
     DArray x(node_num), y(node_num), z(node_num), density(node_num),
@@ -384,7 +384,7 @@ void zaran::Visual::WriteTecplotBinary(NSFieldStruct* field)
     i = TECDAT142(&node_num, pressure.data(), &vIsDouble);
     delete idx_proxy;
 }
-void Visual::WriteTecASCII(FieldManager* field_manager)
+void Visual::WriteTecASCII(std::shared_ptr<FieldManager> field_manager)
 {
     std::string work_dir = GlobalData::GetString("work_dir");
     std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + ".dat";
@@ -400,12 +400,12 @@ void Visual::WriteTecASCII(FieldManager* field_manager)
         auto field_type = field->GetFieldType();
         if (field_type == FieldType::NS_Structured)
         {
-            auto field_struct = dynamic_cast<NSFieldStruct*>(field);
+            auto field_struct = std::dynamic_pointer_cast<NSFieldStruct>(field);
             WriteTecplotASCII(field_struct, out);
         }
         else if (field_type == FieldType::NS_Zaran)
         {
-            auto field_zaran = dynamic_cast<NSFieldZaran*>(field);
+            auto field_zaran = std::dynamic_pointer_cast<NSFieldZaran>(field);
             WriteTecplotASCII(field_zaran, out);
         }
         else
@@ -417,7 +417,7 @@ void Visual::WriteTecASCII(FieldManager* field_manager)
 
 }
 
-void zaran::Visual::WriteTecplotBinary(FieldManager* field_manager)
+void zaran::Visual::WriteTecplotBinary(std::shared_ptr<FieldManager> field_manager)
 {
     INTEGER4 file_format = 0;
     INTEGER4 debug = 0;
@@ -438,17 +438,17 @@ void zaran::Visual::WriteTecplotBinary(FieldManager* field_manager)
         auto field_type = field->GetFieldType();
         if (field_type == FieldType::NS_Zaran)
         {
-            auto field_zaran = dynamic_cast<NSFieldZaran*>(field);
+            auto field_zaran = std::dynamic_pointer_cast<NSFieldZaran>(field);
             WriteTecplotBinary(field_zaran);
         }
         else if (field_type == FieldType::NS_FlexibleNode)
         {
-            auto field_fn = dynamic_cast<NSFieldFNFDM*>(field);
+            auto field_fn = std::dynamic_pointer_cast<NSFieldFNFDM>(field);
             WriteTecplotBinary(field_fn);
         }
         else if (field_type == FieldType::NS_Structured)
         {
-            auto field_struct = dynamic_cast<NSFieldStruct*>(field);
+            auto field_struct = std::dynamic_pointer_cast<NSFieldStruct>(field);
             WriteTecplotBinary(field_struct);
         }
         else

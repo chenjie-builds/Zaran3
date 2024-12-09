@@ -3,7 +3,8 @@
 #include "GlobalData.h"
 #include"GlobalField.h"
 #include "Log.h"
-#include "FieldBuilder.h"
+#include "FieldGenerator.h"
+#include "FieldGeneratorBuildingExplosion.h"
 #include"ReadSTL.h"
 #include"PolyData.h"
 #include"File.h"
@@ -165,9 +166,10 @@ namespace zaran
 			Log::warn("Unsupported Solver Type! Please Check!");
 			system("pause");
 		}
-		FieldBuilder* fieldFactory = new FieldBuilder(grid_type, solver_type, dim);
-		FieldManager* global_field = fieldFactory->Create();
-		FieldSimulation* controller = new FieldSimulation(global_field);
+		std::shared_ptr<FieldGenerator> fieldFactory = std::make_shared<FieldGenerator>(grid_type, solver_type, dim);
+		//FieldGeneratorBuildingExplosion* fieldFactory = new FieldGeneratorBuildingExplosion(grid_type, solver_type, dim);
+		std::shared_ptr<FieldManager> global_field = fieldFactory->Create();
+		std::shared_ptr<FieldSimulation> controller = std::make_shared <FieldSimulation>(global_field);
 		controller->SolveField();
 	}
 

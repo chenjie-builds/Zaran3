@@ -22,7 +22,7 @@ namespace zaran
     class FieldSimulation
     {
     public:
-        FieldSimulation(FieldManager *field_manager);
+        FieldSimulation(std::shared_ptr<FieldManager> global_Field);
         ~FieldSimulation();
 
     public:
@@ -67,7 +67,7 @@ namespace zaran
         // 备份全局参数
         void BackupGlobalData(std::string &back_folder);
     private:
-        FieldManager *m_field_manager;
+        std::shared_ptr<FieldManager> m_field_manager;
         Ptr<Visual> m_visual;
         double m_res_max;
         double m_res_ave;

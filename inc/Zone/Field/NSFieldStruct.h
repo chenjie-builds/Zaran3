@@ -9,23 +9,21 @@ namespace zaran
     class NSFieldStruct : public FieldNS
     {
     public:
-        NSFieldStruct(GridBase *grid);
+        NSFieldStruct(std::shared_ptr<GridStruct> grid);
         ~NSFieldStruct();
         void Allocate() override;
 
     public:
-        GridStruct *GetGrid() override;
-        FlowSolverParamStruct *GetSolverPara() override;
-        NSSolverStruct *GetSolver() override;
-        DataManagerNSStruct *GetDataManager() override;
+        std::shared_ptr<GridStruct>GetGrid();
+		std::shared_ptr<FlowSolverParamStruct>GetSolverPara();
+		std::shared_ptr<NSSolverStruct>GetSolver();
+		std::shared_ptr<DataManagerNSStruct>GetDataManager();
         void CalcResidual() override;
-        IdxStruct& GetIdxProxy() { return *m_idx_proxy; }
+        IdProxyStruct& GetIdxProxy() { return *(GetGrid()->GetIdxProxy()); }
     protected:
         void AllocateResInfo() override;
         void AllocateSolver() override;
         void AllocateDataManager() override;
-        void AllocateIdxProxy();
         void AllocateSolverPara() override;
-        IdxStruct *m_idx_proxy;
     };
 }

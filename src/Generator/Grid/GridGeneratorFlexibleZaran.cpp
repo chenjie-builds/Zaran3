@@ -1,19 +1,19 @@
-#include "GridFNFactoryZaran.h"
+#include "GridGeneratorFlexibleZaran.h"
 #include "Log.h"
 #include "MathBasic.h"
 #include <omp.h>
 #include<cmath>
 namespace zaran {
-	void GridFNFactoryZaran::CreateGrid(GridBlock* grid_master, GridFN*& grid,
-		ModelManager* model_manager) {
+	void GridFNFactoryZaran::CreateGrid(std::shared_ptr<GridBlock> block, std::shared_ptr<GridFN> grid, std::shared_ptr<ModelManager> model_manager) 
+	{
 		m_model_manager = model_manager;
-		m_block_grid = grid_master;
+		m_block_grid = block;
 		m_fn_grid = grid;
 		int ni, nj, nk;
 		ni = m_block_grid->GetNi();
 		nj = m_block_grid->GetNj();
 		nk = m_block_grid->GetNk();
-		m_idx_proxy = new IdxStruct(ni, nj, nk);
+		m_idx_proxy = std::make_shared <IdProxyStruct>(ni, nj, nk);
 		m_layer_num = GlobalData::GetInt("projection_layer");
 		TagBlockGrid();
 		TagNodes();
@@ -251,7 +251,7 @@ namespace zaran {
 		m_node_type.resize(ni * nj * nk);
 		for (int idx = 0; idx < ni * nj * nk; idx++) {
 			m_idx_proxy->SetIdx(idx);
-			int i, j, k;
+			Id i, j, k;
 			m_idx_proxy->GetIdxStruct(i, j, k);
 			if (i < is || i >= ie || j < js || j >= je || k < ks || k >= ke) {
 				m_node_type[idx] = PhysicalType::Fluid;
@@ -265,7 +265,7 @@ namespace zaran {
 		for (int k = ks; k <= ke; k++) {
 			for (int j = js; j <= je; j++) {
 				for (int i = is; i <= ie; i++) {
-					int idx = m_idx_proxy->GetIdx(i, j, k);
+					auto idx = m_idx_proxy->GetIdx(i, j, k);
 					if (IsValidCell(i - 1, j, k)) {
 						int idx_left = m_idx_proxy->GetIdx(i - 1, j, k);
 						if (m_cell_type[idx_left] == PhysicalType::FluidSolid &&
@@ -794,26 +794,26 @@ namespace zaran {
 	void GridFNFactoryZaran::SetFNGridNodeNeighbor() {
 		auto grid = GetFNGrid();
 		auto node = grid->GetNode();
-		int node_num = node->GetCount();
-		std::vector<int> neighbor_node_num;
+		Id node_num = node->GetCount();
+		std::vector<Id> neighbor_node_num;
 		neighbor_node_num.resize(node_num);
-		for (int iLayer = 0; iLayer < m_fn_info.node.size(); iLayer++) {
-			for (int iNode = 0; iNode < m_fn_info.node[iLayer].size(); iNode++) {
-				int idx = m_fn_info.node[iLayer][iNode].idx;
+		for (Id iLayer = 0; iLayer < m_fn_info.node.size(); iLayer++) {
+			for (Id iNode = 0; iNode < m_fn_info.node[iLayer].size(); iNode++) {
+				Id idx = m_fn_info.node[iLayer][iNode].idx;
 				neighbor_node_num[idx] =
 					m_fn_info.node[iLayer][iNode].neighbor_node.size();
 			}
 		}
-		int total_neighbor_num = 0;
-		for (int i = 0; i < node_num; i++) {
+		Id total_neighbor_num = 0;
+		for (Id i = 0; i < node_num; i++) {
 			total_neighbor_num += neighbor_node_num[i];
 		}
-		std::vector<int> neighbor_node_idx;
+		std::vector<Id> neighbor_node_idx;
 		neighbor_node_idx.resize(total_neighbor_num);
-		int idx = 0;
-		for (int iLayer = 0; iLayer < m_fn_info.node.size(); iLayer++) {
-			for (int iNode = 0; iNode < m_fn_info.node[iLayer].size(); iNode++) {
-				for (int iNeighbor = 0;
+		Id idx = 0;
+		for (Id iLayer = 0; iLayer < m_fn_info.node.size(); iLayer++) {
+			for (Id iNode = 0; iNode < m_fn_info.node[iLayer].size(); iNode++) {
+				for (Id iNeighbor = 0;
 					iNeighbor < m_fn_info.node[iLayer][iNode].neighbor_node.size();
 					iNeighbor++) {
 					neighbor_node_idx[idx++] =
@@ -827,7 +827,7 @@ namespace zaran {
 
 	void GridFNFactoryZaran::SetFNGridCell() {
 		auto grid = GetFNGrid();
-		int cell_num = m_fn_info.cell.size();
+		Id cell_num = m_fn_info.cell.size();
 		CellFN* cell = new CellFN(cell_num);
 		cell->SetNode(m_fn_info.cell);
 		grid->SetCell(cell);
@@ -838,11 +838,11 @@ namespace zaran {
 		BoundMapFN* bound = new BoundMapFN();
 		bound->CreateBoundary("wall");
 		auto& wall = bound->GetBoundary("wall");
-		int node_num = m_fn_info.node[m_layer_num].size();
+		Id node_num = m_fn_info.node[m_layer_num].size();
 		wall.resize(node_num);
-		for (int iNode = 0; iNode < node_num; iNode++) {
-			int bound_idx = m_fn_info.node[m_layer_num][iNode].idx;
-			int ref_idx = m_fn_info.node[1][iNode].idx;
+		for (Id iNode = 0; iNode < node_num; iNode++) {
+			Id bound_idx = m_fn_info.node[m_layer_num][iNode].idx;
+			Id ref_idx = m_fn_info.node[1][iNode].idx;
 			double normal[3];
 			auto bound_coord = m_fn_info.node[m_layer_num][iNode].coord;
 			auto ref_coord = m_fn_info.node[1][iNode].coord;
@@ -864,16 +864,16 @@ namespace zaran {
 	void GridFNFactoryZaran::SetFNGridBoundaryFace() {
 		auto grid = GetFNGrid();
 		FaceFN* face = new FaceFN();
-		int face_num = m_trans_face.size();
-		std::vector<int> face_node_num;
+		Id face_num = m_trans_face.size();
+		std::vector<Id> face_node_num;
 		face_node_num.resize(face_num);
-		for (int iFace = 0; iFace < face_num; iFace++) {
+		for (Id iFace = 0; iFace < face_num; iFace++) {
 			face_node_num[iFace] = m_trans_face[iFace].idx_block.size();
 		}
 		face->Allocate(face_num, face_node_num.data());
 		double normal[3];
 		double area;
-		for (int iFace = 0; iFace < face_num; iFace++) {
+		for (Id iFace = 0; iFace < face_num; iFace++) {
 			// auto face_node_idx = m_trans_face[iFace].idx_master;
 			// for (int iNode = 0; iNode < face_node_idx.size(); iNode++)
 			// {
@@ -888,7 +888,7 @@ namespace zaran {
 			// }
 			auto& face_node_idx = m_trans_face[iFace].idx_slave;
 
-			for (int iNode = 0; iNode < face_node_idx.size(); iNode++) {
+			for (Id iNode = 0; iNode < face_node_idx.size(); iNode++) {
 				face_node_idx[iNode] =
 					m_fn_info.node[m_layer_num][face_node_idx[iNode]].idx;
 			}
@@ -905,7 +905,7 @@ namespace zaran {
 		auto node = grid->GetNode();
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
-		std::set<int> ref_node_idx_set;
+		std::set<Id> ref_node_idx_set;
 		for (int k = ks; k <= ke; k++) {
 			for (int j = js; j <= je; j++) {
 				for (int i = is; i <= ie; i++) {
@@ -940,9 +940,9 @@ namespace zaran {
 			}
 		}
 		m_fn_info.node[0].resize(ref_node_idx_set.size());
-		int idx = 0;
+		Id idx = 0;
 		for (auto& ref_node_idx : ref_node_idx_set) {
-			int i, j, k;
+			Id i, j, k;
 			m_idx_proxy->SetIdx(ref_node_idx);
 			m_idx_proxy->GetIdxStruct(i, j, k);
 			m_fn_info.node[0][idx].coord[0] = node->GetCoord(i, j, k)[0];
@@ -958,7 +958,7 @@ namespace zaran {
 		auto node = grid->GetNode();
 		// int is, ie, js, je, ks, ke;
 		// grid->GetRange(is, ie, js, je, ks, ke);
-		std::set<int> trans_node_idx_set;
+		std::set<Id> trans_node_idx_set;
 		// for (int k = ks; k <= ke; k++)
 		// {
 		//     for (int j = js; j <= je; j++)
@@ -982,9 +982,9 @@ namespace zaran {
 		}
 
 		m_fn_info.node[1].resize(trans_node_idx_set.size());
-		int idx = 0;
+		Id idx = 0;
 		for (auto& trans_idx : trans_node_idx_set) {
-			int i, j, k;
+			Id i, j, k;
 			m_idx_proxy->SetIdx(trans_idx);
 			m_idx_proxy->GetIdxStruct(i, j, k);
 			m_fn_info.node[1][idx].coord[0] = node->GetCoord(i, j, k)[0];
@@ -1016,7 +1016,7 @@ namespace zaran {
 	bool GridFNFactoryZaran::CheckTransNode() {
 		int total_error_num = 0;
 		for (int iNode = 0; iNode < m_node_type.size(); iNode++) {
-			int i, j, k;
+			Id i, j, k;
 			m_idx_proxy->SetIdx(iNode);
 			m_idx_proxy->GetIdxStruct(i, j, k);
 			if (m_node_type[iNode] != PhysicalType::FluidSolid)
@@ -1057,7 +1057,7 @@ namespace zaran {
 			for (int iNode = 0; iNode < m_node_type.size(); iNode++) {
 				auto grid = GetBlockGrid();
 				auto node = grid->GetNode();
-				int i, j, k;
+				Id i, j, k;
 				m_idx_proxy->SetIdx(iNode);
 				m_idx_proxy->GetIdxStruct(i, j, k);
 				if (m_node_type[iNode] != PhysicalType::FluidSolid)
@@ -1409,14 +1409,14 @@ namespace zaran {
 				}
 				node_pair_map.clear();
 				// 获取下一个点的lamda表达�?
-				auto get_next_node = [&](int iNode, IArray neiborNode) -> int {
+				auto get_next_node = [&](Id iNode, std::vector<Id> neiborNode) -> Id {
 					if (iNode == neiborNode.size() - 1)
 						return 0;
 					else
 						return iNode + 1;
 					};
 				// 获取上一个点的lamda表达�?
-				auto get_last_node = [&](int iNode, IArray neiborNode) -> int {
+				auto get_last_node = [&](Id iNode, std::vector<Id> neiborNode) -> Id {
 					if (iNode == 0)
 						return neiborNode.size() - 1;
 					else
@@ -1442,7 +1442,7 @@ namespace zaran {
 				while (neighbor.size() > 4) {
 
 					auto& temp_pair = node_pair_map.begin()->second;
-					int remove_node, remove_index;
+					Id remove_node, remove_index;
 					node_pair temp;
 					if (node_dis_map[temp_pair.node1] > node_dis_map[temp_pair.node2]) {
 						remove_node = temp_pair.node1;
@@ -1583,7 +1583,7 @@ namespace zaran {
 			m_fn_info.node[1][iNode].neighbor_node.resize(6);
 		}
 		for (auto& nodes : m_trans_node) {
-			int i, j, k;
+			Id i, j, k;
 			m_idx_proxy->SetIdx(nodes.idx_block);
 			m_idx_proxy->GetIdxStruct(i, j, k);
 			m_fn_info.node[1][nodes.idx_local_layer].neighbor_node[0] =
@@ -1631,7 +1631,7 @@ namespace zaran {
 					solid_num++;
 				}
 				if (!find) {
-					int i, j, k;
+					Id i, j, k;
 					m_idx_proxy->SetIdx(idx_master);
 					m_idx_proxy->GetIdxStruct(i, j, k);
 					Log::error("Invalid node:{}, {},{},{}, type:{}", idx_master, i, j, k,

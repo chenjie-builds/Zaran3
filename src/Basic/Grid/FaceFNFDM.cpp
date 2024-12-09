@@ -23,31 +23,31 @@ namespace zaran
 			delete[] m_normal;
 	}
 
-	void FaceFN::Allocate(int nFace, int* face_node_num)
+	void FaceFN::Allocate(Id nFace, Id* face_node_num)
 	{
 		SetFaceNum(nFace);
-		m_face_node_num = new int[nFace];
-		m_node_id = new int[nFace];
-		int nNode = 0;
-		for (int i = 0;i < nFace;i++)
+		m_face_node_num = new Id[nFace];
+		m_node_id = new Id[nFace];
+		Id nNode = 0;
+		for (Id i = 0;i < nFace;i++)
 		{
 			m_node_id[i] = nNode;
 			m_face_node_num[i] = face_node_num[i];
 			nNode += face_node_num[i];
 		}
-		m_face2node = new int[nNode];
-		m_face2cell = new int[2 * nFace];
+		m_face2node = new Id[nNode];
+		m_face2cell = new Id[2 * nFace];
 		m_area = new double[nFace];
 		m_normal = new double[3 * nFace];
 	}
 
-	void FaceFN::SetFace2Node(int iFace, int* node, int nNode)
+	void FaceFN::SetFace2Node(Id iFace, Id* node, Id nNode)
 	{
 		if (nNode != m_face_node_num[iFace])
 		{
 			Log::error("FaceTopoInfo::SetFace2Node: The number of nodes is not equal to the number of nodes in the face");
 		}
-		for (int i = 0; i < nNode; i++)
+		for (Id i = 0; i < nNode; i++)
 		{
 			m_face2node[m_node_id[iFace] + i] = node[i];
 		}

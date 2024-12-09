@@ -14,6 +14,7 @@ namespace zaran
 	using Array = std::vector<T>;//array
 	template<typename T>
 	using Ptr = std::shared_ptr<T>;//pointer
+	using Id = size_t;//id
 
 	using DArray = std::vector<double>;//double array
 	using IArray = std::vector<int>;//int array

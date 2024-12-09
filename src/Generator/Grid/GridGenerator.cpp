@@ -1,4 +1,4 @@
-#include "GridFactory.h"
+#include "GridGenerator.h"
 #include "GridStruct.h"
 #include "Log.h"
 

@@ -1,20 +1,20 @@
 #include "IdxProxy.h"
 namespace zaran
 {
-    Idx::Idx(int idx)
-    {
-        m_idx = idx;
-    }
+	IdProxy::IdProxy(Id idx)
+	{
+		m_idx = idx;
+	}
 
-    Idx::~Idx()
-    {
-    }
-    int Idx::GetIdx() const
-    {
-        return m_idx;
-    }
-    void Idx::SetIdx(int idx)
-    {
-        m_idx = idx;
-    }
+	IdProxy::~IdProxy()
+	{
+	}
+	Id IdProxy::GetIdx() const
+	{
+		return m_idx;
+	}
+	void IdProxy::SetIdx(Id idx)
+	{
+		m_idx = idx;
+	}
 }

@@ -1,8 +1,8 @@
-#include "GridBlockFactory.h"
+#include "GridGeneratorBlock.h"
 namespace zaran
 {
 
-    void GridBlockFactory::CreateGrid(GridBlock *&grid, GridBlockInfo &grid_info)
+    void GridGeneratorBlock::CreateGrid(std::shared_ptr<GridBlock> grid, GridBlockInfo& grid_info)
     {
         m_grid_info = grid_info;
         m_grid = grid;
@@ -11,22 +11,23 @@ namespace zaran
         CreateBound();
         grid = m_grid;
     }
-    void GridBlockFactory::AllocateGrid()
+    void GridGeneratorBlock::AllocateGrid()
     {
         int ni = m_grid_info.ni;
         int nj = m_grid_info.nj;
         int nk = m_grid_info.nk;
         int ghost_size = 3;
-        m_grid = new GridBlock("Structured", 1, 3);
+        m_grid = std::make_shared<GridBlock>("Structured", 1, 3);
         m_grid->Allocate(ni, nj, nk, ghost_size);
         m_grid->SetBoundBox(m_grid_info.bound_box);
     }
-    void GridBlockFactory::CreateNode()
+    void GridGeneratorBlock::CreateNode()
     {
         auto grid = GetGrid();
         auto node = grid->GetNode();
-        int ni, nj, nk;
-        grid->GetNodeNum(ni, nj, nk);
+		auto ni = grid->GetNi();
+		auto nj = grid->GetNj();
+		auto nk = grid->GetNk();
         int ghost_size = grid->GetGhostLevel();
         auto& bound_box = grid->GetBoundBox();
         double dx = (bound_box.x_max - bound_box.x_min) / (ni - 2 * ghost_size - 1);
@@ -50,7 +51,7 @@ namespace zaran
             }
         }
     }
-    void GridBlockFactory::CreateBound()
+    void GridGeneratorBlock::CreateBound()
     {
         auto grid = GetGrid();
         auto bnd_manager = grid->GetBoundMap();

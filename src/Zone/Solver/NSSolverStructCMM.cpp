@@ -5,8 +5,7 @@
 
 namespace zaran
 {
-	NSSolverStructCMM::NSSolverStructCMM(int index, string name, FlowSolverParam* para, GridStruct* grid,
-		DataManagerNSStruct* data_manager)
+	NSSolverStructCMM::NSSolverStructCMM(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridStruct> grid, std::shared_ptr < DataManagerNSStruct>data_manager)
 		: NSSolverStruct(index, name, para, grid, data_manager)
 	{
 	}
@@ -472,9 +471,9 @@ namespace zaran
 		auto gas = GetGas();
 		auto equ_num = GetPara()->GetEqNum();
 		int ni, nj, nk;
-		ni = idx_proxy->GetNi();
-		nj = idx_proxy->GetNj();
-		nk = idx_proxy->GetNk();
+		ni = grid->GetNi();
+		nj = grid->GetNj();
+		nk = grid->GetNk();
 		RiemannSolverPara riemann_para;
 		for (int k = 0; k < nk - 1; ++k)
 		{

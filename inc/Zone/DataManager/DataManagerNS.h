@@ -9,7 +9,7 @@ namespace zaran
     class DataManagerNS :public DataManager
     {
     public:
-        DataManagerNS(FieldData* field_data, int data_num);
+        DataManagerNS(std::shared_ptr<FieldData> fieldData, int data_num);
         ~DataManagerNS();
     public:
         void CreateData()override;

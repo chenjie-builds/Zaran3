@@ -11,6 +11,7 @@
 //==============================================================================||
 #pragma once
 #include "RiemannSolver.h"
+#include <memory>
 namespace zaran
 {
 
@@ -18,5 +19,6 @@ namespace zaran
 	{
 	public:
 		 RiemannSolver* Create(RiemannSolverType type);
+		 std::unique_ptr<RiemannSolver> CreateUnique(RiemannSolverType type);
 	};
 }

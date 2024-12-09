@@ -21,7 +21,7 @@ namespace zaran
 	class NSSolverFNFDM : public NSSolver
 	{
 	public:
-		NSSolverFNFDM(int index, string name, FlowSolverParam *para, GridFN *grid, DataManagerNS *data_manager);
+		NSSolverFNFDM(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridFN> grid, std::shared_ptr < DataManagerNS>data_manager);
 		~NSSolverFNFDM();
 
 	protected:
@@ -30,13 +30,13 @@ namespace zaran
 		void InitFieldBackup() override;
 		void InitFieldExplosion() override;
 		void CalcCoordTransCoef() override;
-		void BackupField(std::string &back_folder) override;
+		void BackupField(std::string& back_folder) override;
 
 	protected:
 		void Preprocess() override;
 		void CalcTimeStepLocal() override;
 		void CalcMinTimeStep(double& dt) override;
-		void ReduceTimeStep(double &dt) override;
+		void ReduceTimeStep(double& dt) override;
 		void RungeKutta() override;
 		void Prim2Cons() override;
 		void Cons2Prim() override;
@@ -46,8 +46,8 @@ namespace zaran
 		/// @param index_right right node index
 		/// @param value_rec_left reconstructed value of left side at mid point
 		/// @param value_rec_right reconstructed value of right side at mid point
-		void MidPointReconstruct2ndOrder(int index_left, int index_right, double *value_rec_left, double *value_rec_right);
-		void MidPointReconstruct1stOrder(int index_left, int index_right, double *value_rec_left, double *value_rec_right);
+		void MidPointReconstruct2ndOrder(int index_left, int index_right, double* value_rec_left, double* value_rec_right);
+		void MidPointReconstruct1stOrder(int index_left, int index_right, double* value_rec_left, double* value_rec_right);
 
 	protected:
 		void CalcPrimGrad();
@@ -80,19 +80,19 @@ namespace zaran
 		void CalcForce() override;
 		void BoundaryCondition() override;
 		// 超声速入口边界条件
-		virtual void BCInlow(BoundFN &bound);
+		virtual void BCInlow(BoundFN& bound);
 		// 超声速出口边界条件
-		virtual void BCOutflow(BoundFN &bound);
+		virtual void BCOutflow(BoundFN& bound);
 		// 壁面边界条件
-		virtual void BCWall(BoundFN &bound);
+		virtual void BCWall(BoundFN& bound);
 		// 黎曼边界条件
-		virtual void BCFarfield(BoundFN &bound);
+		virtual void BCFarfield(BoundFN& bound);
+
 
 	protected:
-		virtual GridFN *GetGrid() override;
-
+		std::shared_ptr<GridFN> GetGrid();
 	private:
-		GradWLSQ *m_grad_wlsq;
-		Metric *m_node_metric;
+		std::shared_ptr<GradWLSQ> m_grad_wlsq;
+		std::shared_ptr<Metric> m_node_metric;
 	};
 }

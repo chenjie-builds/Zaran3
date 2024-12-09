@@ -15,34 +15,34 @@
 #include"FieldDataManager.h"
 namespace zaran
 {
-/// @brief 流场求解器基类
-class FlowFieldSolver : public FieldSolver
-{
-  public:
-    FlowFieldSolver(int index, string name, FlowSolverParam *para, GridBase *grid, DataManager *data_manager);
-    virtual ~FlowFieldSolver();
-  public:
-    void InitField() override;
-    void InitSolver() override;
-    // 计算时间步长
-    virtual void CalcTimeStep() = 0;
-    void Solve() override;
-    void Postprocess() override;
-    // 同步时间步长为全局时间步
-    virtual void ReduceTimeStep(double &dt) = 0;
+	/// @brief 流场求解器基类
+	class FlowFieldSolver : public FieldSolver
+	{
+	public:
+		FlowFieldSolver(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridBase> grid, std::shared_ptr < DataManager>data_manager);
+		virtual ~FlowFieldSolver();
+	public:
+		void InitField() override;
+		void InitSolver() override;
+		// 计算时间步长
+		virtual void CalcTimeStep() = 0;
+		void Solve() override;
+		void Postprocess() override;
+		// 同步时间步长为全局时间步
+		virtual void ReduceTimeStep(double& dt) = 0;
 
-  public:
-    // 计算当前时刻的CFL数
-    double ComputeCFL();
+	public:
+		// 计算当前时刻的CFL数
+		double ComputeCFL();
 
-  protected:
-    // 返回当前求解器的参数
-    FlowSolverParam *GetPara() override;
-  public:
-    // 时间推进
-    virtual void TimeAdvance() = 0;
+	protected:
+		// 返回当前求解器的参数
+		std::shared_ptr<FlowSolverParam>GetPara();
+	public:
+		// 时间推进
+		virtual void TimeAdvance() = 0;
 
 
-  protected:
-};
+	protected:
+	};
 } // namespace zaran

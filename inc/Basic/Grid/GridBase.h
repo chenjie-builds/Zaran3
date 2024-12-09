@@ -19,12 +19,13 @@ namespace zaran
         Structured,
         Flexible,
         Zaran,
+		Block,
 		Unkown,
     };
 	class GridBase
 	{
 	public:
-		GridBase(const string& name,int index,int dim,GridType type)
+		GridBase(const string& name, Id index,Id dim,GridType type)
 			:m_name(name),m_index(index),m_dim(dim),m_type(type){}
 		virtual ~GridBase() {}
 		void SetName(const std::string& name) { m_name = name; }
@@ -38,8 +39,8 @@ namespace zaran
 		const GridType& GetType()const { return m_type; }
 	private:
 		string m_name;//网格名称
-		int m_index;//网格索引
-		int m_dim;//网格维度
+		Id m_index;//网格索引
+		Id m_dim;//网格维度
 		GridType m_type;//网格类型
 	};
 }

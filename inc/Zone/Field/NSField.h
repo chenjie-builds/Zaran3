@@ -9,12 +9,12 @@ namespace zaran
     class FieldNS :public Field
     {
     public:
-        FieldNS(GridBase* grid=nullptr, FieldType fieldType=FieldType::Unset);
+        FieldNS(std::shared_ptr<GridBase> grid=nullptr, FieldType fieldType=FieldType::Unset);
         ~FieldNS();
         void Allocate() override;
     public:
-        FlowSolverParam* GetSolverPara() override;
-        DataManagerNS* GetDataManager() override;
+        std::shared_ptr<FlowSolverParam> GetSolverPara();
+		std::shared_ptr<DataManagerNS> GetDataManager();
         ResInfo* GetResInfo() { return m_res_info; }
         virtual void CalcResidual() = 0;
         virtual void AllocateSolverPara()override;

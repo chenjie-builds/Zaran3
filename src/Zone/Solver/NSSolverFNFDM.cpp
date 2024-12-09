@@ -5,23 +5,21 @@
 #include "MathBasic.h"
 namespace zaran
 {
-	NSSolverFNFDM::NSSolverFNFDM(int index, string name, FlowSolverParam* para, GridFN* grid, DataManagerNS* data_manager)
+	NSSolverFNFDM::NSSolverFNFDM(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridFN> grid, std::shared_ptr < DataManagerNS>data_manager)
 		: NSSolver(index, name, para, grid, data_manager)
 	{
-		m_node_metric = new Metric(grid->GetTotalNodeNum());
-		m_grad_wlsq = new GradWLSQ(grid);
+		m_grad_wlsq = std::make_shared<GradWLSQ>(grid);
+		m_node_metric = std::make_shared<Metric>(grid->GetTotalNodeNum());
 	}
 
 	NSSolverFNFDM::~NSSolverFNFDM()
 	{
-		delete[] m_node_metric;
-		delete[] m_grad_wlsq;
 	}
 
 	void NSSolverFNFDM::InitFieldFarfield()
 	{
-		GridFN* grid = GetGrid();
-		FlowSolverParam* para = GetPara();
+		auto grid = GetGrid();
+		auto para = GetPara();
 		auto data_manager = GetDataManager();
 		double prim_far[5];
 		prim_far[0] = para->GetInflowDensity();
@@ -77,8 +75,8 @@ namespace zaran
 	}
 	void NSSolverFNFDM::InitFieldExplosion()
 	{
-		GridFN* grid = GetGrid();
-		FlowSolverParam* para = GetPara();
+		auto grid = GetGrid();
+		auto para = GetPara();
 		auto data_manager = GetDataManager();
 		double prim_far[5];
 		prim_far[0] = para->GetInflowDensity();
@@ -209,7 +207,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
-		FlowSolverParam* para = GetPara();
+		auto para = GetPara();
 		int rk_step = para->GetRkStep();
 		auto node = grid->GetNode();
 		int n_node = grid->GetTotalNodeNum();
@@ -371,7 +369,7 @@ namespace zaran
 	}
 	void NSSolverFNFDM::BCInlow(BoundFN& bound)
 	{
-		FlowSolverParam* para = GetPara();
+		auto para = GetPara();
 		auto data_manager = GetDataManager();
 		int bound_index = bound.GetIdxBound();
 		double prim_far[5];
@@ -442,7 +440,7 @@ namespace zaran
 							 data_manager->GetPrim(3, idx_ref), data_manager->GetPrim(4, idx_ref) };
 		double prim_bnd[5] = { data_manager->GetPrim(0, idx_bnd), data_manager->GetPrim(1, idx_bnd), data_manager->GetPrim(2, idx_bnd),
 							  data_manager->GetPrim(3, idx_bnd), data_manager->GetPrim(4, idx_bnd) };
-		FlowSolverParam* para = GetPara();
+		auto para = GetPara();
 		auto gas = GetGas();
 		double gamma = gas->GetGamma();
 		double prim_far[5] = { para->GetInflowDensity(), para->GetInflowVelocityX(), para->GetInflowVelocityY(),
@@ -1244,7 +1242,7 @@ namespace zaran
 		for (int iFace = 0; iFace < face_num; ++iFace)
 		{
 			face_pressure = 0;
-			int* face2node = face->GetFace2Node(iFace);
+			auto face2node = face->GetFace2Node(iFace);
 			for (int iNode = 0; iNode < face->GetFaceNodeNum(iFace); ++iNode)
 			{
 				face_pressure += data_manager->GetPressure(face2node[iNode]);
@@ -1261,8 +1259,8 @@ namespace zaran
 		Log::info("Force: {}, {}, {}", force[0], force[1], force[2]);
 	}
 
-	GridFN* NSSolverFNFDM::GetGrid()
+	std::shared_ptr<GridFN> NSSolverFNFDM::GetGrid()
 	{
-		return static_cast<GridFN*>(FlowFieldSolver::GetGrid());
+		return std::static_pointer_cast<GridFN>(NSSolver::GetGrid());
 	}
 }

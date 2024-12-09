@@ -37,3 +37,34 @@ RiemannSolver* RiemannSolverBuilder::Create(RiemannSolverType type)
 		return new Vanleer();
 	}
 }
+
+std::unique_ptr<zaran::RiemannSolver> RiemannSolverBuilder::CreateUnique(RiemannSolverType type)
+{
+	if (type == RiemannSolverType::VanLeer)
+	{
+		return std::make_unique<Vanleer>();
+	}
+	else if (type == RiemannSolverType::Ausmpw)
+	{
+		return std::make_unique<Ausmpw>();
+	}
+	else if (type == RiemannSolverType::Roe)
+	{
+		return std::make_unique<Roe>();
+	}
+	else if (type == RiemannSolverType::HLLC)
+	{
+		return std::make_unique<HLLC>();
+	}
+	else if (type == RiemannSolverType::StegerWarming)
+	{
+		return std::make_unique<StegerWarming>();
+	}
+	else
+	{
+		Log::warn("RiemannSolverBuilder::Create: unknown RiemannSolverType");
+		Log::warn("RiemannSolverBuilder::Create: Using default RiemannSolverType: VanLeer");
+		return std::make_unique<Vanleer>();
+	}
+
+}

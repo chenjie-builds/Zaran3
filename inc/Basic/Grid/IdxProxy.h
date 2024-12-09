@@ -5,24 +5,25 @@
 //*	License																		||
 //*	This file is part of ZaRan.													||
 //*																				||
-//*	@file	Idx.h													||
+//*	@file	IdProxy.h													||
 //*	@brief							||
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
+#include "BasicType.h"
 namespace zaran
 {
     /// @brief 索引代理类
     /// 用于不同网格类型的索引转换
-    class Idx
+    class IdProxy
     {
     public:
-        Idx() = default;
-        Idx(int idx);
-        ~Idx();
-        int GetIdx() const;
-        void SetIdx(int idx);
+        IdProxy() = default;
+        IdProxy(Id idx);
+        ~IdProxy();
+        Id GetIdx() const;
+        void SetIdx(Id idx);
     private:
-        int m_idx; // 索引
+        Id m_idx; // 索引
     };
 }

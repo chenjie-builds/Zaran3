@@ -2,7 +2,7 @@
 namespace zaran
 {
 
-    DataManagerNSStruct::DataManagerNSStruct(FieldData* fieldData, int ni, int nj, int nk)
+    DataManagerNSStruct::DataManagerNSStruct(std::shared_ptr<FieldData> fieldData, int ni, int nj, int nk)
         :DataManagerNS(fieldData, ni* nj* nk)
     {
     }

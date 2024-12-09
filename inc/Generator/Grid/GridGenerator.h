@@ -5,7 +5,7 @@
 //*	License																		||
 //*	This file is part of ZaRan.													||
 //*																				||
-//*	@file	GridListFactory.h													||
+//*	@file	GridGenerator.h													||
 //*	@brief	网格数组工厂, 负责生成网格数组											||
 //*	@author	Chen Jie.															||
 //==============================================================================||
@@ -19,13 +19,13 @@ namespace zaran
   /// @details 根据控制参数生成网格
   /// @return 返回生成的
   /// @note 只负责生成网格，不负责销毁网格，销毁网格由Field 负责
-  class GridBuilder
+  class GridGenerator
   {
   public:
     /// @brief 生成网格数组
     /// @param grid_list 生成的网格数组
     /// @param grid_num 网格数组大小
-    virtual void CreateGrid(GridBase **&grid_list, int& grid_num) {};
-    virtual ~GridBuilder() {}
+    virtual void CreateGrid(Array<std::shared_ptr<GridBase>>&grid_list) {};
+    virtual ~GridGenerator() {}
   };
 } // namespace zaran

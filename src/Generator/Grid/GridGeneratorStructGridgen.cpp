@@ -1,10 +1,10 @@
-#include "GridStructFactoryGridgen.h"
+#include "GridGeneratorStructGridgen.h"
 #include "Log.h"
 #include <fstream>
 #include "MathBasic.h"
 namespace zaran
 {
-	GridStructFactoryGridgen::GridStructFactoryGridgen()
+	GridBuilderStructGridgen::GridBuilderStructGridgen()
 	{
 		// m_node_file_name = GlobalData::GetString("NodeFile");
 		// m_bnd_file_name = GlobalData::GetString("BoundFile");
@@ -15,32 +15,31 @@ namespace zaran
 		m_bnd_file_name = work_dir + "/" + m_bnd_file_name;
 	}
 
-	void GridStructFactoryGridgen::CreateGrid(GridBase**& grid_list, int& grid_num)
+	void GridBuilderStructGridgen::CreateGrid(Array<std::shared_ptr<GridBase>>& grid_list)
 	{
 		m_ghost_size = 3;
 		ReadNodeFile();
 		ReadBoundFile();
 		SetMultiBlockInfo();
-		AllocateGridMemory(grid_list, grid_num);
-		SetNodeCoord(grid_list, grid_num);
-		SetBoundInfo(grid_list, grid_num);
-		SetGhostNodeCoord(grid_list, grid_num);
-		WriteGridTest(grid_list, grid_num);
+		AllocateGridMemory(grid_list);
+		SetNodeCoord(grid_list);
+		SetBoundInfo(grid_list);
+		SetGhostNodeCoord(grid_list);
+		WriteGridTest(grid_list);
 	}
 
-	void GridStructFactoryGridgen::AllocateGridMemory(GridBase**& grid_list, int& grid_num)
+	void GridBuilderStructGridgen::AllocateGridMemory(Array<std::shared_ptr<GridBase>>& grid_list)
 	{
-		grid_num = GetBlockNum();
-		grid_list = new GridBase * [GetBlockNum()];
+		grid_list.resize(GetBlockNum());
 		for (int idx_block = 0; idx_block < GetBlockNum(); ++idx_block)
 		{
-			grid_list[idx_block] = new GridStruct("Structured", 1, m_dim);
-			auto grid = dynamic_cast<GridStruct*>(grid_list[idx_block]);
+			grid_list[idx_block] = std::make_shared<GridStruct>("Structured", 1, m_dim);
+			auto grid = std::static_pointer_cast<GridStruct>(grid_list[idx_block]);
 			grid->Allocate(m_block[idx_block].ni, m_block[idx_block].nj, m_block[idx_block].nk, m_ghost_size);
 		}
 	}
 
-	void GridStructFactoryGridgen::ReadNodeFile()
+	void GridBuilderStructGridgen::ReadNodeFile()
 	{
 		std::ifstream node_file(m_node_file_name);
 		if (!node_file.is_open())
@@ -110,7 +109,7 @@ namespace zaran
 		node_file.close();
 		Log::info("Read Node File Success!");
 	}
-	void GridStructFactoryGridgen::ReadBoundFile()
+	void GridBuilderStructGridgen::ReadBoundFile()
 	{
 		// read inp file
 		std::ifstream bnd_file(m_bnd_file_name);
@@ -221,7 +220,7 @@ namespace zaran
 			}
 		}
 	}
-	void GridStructFactoryGridgen::SetMultiBlockInfo()
+	void GridBuilderStructGridgen::SetMultiBlockInfo()
 	{
 		for (int idx_block = 0; idx_block < GetBlockNum(); ++idx_block)
 		{
@@ -436,7 +435,7 @@ namespace zaran
 			}
 		}
 	}
-	void GridStructFactoryGridgen::SetBoundInfo(GridBase** grid_list, int& grid_num)
+	void GridBuilderStructGridgen::SetBoundInfo(Array<std::shared_ptr<GridBase>>& grid_list)
 	{
 		std::map<int, string> gridgen_bound = {
 			{-1, "connection"},
@@ -449,7 +448,7 @@ namespace zaran
 			{6, "outlet"} };
 		for (int block_indx = 0; block_indx < GetBlockNum(); ++block_indx)
 		{
-			auto grid_src = dynamic_cast<GridStruct*>(grid_list[block_indx]);
+			auto grid_src = std::static_pointer_cast<GridStruct>(grid_list[block_indx]);
 			auto bnd_manager = grid_src->GetBoundMap();
 			auto node_src = grid_src->GetNode();
 			int i_bnd_src, j_bnd_src, k_bns_src;
@@ -580,7 +579,7 @@ namespace zaran
 								i_bnd_tgt = bound_info.is_t + iter_i * Sign(bound_info.ie_t - bound_info.is_t) + m_ghost_size;
 								j_bnd_tgt = bound_info.js_t + iter_j * Sign(bound_info.je_t - bound_info.js_t) + m_ghost_size;
 								k_bns_tgt = bound_info.ks_t + iter_k * Sign(bound_info.ke_t - bound_info.ks_t) + m_ghost_size;
-								auto grid_tgt = dynamic_cast<GridStruct*>(grid_list[bound_info.block_indx_target]);
+								auto grid_tgt = std::static_pointer_cast<GridStruct>(grid_list[bound_info.block_indx_target]);
 								auto node_tgt = grid_tgt->GetNode();
 								for (int iGhost = 0; iGhost < m_ghost_size; ++iGhost)
 								{
@@ -610,11 +609,11 @@ namespace zaran
 			}
 		}
 	}
-	void GridStructFactoryGridgen::SetNodeCoord(GridBase** grid_list, int& grid_num)
+	void GridBuilderStructGridgen::SetNodeCoord(Array<std::shared_ptr<GridBase>>& grid_list)
 	{
 		for (int idx_block = 0; idx_block < GetBlockNum(); ++idx_block)
 		{
-			auto grid = dynamic_cast<GridStruct*>(grid_list[idx_block]);
+			auto grid = std::static_pointer_cast<GridStruct>(grid_list[idx_block]);
 			auto node = grid->GetNode();
 			int is, ie, js, je, ks, ke;
 			grid->GetRange(is, ie, js, je, ks, ke);
@@ -630,11 +629,11 @@ namespace zaran
 			}
 		}
 	}
-	void GridStructFactoryGridgen::SetGhostNodeCoord3D(GridBase** grid_list, int& grid_num)
+	void GridBuilderStructGridgen::SetGhostNodeCoord3D(Array<std::shared_ptr<GridBase>>& grid_list)
 	{
 		for (int block_indx = 0; block_indx < GetBlockNum(); ++block_indx)
 		{
-			auto grid_src = dynamic_cast<GridStruct*>(grid_list[block_indx]);
+			auto grid_src = std::static_pointer_cast<GridStruct>(grid_list[block_indx]);
 			auto bnd_manager = grid_src->GetBoundMap();
 			auto node_src = grid_src->GetNode();
 			int i_bnd_src, j_bnd_src, k_bns_src;
@@ -660,7 +659,7 @@ namespace zaran
 							j_bnd_src = j + m_ghost_size;
 							k_bns_src = k + m_ghost_size;
 
-							auto grid_tgt = dynamic_cast<GridStruct*>(grid_list[bound_info.block_indx_target]);
+							auto grid_tgt = std::static_pointer_cast<GridStruct>(grid_list[bound_info.block_indx_target]);
 							auto node_tgt = grid_tgt->GetNode();
 							for (int iGhost = 0; iGhost < m_ghost_size; ++iGhost)
 							{
@@ -980,24 +979,25 @@ namespace zaran
 		}
 	}
 
-	void GridStructFactoryGridgen::SetGhostNodeCoord(GridBase** grid_list, int& grid_num)
+	void GridBuilderStructGridgen::SetGhostNodeCoord(Array<std::shared_ptr<GridBase>>& grid_list)
 	{
 		if (m_dim == 2)
 		{
-			SetGhostNodeCoord2D(grid_list, grid_num);
+			SetGhostNodeCoord2D(grid_list);
 		}
 		else if (m_dim == 3)
 		{
-			SetGhostNodeCoord3D(grid_list, grid_num);
+			SetGhostNodeCoord3D(grid_list);
 		}
 	}
 
-	void GridStructFactoryGridgen::SetGhostNodeCoord2D(GridBase** grid_list, int& grid_num)
+	void GridBuilderStructGridgen::SetGhostNodeCoord2D(Array<std::shared_ptr<GridBase>>& grid_list)
 	{
 		// step 1: set boundary ghost node coord
 		for (int block_indx = 0; block_indx < GetBlockNum(); ++block_indx)
 		{
-			auto grid_src = dynamic_cast<GridStruct*>(grid_list[block_indx]);
+			auto grid_src = std::static_pointer_cast<GridStruct>(grid_list[block_indx]);
+
 			auto bound_map = grid_src->GetBoundMap();
 			auto node_src = grid_src->GetNode();
 			int i_bnd_src, j_bnd_src, k_bnd_src;
@@ -1027,7 +1027,7 @@ namespace zaran
 							auto dir_tgt = bound[iBound].GetDirectionTgt();
 							auto src_bnd_coord = node_src->GetCoord(i_bnd_src, j_bnd_src, k_bnd_src);
 							bound[iBound].GetIdxTgt(i_bnd_tgt, j_bnd_tgt, k_bns_tgt);
-							auto grid_tgt = dynamic_cast<GridStruct*>(grid_list[bound[iBound].GetTargetBlock()]);
+							auto grid_tgt = std::static_pointer_cast<GridStruct>(grid_list[bound[iBound].GetTargetBlock()]);
 							auto node_tgt = grid_tgt->GetNode();
 							auto tgt_bnd_coord = node_tgt->GetCoord(i_bnd_tgt, j_bnd_tgt, k_bns_tgt);
 							i_ref = i_bnd_tgt - dir_tgt[0] * (iGhost + 1);
@@ -1084,7 +1084,7 @@ namespace zaran
 
 		for (int block_indx = 0; block_indx < GetBlockNum(); ++block_indx)
 		{
-			auto grid_src = dynamic_cast<GridStruct*>(grid_list[block_indx]);
+			auto grid_src = std::static_pointer_cast<GridStruct>(grid_list[block_indx]);
 			auto bnd_manager = grid_src->GetBoundMap();
 			auto node_src = grid_src->GetNode();
 			int i_bnd_src, j_bnd_src, k_bnd_src;
@@ -1247,13 +1247,13 @@ namespace zaran
 		}
 	}
 
-	void GridStructFactoryGridgen::WriteGridTest(GridBase** grid_list, int& grid_num)
+	void GridBuilderStructGridgen::WriteGridTest(Array<std::shared_ptr<GridBase>>& grid_list)
 	{
 
 		for (int idx_block = 0; idx_block < GetBlockNum(); ++idx_block)
 		{
 			std::ofstream file("grid_test" + std::to_string(idx_block) + ".dat");
-			auto grid = dynamic_cast<GridStruct*>(grid_list[idx_block]);
+			auto grid = std::static_pointer_cast<GridStruct>(grid_list[idx_block]);
 			auto node = grid->GetNode();
 			int ni, nj, nk;
 			ni = grid->GetNi();

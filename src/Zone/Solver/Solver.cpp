@@ -4,21 +4,15 @@ namespace zaran
 {
 
 
-Solver::Solver(int index, string name, SolverParam* para, GridBase* grid):
+Solver::Solver(Id index, string name, std::shared_ptr<SolverParam>para, std::shared_ptr<GridBase>grid) :
 	index_(index),name_(name),m_para(para),m_grid(grid)
 {
 }
 
 Solver::~Solver()
 {
-	delete[] m_para;
 }
 
-SolverParam* Solver::GetPara()
-{
-	Log::info("using Solver::GetPara()");
-	return m_para;
-}
 
 void Solver::Init()
 {
