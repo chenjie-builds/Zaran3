@@ -33,7 +33,7 @@ namespace zaran
 	{
 		return m_node->GetKNum();
 	}
-	void GridStruct::GetNodeNum(Id&ni, Id&nj, Id&nk)
+	void GridStruct::GetNodeNum(Id&ni, Id&nj, Id&nk) const
 	{
 		ni = GetNi();
 		nj = GetNj();
@@ -43,7 +43,7 @@ namespace zaran
 	{
 		return m_node->GetCount();
 	}
-	void GridStruct::GetRange(int &is, int &ie, int &js, int &je, int &ks, int &ke)
+	void GridStruct::GetRange(int &is, int &ie, int &js, int &je, int &ks, int &ke) const
 	{
 		is = GetGhostLevel();
 		ie = GetNi() - GetGhostLevel() - 1;
