@@ -8,6 +8,7 @@ namespace zaran
 	NSSolverFNFDM::NSSolverFNFDM(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridFN> grid, std::shared_ptr < DataManagerNS>data_manager)
 		: NSSolver(index, name, para, grid, data_manager)
 	{
+		m_grid = grid;
 		m_grad_wlsq = std::make_shared<GradWLSQ>(grid);
 		m_node_metric = std::make_shared<Metric>(grid->GetTotalNodeNum());
 	}
@@ -1261,6 +1262,6 @@ namespace zaran
 
 	std::shared_ptr<GridFN> NSSolverFNFDM::GetGrid()
 	{
-		return std::static_pointer_cast<GridFN>(NSSolver::GetGrid());
+		return m_grid;
 	}
 }

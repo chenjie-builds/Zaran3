@@ -7,7 +7,7 @@
 
 namespace zaran
 {
-	NSSolverStruct::NSSolverStruct(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridStruct> grid, std::shared_ptr < DataManagerNSStruct>data_manager)
+	NSSolverStruct::NSSolverStruct(Id index, string name, std::shared_ptr<FlowSolverParamStruct> para, std::shared_ptr < GridStruct> grid, std::shared_ptr < DataManagerNSStruct>data_manager)
 		: NSSolver(index, name, para, grid, data_manager)
 	{
 		int ni, nj, nk;
@@ -20,6 +20,9 @@ namespace zaran
 		m_metrics_mid_i = new Metric(node_num);
 		m_metrics_mid_j = new Metric(node_num);
 		m_metrics_mid_k = new Metric(node_num);
+		m_grid = grid;
+		m_data_manager = data_manager;
+		m_para = para;
 	}
 	NSSolverStruct::~NSSolverStruct()
 	{
@@ -40,21 +43,21 @@ namespace zaran
 			m_metrics_mid_k = nullptr;
 		}
 	}
-	std::shared_ptr < DataManagerNSStruct> NSSolverStruct::GetDataManager()
+	DataManagerNSStruct* NSSolverStruct::GetDataManager()
 	{
-		return std::static_pointer_cast<DataManagerNSStruct>(NSSolver::GetDataManager());
+		return m_data_manager.get();
 	}
-	std::shared_ptr<Metric> NSSolverStruct::GetNodeMetrics()
+	Metric* NSSolverStruct::GetNodeMetrics()
 	{
-		return m_node_metrics;
+		return m_node_metrics.get();
 	}
-	std::shared_ptr<IdProxyStruct> NSSolverStruct::GetIdxProxy()
+	IdProxyStruct* NSSolverStruct::GetIdxProxy()
 	{
-		return m_idx_proxy;
+		return m_idx_proxy.get();
 	}
-	std::shared_ptr<FlowSolverParamStruct>	 NSSolverStruct::GetPara()
+	FlowSolverParamStruct*	 NSSolverStruct::GetPara()
 	{
-		return std::static_pointer_cast<FlowSolverParamStruct>(NSSolver::GetPara());
+		return m_para.get();
 	}
 	void NSSolverStruct::InitField()
 	{
@@ -8066,11 +8069,11 @@ namespace zaran
 	void NSSolverStruct::BackupField(std::string& back_folder)
 	{
 	}
-	std::shared_ptr<GridStruct> NSSolverStruct::GetGrid()
-	{
-		return std::static_pointer_cast<GridStruct>(NSSolver::GetGrid());
-	}
 
+	GridStruct* NSSolverStruct::GetGrid()
+	{
+		return m_grid.get();
+	}
 	Metric* NSSolverStruct::GetMidMetricsI()
 	{
 		return m_metrics_mid_i;

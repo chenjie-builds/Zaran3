@@ -11,12 +11,12 @@ namespace zaran
 	class NSSolverStruct : public NSSolver
 	{
 	public:
-		NSSolverStruct(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridStruct> grid, std::shared_ptr < DataManagerNSStruct>data_manager);
+		NSSolverStruct(Id index, string name, std::shared_ptr<FlowSolverParamStruct> para, std::shared_ptr < GridStruct> grid, std::shared_ptr < DataManagerNSStruct>data_manager);
 		~NSSolverStruct();
-		std::shared_ptr<DataManagerNSStruct> GetDataManager() ;
-		std::shared_ptr<Metric> GetNodeMetrics();
-		std::shared_ptr<IdProxyStruct>  GetIdxProxy();
-		std::shared_ptr<FlowSolverParamStruct>GetPara();
+		DataManagerNSStruct* GetDataManager();
+		Metric* GetNodeMetrics();
+		IdProxyStruct* GetIdxProxy();
+		FlowSolverParamStruct* GetPara();
 
 	protected:
 		void InitField() override;
@@ -144,7 +144,8 @@ namespace zaran
 		void BackupField(std::string& back_folder) override;
 
 	protected:
-		std::shared_ptr<GridStruct>GetGrid();
+		GridStruct* GetGrid();
+		//std::shared_ptr<GridStruct>GetGrid();
 		Metric* GetMidMetricsI();
 		Metric* GetMidMetricsJ();
 		Metric* GetMidMetricsK();
@@ -217,5 +218,8 @@ namespace zaran
 		Metric* m_metrics_mid_i; // 半点度量系数(i+1/2)
 		Metric* m_metrics_mid_j; // 半点度量系数(j+1/2)
 		Metric* m_metrics_mid_k; // 半点度量系数(k+1/2)
+		std::shared_ptr<GridStruct> m_grid;
+		std::shared_ptr<DataManagerNSStruct> m_data_manager;
+		std::shared_ptr<FlowSolverParamStruct> m_para;
 	};
 } // namespace zaran

@@ -10,6 +10,7 @@ namespace zaran
 	NSSolver::NSSolver(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridBase> grid, std::shared_ptr < DataManagerNS>data_manager) :
 		FlowFieldSolver(index, name, para, grid, data_manager)
 	{
+		m_data_manager = data_manager;
 	}
 
 	NSSolver::~NSSolver()
@@ -51,9 +52,9 @@ namespace zaran
 		Prim2Cons();
 		Log::info("Flow Field Initialize Finished!");
 	}
-	std::shared_ptr<DataManagerNS> NSSolver::GetDataManager()
+	DataManagerNS* NSSolver::GetDataManager()
 	{
-		return std::static_pointer_cast<DataManagerNS>(FlowFieldSolver::GetDataManager());
+		return m_data_manager.get();
 	}
 	void NSSolver::InitSolver()
 	{

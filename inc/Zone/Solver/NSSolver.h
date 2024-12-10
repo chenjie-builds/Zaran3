@@ -23,7 +23,7 @@ namespace zaran
 		~NSSolver();
 		void Init() override;
 		void InitField() override;
-		std::shared_ptr<DataManagerNS> GetDataManager() ;
+		DataManagerNS* GetDataManager() ;
 
 	protected:
 		virtual void InitFieldFarfield() = 0;
@@ -83,5 +83,6 @@ namespace zaran
 		std::shared_ptr<Gas> m_gas;
 		// 通量求解器
 		std::unique_ptr<RiemannSolver> m_riemann_solver;
+		std::shared_ptr<DataManagerNS> m_data_manager;
 	};
 }

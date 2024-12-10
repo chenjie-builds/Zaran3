@@ -5,7 +5,7 @@ namespace zaran
 
 
 Solver::Solver(Id index, string name, std::shared_ptr<SolverParam>para, std::shared_ptr<GridBase>grid) :
-	index_(index),name_(name),m_para(para),m_grid(grid)
+	m_id(index),m_name(name),m_para(para),m_grid(grid)
 {
 }
 

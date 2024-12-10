@@ -2,7 +2,7 @@
 #include <omp.h>
 namespace zaran
 {
-	NSSolverBlock::NSSolverBlock(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridBlock> grid, std::shared_ptr < DataManagerNSStruct>data_manager)
+	NSSolverBlock::NSSolverBlock(Id index, string name, std::shared_ptr<FlowSolverParamStruct> para, std::shared_ptr < GridBlock> grid, std::shared_ptr < DataManagerNSStruct>data_manager)
 		: NSSolverStructDEER(index, name, para, grid, data_manager)
 	{
 	}
@@ -11,9 +11,9 @@ namespace zaran
 	{
 	}
 
-	std::shared_ptr<GridBlock>NSSolverBlock::GetGrid()
+	GridBlock*NSSolverBlock::GetGrid()
 	{
-		return std::static_pointer_cast<GridBlock>(NSSolverStructDEER::GetGrid());
+		return static_cast<GridBlock*>(NSSolver::GetGrid());
 	}
 
 	void NSSolverBlock::FluxDifference2nd()

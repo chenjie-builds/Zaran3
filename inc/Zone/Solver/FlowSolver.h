@@ -37,12 +37,14 @@ namespace zaran
 
 	protected:
 		// 返回当前求解器的参数
-		std::shared_ptr<FlowSolverParam>GetPara();
+		FlowSolverParam* GetPara();
 	public:
 		// 时间推进
 		virtual void TimeAdvance() = 0;
 
+	private:
+		// 流场参数
+		std::shared_ptr<FlowSolverParam> m_para;
 
-	protected:
 	};
 } // namespace zaran

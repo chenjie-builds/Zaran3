@@ -9,7 +9,7 @@ namespace zaran
   class NSSolverStructCMM : public NSSolverStruct
   {
   public:
-    NSSolverStructCMM(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridStruct> grid, std::shared_ptr < DataManagerNSStruct>data_manager);
+    NSSolverStructCMM(Id index, string name, std::shared_ptr<FlowSolverParamStruct> para, std::shared_ptr < GridStruct> grid, std::shared_ptr < DataManagerNSStruct>data_manager);
     ~NSSolverStructCMM();
 
   protected:

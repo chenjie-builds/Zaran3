@@ -87,12 +87,10 @@ namespace zaran
 		virtual void BCWall(BoundFN& bound);
 		// 黎曼边界条件
 		virtual void BCFarfield(BoundFN& bound);
-
-
-	protected:
 		std::shared_ptr<GridFN> GetGrid();
 	private:
 		std::shared_ptr<GradWLSQ> m_grad_wlsq;
 		std::shared_ptr<Metric> m_node_metric;
+		std::shared_ptr<GridFN> m_grid;
 	};
 }

@@ -36,7 +36,7 @@ namespace zaran
 		virtual void UpdateField() = 0;
 		// 备份场数据
 		virtual void BackupField(std::string& back_folder) = 0;
-		std::shared_ptr<DataManager> GetDataManager() { return m_data_manager; }
+		std::shared_ptr<DataManager>& GetDataManager() { return m_data_manager; }
 	private:
 		// 场数据
 		std::shared_ptr<DataManager> m_data_manager;
