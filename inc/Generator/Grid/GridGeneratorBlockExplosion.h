@@ -6,7 +6,7 @@ namespace zaran {
 	public:
 		GridGeneratorBlockExplosion();
 		~GridGeneratorBlockExplosion();
-		void CreateGrid(std::shared_ptr<GridBlock> grid, GridBlockInfo& grid_info);
+		void CreateGrid(shared_ptr<GridBlock> grid, GridBlockInfo& grid_info);
 	private:
 		//根据建筑物外形设置iBlank
 		void SetIBlankByBuilding();

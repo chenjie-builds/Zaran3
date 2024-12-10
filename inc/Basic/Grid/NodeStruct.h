@@ -22,32 +22,32 @@ namespace zaran
 	public:
 		NodeStruct();
 		~NodeStruct();
-		void Allocate(Id i_num, Id j_num, Id k_num);
+		void Allocate(index_type i_num, index_type j_num, index_type k_num);
 		/// @brief 设置节点坐标
 		/// @param idx_i i方向上的索引
 		/// @param idx_j j方向上的索引
 		/// @param idx_k k方向上的索引
 		/// @param coord 输入的坐标，长度为3
-		void SetCoord(Id idx_i, Id idx_j, Id idx_k, Coord coord);
+		void SetCoord(index_type idx_i, index_type idx_j, index_type idx_k, Coord coord);
 		/// @brief 获取节点坐标
 		/// @param idx_i i方向上的索引
 		/// @param idx_j j方向上的索引
 		/// @param idx_k k方向上的索引
 		/// @return 返回节点坐标，长度为3，不可修改
-		Coord GetCoord(Id idx_i, Id idx_j, Id idx_k) const;
+		Coord GetCoord(index_type idx_i, index_type idx_j, index_type idx_k) const;
 		Coord GetCoord(IdProxyStruct* idx_proxy) const;
-		Coord GetCoord(Id idx)const;
+		Coord GetCoord(index_type idx)const;
 		int GetINum() const { return m_i_num; }
 		int GetJNum() const { return m_j_num; }
 		int GetKNum() const { return m_k_num; }
 	protected:
 		/// @brief 将i,j,k转换为一维数组的索引，用于访问坐标数组
 		/// @return 一维数组的索引
-		Id GetIdx(Id i, Id j, Id k) const;
+		index_type GetIdx(index_type i, index_type j, index_type k) const;
 	protected:
 		/// @brief 节点个数，分别为i,j,k方向上的节点个数
 		int m_i_num, m_j_num, m_k_num;
 		/// @brief 节点坐标，按照每个节点x,y,z的顺序存储
-		Array<double>m_coord;
+		dynamic_array<double>m_coord;
 	};
 } // namespace zaran

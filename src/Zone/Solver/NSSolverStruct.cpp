@@ -7,16 +7,16 @@
 
 namespace zaran
 {
-	NSSolverStruct::NSSolverStruct(Id index, string name, std::shared_ptr<FlowSolverParamStruct> para, std::shared_ptr < GridStruct> grid, std::shared_ptr < DataManagerNSStruct>data_manager)
+	NSSolverStruct::NSSolverStruct(index_type index, string name, shared_ptr<FlowSolverParamStruct> para, shared_ptr < GridStruct> grid, shared_ptr < DataManagerNSStruct>data_manager)
 		: NSSolver(index, name, para, grid, data_manager)
 	{
 		int ni, nj, nk;
 		ni = grid->GetNi();
 		nj = grid->GetNj();
 		nk = grid->GetNk();
-		m_idx_proxy = std::make_shared<IdProxyStruct>(ni, nj, nk);
+		m_idx_proxy = make_shared<IdProxyStruct>(ni, nj, nk);
 		int node_num = ni * nj * nk;
-		m_node_metrics = std::make_shared<Metric>(node_num);
+		m_node_metrics = make_shared<Metric>(node_num);
 		m_metrics_mid_i = new Metric(node_num);
 		m_metrics_mid_j = new Metric(node_num);
 		m_metrics_mid_k = new Metric(node_num);
@@ -288,8 +288,8 @@ namespace zaran
 		int nj = grid->GetNj();
 		int nk = grid->GetNk();
 		// i+1/2,j+1/2,k+1/2处的坐标
-		std::vector<std::vector<double>> coord_i(ni * nj * nk, std::vector<double>(3)),
-			coord_j(ni * nj * nk, std::vector<double>(3)), coord_k(ni * nj * nk, std::vector<double>(3));
+		dynamic_array<dynamic_array<double>> coord_i(ni * nj * nk, dynamic_array<double>(3)),
+			coord_j(ni * nj * nk, dynamic_array<double>(3)), coord_k(ni * nj * nk, dynamic_array<double>(3));
 		// 计算之前，先把度量系数赋值为0
 		for (int i = 0; i < ni; ++i)
 		{
@@ -399,8 +399,8 @@ namespace zaran
 		int nk = grid->GetNk();
 		double inter_temp[6];
 		// 用于度量系数计算的临时变量
-		std::vector<std::vector<double>> coord_i(ni * nj * nk, std::vector<double>(3)),
-			coord_j(ni * nj * nk, std::vector<double>(3)), coord_k(ni * nj * nk, std::vector<double>(3));
+		dynamic_array<dynamic_array<double>> coord_i(ni * nj * nk, dynamic_array<double>(3)),
+			coord_j(ni * nj * nk, dynamic_array<double>(3)), coord_k(ni * nj * nk, dynamic_array<double>(3));
 		// 计算之前，先把度量系数赋值为0
 		for (int i = 0; i < ni; ++i)
 		{
@@ -993,7 +993,7 @@ namespace zaran
 		int nk = grid->GetNk();
 		double inter_temp[2];
 		// i+1/2,j+1/2,k+1/2处的临时变量
-		std::vector<double> temp_i(ni * nj * nk, 0.0), temp_j(ni * nj * nk, 0.0), temp_k(ni * nj * nk, 0.0);
+		dynamic_array<double> temp_i(ni * nj * nk, 0.0), temp_j(ni * nj * nk, 0.0), temp_k(ni * nj * nk, 0.0);
 		for (int k = 1; k < nk - 1; ++k)
 		{
 			for (int j = 1; j < nj - 1; ++j)
@@ -1134,7 +1134,7 @@ namespace zaran
 		int nk = grid->GetNk();
 		double inter_temp[6];
 		// i+1/2,j+1/2,k+1/2处的临时变量
-		std::vector<double> temp_i(ni * nj * nk, 0.0), temp_j(ni * nj * nk, 0.0), temp_k(ni * nj * nk, 0.0);
+		dynamic_array<double> temp_i(ni * nj * nk, 0.0), temp_j(ni * nj * nk, 0.0), temp_k(ni * nj * nk, 0.0);
 		// i+1/2
 		for (int k = 1; k < nk - 1; ++k)
 		{
@@ -1426,8 +1426,8 @@ namespace zaran
 		int nk = grid->GetNk();
 		int idx_temp[3];
 		// i+1/2,j+1/2,k+1/2处的坐标
-		std::vector<std::vector<double>> coord_i(ni * nj * nk, std::vector<double>(3)),
-			coord_j(ni * nj * nk, std::vector<double>(3)), coord_k(ni * nj * nk, std::vector<double>(3));
+		dynamic_array<dynamic_array<double>> coord_i(ni * nj * nk, dynamic_array<double>(3)),
+			coord_j(ni * nj * nk, dynamic_array<double>(3)), coord_k(ni * nj * nk, dynamic_array<double>(3));
 		// 计算之前，先把度量系数赋值为0
 		for (int i = 0; i < ni; ++i)
 		{
@@ -1513,7 +1513,7 @@ namespace zaran
 		{
 			double y_zeta_z, z_zeta_x, x_zeta_y, y_eta_z, z_eta_x, x_eta_y;
 		};
-		std::vector<TempXi> temp_xi(ni * nj * nk);
+		dynamic_array<TempXi> temp_xi(ni * nj * nk);
 		for (int k = 1; k < nk - 1; ++k)
 		{
 			for (int j = 1; j < nj - 1; ++j)
@@ -1575,7 +1575,7 @@ namespace zaran
 		{
 			double y_zeta_z, z_zeta_x, x_zeta_y, y_xi_z, z_xi_x, x_xi_y;
 		};
-		std::vector<TempEta> temp_eta(ni * nj * nk);
+		dynamic_array<TempEta> temp_eta(ni * nj * nk);
 		for (int k = 1; k < nk - 1; ++k)
 		{
 			for (int j = 1; j < nj - 1; ++j)
@@ -1638,7 +1638,7 @@ namespace zaran
 		{
 			double y_eta_z, z_eta_x, x_eta_y, y_xi_z, z_xi_x, x_xi_y;
 		};
-		std::vector<TempZeta> temp_zeta(ni * nj * nk);
+		dynamic_array<TempZeta> temp_zeta(ni * nj * nk);
 		for (int k = 1; k < nk - 1; ++k)
 		{
 			for (int j = 1; j < nj - 1; ++j)
@@ -1781,8 +1781,8 @@ namespace zaran
 		int nk = grid->GetNk();
 		double inter_temp[6];
 		// i+1/2,j+1/2,k+1/2处的坐标
-		std::vector<std::vector<double>> coord_i(ni * nj * nk, std::vector<double>(3)),
-			coord_j(ni * nj * nk, std::vector<double>(3)), coord_k(ni * nj * nk, std::vector<double>(3));
+		dynamic_array<dynamic_array<double>> coord_i(ni * nj * nk, dynamic_array<double>(3)),
+			coord_j(ni * nj * nk, dynamic_array<double>(3)), coord_k(ni * nj * nk, dynamic_array<double>(3));
 		// 计算之前，先把度量系数赋值为0
 		for (int i = 0; i < ni; ++i)
 		{
@@ -2179,7 +2179,7 @@ namespace zaran
 		{
 			double y_zeta_z, z_zeta_x, x_zeta_y, y_eta_z, z_eta_x, x_eta_y;
 		};
-		std::vector<TempXi> temp_xi(ni * nj * nk);
+		dynamic_array<TempXi> temp_xi(ni * nj * nk);
 		// i+1/2
 		for (int k = 1; k < nk - 1; ++k)
 		{
@@ -2324,7 +2324,7 @@ namespace zaran
 		{
 			double y_zeta_z, z_zeta_x, x_zeta_y, y_xi_z, z_xi_x, x_xi_y;
 		};
-		std::vector<TempEta> temp_eta(ni * nj * nk);
+		dynamic_array<TempEta> temp_eta(ni * nj * nk);
 		for (int k = 1; k < nk - 1; ++k)
 		{
 			for (int j = 3; j < nj - 4; ++j)
@@ -2469,7 +2469,7 @@ namespace zaran
 		{
 			double y_eta_z, z_eta_x, x_eta_y, y_xi_z, z_xi_x, x_xi_y;
 		};
-		std::vector<TempZeta> temp_zeta(ni * nj * nk);
+		dynamic_array<TempZeta> temp_zeta(ni * nj * nk);
 		for (int k = 3; k < nk - 4; ++k)
 		{
 			for (int j = 1; j < nj - 1; ++j)
@@ -2920,8 +2920,8 @@ namespace zaran
 		int nk = grid->GetNk();
 		int idx_temp[3];
 		// i+1/2,j+1/2,k+1/2处的坐标
-		std::vector<std::vector<double>> coord_i(ni * nj * nk, std::vector<double>(3)),
-			coord_j(ni * nj * nk, std::vector<double>(3)), coord_k(ni * nj * nk, std::vector<double>(3));
+		dynamic_array<dynamic_array<double>> coord_i(ni * nj * nk, dynamic_array<double>(3)),
+			coord_j(ni * nj * nk, dynamic_array<double>(3)), coord_k(ni * nj * nk, dynamic_array<double>(3));
 		// 计算之前，先把度量系数赋值为0
 		for (int i = 0; i < ni; ++i)
 		{
@@ -3005,7 +3005,7 @@ namespace zaran
 		{
 			double z_zeta_y, x_zeta_z, y_zeta_x, z_eta_y, x_eta_z, y_eta_x;
 		};
-		std::vector<TempXi> temp_xi(ni * nj * nk);
+		dynamic_array<TempXi> temp_xi(ni * nj * nk);
 		for (int k = 1; k < nk - 1; ++k)
 		{
 			for (int j = 1; j < nj - 1; ++j)
@@ -3071,7 +3071,7 @@ namespace zaran
 		{
 			double z_zeta_y, x_zeta_z, y_zeta_x, z_xi_y, x_xi_z, y_xi_x;
 		};
-		std::vector<TempEta> temp_eta(ni * nj * nk);
+		dynamic_array<TempEta> temp_eta(ni * nj * nk);
 		for (int k = 1; k < nk - 1; ++k)
 		{
 			for (int j = 1; j < nj - 1; ++j)
@@ -3137,7 +3137,7 @@ namespace zaran
 		{
 			double z_eta_y, x_eta_z, y_eta_x, z_xi_y, x_xi_z, y_xi_x;
 		};
-		std::vector<TempZeta> temp_zeta(ni * nj * nk);
+		dynamic_array<TempZeta> temp_zeta(ni * nj * nk);
 		for (int k = 1; k < nk - 1; ++k)
 		{
 			for (int j = 1; j < nj - 1; ++j)
@@ -3283,8 +3283,8 @@ namespace zaran
 		int nk = grid->GetNk();
 		double inter_temp[6];
 		// i+1/2,j+1/2,k+1/2处的坐标
-		std::vector<std::vector<double>> coord_i(ni * nj * nk, std::vector<double>(3)),
-			coord_j(ni * nj * nk, std::vector<double>(3)), coord_k(ni * nj * nk, std::vector<double>(3));
+		dynamic_array<dynamic_array<double>> coord_i(ni * nj * nk, dynamic_array<double>(3)),
+			coord_j(ni * nj * nk, dynamic_array<double>(3)), coord_k(ni * nj * nk, dynamic_array<double>(3));
 		// 计算之前，先把度量系数赋值为0
 		for (int i = 0; i < ni; ++i)
 		{
@@ -3680,7 +3680,7 @@ namespace zaran
 		{
 			double z_zeta_y, x_zeta_z, y_zeta_x, z_eta_y, x_eta_z, y_eta_x;
 		};
-		std::vector<TempXi> temp_xi(ni * nj * nk);
+		dynamic_array<TempXi> temp_xi(ni * nj * nk);
 		// i+1/2
 		for (int k = 1; k < nk - 1; ++k)
 		{
@@ -3825,7 +3825,7 @@ namespace zaran
 		{
 			double z_zeta_y, x_zeta_z, y_zeta_x, z_xi_y, x_xi_z, y_xi_x;
 		};
-		std::vector<TempEta> temp_eta(ni * nj * nk);
+		dynamic_array<TempEta> temp_eta(ni * nj * nk);
 		for (int k = 1; k < nk - 1; ++k)
 		{
 			for (int j = 3; j < nj - 4; ++j)
@@ -3969,7 +3969,7 @@ namespace zaran
 		{
 			double z_eta_y, x_eta_z, y_eta_x, z_xi_y, x_xi_z, y_xi_x;
 		};
-		std::vector<TempZeta> temp_zeta(ni * nj * nk);
+		dynamic_array<TempZeta> temp_zeta(ni * nj * nk);
 		for (int k = 3; k < nk - 4; ++k)
 		{
 			for (int j = 1; j < nj - 1; ++j)
@@ -4421,8 +4421,8 @@ namespace zaran
 		int nk = grid->GetNk();
 		int idx_temp[3];
 		// i+1/2,j+1/2,k+1/2处的坐标
-		std::vector<std::vector<double>> coord_i(ni * nj * nk, std::vector<double>(3)),
-			coord_j(ni * nj * nk, std::vector<double>(3)), coord_k(ni * nj * nk, std::vector<double>(3));
+		dynamic_array<dynamic_array<double>> coord_i(ni * nj * nk, dynamic_array<double>(3)),
+			coord_j(ni * nj * nk, dynamic_array<double>(3)), coord_k(ni * nj * nk, dynamic_array<double>(3));
 		// 计算之前，先把度量系数赋值为0
 		for (int i = 0; i < ni; ++i)
 		{
@@ -4509,7 +4509,7 @@ namespace zaran
 			double y_zeta_z, z_zeta_x, x_zeta_y, y_eta_z, z_eta_x, x_eta_y, z_zeta_y, x_zeta_z, y_zeta_x, z_eta_y, x_eta_z,
 				y_eta_x;
 		};
-		std::vector<TempXi> temp_xi(ni * nj * nk);
+		dynamic_array<TempXi> temp_xi(ni * nj * nk);
 		for (int k = 1; k < nk - 1; ++k)
 		{
 			for (int j = 1; j < nj - 1; ++j)
@@ -4615,7 +4615,7 @@ namespace zaran
 			double y_zeta_z, z_zeta_x, x_zeta_y, y_xi_z, z_xi_x, x_xi_y, z_zeta_y, x_zeta_z, y_zeta_x, z_xi_y, x_xi_z,
 				y_xi_x;
 		};
-		std::vector<TempEta> temp_eta(ni * nj * nk);
+		dynamic_array<TempEta> temp_eta(ni * nj * nk);
 		for (int k = 1; k < nk - 1; ++k)
 		{
 			for (int j = 1; j < nj - 1; ++j)
@@ -4721,7 +4721,7 @@ namespace zaran
 		{
 			double y_eta_z, z_eta_x, x_eta_y, y_xi_z, z_xi_x, x_xi_y, z_eta_y, x_eta_z, y_eta_x, z_xi_y, x_xi_z, y_xi_x;
 		};
-		std::vector<TempZeta> temp_zeta(ni * nj * nk);
+		dynamic_array<TempZeta> temp_zeta(ni * nj * nk);
 		for (int k = 1; k < nk - 1; ++k)
 		{
 			for (int j = 1; j < nj - 1; ++j)
@@ -4906,8 +4906,8 @@ namespace zaran
 		int nk = grid->GetNk();
 		double inter_temp[6];
 		// i+1/2,j+1/2,k+1/2处的坐标
-		std::vector<std::vector<double>> coord_i(ni * nj * nk, std::vector<double>(3)),
-			coord_j(ni * nj * nk, std::vector<double>(3)), coord_k(ni * nj * nk, std::vector<double>(3));
+		dynamic_array<dynamic_array<double>> coord_i(ni * nj * nk, dynamic_array<double>(3)),
+			coord_j(ni * nj * nk, dynamic_array<double>(3)), coord_k(ni * nj * nk, dynamic_array<double>(3));
 		// 计算之前，先把度量系数赋值为0
 		for (int i = 0; i < ni; ++i)
 		{
@@ -5305,7 +5305,7 @@ namespace zaran
 			double y_zeta_z, z_zeta_x, x_zeta_y, y_eta_z, z_eta_x, x_eta_y, z_zeta_y, x_zeta_z, y_zeta_x, z_eta_y, x_eta_z,
 				y_eta_x;
 		};
-		std::vector<TempXi> temp_xi(ni * nj * nk);
+		dynamic_array<TempXi> temp_xi(ni * nj * nk);
 		// i+1/2
 		for (int k = 1; k < nk - 1; ++k)
 		{
@@ -5571,7 +5571,7 @@ namespace zaran
 			double y_zeta_z, z_zeta_x, x_zeta_y, y_xi_z, z_xi_x, x_xi_y, z_zeta_y, x_zeta_z, y_zeta_x, z_xi_y, x_xi_z,
 				y_xi_x;
 		};
-		std::vector<TempEta> temp_eta(ni * nj * nk);
+		dynamic_array<TempEta> temp_eta(ni * nj * nk);
 		for (int k = 1; k < nk - 1; ++k)
 		{
 			for (int j = 3; j < nj - 4; ++j)
@@ -5836,7 +5836,7 @@ namespace zaran
 		{
 			double y_eta_z, z_eta_x, x_eta_y, y_xi_z, z_xi_x, x_xi_y, z_eta_y, x_eta_z, y_eta_x, z_xi_y, x_xi_z, y_xi_x;
 		};
-		std::vector<TempZeta> temp_zeta(ni * nj * nk);
+		dynamic_array<TempZeta> temp_zeta(ni * nj * nk);
 		for (int k = 3; k < nk - 4; ++k)
 		{
 			for (int j = 1; j < nj - 1; ++j)
@@ -6412,9 +6412,9 @@ namespace zaran
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
 		Matrix2d A, A_inv;
-		DVector2D b, grad;
+		Eigen::Vector2d b, grad;
 		int neighbor_num = 4;
-		std::vector<int> temp_i, temp_j, temp_k;
+		dynamic_array<int> temp_i, temp_j, temp_k;
 		temp_i.resize(neighbor_num);
 		temp_j.resize(neighbor_num);
 		temp_k.resize(neighbor_num);
@@ -6484,9 +6484,9 @@ namespace zaran
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
 		Matrix3d A, A_inv;
-		DVector3D b, grad;
+		Eigen::Vector3d b, grad;
 		int neighbor_num = 6;
-		std::vector<int> temp_i, temp_j, temp_k;
+		dynamic_array<int> temp_i, temp_j, temp_k;
 
 		temp_i.resize(neighbor_num);
 		temp_j.resize(neighbor_num);
@@ -6572,7 +6572,7 @@ namespace zaran
 		auto nk = grid->GetNk();
 		double max_val, min_val;
 		int neighbor_num = 4;
-		std::vector<int> temp_i, temp_j, temp_k;
+		dynamic_array<int> temp_i, temp_j, temp_k;
 		if (grid->GetDim() == 2)
 		{
 			temp_i.resize(neighbor_num);
@@ -7775,7 +7775,7 @@ namespace zaran
 			}
 		}
 	}
-	void NSSolverStruct::BCInflow(Array<BoundStruct>& bound)
+	void NSSolverStruct::BCInflow(dynamic_array<BoundStruct>& bound)
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
@@ -7791,8 +7791,8 @@ namespace zaran
 #pragma omp parallel for 
 		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
-			Id i_bound, j_bound, k_bound;
-			Id i_ghost, j_ghost, k_ghost;
+			index_type i_bound, j_bound, k_bound;
+			index_type i_ghost, j_ghost, k_ghost;
 			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
 			auto bound_direction = bound[iBound].GetDirectionSrc();
 			for (size_t iGhost = 1; iGhost <= ghost_size; ++iGhost)
@@ -7800,7 +7800,7 @@ namespace zaran
 				i_ghost = i_bound + iGhost * bound_direction[0];
 				j_ghost = j_bound + iGhost * bound_direction[1];
 				k_ghost = k_bound + iGhost * bound_direction[2];
-				Id idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				index_type idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
 				//double y = node->GetCoord(i_ghost, j_ghost, k_ghost)[1];
 				//prim_far[0] = 1 + 0.1 * y*y;
 				//GetGas()->Prim2Cons(prim_far, cons_far);
@@ -7810,22 +7810,22 @@ namespace zaran
 		}
 	}
 
-	void NSSolverStruct::BCOutflow(Array<BoundStruct>& bound)
+	void NSSolverStruct::BCOutflow(dynamic_array<BoundStruct>& bound)
 	{
 		BCDoubleMach(bound);
 		return;
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		size_t ghost_size = grid->GetGhostLevel();
-		Id eq_num = GetPara()->GetEqNum();
-		std::vector<double> prim_vals(eq_num), cons_vals(eq_num);
+		index_type eq_num = GetPara()->GetEqNum();
+		dynamic_array<double> prim_vals(eq_num), cons_vals(eq_num);
 #pragma omp parallel for private( prim_vals, cons_vals)
 		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
-			Id i_bound, j_bound, k_bound;
-			Id i_ghost, j_ghost, k_ghost;
+			index_type i_bound, j_bound, k_bound;
+			index_type i_ghost, j_ghost, k_ghost;
 			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
-			Id idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+			index_type idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
 			auto bound_direction = bound[iBound].GetDirectionSrc();
 			// 预先获取边界的原始变量和守恒变量
 			for (size_t idx_eq = 0; idx_eq < eq_num; ++idx_eq)
@@ -7838,14 +7838,14 @@ namespace zaran
 				i_ghost = i_bound + iGhost * bound_direction[0];
 				j_ghost = j_bound + iGhost * bound_direction[1];
 				k_ghost = k_bound + iGhost * bound_direction[2];
-				Id idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				index_type idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
 				data_manager->SetPrim(idx_ghost, prim_vals.data());
 				data_manager->SetCons(idx_ghost, cons_vals.data());
 			}
 		}
 	}
 
-	void NSSolverStruct::BCWall(Array<BoundStruct>& bound)
+	void NSSolverStruct::BCWall(dynamic_array<BoundStruct>& bound)
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
@@ -7854,23 +7854,23 @@ namespace zaran
 #pragma omp for
 		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
-			Id i_bound, j_bound, k_bound;
-			Id i_ref, j_ref, k_ref;
-			Id i_ghost, j_ghost, k_ghost;
+			index_type i_bound, j_bound, k_bound;
+			index_type i_ref, j_ref, k_ref;
+			index_type i_ghost, j_ghost, k_ghost;
 			auto norm_bnd = bound[iBound].GetNorm();
 			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
-			Id idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+			index_type idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
 			auto bound_coord = node->GetCoord(i_bound, j_bound, k_bound);
 			for (size_t iGhost = 1; iGhost <= ghost_size; ++iGhost)
 			{
 				i_ghost = i_bound + iGhost * bound[iBound].GetDirectionSrc()[0];
 				j_ghost = j_bound + iGhost * bound[iBound].GetDirectionSrc()[1];
 				k_ghost = k_bound + iGhost * bound[iBound].GetDirectionSrc()[2];
-				Id idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				index_type idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
 				i_ref = i_bound - iGhost * bound[iBound].GetDirectionSrc()[0];
 				j_ref = j_bound - iGhost * bound[iBound].GetDirectionSrc()[1];
 				k_ref = k_bound - iGhost * bound[iBound].GetDirectionSrc()[2];
-				Id idx_ref = m_idx_proxy->GetIdx(i_ref, j_ref, k_ref);
+				index_type idx_ref = m_idx_proxy->GetIdx(i_ref, j_ref, k_ref);
 				double prim_ghost[5];
 				for (int idx_eq = 0; idx_eq < data_manager->GetEqNum(); ++idx_eq)
 				{
@@ -7889,14 +7889,14 @@ namespace zaran
 		}
 	}
 
-	void NSSolverStruct::BCFarfield(Array<BoundStruct>& bound)
+	void NSSolverStruct::BCFarfield(dynamic_array<BoundStruct>& bound)
 	{
 		auto data_manager = GetDataManager();
 #pragma omp parallel for
 		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
-			Id i_bound, j_bound, k_bound;
-			Id i_ghost, j_ghost, k_ghost;
+			index_type i_bound, j_bound, k_bound;
+			index_type i_ghost, j_ghost, k_ghost;
 			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
 			int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
 			i_ghost = i_bound + bound[iBound].GetDirectionSrc()[0];
@@ -7986,12 +7986,12 @@ namespace zaran
 	}
 
 
-	void NSSolverStruct::BCSymmetry(Array<BoundStruct>& bound)
+	void NSSolverStruct::BCSymmetry(dynamic_array<BoundStruct>& bound)
 	{
 		BCWall(bound);
 	}
 
-	void NSSolverStruct::BCVortex(Array<BoundStruct>& bound)
+	void NSSolverStruct::BCVortex(dynamic_array<BoundStruct>& bound)
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
@@ -8005,16 +8005,16 @@ namespace zaran
 #pragma omp for private( r2, prim)
 		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
-			Id i_bound, j_bound, k_bound;
-			Id i_ghost, j_ghost, k_ghost;
+			index_type i_bound, j_bound, k_bound;
+			index_type i_ghost, j_ghost, k_ghost;
 			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
-			Id idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+			index_type idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
 			for (size_t iGhost = 1; iGhost <= ghost_size; ++iGhost)
 			{
 				i_ghost = i_bound + iGhost * bound[iBound].GetDirectionSrc()[0];
 				j_ghost = j_bound + iGhost * bound[iBound].GetDirectionSrc()[1];
 				k_ghost = k_bound + iGhost * bound[iBound].GetDirectionSrc()[2];
-				Id idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				index_type idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
 				auto coord = node->GetCoord(i_ghost, j_ghost, k_ghost);
 				r2 = coord[0] * coord[0] + coord[1] * coord[1];
 				prim[0] = pow(1.0 - (gamma - 1.0) * beta * beta * exp(1.0 - r2) / (8.0 * gamma * PI * PI), 1.0 / (gamma - 1.0));
@@ -8027,7 +8027,7 @@ namespace zaran
 		}
 	}
 
-	void NSSolverStruct::BCDoubleMach(Array<BoundStruct>& bound)
+	void NSSolverStruct::BCDoubleMach(dynamic_array<BoundStruct>& bound)
 	{
 		double current_time = GlobalData::GetDouble("currentTime");
 		double shock_velocity = 10.0 / sin(PI / 3.0);
@@ -8043,16 +8043,16 @@ namespace zaran
 #pragma omp for
 		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
-			Id i_bound, j_bound, k_bound;
+			index_type i_bound, j_bound, k_bound;
 			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
-			Id idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+			index_type idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
 			auto bound_direction = bound[iBound].GetDirectionSrc();
 			for (size_t iGhost = 1; iGhost <= ghost_size; ++iGhost)
 			{
-				Id i_ghost = i_bound + iGhost * bound_direction[0];
-				Id j_ghost = j_bound + iGhost * bound_direction[1];
-				Id k_ghost = k_bound + iGhost * bound_direction[2];
-				Id idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				index_type i_ghost = i_bound + iGhost * bound_direction[0];
+				index_type j_ghost = j_bound + iGhost * bound_direction[1];
+				index_type k_ghost = k_bound + iGhost * bound_direction[2];
+				index_type idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
 				double x = grid->GetNode()->GetCoord(i_ghost, j_ghost, k_ghost)[0];
 				if (x <= shock_x)
 				{

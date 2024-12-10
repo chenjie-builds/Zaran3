@@ -35,7 +35,7 @@ namespace zaran
 	{
 	}
 
-	void BoundStruct::SetIdxSrc(Id i_bound, Id j_bound, Id k_bound)
+	void BoundStruct::SetIdxSrc(index_type i_bound, index_type j_bound, index_type k_bound)
 	{
 		m_i_bnd_src = i_bound;
 		m_j_bnd_src = j_bound;
@@ -58,7 +58,7 @@ namespace zaran
 		}
 	}
 
-	void BoundStruct::GetIdx(Id& i, Id& j, Id& k)
+	void BoundStruct::GetIdx(index_type& i, index_type& j, index_type& k)
 	{
 		i = m_i_bnd_src;
 		j = m_j_bnd_src;
@@ -89,7 +89,7 @@ namespace zaran
 			m_dir_tgt[i] = direction_tgt[i];
 		}
 	}
-	void BoundStruct::GetIdxTgt(Id& i_bnd_tgt, Id& j_bnd_tgt, Id& k_bnd_tgt) 
+	void BoundStruct::GetIdxTgt(index_type& i_bnd_tgt, index_type& j_bnd_tgt, index_type& k_bnd_tgt) 
 	{
 		i_bnd_tgt = m_i_bnd_tgt;
 		j_bnd_tgt = m_j_bnd_tgt;

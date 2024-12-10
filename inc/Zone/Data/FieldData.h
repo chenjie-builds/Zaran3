@@ -35,12 +35,12 @@ namespace zaran
 		/// @brief 用于记录数据名称和数据的对应关系
 		map<string, int> m_name_id;
 		/// @brief 用于记录数据类型
-		std::vector<FieldDataType> m_data_type;
+		dynamic_array<FieldDataType> m_data_type;
 		/// @brief 用于记录数据个数
-		std::vector<int> m_data_num;
+		dynamic_array<int> m_data_num;
 		/// @brief 用于记录数据
 		/// @note 第一维是数据索引，第二维是数据
-		std::vector<void *> m_data;
+		dynamic_array<void *> m_data;
 	};
 
 }

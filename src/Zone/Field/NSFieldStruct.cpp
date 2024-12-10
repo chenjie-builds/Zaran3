@@ -6,7 +6,7 @@
 #include "Log.h"
 namespace zaran
 {
-    NSFieldStruct::NSFieldStruct(std::shared_ptr<GridStruct> grid)
+    NSFieldStruct::NSFieldStruct(shared_ptr<GridStruct> grid)
         : FieldNS(grid, FieldType::NS_Structured)
     {
     }
@@ -77,22 +77,22 @@ namespace zaran
         FieldNS::Allocate();
     }
 
-	std::shared_ptr<zaran::GridStruct> NSFieldStruct::GetGrid()
+	shared_ptr<zaran::GridStruct> NSFieldStruct::GetGrid()
 	{
 		return std::static_pointer_cast<zaran::GridStruct>(Field::GetGrid());
 	}
 
-	std::shared_ptr<zaran::FlowSolverParamStruct> NSFieldStruct::GetSolverPara()
+	shared_ptr<zaran::FlowSolverParamStruct> NSFieldStruct::GetSolverPara()
 	{
 		return std::static_pointer_cast<zaran::FlowSolverParamStruct>(Field::GetSolverPara());
 	}
 
-	std::shared_ptr<zaran::NSSolverStruct> NSFieldStruct::GetSolver()
+	shared_ptr<zaran::NSSolverStruct> NSFieldStruct::GetSolver()
 	{
 		return std::static_pointer_cast<zaran::NSSolverStruct>(Field::GetSolver());
 	}
 
-	std::shared_ptr<zaran::DataManagerNSStruct> NSFieldStruct::GetDataManager()
+	shared_ptr<zaran::DataManagerNSStruct> NSFieldStruct::GetDataManager()
 	{
 		return std::static_pointer_cast<zaran::DataManagerNSStruct>(Field::GetDataManager());
 	}
@@ -111,11 +111,11 @@ namespace zaran
         auto para = GetSolverPara();
         if (para->GetMidMetricsScheme() == MidMetricsScheme::CMM)
         {
-			m_solver = std::make_shared<NSSolverStructCMM>(GetIdx(), "NS_Struct", GetSolverPara(), GetGrid(), GetDataManager());
+			m_solver = make_shared<NSSolverStructCMM>(GetIdx(), "NS_Struct", GetSolverPara(), GetGrid(), GetDataManager());
         }
         else if (para->GetMidMetricsScheme() == MidMetricsScheme::DEER)
         {
-			m_solver = std::make_shared<NSSolverStructDEER>(GetIdx(), "NS_Struct", GetSolverPara(), GetGrid(), GetDataManager());
+			m_solver = make_shared<NSSolverStructDEER>(GetIdx(), "NS_Struct", GetSolverPara(), GetGrid(), GetDataManager());
         }
         else
         {
@@ -128,13 +128,13 @@ namespace zaran
         int ni = GetGrid()->GetNi();
         int nj = GetGrid()->GetNj();
         int nk = GetGrid()->GetNk();
-		m_data_manager = std::make_shared<DataManagerNSStruct>(GetData(), ni, nj, nk);
+		m_data_manager = make_shared<DataManagerNSStruct>(GetData(), ni, nj, nk);
         m_data_manager->CreateData();
         m_data_manager->RegisterData();
     }
     void NSFieldStruct::AllocateSolverPara()
     {
-		m_solver_para = std::make_shared<FlowSolverParamStruct>();
+		m_solver_para = make_shared<FlowSolverParamStruct>();
         GetSolverPara()->Init();
     }
 } // namespace zaran

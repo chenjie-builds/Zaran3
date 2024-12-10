@@ -20,39 +20,39 @@ namespace zaran
 	public:
 		CellFN(int cell_num);
 		~CellFN();
-		void SetNode(std::vector<std::vector<Id>>& node_index);
+		void SetNode(dynamic_array<dynamic_array<index_type>>& node_index);
 		/// @brief 设置单元包含的面元
 		/// @param face_index 面元索引
-		void SetFace(std::vector<std::vector<Id>>& face_index);
+		void SetFace(dynamic_array<dynamic_array<index_type>>& face_index);
 		/// @brief 设置单元中心坐标
 		/// @param iCell 单元编号
 		/// @param center 中心坐标
-		void SetCenter(Id iCell, const double* center);
+		void SetCenter(index_type iCell, const double* center);
 		/// @brief 获取单元包含的节点个数
-		Id GetNodeNum(Id iCell)const;
+		index_type GetNodeNum(index_type iCell)const;
 		/// @brief 获取单元包含的面元个数
-		Id GetFaceNum(Id iCell)const;
+		index_type GetFaceNum(index_type iCell)const;
 		/// @brief 获取单元包含的节点
-		const Id* GetNode(Id iCell);
+		const index_type* GetNode(index_type iCell);
 		/// @brief 获取单元包含的面元
-		const Id* GetFace(Id iCell);
+		const index_type* GetFace(index_type iCell);
 		/// @brief 获取单元中心坐标
-		const double* GetCenterCoord(Id iCell)const;
+		const double* GetCenterCoord(index_type iCell)const;
 	private:
 		/// @brief 单元包含的节点个数
-		Id* m_node_num;
+		index_type* m_node_num;
 		/// @brief 记录单元包含节点在m_node中的索引
-		Id* m_node_id;
+		index_type* m_node_id;
 		// 单元包含的节点下标
 		// m_node[m_node_id[id]] = {node1,node2,node3,...} 表示单元id包含的节点
-		Id* m_node;
+		index_type* m_node;
 		// 单元包含的面元个数
-		Id* m_cell_face_num;
+		index_type* m_cell_face_num;
 		// 记录单元包含面元在m_face中的索引
-		Id* m_face_id;
+		index_type* m_face_id;
 		// 单元包含的面元
 		// m_face[id] = {face1,face2,face3,...} 表示单元id包含的面元
-		Id* m_face;
+		index_type* m_face;
 		// 单元中心坐标
 		double* m_center;
 	};

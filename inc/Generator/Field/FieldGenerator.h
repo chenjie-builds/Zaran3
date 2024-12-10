@@ -21,14 +21,14 @@ namespace zaran
 		FieldGenerator(GridType grid_type, FieldSolverType solver_type, Dimension dim)
 			: m_grid_type(grid_type), m_solver_type(solver_type), m_dim(dim) {
 		};
-		virtual std::shared_ptr<FieldManager> Create();
+		virtual shared_ptr<FieldManager> Create();
 
 	private:
 		void CreateGrid();
 		void CreateField();
 		void CreateSolver();
-		std::shared_ptr<FieldManager> CreateFieldZaran();
-		std::shared_ptr<FieldManager>CreateFieldExplosion();
+		shared_ptr<FieldManager> CreateFieldZaran();
+		shared_ptr<FieldManager>CreateFieldExplosion();
 
 	private:
 		GridType m_grid_type;

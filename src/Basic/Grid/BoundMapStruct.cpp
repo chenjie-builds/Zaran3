@@ -22,11 +22,11 @@ namespace zaran
         auto it = m_bound_map.find(name);
         if (it == m_bound_map.end())
         {
-            m_bound_map.insert({name, std::vector<BoundStruct>()});
+            m_bound_map.insert({name, dynamic_array<BoundStruct>()});
         }
     }
 
-    std::vector<BoundStruct> &BoundManagerStruct::GetBoundary(const string &name)
+    dynamic_array<BoundStruct> &BoundManagerStruct::GetBoundary(const string &name)
     {
         auto it = m_bound_map.find(name);
         if (it == m_bound_map.end())

@@ -6,10 +6,10 @@ namespace zaran
 CellFN::CellFN( int cell_num):CellBase()
 {
     SetCellNum(cell_num);
-    m_node_num = new Id[cell_num];
-    m_node_id = new Id[cell_num];
-    m_cell_face_num = new Id[cell_num];
-    m_face_id = new Id[cell_num];
+    m_node_num = new index_type[cell_num];
+    m_node_id = new index_type[cell_num];
+    m_cell_face_num = new index_type[cell_num];
+    m_face_id = new index_type[cell_num];
     m_center = new double[3 * cell_num];
     m_node = nullptr;
     m_face = nullptr;
@@ -25,7 +25,7 @@ CellFN::~CellFN()
     delete[] m_face;
     delete[] m_center;
 }
-void CellFN::SetNode(std::vector<std::vector<Id>>&node_index)
+void CellFN::SetNode(dynamic_array<dynamic_array<index_type>>&node_index)
 {
     if (GetCellNum() != node_index.size())
     {
@@ -46,7 +46,7 @@ void CellFN::SetNode(std::vector<std::vector<Id>>&node_index)
     }
     else
     {
-        m_node = new Id[node_sum];
+        m_node = new index_type[node_sum];
     }
     for (int i = 0; i < GetCellNum(); i++)
     {
@@ -57,7 +57,7 @@ void CellFN::SetNode(std::vector<std::vector<Id>>&node_index)
         }
     }
 }
-void CellFN::SetFace(std::vector<std::vector<Id>>&face_index)
+void CellFN::SetFace(dynamic_array<dynamic_array<index_type>>&face_index)
 {
     if (GetCellNum() != face_index.size())
     {
@@ -78,7 +78,7 @@ void CellFN::SetFace(std::vector<std::vector<Id>>&face_index)
     }
     else
     {
-        m_face = new Id[face_sum];
+        m_face = new index_type[face_sum];
     }
     for (int i = 0; i < GetCellNum(); i++)
     {
@@ -89,7 +89,7 @@ void CellFN::SetFace(std::vector<std::vector<Id>>&face_index)
         }
     }
 }
-void CellFN::SetCenter(Id iCell, const double *center)
+void CellFN::SetCenter(index_type iCell, const double *center)
 {
 	if(iCell >= GetCellNum())
 	{
@@ -103,23 +103,23 @@ void CellFN::SetCenter(Id iCell, const double *center)
     }
 }
 
-Id CellFN::GetNodeNum(Id iCell) const
+index_type CellFN::GetNodeNum(index_type iCell) const
 {
     return m_node_num[iCell];
 }
-const Id*CellFN::GetNode(Id iCell)
+const index_type*CellFN::GetNode(index_type iCell)
 {
     return m_node + m_node_id[iCell];
 }
-Id CellFN::GetFaceNum(Id iCell) const
+index_type CellFN::GetFaceNum(index_type iCell) const
 {
 	return m_cell_face_num[iCell];
 }
-const Id*CellFN::GetFace(Id iCell)
+const index_type*CellFN::GetFace(index_type iCell)
 {
 	return m_face + m_face_id[iCell];
 }
-const double *CellFN::GetCenterCoord(Id iCell) const
+const double *CellFN::GetCenterCoord(index_type iCell) const
 {
     return m_center + iCell * 3;
 }

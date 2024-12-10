@@ -20,19 +20,19 @@ namespace zaran
     {
     public:
         IdProxyStruct() = default;
-        IdProxyStruct(Id ni, Id nj, Id nk);
+        IdProxyStruct(index_type ni, index_type nj, index_type nk);
         ~IdProxyStruct();
-        void SetIdx(Id i, Id j, Id k);
-        void SetIdx(Id idx);
-        void GetIdxStruct(Id&i, Id&j, Id&k) const ;
+        void SetIdx(index_type i, index_type j, index_type k);
+        void SetIdx(index_type idx);
+        void GetIdxStruct(index_type&i, index_type&j, index_type&k) const ;
         using IdProxy::GetIdx;
-        Id GetIdx(Id i, Id j, Id k) const
+        index_type GetIdx(index_type i, index_type j, index_type k) const
         {
             return i + j * m_ni + k * m_ni * m_nj;
         }
     private:
-        Id m_idx_i, m_idx_j, m_idx_k;
+        index_type m_idx_i, m_idx_j, m_idx_k;
 		// 网格的节点个数
-        Id m_ni, m_nj, m_nk;
+        index_type m_ni, m_nj, m_nk;
     };
 }

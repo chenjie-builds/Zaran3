@@ -18,21 +18,21 @@ namespace zaran
 	{
 	public:
 		GridList() {}
-		GridList(Array<Ptr<GridBase>>& gridList);
+		GridList(dynamic_array<shared_ptr<GridBase>>& gridList);
 		~GridList();
 		//向网格集合中添加一个网格
-		void AddGrid(Ptr<GridBase> grid);
+		void AddGrid(shared_ptr<GridBase> grid);
 		//检查网格的index是否和网格集合中匹配
 		void CheckGrid();
 		//返回一个网格
-		Ptr<GridBase>& GetGrid(const int index);
+		shared_ptr<GridBase>& GetGrid(const int index);
 		//返回网格的个数
 		int GetGridNumber() { return gridList_.size(); }
 		// 返回网格数组
-		Array<Ptr<GridBase>>& GetGrid();
+		dynamic_array<shared_ptr<GridBase>>& GetGrid();
 		// 重设网格个数
 		void Resize(int gridNum);
 	private:
-		Array<Ptr<GridBase>> gridList_;
+		dynamic_array<shared_ptr<GridBase>> gridList_;
 	};
 }

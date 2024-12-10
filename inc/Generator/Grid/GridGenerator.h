@@ -25,7 +25,7 @@ namespace zaran
     /// @brief 生成网格数组
     /// @param grid_list 生成的网格数组
     /// @param grid_num 网格数组大小
-    virtual void CreateGrid(Array<std::shared_ptr<GridBase>>&grid_list) {};
+    virtual void CreateGrid(dynamic_array<shared_ptr<GridBase>>&grid_list) {};
     virtual ~GridGenerator() {}
   };
 } // namespace zaran

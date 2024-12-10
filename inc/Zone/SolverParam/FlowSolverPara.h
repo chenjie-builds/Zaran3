@@ -66,7 +66,7 @@ namespace zaran
 		double GetCflNumber()const;
 		void ReduceCflNumber();
 		int GetRkStep()const;
-		const std::vector<double>& GetRkCoef(int iStage) const;
+		const dynamic_array<double>& GetRkCoef(int iStage) const;
 		const GradScheme& GetGradScheme()const;
 		const LimiterType& GetLimiterType()const;
 		const std::string& GetBackupFieldFileName()const;
@@ -93,7 +93,7 @@ namespace zaran
 		int m_is_viscous;
 		CFL* m_cfl;
 		// RK步数
-		std::vector<std::vector<double>> m_rk_coef;
+		dynamic_array<dynamic_array<double>> m_rk_coef;
 		// 梯度方法
 		GradScheme m_grad_scheme;
 		// 限制器

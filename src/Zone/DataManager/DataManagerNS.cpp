@@ -2,7 +2,7 @@
 #include "DataManagerNS.h"
 namespace zaran
 {
-	DataManagerNS::DataManagerNS(std::shared_ptr<FieldData> field_data, int data_num) :DataManager(field_data, data_num)
+	DataManagerNS::DataManagerNS(shared_ptr<FieldData> field_data, int data_num) :DataManager(field_data, data_num)
 	{
 	}
 	DataManagerNS::~DataManagerNS()

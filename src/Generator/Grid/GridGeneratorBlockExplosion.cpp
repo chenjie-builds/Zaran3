@@ -9,7 +9,7 @@ namespace zaran
 	{
 
 	}
-	void GridGeneratorBlockExplosion::CreateGrid(std::shared_ptr<GridBlock> grid, GridBlockInfo& grid_info)
+	void GridGeneratorBlockExplosion::CreateGrid(shared_ptr<GridBlock> grid, GridBlockInfo& grid_info)
 	{
 		GridGeneratorBlock::CreateGrid(grid, grid_info);
 		SetIBlankByBuilding();

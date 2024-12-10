@@ -1,7 +1,7 @@
 #include "NSSolverStructDEER.h"
 namespace zaran
 {
-	NSSolverStructDEER::NSSolverStructDEER(Id index, string name, std::shared_ptr<FlowSolverParamStruct> para, std::shared_ptr < GridStruct> grid, std::shared_ptr < DataManagerNSStruct>data_manager)
+	NSSolverStructDEER::NSSolverStructDEER(index_type index, string name, shared_ptr<FlowSolverParamStruct> para, shared_ptr < GridStruct> grid, shared_ptr < DataManagerNSStruct>data_manager)
 		: NSSolverStruct(index, name, para, grid, data_manager)
 	{
 	}

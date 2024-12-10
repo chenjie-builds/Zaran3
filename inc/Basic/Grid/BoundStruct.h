@@ -23,7 +23,7 @@ namespace zaran
         /// @param i_bnd the index of the boundary in i direction
         /// @param j_bnd the index of the boundary in j direction
         /// @param k_bnd the index of the boundary in k direction
-        void SetIdxSrc( Id i_bnd, Id j_bnd, const Id k_bnd);
+        void SetIdxSrc( index_type i_bnd, index_type j_bnd, const index_type k_bnd);
         /// @brief set direction vector of the boundary
         /// @param direction a 3-element array, each element is -1, 0 or 1
         /// @details -1: left boundary, 0: not boundary, 1: right boundary
@@ -35,7 +35,7 @@ namespace zaran
         /// @param i_bnd the index of the boundary in i direction
         /// @param j_bnd the index of the boundary in j direction
         /// @param k_bnd the index of the boundary in k direction
-        void GetIdx(Id&i_bnd, Id&j_bnd, Id&k_bnd);
+        void GetIdx(index_type&i_bnd, index_type&j_bnd, index_type&k_bnd);
         /// @brief  get direction vector of the boundary
         /// @return a 3-element array, each element is -1, 0 or 1
         const int *GetDirectionSrc();
@@ -57,7 +57,7 @@ namespace zaran
         /// @param i_bnd_tgt the index of the boundary in i direction of the target block
         /// @param j_bnd_tgt the index of the boundary in j direction of the target block
         /// @param k_bnd_tgt the index of the boundary in k direction of the target block
-        void GetIdxTgt(Id &i_bnd_tgt, Id&j_bnd_tgt, Id&k_bnd_tgt) ;
+        void GetIdxTgt(index_type &i_bnd_tgt, index_type&j_bnd_tgt, index_type&k_bnd_tgt) ;
         /// @brief  get direction vector of the boundary in the target block
         /// @return a 3-element array, each element is -1, 0 or 1
         const int *GetDirectionTgt();
@@ -66,7 +66,7 @@ namespace zaran
 
     private:
         // 边界的索引，用于标记边界的位置, src(source)表示当前块，tgt(target)表示相邻块
-        Id m_i_bnd_src, m_j_bnd_src, m_k_bnd_src;
+        index_type m_i_bnd_src, m_j_bnd_src, m_k_bnd_src;
         // norm vector of the boundary
         double m_norm[3];
         // 边界的方向，用于标记边界的方向，只有一个方向为+1或-1，其余为0
@@ -79,7 +79,7 @@ namespace zaran
         // target block index
         int m_target_block;
         // i,j,k index of the boundary in the target block
-        Id m_i_bnd_tgt, m_j_bnd_tgt, m_k_bnd_tgt;
+        index_type m_i_bnd_tgt, m_j_bnd_tgt, m_k_bnd_tgt;
         // 边界的方向，用于标记边界的方向，只有一个方向为+1或-1，其余为0
         //  -1：左侧边界
         //  +1：右侧边界

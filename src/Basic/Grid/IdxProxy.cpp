@@ -1,7 +1,7 @@
 #include "IdxProxy.h"
 namespace zaran
 {
-	IdProxy::IdProxy(Id idx)
+	IdProxy::IdProxy(index_type idx)
 	{
 		m_idx = idx;
 	}
@@ -9,11 +9,11 @@ namespace zaran
 	IdProxy::~IdProxy()
 	{
 	}
-	Id IdProxy::GetIdx() const
+	index_type IdProxy::GetIdx() const
 	{
 		return m_idx;
 	}
-	void IdProxy::SetIdx(Id idx)
+	void IdProxy::SetIdx(index_type idx)
 	{
 		m_idx = idx;
 	}

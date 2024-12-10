@@ -22,15 +22,15 @@ namespace zaran
 	{
 	public:
 		FieldGeneratorBuildingExplosion(GridType grid_type, FieldSolverType solver_type, Dimension dim);
-		std::shared_ptr<FieldManager>  Create() override;
+		shared_ptr<FieldManager>  Create() override;
 	private:
 		void CreateGrid();
 		void TagGrid();
 		void CreateField();
 		void OutTest();
 	private:
-		std::shared_ptr<GridBlock> m_grid;
-		std::shared_ptr<FieldManager> m_field_manager;
+		shared_ptr<GridBlock> m_grid;
+		shared_ptr<FieldManager> m_field_manager;
 	};
 
 

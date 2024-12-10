@@ -2,12 +2,12 @@
 #include "CommonPara.h"
 #include "MathBasic.h"
 using namespace zaran;
-PointCloudModel::PointCloudModel(const std::vector<DVector3D> &point_list)
+PointCloudModel::PointCloudModel(const dynamic_array<Eigen::Vector3d> &point_list)
 {
 	vtkNew<vtkPoints> points;
-	DVector3D max, min;
-	max = DVector3D(-LARGE_NUMBER, -LARGE_NUMBER, -LARGE_NUMBER);
-	min = DVector3D(LARGE_NUMBER, LARGE_NUMBER, LARGE_NUMBER);
+	Eigen::Vector3d max, min;
+	max = Eigen::Vector3d(-LARGE_NUMBER, -LARGE_NUMBER, -LARGE_NUMBER);
+	min = Eigen::Vector3d(LARGE_NUMBER, LARGE_NUMBER, LARGE_NUMBER);
 	Box box;
 	for (size_t iPoint = 0; iPoint < point_list.size(); ++iPoint)
 	{

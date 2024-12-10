@@ -2,7 +2,7 @@
 #include "GlobalData.h"
 using namespace zaran;
 
-FlowFieldSolver::FlowFieldSolver(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridBase> grid, std::shared_ptr < DataManager>data_manager) : FieldSolver(index, name, para, grid, data_manager)
+FlowFieldSolver::FlowFieldSolver(index_type index, string name, shared_ptr<FlowSolverParam> para, shared_ptr < GridBase> grid, shared_ptr < DataManager>data_manager) : FieldSolver(index, name, para, grid, data_manager)
 {
 	m_para = para;
 	

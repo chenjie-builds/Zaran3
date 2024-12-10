@@ -15,7 +15,7 @@ namespace zaran
 		m_bnd_file_name = work_dir + "/" + m_bnd_file_name;
 	}
 
-	void GridBuilderStructGridgen::CreateGrid(Array<std::shared_ptr<GridBase>>& grid_list)
+	void GridBuilderStructGridgen::CreateGrid(dynamic_array<shared_ptr<GridBase>>& grid_list)
 	{
 		m_ghost_size = 3;
 		ReadNodeFile();
@@ -28,12 +28,12 @@ namespace zaran
 		WriteGridTest(grid_list);
 	}
 
-	void GridBuilderStructGridgen::AllocateGridMemory(Array<std::shared_ptr<GridBase>>& grid_list)
+	void GridBuilderStructGridgen::AllocateGridMemory(dynamic_array<shared_ptr<GridBase>>& grid_list)
 	{
 		grid_list.resize(GetBlockNum());
 		for (int idx_block = 0; idx_block < GetBlockNum(); ++idx_block)
 		{
-			grid_list[idx_block] = std::make_shared<GridStruct>("Structured", 1, m_dim);
+			grid_list[idx_block] = make_shared<GridStruct>("Structured", 1, m_dim);
 			auto grid = std::static_pointer_cast<GridStruct>(grid_list[idx_block]);
 			grid->Allocate(m_block[idx_block].ni, m_block[idx_block].nj, m_block[idx_block].nk, m_ghost_size);
 		}
@@ -435,7 +435,7 @@ namespace zaran
 			}
 		}
 	}
-	void GridBuilderStructGridgen::SetBoundInfo(Array<std::shared_ptr<GridBase>>& grid_list)
+	void GridBuilderStructGridgen::SetBoundInfo(dynamic_array<shared_ptr<GridBase>>& grid_list)
 	{
 		std::map<int, string> gridgen_bound = {
 			{-1, "connection"},
@@ -469,7 +469,7 @@ namespace zaran
 							auto ref_node_coord = node_src->GetCoord(i_bnd_src - bound_info.dir_s[0], j_bnd_src - bound_info.dir_s[1], k_bns_src - bound_info.dir_s[2]);
 							auto bound_node_coord = node_src->GetCoord(i_bnd_src, j_bnd_src, k_bns_src);
 							// 根据同层的邻居节点计算法向量
-							std::vector<const double*> neighbor_node_coord;
+							dynamic_array<const double*> neighbor_node_coord;
 							neighbor_node_coord.push_back(node_src->GetCoord(i_bnd_src, j_bnd_src, k_bns_src));
 							if (bound_info.ks_s != bound_info.ke_s)
 							{
@@ -609,7 +609,7 @@ namespace zaran
 			}
 		}
 	}
-	void GridBuilderStructGridgen::SetNodeCoord(Array<std::shared_ptr<GridBase>>& grid_list)
+	void GridBuilderStructGridgen::SetNodeCoord(dynamic_array<shared_ptr<GridBase>>& grid_list)
 	{
 		for (int idx_block = 0; idx_block < GetBlockNum(); ++idx_block)
 		{
@@ -629,7 +629,7 @@ namespace zaran
 			}
 		}
 	}
-	void GridBuilderStructGridgen::SetGhostNodeCoord3D(Array<std::shared_ptr<GridBase>>& grid_list)
+	void GridBuilderStructGridgen::SetGhostNodeCoord3D(dynamic_array<shared_ptr<GridBase>>& grid_list)
 	{
 		for (int block_indx = 0; block_indx < GetBlockNum(); ++block_indx)
 		{
@@ -979,7 +979,7 @@ namespace zaran
 		}
 	}
 
-	void GridBuilderStructGridgen::SetGhostNodeCoord(Array<std::shared_ptr<GridBase>>& grid_list)
+	void GridBuilderStructGridgen::SetGhostNodeCoord(dynamic_array<shared_ptr<GridBase>>& grid_list)
 	{
 		if (m_dim == 2)
 		{
@@ -991,7 +991,7 @@ namespace zaran
 		}
 	}
 
-	void GridBuilderStructGridgen::SetGhostNodeCoord2D(Array<std::shared_ptr<GridBase>>& grid_list)
+	void GridBuilderStructGridgen::SetGhostNodeCoord2D(dynamic_array<shared_ptr<GridBase>>& grid_list)
 	{
 		// step 1: set boundary ghost node coord
 		for (int block_indx = 0; block_indx < GetBlockNum(); ++block_indx)
@@ -1000,10 +1000,10 @@ namespace zaran
 
 			auto bound_map = grid_src->GetBoundMap();
 			auto node_src = grid_src->GetNode();
-			Id i_bnd_src, j_bnd_src, k_bnd_src;
-			Id i_bnd_tgt, j_bnd_tgt, k_bns_tgt;
-			Id i_ref, j_ref, k_ref;
-			Id i_ghost, j_ghost, k_ghost;
+			index_type i_bnd_src, j_bnd_src, k_bnd_src;
+			index_type i_bnd_tgt, j_bnd_tgt, k_bns_tgt;
+			index_type i_ref, j_ref, k_ref;
+			index_type i_ghost, j_ghost, k_ghost;
 			double norm[3];
 			int iter_bnd_s, iter_bnd_e;
 			const double* bnd_node_coord, * ref_node_coord;
@@ -1247,7 +1247,7 @@ namespace zaran
 		}
 	}
 
-	void GridBuilderStructGridgen::WriteGridTest(Array<std::shared_ptr<GridBase>>& grid_list)
+	void GridBuilderStructGridgen::WriteGridTest(dynamic_array<shared_ptr<GridBase>>& grid_list)
 	{
 
 		for (int idx_block = 0; idx_block < GetBlockNum(); ++idx_block)

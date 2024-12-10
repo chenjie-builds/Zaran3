@@ -28,7 +28,7 @@ namespace zaran
 		vtkSmartPointer< vtkKdTreePointLocator> m_point_cloud;
 	public:
 		PointCloudModel() {};
-		PointCloudModel(const Array<DVector3D>& point_list);
+		PointCloudModel(const dynamic_array<Eigen::Vector3d>& point_list);
 		bool InModel(const double* point_input)const  override;
 		void GetClosestPoint(const double*point_input,double*point_find)const override;
 		double GetClosestDistance(const double* point_input)const override;//求出pt离模型最近的点

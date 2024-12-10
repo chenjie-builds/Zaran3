@@ -21,12 +21,12 @@ namespace zaran
 	class Solver
 	{
 	public:
-		Solver(Id index, string name, std::shared_ptr<SolverParam>para, std::shared_ptr<GridBase>grid);
+		Solver(index_type index, string name, shared_ptr<SolverParam>para, shared_ptr<GridBase>grid);
 		virtual ~Solver();
 	public:
 		const string& GetName()const { return m_name; }
 		GridBase* GetGrid() { return m_grid.get(); }
-		const Id& GetIndex()const { return m_id; }
+		const index_type& GetIndex()const { return m_id; }
 		SolverParam* GetPara() { return m_para.get(); }
 	public:
 		virtual void Init();
@@ -37,10 +37,10 @@ namespace zaran
 		virtual void InitSolver() = 0;
 	private:
 		// solver index
-		Id m_id;
+		index_type m_id;
 		string m_name;
-		std::shared_ptr<GridBase> m_grid;
+		shared_ptr<GridBase> m_grid;
 		// solver 的参数
-		std::shared_ptr<SolverParam> m_para;
+		shared_ptr<SolverParam> m_para;
 	};
 }

@@ -21,22 +21,22 @@ namespace zaran
 		AllocateIdxProxy();
 	}
 
-	void NSFieldZaran::SetModelManager(std::shared_ptr <ModelManager> model_manager)
+	void NSFieldZaran::SetModelManager(shared_ptr <ModelManager> model_manager)
 	{
 		m_model_manager = model_manager;
 	}
 
-	std::shared_ptr<zaran::GridBlock> NSFieldZaran::GetGrid()
+	shared_ptr<zaran::GridBlock> NSFieldZaran::GetGrid()
 	{
 		return std::static_pointer_cast<GridBlock>(FieldNS::GetGrid());
 	}
 
-	std::shared_ptr<zaran::FlowSolverParamStruct> NSFieldZaran::GetSolverPara()
+	shared_ptr<zaran::FlowSolverParamStruct> NSFieldZaran::GetSolverPara()
 	{
 		return std::static_pointer_cast<FlowSolverParamStruct>(FieldNS::GetSolverPara());
 	}
 
-	std::shared_ptr<zaran::DataManagerNSStruct> NSFieldZaran::GetDataManager()
+	shared_ptr<zaran::DataManagerNSStruct> NSFieldZaran::GetDataManager()
 	{
 		return std::static_pointer_cast<DataManagerNSStruct>(FieldNS::GetDataManager());
 	}
@@ -45,7 +45,7 @@ namespace zaran
 	{
 
 		auto para = GetSolverPara();
-		m_solver = std::make_shared<NSSolverBlock>(GetIdx(), "NS_Block", GetSolverPara(), GetGrid(), GetDataManager());
+		m_solver = make_shared<NSSolverBlock>(GetIdx(), "NS_Block", GetSolverPara(), GetGrid(), GetDataManager());
 	}
 
 	void NSFieldZaran::AllocateDataManager()
@@ -53,7 +53,7 @@ namespace zaran
 		int ni = GetGrid()->GetNi();
 		int nj = GetGrid()->GetNj();
 		int nk = GetGrid()->GetNk();
-		m_data_manager = std::make_shared<DataManagerNSStruct>(GetData(), ni, nj, nk);
+		m_data_manager = make_shared<DataManagerNSStruct>(GetData(), ni, nj, nk);
 		m_data_manager->CreateData();
 		m_data_manager->RegisterData();
 	}
@@ -65,13 +65,13 @@ namespace zaran
 		int nj = GetGrid()->GetNj();
 		int nk = GetGrid()->GetNk();
 
-		m_idx_proxy = std::make_shared <IdProxyStruct>(ni, nj, nk);
+		m_idx_proxy = make_shared <IdProxyStruct>(ni, nj, nk);
 	}
 
 	void NSFieldZaran::AllocateSolverPara()
 	{
 
-		m_solver_para = std::make_shared<FlowSolverParamStruct>();
+		m_solver_para = make_shared<FlowSolverParamStruct>();
 		GetSolverPara()->Init();
 	}
 
@@ -121,21 +121,21 @@ namespace zaran
 			m_res_info->SetInfNormIdx(iEqu, norm_inf_node);
 		}
 	}
-	void NSFieldZaran::CreateSlaveField(std::shared_ptr<FieldManager> field_manager)
+	void NSFieldZaran::CreateSlaveField(shared_ptr<FieldManager> field_manager)
 	{
 		int idx = field_manager->GetFieldNum();
 		auto block = GetGrid();
 		int dim = block->GetDim();
 		GridFNFactoryZaran grid_factory;
-		std::shared_ptr<GridFN>grid = std::make_shared<GridFN>("ZaranSlaveGrid", idx, dim);
+		shared_ptr<GridFN>grid = make_shared<GridFN>("ZaranSlaveGrid", idx, dim);
 		grid_factory.CreateGrid(block, grid, GetModelManager());
-		std::vector<std::string> fn_recv_data_name, block_recv_data_name;
+		dynamic_array<std::string> fn_recv_data_name, block_recv_data_name;
 		fn_recv_data_name = { "primitive_0", "primitive_1", "primitive_2", "primitive_3", "primitive_4" };
 		block_recv_data_name = { "primitive_0", "primitive_1", "primitive_2", "primitive_3", "primitive_4" };
-		Id fn_recv_num, block_recv_num;
-		std::vector<Id> fn_recv_node_idx_src, block_recv_node_idx_src;
-		std::vector<Id> fn_recv_field_idx_tgt, block_recv_field_idx_tgt;
-		std::vector<Id> fn_recv_node_idx_tgt, block_recv_node_idx_tgt;
+		index_type fn_recv_num, block_recv_num;
+		dynamic_array<index_type> fn_recv_node_idx_src, block_recv_node_idx_src;
+		dynamic_array<index_type> fn_recv_field_idx_tgt, block_recv_field_idx_tgt;
+		dynamic_array<index_type> fn_recv_node_idx_tgt, block_recv_node_idx_tgt;
 		auto& fn_grid_info = grid_factory.GetFNGridInfo();
 		auto& ref_node = grid_factory.GetRefNode();
 		fn_recv_num = ref_node.size();
@@ -165,10 +165,10 @@ namespace zaran
 			i++;
 		}
 
-		std::shared_ptr <FieldDataCommInfo> fn_comm_info = std::make_shared <FieldDataCommInfo>(fn_recv_num, fn_recv_data_name, fn_recv_node_idx_src.data(), fn_recv_field_idx_tgt.data(), fn_recv_node_idx_tgt.data());
-		std::shared_ptr <FieldDataCommInfo> block_comm_info = std::make_shared <FieldDataCommInfo>(block_recv_num, block_recv_data_name, block_recv_node_idx_src.data(), block_recv_field_idx_tgt.data(), block_recv_node_idx_tgt.data());
+		shared_ptr <FieldDataCommInfo> fn_comm_info = make_shared <FieldDataCommInfo>(fn_recv_num, fn_recv_data_name, fn_recv_node_idx_src.data(), fn_recv_field_idx_tgt.data(), fn_recv_node_idx_tgt.data());
+		shared_ptr <FieldDataCommInfo> block_comm_info = make_shared <FieldDataCommInfo>(block_recv_num, block_recv_data_name, block_recv_node_idx_src.data(), block_recv_field_idx_tgt.data(), block_recv_node_idx_tgt.data());
 		field_manager->SetFieldDataCommInfo(this->GetIdx(), block_comm_info);
-		m_slave_field = std::make_shared <NSFieldFNFDM>(grid);
+		m_slave_field = make_shared <NSFieldFNFDM>(grid);
 		field_manager->AddField(m_slave_field, fn_comm_info);
 		m_slave_field->Allocate();
 	}
@@ -879,7 +879,7 @@ namespace zaran
 	//     void NSFieldZaran::BuildProjectNodeNeighbor()
 	//     {
 	//         // direct neighbor
-	//         std::vector<std::set<int>> node_neighbor_origin;
+	//         dynamic_array<std::set<int>> node_neighbor_origin;
 	//         node_neighbor_origin.resize(m_slave_grid.node[1].size());
 	//         for (int iFace = 0; iFace < m_trans_face.size(); iFace++)
 	//         {
@@ -906,7 +906,7 @@ namespace zaran
 	//             }
 	//         }
 	//         // extend neighbor, if the neighbor node is less than 3, extend the neighbor node
-	//         std::vector<std::set<int>> node_neighbor_extend;
+	//         dynamic_array<std::set<int>> node_neighbor_extend;
 	//         node_neighbor_extend.resize(m_slave_grid.node[1].size());
 	//         for (int iNode = 0; iNode < node_neighbor_origin.size(); iNode++)
 	//         {

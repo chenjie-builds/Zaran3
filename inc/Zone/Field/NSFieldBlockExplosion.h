@@ -12,11 +12,11 @@ namespace zaran
     class NSFieldBlockExplosion : public NSFieldStruct
     {
     public:
-        NSFieldBlockExplosion(std::shared_ptr<GridBlock>grid);
+        NSFieldBlockExplosion(shared_ptr<GridBlock>grid);
         ~NSFieldBlockExplosion();
         void Allocate() override;
-        std::shared_ptr<GridBlock> GetGrid();
-        std::shared_ptr<NSSolverBlock> GetSolver();
+        shared_ptr<GridBlock> GetGrid();
+        shared_ptr<NSSolverBlock> GetSolver();
     protected:
         void AllocateSolver() override;
     };

@@ -24,7 +24,7 @@ namespace zaran
   {
   public:
     GridBuilderSYSU_FN(const string &node_file_name, const string &ele_file_name, const string &bnd_file_name);
-    void CreateGrid(Array<std::shared_ptr<GridBase>>& grid_list) override;
+    void CreateGrid(dynamic_array<shared_ptr<GridBase>>& grid_list) override;
 
   private:
     void ReadNodeFile();
@@ -38,21 +38,21 @@ namespace zaran
     void AddSelfToNeighbor();
     // 将内部节点的邻居节点加入到边界节点的邻居节点中
     void SetBoundNeighbor();
-    void ConvertToGrid(std::shared_ptr<GridFN>grid);
+    void ConvertToGrid(shared_ptr<GridFN>grid);
 
   private:
     struct BoundNode
     {
       std::string type;
-      Id bound_index;
-      Id ref_index;
+      index_type bound_index;
+      index_type ref_index;
       double normal[3];
     };
     struct BoundFace
     {
-      std::vector<Id> face_node;
-      std::vector<Id> face_cell;
-      std::vector<double> normal;
+      dynamic_array<index_type> face_node;
+      dynamic_array<index_type> face_cell;
+      dynamic_array<double> normal;
       double area;
     };
 
@@ -60,11 +60,11 @@ namespace zaran
     string m_node_file_name;
     string m_ele_file_name;
     string m_bnd_file_name;
-    std::vector<std::vector<double>> m_node_coord;
-    std::vector<std::vector<Id>> m_node_neibor;
-    std::vector<NodeType> m_node_type;
-    std::vector<BoundNode> m_bound_node;
-    std::vector<std::vector<Id>> m_cell_node;
-    std::vector<BoundFace> m_bound_face;
+    dynamic_array<dynamic_array<double>> m_node_coord;
+    dynamic_array<dynamic_array<index_type>> m_node_neibor;
+    dynamic_array<NodeType> m_node_type;
+    dynamic_array<BoundNode> m_bound_node;
+    dynamic_array<dynamic_array<index_type>> m_cell_node;
+    dynamic_array<BoundFace> m_bound_face;
   };
 } // namespace zaran

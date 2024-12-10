@@ -6,7 +6,7 @@ namespace zaran
     class DataManager
     {
     public:
-        DataManager(std::shared_ptr<FieldData> fieldData, int data_num);
+        DataManager(shared_ptr<FieldData> fieldData, int data_num);
         virtual ~DataManager();
     public:
         /// @brief 创建数据
@@ -15,7 +15,7 @@ namespace zaran
         virtual void RegisterData() = 0;
     protected:
         /// @brief 场数据
-        std::shared_ptr<FieldData>m_data;
+        shared_ptr<FieldData>m_data;
         /// @brief 数据个数
         int m_data_num;
     };

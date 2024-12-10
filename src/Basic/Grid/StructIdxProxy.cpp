@@ -1,21 +1,21 @@
 #include "StructIdxProxy.h"
 namespace zaran
 {
-    IdProxyStruct::IdProxyStruct(Id ni, Id nj, Id nk)
+    IdProxyStruct::IdProxyStruct(index_type ni, index_type nj, index_type nk)
     {
         m_ni = ni;
         m_nj = nj;
         m_nk = nk;
     }
 
-    void IdProxyStruct::SetIdx(Id i, Id j, Id k)
+    void IdProxyStruct::SetIdx(index_type i, index_type j, index_type k)
     {
         m_idx_i = i;
         m_idx_j = j;
         m_idx_k = k;
         IdProxy::SetIdx(i + j * m_ni + k * m_ni * m_nj);
     }
-    void IdProxyStruct::SetIdx(Id idx)
+    void IdProxyStruct::SetIdx(index_type idx)
     {
         m_idx_i = idx % m_ni;
         m_idx_j = (idx / m_ni) % m_nj;
@@ -26,7 +26,7 @@ namespace zaran
     {
     }
 
-    void IdProxyStruct::GetIdxStruct(Id &i, Id&j, Id&k) const
+    void IdProxyStruct::GetIdxStruct(index_type &i, index_type&j, index_type&k) const
     {
         i = m_idx_i;
         j = m_idx_j;

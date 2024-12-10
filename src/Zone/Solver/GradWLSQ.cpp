@@ -1,7 +1,7 @@
 #include "GradWLSQ.h"
 #include "Log.h"
 using namespace zaran;
-zaran::GradWLSQ::GradWLSQ(std::shared_ptr<GridFN>grid) : m_grid(grid)
+zaran::GradWLSQ::GradWLSQ(shared_ptr<GridFN>grid) : m_grid(grid)
 {
 	m_grid = grid;
 	auto node = grid->GetNode();
@@ -10,7 +10,7 @@ zaran::GradWLSQ::GradWLSQ(std::shared_ptr<GridFN>grid) : m_grid(grid)
 	double alpha1, alpha2, alpha3;
 	double beta;
 	double alpha[3];
-	std::vector<double> dx, dy, dz, weight;
+	dynamic_array<double> dx, dy, dz, weight;
 	m_omega = new double** [node_num];
 	for (int iNode = 0; iNode < node_num; iNode++)
 	{
@@ -113,7 +113,7 @@ GradWLSQ::~GradWLSQ()
 	delete[] m_omega;
 }
 
-void GradWLSQ::CalcGradient(std::shared_ptr<GridFN>grid, const double* data, double* grad_x, double* grad_y, double* grad_z)
+void GradWLSQ::CalcGradient(shared_ptr<GridFN>grid, const double* data, double* grad_x, double* grad_y, double* grad_z)
 {
 	if (grid != m_grid)
 	{

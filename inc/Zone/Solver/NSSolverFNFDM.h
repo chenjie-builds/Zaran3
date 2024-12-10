@@ -21,7 +21,7 @@ namespace zaran
 	class NSSolverFNFDM : public NSSolver
 	{
 	public:
-		NSSolverFNFDM(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridFN> grid, std::shared_ptr < DataManagerNS>data_manager);
+		NSSolverFNFDM(index_type index, string name, shared_ptr<FlowSolverParam> para, shared_ptr < GridFN> grid, shared_ptr < DataManagerNS>data_manager);
 		~NSSolverFNFDM();
 
 	protected:
@@ -87,10 +87,10 @@ namespace zaran
 		virtual void BCWall(BoundFN& bound);
 		// 黎曼边界条件
 		virtual void BCFarfield(BoundFN& bound);
-		std::shared_ptr<GridFN> GetGrid();
+		shared_ptr<GridFN> GetGrid();
 	private:
-		std::shared_ptr<GradWLSQ> m_grad_wlsq;
-		std::shared_ptr<Metric> m_node_metric;
-		std::shared_ptr<GridFN> m_grid;
+		shared_ptr<GradWLSQ> m_grad_wlsq;
+		shared_ptr<Metric> m_node_metric;
+		shared_ptr<GridFN> m_grid;
 	};
 }

@@ -19,30 +19,30 @@ namespace zaran
     };
     struct TransFace
     {
-        std::vector<Id> idx_block;
+        dynamic_array<index_type> idx_block;
         bool operator<(const TransFace &rhs) const
         {
             return idx_block < rhs.idx_block;
         }
-        std::vector<Id> idx_slave;
+        dynamic_array<index_type> idx_slave;
     };
     struct SlaveNode
     {
         // 节点索引
-        Id idx;
+        index_type idx;
         // 坐标
         double coord[3];
         // 邻居节点记录其投影层数索引
-        std::vector<Id> neighbor_node;
+        dynamic_array<index_type> neighbor_node;
     };
     struct ConnectInfo
     {
         // 在Block中的索引
-        Id idx_block;
+        index_type idx_block;
         // 在FN中的索引,第几层
-        Id idx_n_layers;
+        index_type idx_n_layers;
         // 在FN中的索引,该层的第几个节点
-        Id idx_local_layer;
+        index_type idx_local_layer;
         bool operator<(const ConnectInfo &rhs) const
         {
             return idx_block < rhs.idx_block;
@@ -50,25 +50,25 @@ namespace zaran
     };
     struct FNGridInfo
     {
-        std::vector<std::vector<SlaveNode>> node;
-        std::vector<std::vector<Id>> cell;
+        dynamic_array<dynamic_array<SlaveNode>> node;
+        dynamic_array<dynamic_array<index_type>> cell;
     };
 
     class GridFNFactoryZaran : public GridGenerator
     {
     public:
         GridFNFactoryZaran() {}
-        void CreateGrid(std::shared_ptr<GridBlock> block, std::shared_ptr<GridFN> grid, std::shared_ptr<ModelManager> model_manager);
+        void CreateGrid(shared_ptr<GridBlock> block, shared_ptr<GridFN> grid, shared_ptr<ModelManager> model_manager);
         ~GridFNFactoryZaran() {}
 
     public:
-        std::shared_ptr<GridBlock> GetBlockGrid() { return m_block_grid; }
-        std::shared_ptr<GridFN> GetFNGrid() { return m_fn_grid; }
-        std::shared_ptr<ModelManager> GetModelManager() { return m_model_manager; }
-        std::shared_ptr<IdProxyStruct> GetIdxProxy() { return m_idx_proxy; }
-        std::vector<PhysicalType> &GetCellType() { return m_cell_type; }
-        std::vector<PhysicalType> &GetNodeType() { return m_node_type; }
-        std::vector<TransFace> &GetTransFace() { return m_trans_face; }
+        shared_ptr<GridBlock> GetBlockGrid() { return m_block_grid; }
+        shared_ptr<GridFN> GetFNGrid() { return m_fn_grid; }
+        shared_ptr<ModelManager> GetModelManager() { return m_model_manager; }
+        shared_ptr<IdProxyStruct> GetIdxProxy() { return m_idx_proxy; }
+        dynamic_array<PhysicalType> &GetCellType() { return m_cell_type; }
+        dynamic_array<PhysicalType> &GetNodeType() { return m_node_type; }
+        dynamic_array<TransFace> &GetTransFace() { return m_trans_face; }
         std::set<ConnectInfo> &GetRefNode() { return m_ref_node; }
         std::set<ConnectInfo> &GetTransNode() { return m_trans_node; }
         FNGridInfo &GetFNGridInfo() { return m_fn_info; }
@@ -118,13 +118,13 @@ namespace zaran
         void BuildCell();
 
     private:
-        std::shared_ptr<GridBlock> m_block_grid;
-        std::shared_ptr<GridFN> m_fn_grid;
-        std::shared_ptr<ModelManager> m_model_manager;
-        std::shared_ptr<IdProxyStruct> m_idx_proxy;
-        std::vector<PhysicalType> m_cell_type;
-        std::vector<PhysicalType> m_node_type;
-        std::vector<TransFace> m_trans_face;
+        shared_ptr<GridBlock> m_block_grid;
+        shared_ptr<GridFN> m_fn_grid;
+        shared_ptr<ModelManager> m_model_manager;
+        shared_ptr<IdProxyStruct> m_idx_proxy;
+        dynamic_array<PhysicalType> m_cell_type;
+        dynamic_array<PhysicalType> m_node_type;
+        dynamic_array<TransFace> m_trans_face;
         // 保存参考节点, 与过渡节点连接的流体节点
         std::set<ConnectInfo> m_ref_node;
         // 保存过渡节点, 与物面节点连接的流体节点

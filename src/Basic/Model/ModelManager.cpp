@@ -13,7 +13,7 @@ namespace zaran
 		m_box.z_max = -LARGE_NUMBER;
 		m_model.clear();
 	}
-	void zaran::ModelManager::AddModel(std::shared_ptr<Model> model)
+	void zaran::ModelManager::AddModel(shared_ptr<Model> model)
 	{
 		m_model.push_back(model);
 		auto box = model->GetBox();
@@ -24,7 +24,7 @@ namespace zaran
 		m_box.z_min = Min(m_box.z_min, box.z_min);
 		m_box.z_max = Max(m_box.z_max, box.z_max);
 	}
-	void ModelManager::AddModel(std::vector<std::shared_ptr<Model>> modVec)
+	void ModelManager::AddModel(dynamic_array<shared_ptr<Model>> modVec)
 	{
 		for (int iModel = 0; iModel < modVec.size(); ++iModel)
 			AddModel(modVec[iModel]);

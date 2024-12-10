@@ -14,20 +14,20 @@ namespace zaran
 
     public:
         /// @brief 获取Field
-        std::shared_ptr<Field> GetField(Id idx_field);
+        shared_ptr<Field> GetField(index_type idx_field);
         /// @brief 获取field data communication information
-        std::shared_ptr<FieldDataCommInfo> GetFieldDataCommInfo(Id idx_field);
-        void SetFieldDataCommInfo(Id idx_field, std::shared_ptr<FieldDataCommInfo> field_data_comm_info);
+        shared_ptr<FieldDataCommInfo> GetFieldDataCommInfo(index_type idx_field);
+        void SetFieldDataCommInfo(index_type idx_field, shared_ptr<FieldDataCommInfo> field_data_comm_info);
         /// @brief 获取Field数量
-        Id GetFieldNum();
+        index_type GetFieldNum();
         /// @brief 添加Field
-        void AddField(std::shared_ptr<Field> field, std::shared_ptr<FieldDataCommInfo> field_data_comm_info);
+        void AddField(shared_ptr<Field> field, shared_ptr<FieldDataCommInfo> field_data_comm_info);
         /// @brief 移除Field
-        void RemoveField(std::shared_ptr<Field> field);
+        void RemoveField(shared_ptr<Field> field);
     private:
         /// @brief Field, store all fields
-        Array<std::shared_ptr<Field>> m_field;
+        dynamic_array<shared_ptr<Field>> m_field;
         /// @brief  field data communication 
-        Array<std::shared_ptr<FieldDataCommInfo>> m_field_data_comm_info;
+        dynamic_array<shared_ptr<FieldDataCommInfo>> m_field_data_comm_info;
     };
 } // namespace zaran

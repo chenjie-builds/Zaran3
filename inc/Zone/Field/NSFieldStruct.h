@@ -9,15 +9,15 @@ namespace zaran
     class NSFieldStruct : public FieldNS
     {
     public:
-        NSFieldStruct(std::shared_ptr<GridStruct> grid);
+        NSFieldStruct(shared_ptr<GridStruct> grid);
         ~NSFieldStruct();
         void Allocate() override;
 
     public:
-        std::shared_ptr<GridStruct>GetGrid();
-		std::shared_ptr<FlowSolverParamStruct>GetSolverPara();
-		std::shared_ptr<NSSolverStruct>GetSolver();
-		std::shared_ptr<DataManagerNSStruct>GetDataManager();
+        shared_ptr<GridStruct>GetGrid();
+		shared_ptr<FlowSolverParamStruct>GetSolverPara();
+		shared_ptr<NSSolverStruct>GetSolver();
+		shared_ptr<DataManagerNSStruct>GetDataManager();
         void CalcResidual() override;
         IdProxyStruct& GetIdxProxy() { return *(GetGrid()->GetIdxProxy()); }
     protected:

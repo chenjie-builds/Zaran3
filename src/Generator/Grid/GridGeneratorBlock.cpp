@@ -2,7 +2,7 @@
 namespace zaran
 {
 
-    void GridGeneratorBlock::CreateGrid(std::shared_ptr<GridBlock> grid, GridBlockInfo& grid_info)
+    void GridGeneratorBlock::CreateGrid(shared_ptr<GridBlock> grid, GridBlockInfo& grid_info)
     {
         m_grid_info = grid_info;
         m_grid = grid;
@@ -17,7 +17,7 @@ namespace zaran
         int nj = m_grid_info.nj;
         int nk = m_grid_info.nk;
         int ghost_size = 3;
-        m_grid = std::make_shared<GridBlock>("Structured", 1, 3);
+        m_grid = make_shared<GridBlock>("Structured", 1, 3);
         m_grid->Allocate(ni, nj, nk, ghost_size);
         m_grid->SetBoundBox(m_grid_info.bound_box);
     }

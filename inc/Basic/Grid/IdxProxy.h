@@ -19,11 +19,11 @@ namespace zaran
     {
     public:
         IdProxy() = default;
-        IdProxy(Id idx);
+        IdProxy(index_type idx);
         ~IdProxy();
-        Id GetIdx() const;
-        void SetIdx(Id idx);
+        index_type GetIdx() const;
+        void SetIdx(index_type idx);
     private:
-        Id m_idx; // 索引
+        index_type m_idx; // 索引
     };
 }

@@ -20,9 +20,9 @@ namespace zaran
 		void AddBoundary(const string& name, BoundFN&& bound);
 		void CreateBoundary(const string& name);
 		int GetBoundaryTypeName() { return m_bound_map.size(); }
-		Array<BoundFN>& GetBoundary(const string& name);
-		map<string, Array<BoundFN>>& GetBoundaryMap() { return m_bound_map; }
+		dynamic_array<BoundFN>& GetBoundary(const string& name);
+		map<string, dynamic_array<BoundFN>>& GetBoundaryMap() { return m_bound_map; }
 	private:
-		map<string, Array<BoundFN>>m_bound_map;
+		map<string, dynamic_array<BoundFN>>m_bound_map;
 	};
 }

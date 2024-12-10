@@ -214,7 +214,7 @@ int zaran::FlowSolverParam::GetRkStep() const
 {
 	return m_rk_coef.size();
 }
-const std::vector<double>& FlowSolverParam::GetRkCoef(int iStage)const 
+const dynamic_array<double>& FlowSolverParam::GetRkCoef(int iStage)const 
 {
 	return m_rk_coef[iStage];
 }

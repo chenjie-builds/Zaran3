@@ -2,7 +2,7 @@
 namespace zaran
 {
 
-	FieldDataCommInfo::FieldDataCommInfo(Id recv_node_num, const Array<std::string>& recv_data_name, const Id* recv_node_idx_local, const Id* recv_field_idx_global, const Id* recv_node_idx_global) : m_recv_data_name(recv_data_name)
+	FieldDataCommInfo::FieldDataCommInfo(index_type recv_node_num, const dynamic_array<std::string>& recv_data_name, const index_type* recv_node_idx_local, const index_type* recv_field_idx_global, const index_type* recv_node_idx_global) : m_recv_data_name(recv_data_name)
 	{
 		m_idx_recv_node.resize(recv_node_num);
 		m_idx_send_field.resize(recv_node_num);

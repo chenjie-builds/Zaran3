@@ -166,10 +166,10 @@ namespace zaran
 			Log::warn("Unsupported Solver Type! Please Check!");
 			system("pause");
 		}
-		std::shared_ptr<FieldGenerator> fieldFactory = std::make_shared<FieldGenerator>(grid_type, solver_type, dim);
+		shared_ptr<FieldGenerator> fieldFactory = make_shared<FieldGenerator>(grid_type, solver_type, dim);
 		//FieldGeneratorBuildingExplosion* fieldFactory = new FieldGeneratorBuildingExplosion(grid_type, solver_type, dim);
-		std::shared_ptr<FieldManager> global_field = fieldFactory->Create();
-		std::shared_ptr<FieldSimulation> controller = std::make_shared <FieldSimulation>(global_field);
+		shared_ptr<FieldManager> global_field = fieldFactory->Create();
+		shared_ptr<FieldSimulation> controller = make_shared <FieldSimulation>(global_field);
 		controller->SolveField();
 	}
 

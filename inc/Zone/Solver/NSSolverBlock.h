@@ -6,7 +6,7 @@ namespace zaran
 	class NSSolverBlock : public NSSolverStructDEER
 	{
 	public:
-		NSSolverBlock(Id index, string name, std::shared_ptr<FlowSolverParamStruct> para, std::shared_ptr < GridBlock> grid, std::shared_ptr < DataManagerNSStruct>data_manager);
+		NSSolverBlock(index_type index, string name, shared_ptr<FlowSolverParamStruct> para, shared_ptr < GridBlock> grid, shared_ptr < DataManagerNSStruct>data_manager);
 		~NSSolverBlock();
 
 	protected:

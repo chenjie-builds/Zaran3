@@ -10,18 +10,14 @@ namespace zaran
 	using std::string;
 	using std::map;
 	using std::variant;
-	template<typename T>
-	using Array = std::vector<T>;//array
-	template<typename T>
-	using Ptr = std::shared_ptr<T>;//pointer
-	using Id = size_t;//id
+	using std::shared_ptr;
+	using std::make_shared;
 
-	using DArray = std::vector<double>;//double array
-	using IArray = std::vector<int>;//int array
-	using SArray = std::vector<string>;//string array
-	using Matrix = Eigen::MatrixXd;//double matrix
-	using DVector = Eigen::VectorXd;//double vector
-	using IVector = Eigen::VectorXi;//int vector
-	using DVector2D = Eigen::Vector2d;//double vector2d
-	using DVector3D = Eigen::Vector3d;//double vector3d
+	template<typename T>
+	using dynamic_array = std::vector<T>;//array
+	//index type
+	using index_type = size_t;
+	//count type
+	using count_type = size_t;//count type
+
 }

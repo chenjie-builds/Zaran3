@@ -5,12 +5,12 @@
 #include "MathBasic.h"
 namespace zaran
 {
-	NSSolverFNFDM::NSSolverFNFDM(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridFN> grid, std::shared_ptr < DataManagerNS>data_manager)
+	NSSolverFNFDM::NSSolverFNFDM(index_type index, string name, shared_ptr<FlowSolverParam> para, shared_ptr < GridFN> grid, shared_ptr < DataManagerNS>data_manager)
 		: NSSolver(index, name, para, grid, data_manager)
 	{
 		m_grid = grid;
-		m_grad_wlsq = std::make_shared<GradWLSQ>(grid);
-		m_node_metric = std::make_shared<Metric>(grid->GetTotalNodeNum());
+		m_grad_wlsq = make_shared<GradWLSQ>(grid);
+		m_node_metric = make_shared<Metric>(grid->GetTotalNodeNum());
 	}
 
 	NSSolverFNFDM::~NSSolverFNFDM()
@@ -880,8 +880,8 @@ namespace zaran
 		auto data_manager = GetDataManager();
 		int total_node_num = grid->GetTotalNodeNum();
 		int equ_num = GetPara()->GetEqNum();
-		DArray weight, distance;
-		IArray physical_neighbor;
+		dynamic_array<double> weight, distance;
+		dynamic_array<int> physical_neighbor;
 		double sum = 0;
 #pragma omp parallel for private(physical_neighbor, weight, distance, sum)
 		for (int iNode = 0; iNode < total_node_num; ++iNode)
@@ -1260,7 +1260,7 @@ namespace zaran
 		Log::info("Force: {}, {}, {}", force[0], force[1], force[2]);
 	}
 
-	std::shared_ptr<GridFN> NSSolverFNFDM::GetGrid()
+	shared_ptr<GridFN> NSSolverFNFDM::GetGrid()
 	{
 		return m_grid;
 	}

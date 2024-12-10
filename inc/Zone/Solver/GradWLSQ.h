@@ -17,7 +17,7 @@ namespace zaran
     class GradWLSQ
     {
     public:
-        GradWLSQ(std::shared_ptr<GridFN> grid);
+        GradWLSQ(shared_ptr<GridFN> grid);
         ~GradWLSQ();
         /// @brief Calculate gradient of data using Weighted Least Square method
         /// @param grid  grid information
@@ -25,9 +25,9 @@ namespace zaran
         /// @param grad_x  gradient in x direction
         /// @param grad_y  gradient in y direction
         /// @param grad_z  gradient in z direction
-        void CalcGradient(std::shared_ptr<GridFN> grid, const double* data, double* grad_x, double* grad_y, double* grad_z);
+        void CalcGradient(shared_ptr<GridFN> grid, const double* data, double* grad_x, double* grad_y, double* grad_z);
     private:
-        std::shared_ptr<GridFN> m_grid;
+        shared_ptr<GridFN> m_grid;
         double*** m_omega;
     };
 }

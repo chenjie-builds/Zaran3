@@ -19,7 +19,7 @@ namespace zaran
 	class NSSolver : public FlowFieldSolver
 	{
 	public:
-		NSSolver(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridBase> grid, std::shared_ptr < DataManagerNS>data_manager);
+		NSSolver(index_type index, string name, shared_ptr<FlowSolverParam> para, shared_ptr < GridBase> grid, shared_ptr < DataManagerNS>data_manager);
 		~NSSolver();
 		void Init() override;
 		void InitField() override;
@@ -39,7 +39,7 @@ namespace zaran
 		virtual void CalcCoordTransCoef() = 0;
 
 	protected:
-		std::shared_ptr<Gas> GetGas() { return m_gas; }
+		shared_ptr<Gas> GetGas() { return m_gas; }
 		/*
 		 * 时间步计算与时间推进相关函数
 		 */
@@ -80,9 +80,9 @@ namespace zaran
 		virtual void CalcForce() {};
 
 	protected:
-		std::shared_ptr<Gas> m_gas;
+		shared_ptr<Gas> m_gas;
 		// 通量求解器
 		std::unique_ptr<RiemannSolver> m_riemann_solver;
-		std::shared_ptr<DataManagerNS> m_data_manager;
+		shared_ptr<DataManagerNS> m_data_manager;
 	};
 }

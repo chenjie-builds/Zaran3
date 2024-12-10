@@ -6,7 +6,7 @@ void BoundMapFN::AddBoundary(const std::string& name, BoundFN&& bound)
 	auto it = m_bound_map.find(name);
 	if (it == m_bound_map.end())
 	{
-		m_bound_map.insert({ name,std::vector<BoundFN>({bound}) });
+		m_bound_map.insert({ name,dynamic_array<BoundFN>({bound}) });
 	}
 	else
 	{
@@ -32,11 +32,11 @@ void zaran::BoundMapFN::CreateBoundary(const string &name)
 	auto it = m_bound_map.find(name);
 	if (it == m_bound_map.end())
 	{
-		m_bound_map.insert({ name,std::vector<BoundFN>() });
+		m_bound_map.insert({ name,dynamic_array<BoundFN>() });
 	}
 }
 
-std::vector<BoundFN>& BoundMapFN::GetBoundary(const std::string& name)
+dynamic_array<BoundFN>& BoundMapFN::GetBoundary(const std::string& name)
 {
 	auto it = m_bound_map.find(name);
 	if (it == m_bound_map.end())

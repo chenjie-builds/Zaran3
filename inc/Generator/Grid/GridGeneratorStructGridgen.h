@@ -14,20 +14,20 @@ namespace zaran
     {
     public:
         GridBuilderStructGridgen();
-        void CreateGrid(Array<std::shared_ptr<GridBase>>& grid_list) override;
-        void AllocateGridMemory(Array<std::shared_ptr<GridBase>>& grid_list);
+        void CreateGrid(dynamic_array<shared_ptr<GridBase>>& grid_list) override;
+        void AllocateGridMemory(dynamic_array<shared_ptr<GridBase>>& grid_list);
 
     private:
         void ReadNodeFile();
         void ReadBoundFile();
         void SetMultiBlockInfo();
-        void SetBoundInfo(Array<std::shared_ptr<GridBase>>& grid_list);
-        void SetNodeCoord(Array<std::shared_ptr<GridBase>>& grid_list);
-        void SetGhostNodeCoord(Array<std::shared_ptr<GridBase>>& grid_list);
-        void SetGhostNodeCoord3D(Array<std::shared_ptr<GridBase>>& grid_list);
-        void SetGhostNodeCoord2D(Array<std::shared_ptr<GridBase>>& grid_list);
+        void SetBoundInfo(dynamic_array<shared_ptr<GridBase>>& grid_list);
+        void SetNodeCoord(dynamic_array<shared_ptr<GridBase>>& grid_list);
+        void SetGhostNodeCoord(dynamic_array<shared_ptr<GridBase>>& grid_list);
+        void SetGhostNodeCoord3D(dynamic_array<shared_ptr<GridBase>>& grid_list);
+        void SetGhostNodeCoord2D(dynamic_array<shared_ptr<GridBase>>& grid_list);
         size_t GetBlockNum() { return m_block.size(); };
-        void WriteGridTest(Array<std::shared_ptr<GridBase>>& grid_list);
+        void WriteGridTest(dynamic_array<shared_ptr<GridBase>>& grid_list);
         struct NodeCoord
         {
             double coord[3];
@@ -59,14 +59,14 @@ namespace zaran
         struct BlockInfo
         {
             int ni, nj, nk;
-            std::vector<std::vector<std::vector<NodeCoord>>> node_coord;
-            std::vector<BoundInfo> bound_info;
+            dynamic_array<dynamic_array<dynamic_array<NodeCoord>>> node_coord;
+            dynamic_array<BoundInfo> bound_info;
         };
 
     private:
         int m_dim;
         int m_ghost_size;
-        std::vector<BlockInfo> m_block;
+        dynamic_array<BlockInfo> m_block;
         string m_node_file_name;
         string m_bnd_file_name;
     };

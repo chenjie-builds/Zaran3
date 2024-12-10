@@ -25,7 +25,7 @@ namespace zaran
 	class FieldSolver :public Solver
 	{
 	public:
-		FieldSolver(Id index, string name, std::shared_ptr<SolverParam> para, std::shared_ptr < GridBase> grid, std::shared_ptr < DataManager>data_manager);
+		FieldSolver(index_type index, string name, shared_ptr<SolverParam> para, shared_ptr < GridBase> grid, shared_ptr < DataManager>data_manager);
 		virtual ~FieldSolver();
 	public:
 		// 初始化流场数据
@@ -36,9 +36,9 @@ namespace zaran
 		virtual void UpdateField() = 0;
 		// 备份场数据
 		virtual void BackupField(std::string& back_folder) = 0;
-		std::shared_ptr<DataManager>& GetDataManager() { return m_data_manager; }
+		shared_ptr<DataManager>& GetDataManager() { return m_data_manager; }
 	private:
 		// 场数据
-		std::shared_ptr<DataManager> m_data_manager;
+		shared_ptr<DataManager> m_data_manager;
 	};
 }

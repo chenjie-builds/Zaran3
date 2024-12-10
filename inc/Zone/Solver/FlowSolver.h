@@ -19,7 +19,7 @@ namespace zaran
 	class FlowFieldSolver : public FieldSolver
 	{
 	public:
-		FlowFieldSolver(Id index, string name, std::shared_ptr<FlowSolverParam> para, std::shared_ptr < GridBase> grid, std::shared_ptr < DataManager>data_manager);
+		FlowFieldSolver(index_type index, string name, shared_ptr<FlowSolverParam> para, shared_ptr < GridBase> grid, shared_ptr < DataManager>data_manager);
 		virtual ~FlowFieldSolver();
 	public:
 		void InitField() override;
@@ -44,7 +44,7 @@ namespace zaran
 
 	private:
 		// 流场参数
-		std::shared_ptr<FlowSolverParam> m_para;
+		shared_ptr<FlowSolverParam> m_para;
 
 	};
 } // namespace zaran

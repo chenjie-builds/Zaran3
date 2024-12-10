@@ -17,7 +17,7 @@ namespace zaran
 	{
 	}
 
-	void GridBuilderSYSU_FN::CreateGrid(Array<std::shared_ptr<GridBase>>& grid_list)
+	void GridBuilderSYSU_FN::CreateGrid(dynamic_array<shared_ptr<GridBase>>& grid_list)
 	{
 		ReadNodeFile();
 		ReadCellFile();
@@ -30,7 +30,7 @@ namespace zaran
 		AddSelfToNeighbor();
 		CheckNeighborNum();
 		grid_list.resize(1);
-		grid_list[0] = std::make_shared<GridFN>("FNFDM", 0, 3);
+		grid_list[0] = make_shared<GridFN>("FNFDM", 0, 3);
 		auto grid = std::static_pointer_cast<GridFN>(grid_list[0]);
 		ConvertToGrid(grid);
 	}
@@ -278,7 +278,7 @@ namespace zaran
 			// 以点对与iNode连线的夹角为key
 			// 以点对为value
 			// 点对为所有与iNode相邻的点�?
-			std::vector<double> vec1(3), vec2(3);
+			dynamic_array<double> vec1(3), vec2(3);
 			for (int i = 0; i < neighbor.size(); ++i)
 			{
 				for (int j = i + 1; j < neighbor.size(); ++j)
@@ -301,15 +301,15 @@ namespace zaran
 			neighbor.erase(std::find(neighbor.begin(), neighbor.end(), main_pair.node1));
 			neighbor.erase(std::find(neighbor.begin(), neighbor.end(), main_pair.node2));
 			// 主方向向�?
-			DVector3D main_vec;
+			Eigen::Vector3d main_vec;
 			for (int k = 0; k < 3; ++k)
 			{
 				main_vec[k] = m_node_coord[main_pair.node1][k] - m_node_coord[main_pair.node2][k];
 			}
 			main_vec.normalize();
 			// 求出所有邻居节点在以主方向向量为法向量，经过当地节点的平面上的投影
-			map<int, DVector3D> node_proj_map;
-			DVector3D vec;
+			map<int, Eigen::Vector3d> node_proj_map;
+			Eigen::Vector3d vec;
 			for (int i = 0; i < neighbor.size(); ++i)
 			{
 				for (int k = 0; k < 3; ++k)
@@ -336,7 +336,7 @@ namespace zaran
 					node_angle_map[0] = neighbor[i];
 					continue;
 				}
-				DVector3D vec = node_proj_map[neighbor[i]];
+				Eigen::Vector3d vec = node_proj_map[neighbor[i]];
 				double angle = AngleOfTwoArray3D(node_proj_map[neighbor[0]].data(), vec.data());
 				if ((node_proj_map[neighbor[0]].cross(vec).dot(main_vec) < 0))
 					angle = 2 * PI - angle;
@@ -371,7 +371,7 @@ namespace zaran
 			}
 			node_pair_map.clear();
 			// 获取下一个点的lamda表达�?
-			auto get_next_node = [&](Id iNode, std::vector<Id> neiborNode) -> int
+			auto get_next_node = [&](index_type iNode, dynamic_array<index_type> neiborNode) -> int
 				{
 					if (iNode == neiborNode.size() - 1)
 						return 0;
@@ -379,7 +379,7 @@ namespace zaran
 						return iNode + 1;
 				};
 			// 获取上一个点的lamda表达�?
-			auto get_last_node = [&](Id iNode, std::vector<Id> neiborNode) -> int
+			auto get_last_node = [&](index_type iNode, dynamic_array<index_type> neiborNode) -> int
 				{
 					if (iNode == 0)
 						return neiborNode.size() - 1;
@@ -392,7 +392,7 @@ namespace zaran
 				node_pair temp;
 				temp.node1 = neighbor[i];
 				temp.node2 = neighbor[get_next_node(i, neighbor)];
-				DVector3D vec1, vec2;
+				Eigen::Vector3d vec1, vec2;
 				vec1 = node_proj_map[temp.node1];
 				vec2 = node_proj_map[temp.node2];
 				double angle = AngleOfTwoArray3D(vec1.data(), vec2.data()) + GetRand(0.0, 1.0) * EPSILON_NUMBER;
@@ -444,7 +444,7 @@ namespace zaran
 				temp.node2 = neighbor[get_next_node(remove_index, neighbor)];
 				neighbor.erase(std::find(neighbor.begin(), neighbor.end(), remove_node));
 				node_dis_map.erase(remove_node);
-				DVector3D vec1, vec2;
+				Eigen::Vector3d vec1, vec2;
 				vec1 = node_proj_map[temp.node1];
 				vec2 = node_proj_map[temp.node2];
 				double angle = AngleOfTwoArray3D(vec1.data(), vec2.data()) + GetRand(0.0, 1.0) * EPSILON_NUMBER;
@@ -600,7 +600,7 @@ namespace zaran
 				continue;
 			int neighbor_num = m_node_neibor[iNode].size();
 			auto& neighbor_index = m_node_neibor[iNode];
-			Array<DVector3D> vec(3);
+			dynamic_array<Eigen::Vector3d> vec(3);
 			for (int i = 0; i < 3; i++)
 			{
 				vec[0][i] = m_node_coord[neighbor_index[1]][i] - m_node_coord[neighbor_index[0]][i];
@@ -912,13 +912,13 @@ namespace zaran
 		}
 		Log::info("Add inner node's neibor node to bound done");
 	}
-	void GridBuilderSYSU_FN::ConvertToGrid(std::shared_ptr<GridFN> grid)
+	void GridBuilderSYSU_FN::ConvertToGrid(shared_ptr<GridFN> grid)
 	{
-		Id node_num = m_node_coord.size();
-		std::vector<Id> neighbor_node_num(node_num);
-		std::vector<Id> neighbor_face_num(node_num);
-		std::vector<Id> neighbor_cell_num(node_num);
-		for (Id iNode = 0; iNode < node_num; iNode++)
+		index_type node_num = m_node_coord.size();
+		dynamic_array<index_type> neighbor_node_num(node_num);
+		dynamic_array<index_type> neighbor_face_num(node_num);
+		dynamic_array<index_type> neighbor_cell_num(node_num);
+		for (index_type iNode = 0; iNode < node_num; iNode++)
 		{
 			neighbor_node_num[iNode] = m_node_neibor[iNode].size();
 			neighbor_face_num[iNode] = 0;
@@ -936,20 +936,20 @@ namespace zaran
 		grid->SetNode(node);
 		CellFN* cell = new CellFN(m_cell_node.size());
 		cell->SetNode(m_cell_node);
-		std::vector<std::vector<Id>> cell_node_face(m_cell_node.size());
+		dynamic_array<dynamic_array<index_type>> cell_node_face(m_cell_node.size());
 		cell->SetFace(cell_node_face);
 		double center[3];
-		for (Id iCell = 0; iCell < m_cell_node.size(); iCell++)
+		for (index_type iCell = 0; iCell < m_cell_node.size(); iCell++)
 		{
 			center[0] = center[1] = center[2] = 0;
-			for (Id iNode = 0; iNode < m_cell_node[iCell].size(); iNode++)
+			for (index_type iNode = 0; iNode < m_cell_node[iCell].size(); iNode++)
 			{
-				for (Id i = 0; i < 3; i++)
+				for (index_type i = 0; i < 3; i++)
 				{
 					center[i] += m_node_coord[m_cell_node[iCell][iNode]][i];
 				}
 			}
-			for (Id i = 0; i < 3; i++)
+			for (index_type i = 0; i < 3; i++)
 			{
 				center[i] /= m_cell_node[iCell].size();
 			}
@@ -959,13 +959,13 @@ namespace zaran
 
 		FaceFN* face = new FaceFN();
 
-		std::vector<Id> face_node_num(m_bound_face.size());
-		for (Id iFace = 0; iFace < m_bound_face.size(); iFace++)
+		dynamic_array<index_type> face_node_num(m_bound_face.size());
+		for (index_type iFace = 0; iFace < m_bound_face.size(); iFace++)
 		{
 			face_node_num[iFace] = m_bound_face[iFace].face_node.size();
 		}
 		face->Allocate(m_bound_face.size(), face_node_num.data());
-		for (Id iFace = 0; iFace < m_bound_face.size(); iFace++)
+		for (index_type iFace = 0; iFace < m_bound_face.size(); iFace++)
 		{
 			face->SetFace2Node(iFace, m_bound_face[iFace].face_node.data(), m_bound_face[iFace].face_node.size());
 			face->SetNormal(iFace, m_bound_face[iFace].normal.data());

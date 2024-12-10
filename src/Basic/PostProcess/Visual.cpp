@@ -7,7 +7,7 @@
 #include <vector>
 #include "NSFieldFN.h"
 using namespace zaran;
-void zaran::Visual::WriteTecplotBinary(std::shared_ptr<NSFieldFNFDM> field)
+void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldFNFDM> field)
 {
     auto data_manager = field->GetDataManager();
     auto grid = field->GetGrid();
@@ -23,7 +23,7 @@ void zaran::Visual::WriteTecplotBinary(std::shared_ptr<NSFieldFNFDM> field)
 
     INTEGER4 node_num = grid->GetTotalNodeNum();
     INTEGER4 cell_num = cell->GetCellNum();
-    DArray x(node_num), y(node_num), z(node_num);
+    dynamic_array<double> x(node_num), y(node_num), z(node_num);
     for (int iNode = 0; iNode < node_num; ++iNode)
     {
         x[iNode] = node->GetCoord(iNode)[0];
@@ -58,7 +58,7 @@ void zaran::Visual::WriteTecplotBinary(std::shared_ptr<NSFieldFNFDM> field)
     i = TECDAT142(&node_num, velocity_z, &vIsDouble);
     i = TECDAT142(&node_num, pressure, &vIsDouble);
     INTEGER4 connectivityCount = cell_num * 8;
-    std::vector<INTEGER4> cell_nodes(connectivityCount);
+    dynamic_array<INTEGER4> cell_nodes(connectivityCount);
     for (int iCell = 0; iCell < cell_num; ++iCell)
     {
         int node_num = cell->GetNodeNum(iCell);
@@ -99,7 +99,7 @@ void zaran::Visual::WriteTecplotBinary(std::shared_ptr<NSFieldFNFDM> field)
     i = TECDAT142(&node_num, pressure, &vIsDouble);
     int node_num_per_cell = 4;
     connectivityCount = cell_num * node_num_per_cell;
-    Array<INTEGER4> face_nodes(connectivityCount);
+    dynamic_array<INTEGER4> face_nodes(connectivityCount);
     for (int iFace = 0; iFace < cell_num; ++iFace)
     {
         auto face2node = face_topo->GetFace2Node(iFace);
@@ -121,7 +121,7 @@ void zaran::Visual::WriteTecplotBinary(std::shared_ptr<NSFieldFNFDM> field)
 
 }
 
-void zaran::Visual::WriteTecplotASCII(std::shared_ptr<NSFieldStruct> field, std::ostream& os)
+void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostream& os)
 {
     auto grid = field->GetGrid();
     auto node = grid->GetNode();
@@ -161,7 +161,7 @@ void zaran::Visual::WriteTecplotASCII(std::shared_ptr<NSFieldStruct> field, std:
     delete idx_proxy;
 }
 
-void zaran::Visual::WriteTecplotASCII(std::shared_ptr<NSFieldZaran> field, std::ostream& os)
+void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldZaran> field, std::ostream& os)
 {
     auto grid = field->GetGrid();
     auto node = grid->GetNode();
@@ -200,7 +200,7 @@ void zaran::Visual::WriteTecplotASCII(std::shared_ptr<NSFieldZaran> field, std::
     }
     delete idx_proxy;
 }
-void zaran::Visual::WriteTecplotBinary(std::shared_ptr<NSFieldZaran> field)
+void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldZaran> field)
 {
     auto data_manager = field->GetDataManager();
     auto grid = field->GetGrid();
@@ -216,7 +216,7 @@ void zaran::Visual::WriteTecplotBinary(std::shared_ptr<NSFieldZaran> field)
     auto idx_proxy = new IdProxyStruct(grid_ni, grid_nj, grid_nk);
     INTEGER4 node_num = ni * nj * nk;
     INTEGER4 cell_num = (ni - 1) * (nj - 1) * (nk - 1);
-    DArray x(node_num), y(node_num), z(node_num), density(node_num),
+    dynamic_array<double> x(node_num), y(node_num), z(node_num), density(node_num),
         velocity_x(node_num), velocity_y(node_num), velocity_z(node_num),
         pressure(node_num), density_error(node_num);
     for (int k = 0; k < nk; ++k)
@@ -292,7 +292,7 @@ void zaran::Visual::WriteTecplotBinary(std::shared_ptr<NSFieldZaran> field)
     i = TECDAT142(&node_num, pressure.data(), &vIsDouble);
     delete idx_proxy;
 }
-void zaran::Visual::WriteTecplotBinary(std::shared_ptr<NSFieldStruct> field)
+void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldStruct> field)
 {
     auto data_manager = field->GetDataManager();
     auto grid = field->GetGrid();
@@ -308,7 +308,7 @@ void zaran::Visual::WriteTecplotBinary(std::shared_ptr<NSFieldStruct> field)
     auto idx_proxy = new IdProxyStruct(grid_ni, grid_nj, grid_nk);
     INTEGER4 node_num = ni * nj * nk;
     INTEGER4 cell_num = (ni - 1) * (nj - 1) * (nk - 1);
-    DArray x(node_num), y(node_num), z(node_num), density(node_num),
+    dynamic_array<double> x(node_num), y(node_num), z(node_num), density(node_num),
         velocity_x(node_num), velocity_y(node_num), velocity_z(node_num),
         pressure(node_num), density_error(node_num);
     for (int k = 0; k < nk; ++k)
@@ -384,7 +384,7 @@ void zaran::Visual::WriteTecplotBinary(std::shared_ptr<NSFieldStruct> field)
     i = TECDAT142(&node_num, pressure.data(), &vIsDouble);
     delete idx_proxy;
 }
-void Visual::WriteTecASCII(std::shared_ptr<FieldManager> field_manager)
+void Visual::WriteTecASCII(shared_ptr<FieldManager> field_manager)
 {
     std::string work_dir = GlobalData::GetString("work_dir");
     std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + ".dat";
@@ -417,7 +417,7 @@ void Visual::WriteTecASCII(std::shared_ptr<FieldManager> field_manager)
 
 }
 
-void zaran::Visual::WriteTecplotBinary(std::shared_ptr<FieldManager> field_manager)
+void zaran::Visual::WriteTecplotBinary(shared_ptr<FieldManager> field_manager)
 {
     INTEGER4 file_format = 0;
     INTEGER4 debug = 0;

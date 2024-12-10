@@ -25,12 +25,12 @@ namespace zaran
 	{
 	public:
 		ModelManager();
-		ModelManager(std::vector<std::shared_ptr<Model >> model) : m_model(model) {};
+		ModelManager(dynamic_array<shared_ptr<Model >> model) : m_model(model) {};
 		ModelManager(const ModelManager &model) { m_model = model.m_model; };
-		void AddModel(std::shared_ptr<Model> model);
-		void AddModel(std::vector<std::shared_ptr<Model>> model);
+		void AddModel(shared_ptr<Model> model);
+		void AddModel(dynamic_array<shared_ptr<Model>> model);
 		void AddModel(ModelManager *model);
-		const std::shared_ptr<Model> GetModel(size_t iModel) const { return m_model[iModel]; }
+		const shared_ptr<Model> GetModel(size_t iModel) const { return m_model[iModel]; }
 		bool InModel(const double *pt) const;
 		void GetClosestPoint(const double *pt, double *point_find) const;
 		double GetClosestDistance(const double *pt) const;
@@ -38,7 +38,7 @@ namespace zaran
 		Box& GetBox() { return m_box; }
 
 	private:
-		std::vector<std::shared_ptr<Model>> m_model;
+		dynamic_array<shared_ptr<Model>> m_model;
 		Box m_box;
 	};
 }

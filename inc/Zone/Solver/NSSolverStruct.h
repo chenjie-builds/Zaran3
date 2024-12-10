@@ -11,7 +11,7 @@ namespace zaran
 	class NSSolverStruct : public NSSolver
 	{
 	public:
-		NSSolverStruct(Id index, string name, std::shared_ptr<FlowSolverParamStruct> para, std::shared_ptr < GridStruct> grid, std::shared_ptr < DataManagerNSStruct>data_manager);
+		NSSolverStruct(index_type index, string name, shared_ptr<FlowSolverParamStruct> para, shared_ptr < GridStruct> grid, shared_ptr < DataManagerNSStruct>data_manager);
 		~NSSolverStruct();
 		DataManagerNSStruct* GetDataManager();
 		Metric* GetNodeMetrics();
@@ -129,20 +129,20 @@ namespace zaran
 
 		void BoundaryCondition() override;
 		void BCInflow(BoundStruct& bound);
-		void BCInflow(Array<BoundStruct>& bound);
+		void BCInflow(dynamic_array<BoundStruct>& bound);
 		void BCOutflow(BoundStruct& bound);
-		void BCOutflow(Array<BoundStruct>& bound);
+		void BCOutflow(dynamic_array<BoundStruct>& bound);
 		void BCWall(BoundStruct& bound);
-		void BCWall(Array<BoundStruct>& bound);
+		void BCWall(dynamic_array<BoundStruct>& bound);
 		void BCFarfield(BoundStruct& bound);
-		void BCFarfield(Array<BoundStruct>& bound);
+		void BCFarfield(dynamic_array<BoundStruct>& bound);
 		void BCSymmetry(BoundStruct& bound);
-		void BCSymmetry(Array<BoundStruct>& bound);
+		void BCSymmetry(dynamic_array<BoundStruct>& bound);
 		void BCVortex(BoundStruct& bound);
-		void BCVortex(Array<BoundStruct>& bound);
+		void BCVortex(dynamic_array<BoundStruct>& bound);
 		//双马赫反射
 		void BCDoubleMach(BoundStruct& bound);
-		void BCDoubleMach(Array<BoundStruct>& bound);
+		void BCDoubleMach(dynamic_array<BoundStruct>& bound);
 
 	protected:
 		void CheckPrimtive() override;
@@ -152,7 +152,7 @@ namespace zaran
 
 	protected:
 		GridStruct* GetGrid();
-		//std::shared_ptr<GridStruct>GetGrid();
+		//shared_ptr<GridStruct>GetGrid();
 		Metric* GetMidMetricsI();
 		Metric* GetMidMetricsJ();
 		Metric* GetMidMetricsK();
@@ -219,14 +219,14 @@ namespace zaran
 
 	private:
 		/// @brief 节点度量
-		std::shared_ptr<Metric> m_node_metrics;
+		shared_ptr<Metric> m_node_metrics;
 		/// @brief 索引代理，用于将结构节点索引转换为场数据索引
-		std::shared_ptr<IdProxyStruct>	 m_idx_proxy;
+		shared_ptr<IdProxyStruct>	 m_idx_proxy;
 		Metric* m_metrics_mid_i; // 半点度量系数(i+1/2)
 		Metric* m_metrics_mid_j; // 半点度量系数(j+1/2)
 		Metric* m_metrics_mid_k; // 半点度量系数(k+1/2)
-		std::shared_ptr<GridStruct> m_grid;
-		std::shared_ptr<DataManagerNSStruct> m_data_manager;
-		std::shared_ptr<FlowSolverParamStruct> m_para;
+		shared_ptr<GridStruct> m_grid;
+		shared_ptr<DataManagerNSStruct> m_data_manager;
+		shared_ptr<FlowSolverParamStruct> m_para;
 	};
 } // namespace zaran

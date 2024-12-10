@@ -57,7 +57,7 @@ namespace zaran
         //参数文件名
         string m_control_file;
         //网格生成工厂
-        Ptr<GridGenerator> m_grid_builder;
+        shared_ptr<GridGenerator> m_grid_builder;
         //程序支持的最小控制文件版本号, 如果读取的版本号低于此版本, 将不进行计算
         //作用: 防止程序更新后，需要更多的控制文件信息，老版本控制文件未添加导致计算失败
         string m_min_ctrol_file_version;

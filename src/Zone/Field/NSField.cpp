@@ -1,7 +1,7 @@
 #include "NSField.h"
 namespace zaran
 {
-	FieldNS::FieldNS(std::shared_ptr < GridBase> grid, FieldType fieldType) :Field(grid, fieldType)
+	FieldNS::FieldNS(shared_ptr < GridBase> grid, FieldType fieldType) :Field(grid, fieldType)
 	{
 		m_res_info = nullptr;
 	}
@@ -10,7 +10,7 @@ namespace zaran
 	}
 	void FieldNS::AllocateSolverPara()
 	{
-		m_solver_para = std::make_shared<FlowSolverParam>();
+		m_solver_para = make_shared<FlowSolverParam>();
 		GetSolverPara()->Init();
 	}
 	void FieldNS::Allocate()
@@ -19,12 +19,12 @@ namespace zaran
 		AllocateResInfo();
 	}
 
-	std::shared_ptr<zaran::FlowSolverParam> FieldNS::GetSolverPara()
+	shared_ptr<zaran::FlowSolverParam> FieldNS::GetSolverPara()
 	{
 		return std::static_pointer_cast<FlowSolverParam>(Field::GetSolverPara());
 	}
 
-	std::shared_ptr<zaran::DataManagerNS> FieldNS::GetDataManager()
+	shared_ptr<zaran::DataManagerNS> FieldNS::GetDataManager()
 	{
 		return std::static_pointer_cast<DataManagerNS>(Field::GetDataManager());
 	}

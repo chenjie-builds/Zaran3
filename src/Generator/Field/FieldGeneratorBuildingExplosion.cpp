@@ -11,7 +11,7 @@ namespace zaran
 
 	}
 
-	std::shared_ptr<FieldManager> FieldGeneratorBuildingExplosion::Create()
+	shared_ptr<FieldManager> FieldGeneratorBuildingExplosion::Create()
 	{
 		CreateGrid();
 		TagGrid();
@@ -147,8 +147,8 @@ namespace zaran
 	}
 	void FieldGeneratorBuildingExplosion::CreateField()
 	{
-		m_field_manager = std::make_shared<FieldManager>();
-		std::shared_ptr<NSFieldBlockExplosion> field = std::make_shared<NSFieldBlockExplosion>(m_grid);
+		m_field_manager = make_shared<FieldManager>();
+		shared_ptr<NSFieldBlockExplosion> field = make_shared<NSFieldBlockExplosion>(m_grid);
 		m_field_manager->AddField(field, nullptr);
 		field->Allocate();
 	}

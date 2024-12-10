@@ -32,19 +32,19 @@ namespace zaran
 	class Field
 	{
 	public:
-		Field(std::shared_ptr<GridBase> grid = nullptr, FieldType fieldType = FieldType::Unset);
+		Field(shared_ptr<GridBase> grid = nullptr, FieldType fieldType = FieldType::Unset);
 		virtual ~Field();
 
 	public:
 		virtual void Allocate();
-		void SetIdx(Id idx) { m_idx = idx; }
-		void SetGrid(std::shared_ptr<GridBase> grid) { m_grid = grid; }
-		Id GetIdx() const { return m_idx; }
-		std::shared_ptr<GridBase> GetGrid() const { return m_grid; }
-		std::shared_ptr<FieldSolver> GetSolver() const { return m_solver; }
-		std::shared_ptr<FieldData> GetData() const { return m_data; }
-		std::shared_ptr<SolverParam> GetSolverPara() const { return m_solver_para; }
-		std::shared_ptr<DataManager> GetDataManager() const { return m_data_manager; }
+		void SetIdx(index_type idx) { m_idx = idx; }
+		void SetGrid(shared_ptr<GridBase> grid) { m_grid = grid; }
+		index_type GetIdx() const { return m_idx; }
+		shared_ptr<GridBase> GetGrid() const { return m_grid; }
+		shared_ptr<FieldSolver> GetSolver() const { return m_solver; }
+		shared_ptr<FieldData> GetData() const { return m_data; }
+		shared_ptr<SolverParam> GetSolverPara() const { return m_solver_para; }
+		shared_ptr<DataManager> GetDataManager() const { return m_data_manager; }
 		FieldType GetFieldType() const { return m_fieldType; }
 
 	protected:
@@ -55,17 +55,17 @@ namespace zaran
 
 	protected:
 		/// @brief 本场在全场数组中的索引
-		Id m_idx;
+		index_type m_idx;
 		/// @brief 场的网格，可能是结构化网格，也可能是非结构化网格
-		std::shared_ptr<GridBase> m_grid;
+		shared_ptr<GridBase> m_grid;
 		/// @brief 场的求解器，用于求解场
-		std::shared_ptr<FieldSolver> m_solver;
+		shared_ptr<FieldSolver> m_solver;
 		/// @brief 场的数据，包含场的值，梯度等
-		std::shared_ptr<FieldData> m_data;
+		shared_ptr<FieldData> m_data;
 		/// @brief 场的求解器参数，用于设置求解器的参数
-		std::shared_ptr<SolverParam> m_solver_para;
+		shared_ptr<SolverParam> m_solver_para;
 		/// @brief 场的数据管理器，用于管理场的数据
-		std::shared_ptr<DataManager> m_data_manager;
+		shared_ptr<DataManager> m_data_manager;
 		/// @brief 场的类型
 		FieldType m_fieldType;
 	};

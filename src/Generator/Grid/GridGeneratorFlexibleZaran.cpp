@@ -4,7 +4,7 @@
 #include <omp.h>
 #include<cmath>
 namespace zaran {
-	void GridFNFactoryZaran::CreateGrid(std::shared_ptr<GridBlock> block, std::shared_ptr<GridFN> grid, std::shared_ptr<ModelManager> model_manager) 
+	void GridFNFactoryZaran::CreateGrid(shared_ptr<GridBlock> block, shared_ptr<GridFN> grid, shared_ptr<ModelManager> model_manager) 
 	{
 		m_model_manager = model_manager;
 		m_block_grid = block;
@@ -13,7 +13,7 @@ namespace zaran {
 		ni = m_block_grid->GetNi();
 		nj = m_block_grid->GetNj();
 		nk = m_block_grid->GetNk();
-		m_idx_proxy = std::make_shared <IdProxyStruct>(ni, nj, nk);
+		m_idx_proxy = make_shared <IdProxyStruct>(ni, nj, nk);
 		m_layer_num = GlobalData::GetInt("projection_layer");
 		TagBlockGrid();
 		TagNodes();
@@ -251,7 +251,7 @@ namespace zaran {
 		m_node_type.resize(ni * nj * nk);
 		for (int idx = 0; idx < ni * nj * nk; idx++) {
 			m_idx_proxy->SetIdx(idx);
-			Id i, j, k;
+			index_type i, j, k;
 			m_idx_proxy->GetIdxStruct(i, j, k);
 			if (i < is || i >= ie || j < js || j >= je || k < ks || k >= ke) {
 				m_node_type[idx] = PhysicalType::Fluid;
@@ -686,7 +686,7 @@ namespace zaran {
 		}
 		for (int iFace = 0; iFace < m_trans_face.size(); iFace++) {
 			// auto face_node_idx = m_trans_face[iFace].idx_master;
-			// std::vector<int> idx_layer;
+			// dynamic_array<int> idx_layer;
 			// idx_layer.resize(face_node_idx.size());
 			// for (int iNode = 0; iNode < face_node_idx.size(); iNode++)
 			// {
@@ -794,26 +794,26 @@ namespace zaran {
 	void GridFNFactoryZaran::SetFNGridNodeNeighbor() {
 		auto grid = GetFNGrid();
 		auto node = grid->GetNode();
-		Id node_num = node->GetCount();
-		std::vector<Id> neighbor_node_num;
+		index_type node_num = node->GetCount();
+		dynamic_array<index_type> neighbor_node_num;
 		neighbor_node_num.resize(node_num);
-		for (Id iLayer = 0; iLayer < m_fn_info.node.size(); iLayer++) {
-			for (Id iNode = 0; iNode < m_fn_info.node[iLayer].size(); iNode++) {
-				Id idx = m_fn_info.node[iLayer][iNode].idx;
+		for (index_type iLayer = 0; iLayer < m_fn_info.node.size(); iLayer++) {
+			for (index_type iNode = 0; iNode < m_fn_info.node[iLayer].size(); iNode++) {
+				index_type idx = m_fn_info.node[iLayer][iNode].idx;
 				neighbor_node_num[idx] =
 					m_fn_info.node[iLayer][iNode].neighbor_node.size();
 			}
 		}
-		Id total_neighbor_num = 0;
-		for (Id i = 0; i < node_num; i++) {
+		index_type total_neighbor_num = 0;
+		for (index_type i = 0; i < node_num; i++) {
 			total_neighbor_num += neighbor_node_num[i];
 		}
-		std::vector<Id> neighbor_node_idx;
+		dynamic_array<index_type> neighbor_node_idx;
 		neighbor_node_idx.resize(total_neighbor_num);
-		Id idx = 0;
-		for (Id iLayer = 0; iLayer < m_fn_info.node.size(); iLayer++) {
-			for (Id iNode = 0; iNode < m_fn_info.node[iLayer].size(); iNode++) {
-				for (Id iNeighbor = 0;
+		index_type idx = 0;
+		for (index_type iLayer = 0; iLayer < m_fn_info.node.size(); iLayer++) {
+			for (index_type iNode = 0; iNode < m_fn_info.node[iLayer].size(); iNode++) {
+				for (index_type iNeighbor = 0;
 					iNeighbor < m_fn_info.node[iLayer][iNode].neighbor_node.size();
 					iNeighbor++) {
 					neighbor_node_idx[idx++] =
@@ -827,7 +827,7 @@ namespace zaran {
 
 	void GridFNFactoryZaran::SetFNGridCell() {
 		auto grid = GetFNGrid();
-		Id cell_num = m_fn_info.cell.size();
+		index_type cell_num = m_fn_info.cell.size();
 		CellFN* cell = new CellFN(cell_num);
 		cell->SetNode(m_fn_info.cell);
 		grid->SetCell(cell);
@@ -838,11 +838,11 @@ namespace zaran {
 		BoundMapFN* bound = new BoundMapFN();
 		bound->CreateBoundary("wall");
 		auto& wall = bound->GetBoundary("wall");
-		Id node_num = m_fn_info.node[m_layer_num].size();
+		index_type node_num = m_fn_info.node[m_layer_num].size();
 		wall.resize(node_num);
-		for (Id iNode = 0; iNode < node_num; iNode++) {
-			Id bound_idx = m_fn_info.node[m_layer_num][iNode].idx;
-			Id ref_idx = m_fn_info.node[1][iNode].idx;
+		for (index_type iNode = 0; iNode < node_num; iNode++) {
+			index_type bound_idx = m_fn_info.node[m_layer_num][iNode].idx;
+			index_type ref_idx = m_fn_info.node[1][iNode].idx;
 			double normal[3];
 			auto bound_coord = m_fn_info.node[m_layer_num][iNode].coord;
 			auto ref_coord = m_fn_info.node[1][iNode].coord;
@@ -864,16 +864,16 @@ namespace zaran {
 	void GridFNFactoryZaran::SetFNGridBoundaryFace() {
 		auto grid = GetFNGrid();
 		FaceFN* face = new FaceFN();
-		Id face_num = m_trans_face.size();
-		std::vector<Id> face_node_num;
+		index_type face_num = m_trans_face.size();
+		dynamic_array<index_type> face_node_num;
 		face_node_num.resize(face_num);
-		for (Id iFace = 0; iFace < face_num; iFace++) {
+		for (index_type iFace = 0; iFace < face_num; iFace++) {
 			face_node_num[iFace] = m_trans_face[iFace].idx_block.size();
 		}
 		face->Allocate(face_num, face_node_num.data());
 		double normal[3];
 		double area;
-		for (Id iFace = 0; iFace < face_num; iFace++) {
+		for (index_type iFace = 0; iFace < face_num; iFace++) {
 			// auto face_node_idx = m_trans_face[iFace].idx_master;
 			// for (int iNode = 0; iNode < face_node_idx.size(); iNode++)
 			// {
@@ -888,7 +888,7 @@ namespace zaran {
 			// }
 			auto& face_node_idx = m_trans_face[iFace].idx_slave;
 
-			for (Id iNode = 0; iNode < face_node_idx.size(); iNode++) {
+			for (index_type iNode = 0; iNode < face_node_idx.size(); iNode++) {
 				face_node_idx[iNode] =
 					m_fn_info.node[m_layer_num][face_node_idx[iNode]].idx;
 			}
@@ -905,7 +905,7 @@ namespace zaran {
 		auto node = grid->GetNode();
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
-		std::set<Id> ref_node_idx_set;
+		std::set<index_type> ref_node_idx_set;
 		for (int k = ks; k <= ke; k++) {
 			for (int j = js; j <= je; j++) {
 				for (int i = is; i <= ie; i++) {
@@ -940,9 +940,9 @@ namespace zaran {
 			}
 		}
 		m_fn_info.node[0].resize(ref_node_idx_set.size());
-		Id idx = 0;
+		index_type idx = 0;
 		for (auto& ref_node_idx : ref_node_idx_set) {
-			Id i, j, k;
+			index_type i, j, k;
 			m_idx_proxy->SetIdx(ref_node_idx);
 			m_idx_proxy->GetIdxStruct(i, j, k);
 			m_fn_info.node[0][idx].coord[0] = node->GetCoord(i, j, k)[0];
@@ -958,7 +958,7 @@ namespace zaran {
 		auto node = grid->GetNode();
 		// int is, ie, js, je, ks, ke;
 		// grid->GetRange(is, ie, js, je, ks, ke);
-		std::set<Id> trans_node_idx_set;
+		std::set<index_type> trans_node_idx_set;
 		// for (int k = ks; k <= ke; k++)
 		// {
 		//     for (int j = js; j <= je; j++)
@@ -982,9 +982,9 @@ namespace zaran {
 		}
 
 		m_fn_info.node[1].resize(trans_node_idx_set.size());
-		Id idx = 0;
+		index_type idx = 0;
 		for (auto& trans_idx : trans_node_idx_set) {
-			Id i, j, k;
+			index_type i, j, k;
 			m_idx_proxy->SetIdx(trans_idx);
 			m_idx_proxy->GetIdxStruct(i, j, k);
 			m_fn_info.node[1][idx].coord[0] = node->GetCoord(i, j, k)[0];
@@ -1016,7 +1016,7 @@ namespace zaran {
 	bool GridFNFactoryZaran::CheckTransNode() {
 		int total_error_num = 0;
 		for (int iNode = 0; iNode < m_node_type.size(); iNode++) {
-			Id i, j, k;
+			index_type i, j, k;
 			m_idx_proxy->SetIdx(iNode);
 			m_idx_proxy->GetIdxStruct(i, j, k);
 			if (m_node_type[iNode] != PhysicalType::FluidSolid)
@@ -1057,7 +1057,7 @@ namespace zaran {
 			for (int iNode = 0; iNode < m_node_type.size(); iNode++) {
 				auto grid = GetBlockGrid();
 				auto node = grid->GetNode();
-				Id i, j, k;
+				index_type i, j, k;
 				m_idx_proxy->SetIdx(iNode);
 				m_idx_proxy->GetIdxStruct(i, j, k);
 				if (m_node_type[iNode] != PhysicalType::FluidSolid)
@@ -1084,29 +1084,29 @@ namespace zaran {
 					total_error_num++;
 				}
 				else {
-					Id neighbor_i[6] = { i - 1, i + 1, i, i, i, i };
-					Id neighbor_j[6] = { j, j, j - 1, j + 1, j, j };
-					Id neighbor_k[6] = { k, k, k, k, k - 1, k + 1 };
+					index_type neighbor_i[6] = { i - 1, i + 1, i, i, i, i };
+					index_type neighbor_j[6] = { j, j, j - 1, j + 1, j, j };
+					index_type neighbor_k[6] = { k, k, k, k, k - 1, k + 1 };
 					double coord[6][3];
 					int direction[6] = { 1, 1, 1, 1, 1, 1 };
-					for (Id iNeighbor = 0; iNeighbor < 6; iNeighbor++) {
-						for (Id iDim = 0; iDim < 3; iDim++) {
+					for (index_type iNeighbor = 0; iNeighbor < 6; iNeighbor++) {
+						for (index_type iDim = 0; iDim < 3; iDim++) {
 							coord[iNeighbor][iDim] =
 								node->GetCoord(neighbor_i[iNeighbor], neighbor_j[iNeighbor],
 									neighbor_k[iNeighbor])[iDim];
 						}
 					}
-					for (Id iNeighbor = 0; iNeighbor < 6; iNeighbor++) {
+					for (index_type iNeighbor = 0; iNeighbor < 6; iNeighbor++) {
 						if (m_node_type[m_idx_proxy->GetIdx(
 							neighbor_i[iNeighbor], neighbor_j[iNeighbor],
 							neighbor_k[iNeighbor])] == PhysicalType::Solid) {
 							direction[iNeighbor] = 0;
-							for (Id iDim = 0; iDim < 3; iDim++) {
+							for (index_type iDim = 0; iDim < 3; iDim++) {
 								coord[iNeighbor][iDim] = wall_coord[iDim];
 							}
 						}
 					}
-					DVector3D vec1, vec2, vec3;
+					Eigen::Vector3d vec1, vec2, vec3;
 					for (int iDim = 0; iDim < 3; iDim++) {
 						vec1[iDim] = coord[1][iDim] - coord[0][iDim];
 						vec2[iDim] = coord[3][iDim] - coord[2][iDim];
@@ -1217,7 +1217,7 @@ namespace zaran {
 	}
 	void GridFNFactoryZaran::BuildProjectNodeNeighbor() {
 		// direct neighbor
-		std::vector<std::set<int>> node_neighbor_origin;
+		dynamic_array<std::set<int>> node_neighbor_origin;
 		node_neighbor_origin.resize(m_fn_info.node[1].size());
 		for (int iFace = 0; iFace < m_trans_face.size(); iFace++) {
 			// auto face_node_idx = m_trans_face[iFace].idx_master;
@@ -1245,7 +1245,7 @@ namespace zaran {
 		}
 		// extend neighbor, if the neighbor node is less than 3, extend the neighbor
 		// node
-		std::vector<std::set<int>> node_neighbor_extend;
+		dynamic_array<std::set<int>> node_neighbor_extend;
 		node_neighbor_extend.resize(m_fn_info.node[1].size());
 		for (int iNode = 0; iNode < node_neighbor_origin.size(); iNode++) {
 
@@ -1340,7 +1340,7 @@ namespace zaran {
 				node_pair main_pair;
 				main_pair.node1 = neighbor[0];
 				main_pair.node2 = neighbor[1];
-				DVector3D main_vec;
+				Eigen::Vector3d main_vec;
 				for (int i = 0; i < 3; ++i) {
 					main_vec[i] = node->GetCoord(main_pair.node2)[i] -
 						node->GetCoord(main_pair.node1)[i];
@@ -1351,8 +1351,8 @@ namespace zaran {
 				neighbor.erase(
 					std::find(neighbor.begin(), neighbor.end(), main_pair.node2));
 				// 求出所有邻居节点在以主方向向量为法向量，经过当地节点的平面上的投影
-				map<int, DVector3D> node_proj_map;
-				DVector3D vec;
+				map<int, Eigen::Vector3d> node_proj_map;
+				Eigen::Vector3d vec;
 				for (int i = 0; i < neighbor.size(); ++i) {
 					for (int k = 0; k < 3; ++k) {
 						vec[k] = node->GetCoord(neighbor[i])[k] - node->GetCoord(idx)[k];
@@ -1375,7 +1375,7 @@ namespace zaran {
 						node_angle_map[0] = neighbor[i];
 						continue;
 					}
-					DVector3D vec = node_proj_map[neighbor[i]];
+					Eigen::Vector3d vec = node_proj_map[neighbor[i]];
 					double angle =
 						AngleOfTwoArray3D(node_proj_map[neighbor[0]].data(), vec.data());
 					if ((node_proj_map[neighbor[0]].cross(vec).dot(main_vec) < 0))
@@ -1409,14 +1409,14 @@ namespace zaran {
 				}
 				node_pair_map.clear();
 				// 获取下一个点的lamda表达�?
-				auto get_next_node = [&](Id iNode, std::vector<Id> neiborNode) -> Id {
+				auto get_next_node = [&](index_type iNode, dynamic_array<index_type> neiborNode) -> index_type {
 					if (iNode == neiborNode.size() - 1)
 						return 0;
 					else
 						return iNode + 1;
 					};
 				// 获取上一个点的lamda表达�?
-				auto get_last_node = [&](Id iNode, std::vector<Id> neiborNode) -> Id {
+				auto get_last_node = [&](index_type iNode, dynamic_array<index_type> neiborNode) -> index_type {
 					if (iNode == 0)
 						return neiborNode.size() - 1;
 					else
@@ -1426,7 +1426,7 @@ namespace zaran {
 					node_pair temp;
 					temp.node1 = neighbor[i];
 					temp.node2 = neighbor[get_next_node(i, neighbor)];
-					DVector3D vec1, vec2;
+					Eigen::Vector3d vec1, vec2;
 					vec1 = node_proj_map[temp.node1];
 					vec2 = node_proj_map[temp.node2];
 					double angle = AngleOfTwoArray3D(vec1.data(), vec2.data());
@@ -1442,7 +1442,7 @@ namespace zaran {
 				while (neighbor.size() > 4) {
 
 					auto& temp_pair = node_pair_map.begin()->second;
-					Id remove_node, remove_index;
+					index_type remove_node, remove_index;
 					node_pair temp;
 					if (node_dis_map[temp_pair.node1] > node_dis_map[temp_pair.node2]) {
 						remove_node = temp_pair.node1;
@@ -1478,7 +1478,7 @@ namespace zaran {
 					neighbor.erase(
 						std::find(neighbor.begin(), neighbor.end(), remove_node));
 					node_dis_map.erase(remove_node);
-					DVector3D vec1, vec2;
+					Eigen::Vector3d vec1, vec2;
 					vec1 = node_proj_map[temp.node1];
 					vec2 = node_proj_map[temp.node2];
 					double angle = AngleOfTwoArray3D(vec1.data(), vec2.data()) +
@@ -1505,7 +1505,7 @@ namespace zaran {
 			for (int iNode = 0; iNode < node_num; iNode++) {
 				int idx = m_fn_info.node[iLayer][iNode].idx;
 				auto& neighbor = m_fn_info.node[iLayer][iNode].neighbor_node;
-				Array<DVector3D> vec(3);
+				dynamic_array<Eigen::Vector3d> vec(3);
 				for (int i = 0; i < 3; i++) {
 					vec[0][i] =
 						node->GetCoord(neighbor[1])[i] - node->GetCoord(neighbor[0])[i];
@@ -1583,7 +1583,7 @@ namespace zaran {
 			m_fn_info.node[1][iNode].neighbor_node.resize(6);
 		}
 		for (auto& nodes : m_trans_node) {
-			Id i, j, k;
+			index_type i, j, k;
 			m_idx_proxy->SetIdx(nodes.idx_block);
 			m_idx_proxy->GetIdxStruct(i, j, k);
 			m_fn_info.node[1][nodes.idx_local_layer].neighbor_node[0] =
@@ -1631,7 +1631,7 @@ namespace zaran {
 					solid_num++;
 				}
 				if (!find) {
-					Id i, j, k;
+					index_type i, j, k;
 					m_idx_proxy->SetIdx(idx_master);
 					m_idx_proxy->GetIdxStruct(i, j, k);
 					Log::error("Invalid node:{}, {},{},{}, type:{}", idx_master, i, j, k,

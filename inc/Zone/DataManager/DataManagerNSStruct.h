@@ -6,7 +6,7 @@ namespace zaran
     class DataManagerNSStruct :public DataManagerNS
     {
     public:
-        DataManagerNSStruct(std::shared_ptr<FieldData> fieldData, int ni, int nj, int nk);
+        DataManagerNSStruct(shared_ptr<FieldData> fieldData, int ni, int nj, int nk);
         ~DataManagerNSStruct();
     public:
         void CreateData()override;

@@ -17,16 +17,16 @@ namespace zaran
     {
     public:
         GridGeneratorBlock() {}
-       void CreateGrid(std::shared_ptr<GridBlock> grid, GridBlockInfo &grid_info);
+       void CreateGrid(shared_ptr<GridBlock> grid, GridBlockInfo &grid_info);
 
 	protected:
         void AllocateGrid();
         void CreateNode();
         void CreateBound();
-        std::shared_ptr<GridBlock> GetGrid() { return m_grid; }
+        shared_ptr<GridBlock> GetGrid() { return m_grid; }
 
     private:
         GridBlockInfo m_grid_info;
-        std::shared_ptr<GridBlock> m_grid;
+        shared_ptr<GridBlock> m_grid;
     };
 }

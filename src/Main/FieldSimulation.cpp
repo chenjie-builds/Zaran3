@@ -7,7 +7,7 @@
 #include "NSFieldFN.h"
 using namespace zaran;
 
-FieldSimulation::FieldSimulation(std::shared_ptr<FieldManager> global_Field)
+FieldSimulation::FieldSimulation(shared_ptr<FieldManager> global_Field)
 {
 	m_field_manager = global_Field;
 	m_res_flag = false;
