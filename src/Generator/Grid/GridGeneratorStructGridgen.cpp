@@ -1000,10 +1000,10 @@ namespace zaran
 
 			auto bound_map = grid_src->GetBoundMap();
 			auto node_src = grid_src->GetNode();
-			int i_bnd_src, j_bnd_src, k_bnd_src;
-			int i_bnd_tgt, j_bnd_tgt, k_bns_tgt;
-			int i_ref, j_ref, k_ref;
-			int i_ghost, j_ghost, k_ghost;
+			Id i_bnd_src, j_bnd_src, k_bnd_src;
+			Id i_bnd_tgt, j_bnd_tgt, k_bns_tgt;
+			Id i_ref, j_ref, k_ref;
+			Id i_ghost, j_ghost, k_ghost;
 			double norm[3];
 			int iter_bnd_s, iter_bnd_e;
 			const double* bnd_node_coord, * ref_node_coord;

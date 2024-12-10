@@ -55,7 +55,7 @@ namespace zaran
 	{
 		return m_idx_proxy.get();
 	}
-	FlowSolverParamStruct*	 NSSolverStruct::GetPara()
+	FlowSolverParamStruct* NSSolverStruct::GetPara()
 	{
 		return m_para.get();
 	}
@@ -7755,53 +7755,32 @@ namespace zaran
 		{
 			auto& bound_name = boundary.first;
 			auto& bound = boundary.second;
-
 			if (bound_name == "hole")
 				continue;
-
 			if (bound_name == "farfield")
 			{
-#pragma omp parallel for
-				for (int iBound = 0; iBound < bound.size(); ++iBound)
-				{
-					BCFarfield(bound[iBound]);
-				}
+				BCFarfield(bound);
 			}
 			else if (bound_name == "inlet")
 			{
-#pragma omp parallel for
-				for (int iBound = 0; iBound < bound.size(); ++iBound)
-				{
-					BCInlow(bound[iBound]);
-				}
+				BCInflow(bound);
 			}
 			else if (bound_name == "outlet")
 			{
-#pragma omp parallel for
-				for (int iBound = 0; iBound < bound.size(); ++iBound)
-				{
-					BCOutflow(bound[iBound]);
-				}
+				BCOutflow(bound);
 			}
 			else if (bound_name == "wall")
 			{
-#pragma omp parallel for
-				for (int iBound = 0; iBound < bound.size(); ++iBound)
-				{
-					BCWall(bound[iBound]);
-				}
+				BCWall(bound);
 			}
 		}
 	}
-	void NSSolverStruct::BCInlow(BoundStruct& bound)
+	void NSSolverStruct::BCInflow(Array<BoundStruct>& bound)
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		int ghost_size = grid->GetGhostLevel();
-		int i_bound, j_bound, k_bound;
-		bound.GetIdx(i_bound, j_bound, k_bound);
-		auto bound_direction = bound.GetDirectionSrc();
 		//double prim_far[5] = { GetPara()->GetInflowDensity(), GetPara()->GetInflowVelocityX(),
 		//					  GetPara()->GetInflowVelocityY(), GetPara()->GetInflowVelocityZ(),
 		//					  GetPara()->GetInflowPressure() };
@@ -7809,217 +7788,246 @@ namespace zaran
 		//double prim_far[5] = { 6.4,3.125,0,0,18.5 };
 		double cons_far[5];
 		GetGas()->Prim2Cons(prim_far, cons_far);
-		for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
+#pragma omp parallel for 
+		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
-			int i_ghost = i_bound + iGhost * bound_direction[0];
-			int j_ghost = j_bound + iGhost * bound_direction[1];
-			int k_ghost = k_bound + iGhost * bound_direction[2];
-			int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
-			//double y = node->GetCoord(i_ghost, j_ghost, k_ghost)[1];
-			//prim_far[0] = 1 + 0.1 * y*y;
-			//GetGas()->Prim2Cons(prim_far, cons_far);
-			data_manager->SetPrim(idx_ghost, prim_far);
-			data_manager->SetCons(idx_ghost, cons_far);
+			Id i_bound, j_bound, k_bound;
+			Id i_ghost, j_ghost, k_ghost;
+			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
+			auto bound_direction = bound[iBound].GetDirectionSrc();
+			for (size_t iGhost = 1; iGhost <= ghost_size; ++iGhost)
+			{
+				i_ghost = i_bound + iGhost * bound_direction[0];
+				j_ghost = j_bound + iGhost * bound_direction[1];
+				k_ghost = k_bound + iGhost * bound_direction[2];
+				Id idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				//double y = node->GetCoord(i_ghost, j_ghost, k_ghost)[1];
+				//prim_far[0] = 1 + 0.1 * y*y;
+				//GetGas()->Prim2Cons(prim_far, cons_far);
+				data_manager->SetPrim(idx_ghost, prim_far);
+				data_manager->SetCons(idx_ghost, cons_far);
+			}
 		}
 	}
-	void NSSolverStruct::BCOutflow(BoundStruct& bound)
+
+	void NSSolverStruct::BCOutflow(Array<BoundStruct>& bound)
 	{
 		BCDoubleMach(bound);
 		return;
-
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
-		int ghost_size = grid->GetGhostLevel();
-		int i_bound, j_bound, k_bound;
-		bound.GetIdx(i_bound, j_bound, k_bound);
-		int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
-		auto bound_direction = bound.GetDirectionSrc();
-		std::vector<double> prim_vals(5), cons_vals(5);
-		// 预先获取边界的原始变量和守恒变量
-		for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
+		size_t ghost_size = grid->GetGhostLevel();
+		Id eq_num = GetPara()->GetEqNum();
+		std::vector<double> prim_vals(eq_num), cons_vals(eq_num);
+#pragma omp parallel for private( prim_vals, cons_vals)
+		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
-			prim_vals[idx_eq] = data_manager->GetPrim(idx_eq, idx_bound);
-		}
-		GetGas()->Prim2Cons(prim_vals.data(), cons_vals.data());
-		for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
-		{
-			int i_ghost = i_bound + iGhost * bound_direction[0];
-			int j_ghost = j_bound + iGhost * bound_direction[1];
-			int k_ghost = k_bound + iGhost * bound_direction[2];
-			int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
-			data_manager->SetPrim(idx_ghost, prim_vals.data());
-			data_manager->SetCons(idx_ghost, cons_vals.data());
+			Id i_bound, j_bound, k_bound;
+			Id i_ghost, j_ghost, k_ghost;
+			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
+			Id idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+			auto bound_direction = bound[iBound].GetDirectionSrc();
+			// 预先获取边界的原始变量和守恒变量
+			for (size_t idx_eq = 0; idx_eq < eq_num; ++idx_eq)
+			{
+				prim_vals[idx_eq] = data_manager->GetPrim(idx_eq, idx_bound);
+			}
+			GetGas()->Prim2Cons(prim_vals.data(), cons_vals.data());
+			for (size_t iGhost = 1; iGhost <= ghost_size; ++iGhost)
+			{
+				i_ghost = i_bound + iGhost * bound_direction[0];
+				j_ghost = j_bound + iGhost * bound_direction[1];
+				k_ghost = k_bound + iGhost * bound_direction[2];
+				Id idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				data_manager->SetPrim(idx_ghost, prim_vals.data());
+				data_manager->SetCons(idx_ghost, cons_vals.data());
+			}
 		}
 	}
-	void NSSolverStruct::BCWall(BoundStruct& bound)
+
+	void NSSolverStruct::BCWall(Array<BoundStruct>& bound)
 	{
 		auto grid = GetGrid();
-		auto data_manager = GetDataManager();
-		int ghost_size = grid->GetGhostLevel();
-		auto norm_bnd = bound.GetNorm();
-		int i_bound, j_bound, k_bound;
-		bound.GetIdx(i_bound, j_bound, k_bound);
-		int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
-		int i_ref, j_ref, k_ref;
-		int i_ghost, j_ghost, k_ghost;
 		auto node = grid->GetNode();
-		auto bound_coord = node->GetCoord(i_bound, j_bound, k_bound);
-		for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
+		auto data_manager = GetDataManager();
+		int ghost_size = grid->GetGhostLevel();
+#pragma omp for
+		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
-			i_ghost = i_bound + iGhost * bound.GetDirectionSrc()[0];
-			j_ghost = j_bound + iGhost * bound.GetDirectionSrc()[1];
-			k_ghost = k_bound + iGhost * bound.GetDirectionSrc()[2];
-			int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
-			i_ref = i_bound - iGhost * bound.GetDirectionSrc()[0];
-			j_ref = j_bound - iGhost * bound.GetDirectionSrc()[1];
-			k_ref = k_bound - iGhost * bound.GetDirectionSrc()[2];
-			int idx_ref = m_idx_proxy->GetIdx(i_ref, j_ref, k_ref);
-			double prim_ghost[5];
-			for (int idx_eq = 0; idx_eq < data_manager->GetEqNum(); ++idx_eq)
+			Id i_bound, j_bound, k_bound;
+			Id i_ref, j_ref, k_ref;
+			Id i_ghost, j_ghost, k_ghost;
+			auto norm_bnd = bound[iBound].GetNorm();
+			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
+			Id idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+			auto bound_coord = node->GetCoord(i_bound, j_bound, k_bound);
+			for (size_t iGhost = 1; iGhost <= ghost_size; ++iGhost)
 			{
-				prim_ghost[idx_eq] = data_manager->GetPrim(idx_eq, idx_ref);
+				i_ghost = i_bound + iGhost * bound[iBound].GetDirectionSrc()[0];
+				j_ghost = j_bound + iGhost * bound[iBound].GetDirectionSrc()[1];
+				k_ghost = k_bound + iGhost * bound[iBound].GetDirectionSrc()[2];
+				Id idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				i_ref = i_bound - iGhost * bound[iBound].GetDirectionSrc()[0];
+				j_ref = j_bound - iGhost * bound[iBound].GetDirectionSrc()[1];
+				k_ref = k_bound - iGhost * bound[iBound].GetDirectionSrc()[2];
+				Id idx_ref = m_idx_proxy->GetIdx(i_ref, j_ref, k_ref);
+				double prim_ghost[5];
+				for (int idx_eq = 0; idx_eq < data_manager->GetEqNum(); ++idx_eq)
+				{
+					prim_ghost[idx_eq] = data_manager->GetPrim(idx_eq, idx_ref);
+				}
+				double vel_ref[3] = { prim_ghost[1], prim_ghost[2], prim_ghost[3] };
+				double vn_ref = vel_ref[0] * norm_bnd[0] + vel_ref[1] * norm_bnd[1] + vel_ref[2] * norm_bnd[2];
+				prim_ghost[1] = vel_ref[0] - 2.0 * vn_ref * norm_bnd[0];
+				prim_ghost[2] = vel_ref[1] - 2.0 * vn_ref * norm_bnd[1];
+				prim_ghost[3] = vel_ref[2] - 2.0 * vn_ref * norm_bnd[2];
+				double cons_ghost[5];
+				GetGas()->Prim2Cons(prim_ghost, cons_ghost);
+				data_manager->SetPrim(idx_ghost, prim_ghost);
+				data_manager->SetCons(idx_ghost, cons_ghost);
 			}
-			double vel_ref[3] = { prim_ghost[1], prim_ghost[2], prim_ghost[3] };
-			double vn_ref = vel_ref[0] * norm_bnd[0] + vel_ref[1] * norm_bnd[1] + vel_ref[2] * norm_bnd[2];
-			prim_ghost[1] = vel_ref[0] - 2.0 * vn_ref * norm_bnd[0];
-			prim_ghost[2] = vel_ref[1] - 2.0 * vn_ref * norm_bnd[1];
-			prim_ghost[3] = vel_ref[2] - 2.0 * vn_ref * norm_bnd[2];
-			double cons_ghost[5];
-			GetGas()->Prim2Cons(prim_ghost, cons_ghost);
-			data_manager->SetPrim(idx_ghost, prim_ghost);
-			data_manager->SetCons(idx_ghost, cons_ghost);
 		}
 	}
-	void NSSolverStruct::BCFarfield(BoundStruct& bound)
+
+	void NSSolverStruct::BCFarfield(Array<BoundStruct>& bound)
 	{
 		auto data_manager = GetDataManager();
-		int i_bound, j_bound, k_bound;
-		bound.GetIdx(i_bound, j_bound, k_bound);
-		int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
-		int i_ghost, j_ghost, k_ghost;
-		i_ghost = i_bound + bound.GetDirectionSrc()[0];
-		j_ghost = j_bound + bound.GetDirectionSrc()[1];
-		k_ghost = k_bound + bound.GetDirectionSrc()[2];
+#pragma omp parallel for
+		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
+		{
+			Id i_bound, j_bound, k_bound;
+			Id i_ghost, j_ghost, k_ghost;
+			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
+			int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+			i_ghost = i_bound + bound[iBound].GetDirectionSrc()[0];
+			j_ghost = j_bound + bound[iBound].GetDirectionSrc()[1];
+			k_ghost = k_bound + bound[iBound].GetDirectionSrc()[2];
 
-		int idx_ref = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
-		int idx_bnd = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
-		auto norm_bnd = bound.GetNorm();
-		double prim_in[5] = { data_manager->GetPrim(0, idx_ref), data_manager->GetPrim(1, idx_ref),
-							 data_manager->GetPrim(2, idx_ref), data_manager->GetPrim(3, idx_ref),
-							 data_manager->GetPrim(4, idx_ref) };
-		double prim_bnd[5] = { data_manager->GetPrim(0, idx_bnd), data_manager->GetPrim(1, idx_bnd),
-							  data_manager->GetPrim(2, idx_bnd), data_manager->GetPrim(3, idx_bnd),
-							  data_manager->GetPrim(4, idx_bnd) };
-		auto para = GetPara();
-		auto gas = GetGas();
-		double gamma = gas->GetGamma();
-		double prim_far[5] = { para->GetInflowDensity(), para->GetInflowVelocityX(), para->GetInflowVelocityY(),
-							  para->GetInflowVelocityZ(), para->GetInflowPressure() };
-		double vel_in[3] = { prim_in[1], prim_in[2], prim_in[3] };
-		// 速度在边界法向上的投影
-		double vn_in = vel_in[0] * norm_bnd[0] + vel_in[1] * norm_bnd[1] + vel_in[2] * norm_bnd[2];
-		double vel_far[3] = { para->GetInflowVelocityX(), para->GetInflowVelocityY(), para->GetInflowVelocityZ() };
-		double vn_far = vel_far[0] * norm_bnd[0] + vel_far[1] * norm_bnd[1] + vel_far[2] * norm_bnd[2];
-		double c_in = sqrt(gamma * prim_in[4] / prim_in[0]);
-		double c_far = sqrt(gamma * para->GetInflowPressure() / para->GetInflowDensity());
-		double mach = sqrt(vel_in[0] * vel_in[0] + vel_in[1] * vel_in[1] + vel_in[2] * vel_in[2]) / c_in;
-		// 超声速出口
-		if (mach >= 1.0)
-		{
-			if (vn_in >= 0) // 超声速出口
+			int idx_ref = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+			int idx_bnd = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+			auto norm_bnd = bound[iBound].GetNorm();
+			double prim_in[5] = { data_manager->GetPrim(0, idx_ref), data_manager->GetPrim(1, idx_ref),
+								 data_manager->GetPrim(2, idx_ref), data_manager->GetPrim(3, idx_ref),
+								 data_manager->GetPrim(4, idx_ref) };
+			double prim_bnd[5] = { data_manager->GetPrim(0, idx_bnd), data_manager->GetPrim(1, idx_bnd),
+								  data_manager->GetPrim(2, idx_bnd), data_manager->GetPrim(3, idx_bnd),
+								  data_manager->GetPrim(4, idx_bnd) };
+			auto para = GetPara();
+			auto gas = GetGas();
+			double gamma = gas->GetGamma();
+			double prim_far[5] = { para->GetInflowDensity(), para->GetInflowVelocityX(), para->GetInflowVelocityY(),
+								  para->GetInflowVelocityZ(), para->GetInflowPressure() };
+			double vel_in[3] = { prim_in[1], prim_in[2], prim_in[3] };
+			// 速度在边界法向上的投影
+			double vn_in = vel_in[0] * norm_bnd[0] + vel_in[1] * norm_bnd[1] + vel_in[2] * norm_bnd[2];
+			double vel_far[3] = { para->GetInflowVelocityX(), para->GetInflowVelocityY(), para->GetInflowVelocityZ() };
+			double vn_far = vel_far[0] * norm_bnd[0] + vel_far[1] * norm_bnd[1] + vel_far[2] * norm_bnd[2];
+			double c_in = sqrt(gamma * prim_in[4] / prim_in[0]);
+			double c_far = sqrt(gamma * para->GetInflowPressure() / para->GetInflowDensity());
+			double mach = sqrt(vel_in[0] * vel_in[0] + vel_in[1] * vel_in[1] + vel_in[2] * vel_in[2]) / c_in;
+			// 超声速出口
+			if (mach >= 1.0)
 			{
-				for (int iVal = 0; iVal < 5; ++iVal)
+				if (vn_in >= 0) // 超声速出口
 				{
-					prim_bnd[iVal] = prim_in[iVal];
+					for (int iVal = 0; iVal < 5; ++iVal)
+					{
+						prim_bnd[iVal] = prim_in[iVal];
+					}
+				}
+				else // 超声速入口
+				{
+					for (int iVal = 0; iVal < 5; ++iVal)
+					{
+						prim_bnd[iVal] = prim_far[iVal];
+					}
 				}
 			}
-			else // 超声速入口
+			else
 			{
-				for (int iVal = 0; iVal < 5; ++iVal)
+				double gamma1 = gamma - 1.0;
+				double r_p = vn_in + 2.0 * c_in / gamma1;
+				double r_m = vn_far - 2.0 * c_far / gamma1;
+				double vn_bound = 0.5 * (r_p + r_m);
+				double c_bound = 0.25 * gamma1 * (r_p - r_m);
+				if (vn_bound <= 0) // 亚声速入口
 				{
-					prim_bnd[iVal] = prim_far[iVal];
+					double entropy = (prim_far[4] / pow(prim_far[0], gamma));
+					prim_bnd[0] = pow(c_bound * c_bound / (entropy * gamma), 1.0 / gamma1);
+					prim_bnd[1] = prim_far[1] + norm_bnd[0] * (vn_bound - vn_far);
+					prim_bnd[2] = prim_far[2] + norm_bnd[1] * (vn_bound - vn_far);
+					prim_bnd[3] = prim_far[3] + norm_bnd[2] * (vn_bound - vn_far);
+					prim_bnd[4] = c_bound * c_bound * prim_bnd[0] / gamma;
+				}
+				else // 亚声速出口
+				{
+					double entropy = prim_in[4] / pow(prim_in[0], gamma);
+					prim_bnd[0] = pow(c_bound * c_bound / (entropy * gamma), 1.0 / gamma1);
+					prim_bnd[1] = prim_in[1] + norm_bnd[0] * (vn_bound - vn_in);
+					prim_bnd[2] = prim_in[2] + norm_bnd[1] * (vn_bound - vn_in);
+					prim_bnd[3] = prim_in[3] + norm_bnd[2] * (vn_bound - vn_in);
+					prim_bnd[4] = c_bound * c_bound * prim_bnd[0] / gamma;
 				}
 			}
-		}
-		else
-		{
-			double gamma1 = gamma - 1.0;
-			double r_p = vn_in + 2.0 * c_in / gamma1;
-			double r_m = vn_far - 2.0 * c_far / gamma1;
-			double vn_bound = 0.5 * (r_p + r_m);
-			double c_bound = 0.25 * gamma1 * (r_p - r_m);
-			if (vn_bound <= 0) // 亚声速入口
+			double cons_bound[5];
+			GetGas()->Prim2Cons(prim_bnd, cons_bound);
+			auto grid = GetGrid();
+			int ghost_size = grid->GetGhostLevel();
+			for (size_t iGhost = 1; iGhost <= ghost_size; ++iGhost)
 			{
-				double entropy = (prim_far[4] / pow(prim_far[0], gamma));
-				prim_bnd[0] = pow(c_bound * c_bound / (entropy * gamma), 1.0 / gamma1);
-				prim_bnd[1] = prim_far[1] + norm_bnd[0] * (vn_bound - vn_far);
-				prim_bnd[2] = prim_far[2] + norm_bnd[1] * (vn_bound - vn_far);
-				prim_bnd[3] = prim_far[3] + norm_bnd[2] * (vn_bound - vn_far);
-				prim_bnd[4] = c_bound * c_bound * prim_bnd[0] / gamma;
+				i_ghost = i_bound + iGhost * bound[iBound].GetDirectionSrc()[0];
+				j_ghost = j_bound + iGhost * bound[iBound].GetDirectionSrc()[1];
+				k_ghost = k_bound + iGhost * bound[iBound].GetDirectionSrc()[2];
+				int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				data_manager->SetPrim(idx_ghost, prim_bnd);
+				data_manager->SetCons(idx_ghost, cons_bound);
 			}
-			else // 亚声速出口
-			{
-				double entropy = prim_in[4] / pow(prim_in[0], gamma);
-				prim_bnd[0] = pow(c_bound * c_bound / (entropy * gamma), 1.0 / gamma1);
-				prim_bnd[1] = prim_in[1] + norm_bnd[0] * (vn_bound - vn_in);
-				prim_bnd[2] = prim_in[2] + norm_bnd[1] * (vn_bound - vn_in);
-				prim_bnd[3] = prim_in[3] + norm_bnd[2] * (vn_bound - vn_in);
-				prim_bnd[4] = c_bound * c_bound * prim_bnd[0] / gamma;
-			}
-		}
-		double cons_bound[5];
-		GetGas()->Prim2Cons(prim_bnd, cons_bound);
-		auto grid = GetGrid();
-		int ghost_size = grid->GetGhostLevel();
-		for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
-		{
-			i_ghost = i_bound + iGhost * bound.GetDirectionSrc()[0];
-			j_ghost = j_bound + iGhost * bound.GetDirectionSrc()[1];
-			k_ghost = k_bound + iGhost * bound.GetDirectionSrc()[2];
-			int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
-			data_manager->SetPrim(idx_ghost, prim_bnd);
-			data_manager->SetCons(idx_ghost, cons_bound);
 		}
 	}
-	void NSSolverStruct::BCSymmetry(BoundStruct& bound)
+
+
+	void NSSolverStruct::BCSymmetry(Array<BoundStruct>& bound)
 	{
 		BCWall(bound);
 	}
-	void NSSolverStruct::BCVortex(BoundStruct& bound)
+
+	void NSSolverStruct::BCVortex(Array<BoundStruct>& bound)
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto para = GetPara();
 		auto data_manager = GetDataManager();
 		int ghost_size = grid->GetGhostLevel();
-		int i_bound, j_bound, k_bound;
-		bound.GetIdx(i_bound, j_bound, k_bound);
-		int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
-		int i_ghost, j_ghost, k_ghost;
 		double beta = 5.0;
-		double x, y, z;
 		double r2;
 		double prim[5];
 		double gamma = 1.4;
-		for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
+#pragma omp for private( r2, prim)
+		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
-			i_ghost = i_bound + iGhost * bound.GetDirectionSrc()[0];
-			j_ghost = j_bound + iGhost * bound.GetDirectionSrc()[1];
-			k_ghost = k_bound + iGhost * bound.GetDirectionSrc()[2];
-			int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
-			x = node->GetCoord(i_ghost, j_ghost, k_ghost)[0];
-			y = node->GetCoord(i_ghost, j_ghost, k_ghost)[1];
-			z = node->GetCoord(i_ghost, j_ghost, k_ghost)[2];
-			r2 = x * x + y * y;
-			prim[0] = pow(1.0 - (gamma - 1.0) * beta * beta * exp(1.0 - r2) / (8.0 * gamma * PI * PI), 1.0 / (gamma - 1.0));
-			prim[4] = pow(prim[0], gamma);
-			prim[1] = beta * exp(0.5 * (1.0 - r2)) / (2.0 * PI) * (-y);
-			prim[2] = beta * exp(0.5 * (1.0 - r2)) / (2.0 * PI) * (x);
-			prim[3] = 0.0;
-			data_manager->SetPrim(idx_ghost, prim);
+			Id i_bound, j_bound, k_bound;
+			Id i_ghost, j_ghost, k_ghost;
+			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
+			Id idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+			for (size_t iGhost = 1; iGhost <= ghost_size; ++iGhost)
+			{
+				i_ghost = i_bound + iGhost * bound[iBound].GetDirectionSrc()[0];
+				j_ghost = j_bound + iGhost * bound[iBound].GetDirectionSrc()[1];
+				k_ghost = k_bound + iGhost * bound[iBound].GetDirectionSrc()[2];
+				Id idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				auto coord = node->GetCoord(i_ghost, j_ghost, k_ghost);
+				r2 = coord[0] * coord[0] + coord[1] * coord[1];
+				prim[0] = pow(1.0 - (gamma - 1.0) * beta * beta * exp(1.0 - r2) / (8.0 * gamma * PI * PI), 1.0 / (gamma - 1.0));
+				prim[4] = pow(prim[0], gamma);
+				prim[1] = beta * exp(0.5 * (1.0 - r2)) / (2.0 * PI) * (-coord[1]);
+				prim[2] = beta * exp(0.5 * (1.0 - r2)) / (2.0 * PI) * (coord[0]);
+				prim[3] = 0.0;
+				data_manager->SetPrim(idx_ghost, prim);
+			}
 		}
 	}
-	void NSSolverStruct::BCDoubleMach(BoundStruct& bound)
+
+	void NSSolverStruct::BCDoubleMach(Array<BoundStruct>& bound)
 	{
 		double current_time = GlobalData::GetDouble("currentTime");
 		double shock_velocity = 10.0 / sin(PI / 3.0);
@@ -8032,30 +8040,34 @@ namespace zaran
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		int ghost_size = grid->GetGhostLevel();
-		int i_bound, j_bound, k_bound;
-		bound.GetIdx(i_bound, j_bound, k_bound);
-		int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
-		auto bound_direction = bound.GetDirectionSrc();
-		for (int iGhost = 1; iGhost <= ghost_size; ++iGhost)
+#pragma omp for
+		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
-			int i_ghost = i_bound + iGhost * bound_direction[0];
-			int j_ghost = j_bound + iGhost * bound_direction[1];
-			int k_ghost = k_bound + iGhost * bound_direction[2];
-			int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
-			double x = grid->GetNode()->GetCoord(i_ghost, j_ghost, k_ghost)[0];
-			if (x <= shock_x)
+			Id i_bound, j_bound, k_bound;
+			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
+			Id idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+			auto bound_direction = bound[iBound].GetDirectionSrc();
+			for (size_t iGhost = 1; iGhost <= ghost_size; ++iGhost)
 			{
-				data_manager->SetPrim(idx_ghost, prim_left);
-				data_manager->SetCons(idx_ghost, cons_left);
-			}
-			else
-			{
-				data_manager->SetPrim(idx_ghost, prim_right);
-				data_manager->SetCons(idx_ghost, cons_right);
+				Id i_ghost = i_bound + iGhost * bound_direction[0];
+				Id j_ghost = j_bound + iGhost * bound_direction[1];
+				Id k_ghost = k_bound + iGhost * bound_direction[2];
+				Id idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				double x = grid->GetNode()->GetCoord(i_ghost, j_ghost, k_ghost)[0];
+				if (x <= shock_x)
+				{
+					data_manager->SetPrim(idx_ghost, prim_left);
+					data_manager->SetCons(idx_ghost, cons_left);
+				}
+				else
+				{
+					data_manager->SetPrim(idx_ghost, prim_right);
+					data_manager->SetCons(idx_ghost, cons_right);
+				}
 			}
 		}
-
 	}
+
 	void NSSolverStruct::CheckPrimtive()
 	{
 

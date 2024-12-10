@@ -128,14 +128,21 @@ namespace zaran
 		void CalcSourceResidual() override;
 
 		void BoundaryCondition() override;
-		void BCInlow(BoundStruct& bound);
+		void BCInflow(BoundStruct& bound);
+		void BCInflow(Array<BoundStruct>& bound);
 		void BCOutflow(BoundStruct& bound);
+		void BCOutflow(Array<BoundStruct>& bound);
 		void BCWall(BoundStruct& bound);
+		void BCWall(Array<BoundStruct>& bound);
 		void BCFarfield(BoundStruct& bound);
+		void BCFarfield(Array<BoundStruct>& bound);
 		void BCSymmetry(BoundStruct& bound);
+		void BCSymmetry(Array<BoundStruct>& bound);
 		void BCVortex(BoundStruct& bound);
+		void BCVortex(Array<BoundStruct>& bound);
 		//双马赫反射
 		void BCDoubleMach(BoundStruct& bound);
+		void BCDoubleMach(Array<BoundStruct>& bound);
 
 	protected:
 		void CheckPrimtive() override;

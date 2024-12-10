@@ -14,7 +14,7 @@ namespace zaran
     public:
         void CreateData()override;
         void RegisterData()override;
-        int GetEqNum() { return m_equ_num; }
+        int GetEqNum() const { return m_equ_num; }
     public:
         //! @brief 设置基本变量
         /// @param idx_eq 变量索引

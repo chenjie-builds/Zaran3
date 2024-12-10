@@ -78,7 +78,7 @@ namespace zaran
 					recv_node_idx_global.resize(connect_bound.size());
 					for (int i = 0; i < connect_bound.size(); i++)
 					{
-						int idx_i, idx_j, idx_k;
+						Id idx_i, idx_j, idx_k;
 						connect_bound[i].GetIdx(idx_i, idx_j, idx_k);
 						int idx = src_idx_proxy->GetIdx(idx_i, idx_j, idx_k);
 						recv_node_idx_local[i] = idx;
