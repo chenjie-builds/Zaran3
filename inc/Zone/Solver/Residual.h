@@ -8,27 +8,27 @@ namespace zaran
     class ResInfo
     {
     public:
-        ResInfo(int equ_num);
+        ResInfo(Id equ_num);
         ~ResInfo();
-        double GetInfNorm(int iVar);
-        double GetL2Norm(int iVar);
-        const double* GetInfNormCoord(int iVar)const;
-        int GetInfNormIdx(int iVar)const;
-        void SetInfNorm(int iVar, double value);
-        void SetL2Norm(int iVar, double value);
-        void SetInfNormCoord(int iVar, const double* coord);
-        void SetInfNormIdx(int iVar, int idx);
+        double GetInfNorm(Id iVar);
+        double GetL2Norm(Id iVar);
+        const double* GetInfNormCoord(Id Id)const;
+        int GetInfNormIdx(Id iVar)const;
+        void SetInfNorm(Id iVar, double value);
+        void SetL2Norm(Id iVar, double value);
+        void SetInfNormCoord(Id iVar, const double* coord);
+        void SetInfNormIdx(Id iVar, Id idx);
 
     private:
         int m_equ_num;
         // 残差的L2范数
-        double* m_ref_L2;
+		Array<double> m_ref_L2;
         // 残差的无穷范数
-        double* m_res_inf;
+		Array<double> m_res_inf;
         // 残差的无穷范数的坐标
-        double* m_res_inf_coord;
+		Array<double> m_res_inf_coord;
         // 残差的无穷范数的索引
         // 对于结构网格，还需要通过索引代理算出结构网格的节点编号
-        int* m_res_inf_idx;
+		Array<int> m_res_inf_idx;
     };
 }

@@ -132,10 +132,10 @@ namespace zaran
 		std::vector<std::string> fn_recv_data_name, block_recv_data_name;
 		fn_recv_data_name = { "primitive_0", "primitive_1", "primitive_2", "primitive_3", "primitive_4" };
 		block_recv_data_name = { "primitive_0", "primitive_1", "primitive_2", "primitive_3", "primitive_4" };
-		int fn_recv_num, block_recv_num;
-		std::vector<int> fn_recv_node_idx_src, block_recv_node_idx_src;
-		std::vector<int> fn_recv_field_idx_tgt, block_recv_field_idx_tgt;
-		std::vector<int> fn_recv_node_idx_tgt, block_recv_node_idx_tgt;
+		Id fn_recv_num, block_recv_num;
+		std::vector<Id> fn_recv_node_idx_src, block_recv_node_idx_src;
+		std::vector<Id> fn_recv_field_idx_tgt, block_recv_field_idx_tgt;
+		std::vector<Id> fn_recv_node_idx_tgt, block_recv_node_idx_tgt;
 		auto& fn_grid_info = grid_factory.GetFNGridInfo();
 		auto& ref_node = grid_factory.GetRefNode();
 		fn_recv_num = ref_node.size();

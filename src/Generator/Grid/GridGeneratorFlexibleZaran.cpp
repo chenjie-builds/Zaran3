@@ -1084,24 +1084,24 @@ namespace zaran {
 					total_error_num++;
 				}
 				else {
-					int neighbor_i[6] = { i - 1, i + 1, i, i, i, i };
-					int neighbor_j[6] = { j, j, j - 1, j + 1, j, j };
-					int neighbor_k[6] = { k, k, k, k, k - 1, k + 1 };
+					Id neighbor_i[6] = { i - 1, i + 1, i, i, i, i };
+					Id neighbor_j[6] = { j, j, j - 1, j + 1, j, j };
+					Id neighbor_k[6] = { k, k, k, k, k - 1, k + 1 };
 					double coord[6][3];
 					int direction[6] = { 1, 1, 1, 1, 1, 1 };
-					for (int iNeighbor = 0; iNeighbor < 6; iNeighbor++) {
-						for (int iDim = 0; iDim < 3; iDim++) {
+					for (Id iNeighbor = 0; iNeighbor < 6; iNeighbor++) {
+						for (Id iDim = 0; iDim < 3; iDim++) {
 							coord[iNeighbor][iDim] =
 								node->GetCoord(neighbor_i[iNeighbor], neighbor_j[iNeighbor],
 									neighbor_k[iNeighbor])[iDim];
 						}
 					}
-					for (int iNeighbor = 0; iNeighbor < 6; iNeighbor++) {
+					for (Id iNeighbor = 0; iNeighbor < 6; iNeighbor++) {
 						if (m_node_type[m_idx_proxy->GetIdx(
 							neighbor_i[iNeighbor], neighbor_j[iNeighbor],
 							neighbor_k[iNeighbor])] == PhysicalType::Solid) {
 							direction[iNeighbor] = 0;
-							for (int iDim = 0; iDim < 3; iDim++) {
+							for (Id iDim = 0; iDim < 3; iDim++) {
 								coord[iNeighbor][iDim] = wall_coord[iDim];
 							}
 						}

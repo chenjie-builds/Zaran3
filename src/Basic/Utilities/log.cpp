@@ -11,7 +11,7 @@ Logger::Logger(const std::string& work_dir)
 	auto console_sink = std::make_shared<Log::sinks::stdout_color_sink_mt>();
 	console_sink->set_level(Log::level::debug);
 	console_sink->set_pattern("[%D %H:%M:%S] [%^%l%$] %v");
-	auto file_sink = std::make_shared<Log::sinks::basic_file_sink_mt>(work_dir+"\log.txt", false);
+	auto file_sink = std::make_shared<Log::sinks::basic_file_sink_mt>(work_dir+"/log.txt", false);
 	file_sink->set_level(Log::level::trace);
 	file_sink->set_pattern("[%D %H:%M:%S] [%^%l%$] %v");
 	Log::logger logger("multi_sink", { console_sink, file_sink });

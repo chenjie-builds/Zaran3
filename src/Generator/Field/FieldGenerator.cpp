@@ -50,7 +50,7 @@ namespace zaran
 		std::vector<std::string> recv_data_name = { "primitive_0", "primitive_1",
 												   "primitive_2", "primitive_3",
 												   "primitive_4" };
-		std::vector<int> recv_node_idx_local, recv_field_idx_global,
+		std::vector<Id> recv_node_idx_local, recv_field_idx_global,
 			recv_node_idx_global;
 
 		for (Id iField = 0; iField < grid_list.size(); iField++)

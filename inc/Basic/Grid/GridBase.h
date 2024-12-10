@@ -29,13 +29,13 @@ namespace zaran
 			:m_name(name),m_index(index),m_dim(dim),m_type(type){}
 		virtual ~GridBase() {}
 		void SetName(const std::string& name) { m_name = name; }
-		void SetIndex(const size_t& index) { m_index = index; }
-		void SetDimension(const int& dim) { m_dim = dim; }
+		void SetIndex(const Id& index) { m_index = index; }
+		void SetDimension(const Id& dim) { m_dim = dim; }
 		void SetType(GridType type = GridType::Unkown) { m_type = type; };
 	public:
 		const string& GetName()const { return m_name; }
-		const int& GetIndex()const { return m_index; }
-		const int& GetDim()const { return m_dim; }
+		const Id& GetIndex()const { return m_index; }
+		const Id& GetDim()const { return m_dim; }
 		const GridType& GetType()const { return m_type; }
 	private:
 		string m_name;//网格名称
