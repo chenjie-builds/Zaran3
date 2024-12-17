@@ -9,9 +9,9 @@ int main(int argc,char**argv)
 	std::string control_file = "zaran.ini";
 	if (argc == 1)
 	{
-		work_dir = GetCurPath();
+		work_dir = zaran::GetCurPath();
 		control_file = work_dir + "/" + control_file;
-		if (IsFileExist(control_file))
+		if (zaran::IsFileExist(control_file))
 		{
 			Log::info("Use default control file: {}", control_file);
 		}

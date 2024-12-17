@@ -117,7 +117,8 @@ namespace zaran
 
 	void FieldGenerator::CreateSolver() {}
 
-	shared_ptr<FieldManager> FieldGenerator::CreateFieldZaran() {
+	shared_ptr<FieldManager> FieldGenerator::CreateFieldZaran()
+	{
 		// Read model file
 		STLReader stl_reader;
 		string mode_file = GlobalData::GetString("modelFileName");
@@ -126,7 +127,7 @@ namespace zaran
 		stl_reader.ReadSTLFile(mode_file.c_str());
 		// Create model manager
 		shared_ptr < PolyDataModel > poly_data_model = make_shared <PolyDataModel>();
-		poly_data_model->SetPolyData(stl_reader.GetPolyData(), 0.0001);
+		poly_data_model->SetPolyData(stl_reader.GetPolyData(), 1e-6);
 		shared_ptr < ModelManager > model_manager = make_shared <ModelManager>();
 		model_manager->AddModel(poly_data_model);
 		// Create field manager

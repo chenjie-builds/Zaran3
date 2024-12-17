@@ -10,14 +10,18 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #include"BasicType.h"
+namespace zaran
+{
 //判断文件存在
-bool IsFileExist(const std::string& fileName);
+bool IsFileExist(const string& fileName);
 //判断文件夹是否存在
-bool IsFolderExist(const std::string& folderName);
+bool IsFolderExist(const string& folderName);
 //创建文件夹
-bool CreateFolder(const std::string& folderName);
+bool CreateFolder(const string& folderName);
 //复制文件
-bool CopyFile(const std::string& src_file, const std::string& dest_file);
+bool CopySingleFile(const string& src_file, const string& dest_file);
 //删除文件
-bool DeleteFile(const std::string& fileName);
-std::string GetCurPath();
+bool RemoveFile(const string& fileName);
+string GetCurPath();
+
+}

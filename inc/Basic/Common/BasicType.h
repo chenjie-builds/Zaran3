@@ -20,4 +20,9 @@ namespace zaran
 	//count type
 	using count_type = size_t;//count type
 
+	//dimension type
+	using dimension_type = size_t;
+
+
+
 }

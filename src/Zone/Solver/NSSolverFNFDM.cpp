@@ -185,11 +185,11 @@ namespace zaran
 		auto grid = GetGrid();
 		auto para = GetPara();
 		auto data_manager = GetDataManager();
-		std::string backup_file_name = para->GetBackupFieldFileName();
+		string backup_file_name = para->GetBackupFieldFileName();
 		backup_file_name = back_folder + "/" + backup_file_name;
 		if (IsFileExist(backup_file_name))
 		{
-			DeleteFile(backup_file_name);
+			RemoveFile(backup_file_name);
 		}
 		std::ofstream fout(backup_file_name);
 		int n_node = grid->GetTotalNodeNum();

@@ -1,39 +1,42 @@
 #include"File.h"
 #include"MathBasic.h"
-#include<io.h>
 #include <filesystem>
-bool IsFileExist(const std::string& fileName)
+namespace zaran
 {
-	if (std::filesystem::exists(fileName))
-		return true;
-	return false;
-}
-bool IsFolderExist(const std::string& floderName)
-{
-	return IsFileExist(floderName);
-}
 
-bool CreateFolder(const std::string& folderName)
-{
-	if (IsFolderExist(folderName))
-		return true;
-	if (std::filesystem::create_directory(folderName))
-		return true;
-	return false;
-}
+	bool IsFileExist(const string& fileName)
+	{
+		if (std::filesystem::exists(fileName))
+			return true;
+		return false;
+	}
+	bool IsFolderExist(const string& floderName)
+	{
+		return IsFileExist(floderName);
+	}
 
-bool CopyFile(const std::string& src_file, const std::string& dest_file)
-{
-	std::filesystem::copy_file(src_file, dest_file);
-	return true;
-}
-bool DeleteFile(const std::string& fileName)
-{
-	if (std::filesystem::remove(fileName))
+	bool CreateFolder(const string& folderName)
+	{
+		if (IsFolderExist(folderName))
+			return true;
+		if (std::filesystem::create_directory(folderName))
+			return true;
+		return false;
+	}
+
+	bool CopySingleFile(const string& src_file, const string& dest_file)
+	{
+		std::filesystem::copy_file(src_file, dest_file);
 		return true;
-	return false;
-}
-std::string GetCurPath()
-{
-	return std::filesystem::current_path().string();
+	}
+	bool RemoveFile(const string& fileName)
+	{
+		if (std::filesystem::remove(fileName))
+			return true;
+		return false;
+	}
+	string GetCurPath()
+	{
+		return std::filesystem::current_path().string();
+	}
 }

@@ -872,7 +872,7 @@ namespace zaran {
 		}
 		face->Allocate(face_num, face_node_num.data());
 		double normal[3];
-		double area;
+		double area = 0;
 		for (index_type iFace = 0; iFace < face_num; iFace++) {
 			// auto face_node_idx = m_trans_face[iFace].idx_master;
 			// for (int iNode = 0; iNode < face_node_idx.size(); iNode++)

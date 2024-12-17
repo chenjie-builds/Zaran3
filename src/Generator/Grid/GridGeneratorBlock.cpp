@@ -2,7 +2,7 @@
 namespace zaran
 {
 
-    void GridGeneratorBlock::CreateGrid(shared_ptr<GridBlock> grid, GridBlockInfo& grid_info)
+    void GridGeneratorBlock::CreateGrid(shared_ptr<GridBlock>& grid, GridBlockInfo& grid_info)
     {
         m_grid_info = grid_info;
         m_grid = grid;

@@ -10,9 +10,9 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
-#include "spdlog/spdlog.h"
-#include "spdlog/sinks/basic_file_sink.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 //对spdlog进行初始化
 //TODO 对spdlog库更熟悉后： 设置输出位置，log等级自定义
 namespace Log = spdlog;

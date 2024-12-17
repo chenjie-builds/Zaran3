@@ -8,9 +8,9 @@ namespace zaran {
 		~GridGeneratorBlockExplosion();
 		void CreateGrid(shared_ptr<GridBlock> grid, GridBlockInfo& grid_info);
 	private:
-		//根据建筑物外形设置iBlank
+		//鏍规嵁寤虹瓚鐗╁褰㈣缃甶Blank
 		void SetIBlankByBuilding();
-		//输出测试
+		//杈撳嚭娴嬭瘯
 		void ExportTecplot();
 	};
 } // namespace zaran

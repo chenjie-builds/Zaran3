@@ -39,8 +39,7 @@ void FieldSimulation::SaveDataTecplot()
 {
 	//m_visual->WriteTecASCII(m_field_manager);
 	m_visual->WriteTecplotBinary(m_field_manager);
-
-
+	//m_visual->WriteVtkBinary(m_field_manager);
 }
 void FieldSimulation::SaveDataVTK(std::ostream& os)
 {
@@ -147,14 +146,14 @@ void FieldSimulation::BackupResidual(std::string& back_folder)
 	std::string residual_file_back = back_folder + "/" + residual_file;
 	if (IsFileExist(residual_file_back) == false)
 	{
-		Log::warn("residual file:{} is not exist!", residual_file_back);
 		return;
 	}
+
 	if (IsFileExist(residual_file_back) == true)
 	{
-		DeleteFile(residual_file_back);
+		zaran::RemoveFile(residual_file_back);
 	}
-	CopyFile(residual_file, residual_file_back);
+	CopySingleFile(residual_file, residual_file_back);
 }
 
 void FieldSimulation::BackupLog(std::string& back_folder)
@@ -163,14 +162,14 @@ void FieldSimulation::BackupLog(std::string& back_folder)
 	std::string log_file_back = back_folder + "/" + log_file;
 	if (IsFileExist(log_file_back) == false)
 	{
-		Log::warn("logFile:{} is not exist!", log_file_back);
 		return;
 	}
+
 	if (IsFileExist(log_file_back) == true)
 	{
-		DeleteFile(log_file_back);
+		RemoveFile(log_file_back);
 	}
-	CopyFile(log_file, log_file_back);
+	CopySingleFile(log_file, log_file_back);
 }
 
 void FieldSimulation::BackupGlobalData(std::string& back_folder)
@@ -179,12 +178,11 @@ void FieldSimulation::BackupGlobalData(std::string& back_folder)
 	std::string global_file_back = back_folder + "/" + global_file;
 	if (IsFileExist(global_file_back) == false)
 	{
-		Log::warn("gloabal data file:{} is not exist!", global_file_back);
 		return;
 	}
 	if (IsFileExist(global_file_back) == true)
 	{
-		DeleteFile(global_file_back);
+		RemoveFile(global_file_back);
 	}
 	GlobalData::Backup(back_folder);
 }
@@ -298,15 +296,15 @@ void FieldSimulation::CommFieldData()
 		int recv_node_num = comm_info->GetRecvNodeNum();
 		for (int i_recv_node = 0; i_recv_node < recv_node_num; i_recv_node++)
 		{
-			auto send_field = m_field_manager->GetField(comm_info->GetIdxSendField()[i_recv_node]);
+			auto send_field = m_field_manager->GetField(comm_info->GetTgtFieldIdx()[i_recv_node]);
 			auto send_field_data = send_field->GetData();
-			int idx_send_field = comm_info->GetIdxSendField()[i_recv_node];
-			int idx_send_node = comm_info->GetIdxSendNode()[i_recv_node];
+			int idx_send_field = comm_info->GetTgtFieldIdx()[i_recv_node];
+			int idx_send_node = comm_info->GetTgtNodeIdx()[i_recv_node];
 			for (size_t i_recv_name = 0; i_recv_name < recv_data_name.size(); i_recv_name++)
 			{
 				std::string data_name = recv_data_name[i_recv_name];
 				double data = send_field_data->GetData(data_name, idx_send_node);
-				comm_info->SetRecvDataCache(i_recv_name, i_recv_node, data);
+				comm_info->UpdateSrcDataBuffer(i_recv_name, i_recv_node, data);
 			}
 		}
 	}
@@ -321,13 +319,13 @@ void FieldSimulation::CommFieldData()
 		}
 		auto& recv_data_name = comm_info->GetRecvDataName();
 		int recv_node_num = comm_info->GetRecvNodeNum();
-		auto recv_node = comm_info->GetIdxRecvNode();
+		auto recv_node = comm_info->GetSrcDataIdx();
 		for (int i_recv_node = 0; i_recv_node < recv_node_num; i_recv_node++)
 		{
 			for (size_t i_recv_name = 0; i_recv_name < recv_data_name.size(); i_recv_name++)
 			{
 				std::string data_name = recv_data_name[i_recv_name];
-				field_data->GetData(data_name, recv_node[i_recv_node]) = comm_info->GetRecvDataCache(i_recv_name, i_recv_node);
+				field_data->GetData(data_name, recv_node[i_recv_node]) = comm_info->GetSrcDataBuffer(i_recv_name, i_recv_node);
 			}
 		}
 	}

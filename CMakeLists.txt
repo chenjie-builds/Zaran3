@@ -51,7 +51,6 @@ endif()
  
 # 程序输出路径
 set( EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE} )
-set( LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib/${CMAKE_BUILD_TYPE} )
 
 # OMP并行
 option( USE_OMP "ON to use OMP, OFF to serial" ON )
@@ -71,21 +70,33 @@ if( USE_OMP )
 endif()
 
 # Eigen库
-find_package( Eigen3 CONFIG REQUIRED )
+set( Eigen_DIR  ${PROJECT_SOURCE_DIR}/3rdparty/Eigen/eigen3 )
+target_include_directories( ${EXECUTABLE_NAME} PRIVATE ${Eigen_DIR} )
 
 # VTK库
-find_package( VTK REQUIRED )
+set( VTK_DIR  ${PROJECT_SOURCE_DIR}/3rdparty/vtk )
+set( VTK_INC_DIR ${VTK_DIR}/include/vtk-9.3 )
+set(VTK_BIN_DIR ${VTK_DIR}/bin)
+set( VTK_LIB_DIR ${VTK_DIR}/lib)
+file( GLOB VTK_LIBS "${VTK_LIB_DIR}/*.lib" )
+file( GLOB VTK_DLLS "${VTK_BIN_DIR}/*.dll" )
+
 # spdlog库
-find_package( spdlog CONFIG REQUIRED )
-target_include_directories( ${EXECUTABLE_NAME} PRIVATE ${VTK_INCLUDE_DIRS} )
+set( spdlog_DIR  ${PROJECT_SOURCE_DIR}/3rdparty/spdlog/include )
+message(STATUS "spdlog_DIR: ${spdlog_DIR}")
+target_include_directories( ${EXECUTABLE_NAME} PRIVATE ${spdlog_DIR} )
+
+
+target_include_directories( ${EXECUTABLE_NAME} PRIVATE ${VTK_INC_DIR} )
 target_include_directories( ${EXECUTABLE_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/tecio/inc )
-target_link_libraries( ${EXECUTABLE_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/tecio/lib/tecio.lib )
-target_link_libraries( ${EXECUTABLE_NAME} PRIVATE Eigen3::Eigen ${VTK_LIBRARIES} spdlog::spdlog spdlog::spdlog_header_only )
+set(Tecio_lib ${PROJECT_SOURCE_DIR}/3rdparty/tecio/lib/tecio.lib)
+target_link_libraries( ${EXECUTABLE_NAME} PRIVATE ${Tecio_lib} )
+target_link_libraries( ${EXECUTABLE_NAME} PRIVATE ${VTK_LIBS} )
 
 set( CMAKE_NINJA_FORCE_RESPONSE_FILE "ON" CACHE BOOL "Force Ninja to use response files." )
 message( STATUS "CXX_COMPILER_ID:" ${CMAKE_CXX_COMPILER_ID} )
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    target_compile_options( ${EXECUTABLE_NAME} PRIVATE /bigobj /MP /W0 )
+    target_compile_options( ${EXECUTABLE_NAME} PRIVATE /bigobj /MP /utf-8 )
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options( ${EXECUTABLE_NAME} PRIVATE -mbig-obj )
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -96,3 +107,4 @@ message( STATUS "CMAKE_CXX_FLAGS:" ${CMAKE_CXX_FLAGS} )
 #输出target_compile_definitions
 get_target_property(compile_definitions ${EXECUTABLE_NAME} COMPILE_DEFINITIONS)
 message(STATUS "compile_definitions: ${compile_definitions}")
+file(COPY ${VTK_DLLS} DESTINATION ${EXECUTABLE_OUTPUT_PATH})

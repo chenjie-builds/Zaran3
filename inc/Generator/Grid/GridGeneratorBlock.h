@@ -12,12 +12,12 @@ namespace zaran
         std::string bound_type_j_minus, bound_type_j_plus;
         std::string bound_type_k_minus, bound_type_k_plus;
     };
-	// 网格生成器：块结构网格，均匀正交结构网格
+	// 缃戞牸鐢熸垚鍣細鍧楃粨鏋勭綉鏍硷紝鍧囧寑姝ｄ氦缁撴瀯缃戞牸
     class GridGeneratorBlock : public GridGenerator
     {
     public:
         GridGeneratorBlock() {}
-       void CreateGrid(shared_ptr<GridBlock> grid, GridBlockInfo &grid_info);
+       void CreateGrid(shared_ptr<GridBlock>& grid, GridBlockInfo &grid_info);
 
 	protected:
         void AllocateGrid();

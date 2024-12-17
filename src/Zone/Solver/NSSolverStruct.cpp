@@ -139,29 +139,30 @@ namespace zaran
 		// prim_far[2] = 0.0;
 		// prim_far[3] = 0.0;
 		// prim_far[4] = 1.4;
-		double prim_left[5] = { 8.0,8.25 * cos(30.0 / 180.0 * PI),-8.25 * sin(30.0 / 180.0 * PI),0.0,116.5 };
+		//double prim_left[5] = { 8.0,8.25 * cos(30.0 / 180.0 * PI),-8.25 * sin(30.0 / 180.0 * PI),0.0,116.5 };
 		//double prim_left[5] = { 6.4,3.125,0,0,18.5 };
-		double prim_right[5] = { 1.4,0.0,0.0,0.0,1.0 };
+		//double prim_right[5] = { 1.4,0.0,0.0,0.0,1.0 };
 		for (int k = 0; k < nk; ++k)
 		{
 			for (int j = 0; j < nj; ++j)
 			{
 				for (int i = 0; i < ni; ++i)
 				{
-					auto idx = m_idx_proxy->GetIdx();
+					m_idx_proxy->SetIdx(i, j, k);
+					int idx = m_idx_proxy->GetIdx();
 					// double y = grid->GetNode()->GetCoord(i, j, k)[1];
 					// prim_far[0] = 1.0 + 0.01 * y;
 					data_manager->SetPrim(idx, prim_far);
-					auto coord = node->GetCoord(idx);
-					if (coord[0] <= 1.0 / 6.0 + coord[1] / tan(60.0 / 180.0 * PI))
-						//if (coord[0] <= 0.1)
-					{
-						data_manager->SetPrim(idx, prim_left);
-					}
-					else
-					{
-						data_manager->SetPrim(idx, prim_right);
-					}
+					//auto coord = node->GetCoord(idx);
+					//if (coord[0] <= 1.0 / 6.0 + coord[1] / tan(60.0 / 180.0 * PI))
+					//	//if (coord[0] <= 0.1)
+					//{
+					//	data_manager->SetPrim(idx, prim_left);
+					//}
+					//else
+					//{
+					//	data_manager->SetPrim(idx, prim_right);
+					//}
 				}
 			}
 		}
@@ -7757,7 +7758,7 @@ namespace zaran
 			auto& bound = boundary.second;
 			if (bound_name == "hole")
 				continue;
-			if (bound_name == "farfield")
+			if (bound_name == "riemann")
 			{
 				BCFarfield(bound);
 			}
@@ -7773,6 +7774,11 @@ namespace zaran
 			{
 				BCWall(bound);
 			}
+			else
+			{
+				Log::error("Unsupport boundary: {}", bound_name);
+				exit(0);
+			}
 		}
 	}
 	void NSSolverStruct::BCInflow(dynamic_array<BoundStruct>& bound)
@@ -7781,10 +7787,10 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		int ghost_size = grid->GetGhostLevel();
-		//double prim_far[5] = { GetPara()->GetInflowDensity(), GetPara()->GetInflowVelocityX(),
-		//					  GetPara()->GetInflowVelocityY(), GetPara()->GetInflowVelocityZ(),
-		//					  GetPara()->GetInflowPressure() };
-		double prim_far[5] = { 8.0,8.25 * cos(30.0 / 180.0 * PI),-8.25 * sin(30.0 / 180.0 * PI),0.0,116.5 };
+		double prim_far[5] = { GetPara()->GetInflowDensity(), GetPara()->GetInflowVelocityX(),
+							  GetPara()->GetInflowVelocityY(), GetPara()->GetInflowVelocityZ(),
+							  GetPara()->GetInflowPressure() };
+		//double prim_far[5] = { 8.0,8.25 * cos(30.0 / 180.0 * PI),-8.25 * sin(30.0 / 180.0 * PI),0.0,116.5 };
 		//double prim_far[5] = { 6.4,3.125,0,0,18.5 };
 		double cons_far[5];
 		GetGas()->Prim2Cons(prim_far, cons_far);
@@ -7812,8 +7818,8 @@ namespace zaran
 
 	void NSSolverStruct::BCOutflow(dynamic_array<BoundStruct>& bound)
 	{
-		BCDoubleMach(bound);
-		return;
+		//BCDoubleMach(bound);
+		//return;
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		size_t ghost_size = grid->GetGhostLevel();
