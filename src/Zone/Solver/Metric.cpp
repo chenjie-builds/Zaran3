@@ -2,57 +2,56 @@
 #include "Log.h"
 namespace zaran
 {
-    Metric::Metric(int node_num)
+    Metric::Metric(count_type node_num)
     {
-        m_metric = new double[node_num * m_metric_num];
+        m_metric.resize(node_num * m_metric_num);
     }
 
     Metric::~Metric()
     {
-        delete[] m_metric;
     }
 	double* Metric::GetInvMetrics(int dim, int iNode)
 	{
-		return m_metric + iNode * m_metric_num + dim * 4;
+		return m_metric.data() + iNode * m_metric_num + dim * 4;
 	}
 	double* Metric::GetMetrics(int  dim, int iNode)
     {
-        return m_metric + iNode * m_metric_num + dim * 4 + 16;
+        return m_metric.data() + iNode * m_metric_num + dim * 4 + 16;
     }
     double *Metric::GetX(int iNode)
     {
-        return m_metric + iNode * m_metric_num;
+        return m_metric.data() + iNode * m_metric_num;
     }
     double *Metric::GetY(int iNode)
     {
-        return m_metric + iNode * m_metric_num + 4;
+        return m_metric.data() + iNode * m_metric_num + 4;
     }
     double *Metric::GetZ(int iNode)
     {
-        return m_metric + iNode * m_metric_num + 8;
+        return m_metric.data() + iNode * m_metric_num + 8;
     }
     double *Metric::GetT(int iNode)
     {
-        return m_metric + iNode * m_metric_num + 12;
+        return m_metric.data() + iNode * m_metric_num + 12;
     }
     double *Metric::GetXi(int iNode)
     {
-        return m_metric + iNode * m_metric_num + 16;
+        return m_metric.data() + iNode * m_metric_num + 16;
     }
 
     double *Metric::GetEta(int iNode)
     {
-        return m_metric + iNode * m_metric_num + 20;
+        return m_metric.data() + iNode * m_metric_num + 20;
     }
 
     double *Metric::GetZeta(int iNode)
     {
-        return m_metric + iNode * m_metric_num + 24;
+        return m_metric.data() + iNode * m_metric_num + 24;
     }
 
     double *Metric::GetTau(int iNode)
     {
-        return m_metric + iNode * m_metric_num + 28;
+        return m_metric.data() + iNode * m_metric_num + 28;
     }
     double &Metric::GetJacobian(int iNode)
     {
@@ -101,17 +100,17 @@ namespace zaran
         coef_xi[0] = (coef_y[1] * coef_z[2] - coef_y[2] * coef_z[1]);
         coef_xi[1] = -(coef_x[1] * coef_z[2] - coef_x[2] * coef_z[1]);
         coef_xi[2] = (coef_x[1] * coef_y[2] - coef_x[2] * coef_y[1]);
-        coef_xi[3] = -(coef_x[3] * coef_xi[0] + coef_x[3] * coef_xi[1] + coef_x[3] * coef_xi[2]);
+        coef_xi[3] = -(coef_x[3] * coef_xi[0] + coef_y[3] * coef_xi[1] + coef_z[3] * coef_xi[2]);
 
         coef_eta[0] = -(coef_y[0] * coef_z[2] - coef_y[2] * coef_z[0]);
         coef_eta[1] = (coef_x[0] * coef_z[2] - coef_x[2] * coef_z[0]);
         coef_eta[2] = -(coef_x[0] * coef_y[2] - coef_x[2] * coef_y[0]);
-        coef_eta[3] = -(coef_y[3] * coef_eta[0] + coef_y[3] * coef_eta[1] + coef_y[3] * coef_eta[2]);
+        coef_eta[3] = -(coef_x[3] * coef_eta[0] + coef_y[3] * coef_eta[1] + coef_z[3] * coef_eta[2]);
 
         coef_zeta[0] = (coef_y[0] * coef_z[1] - coef_y[1] * coef_z[0]);
         coef_zeta[1] = -(coef_x[0] * coef_z[1] - coef_x[1] * coef_z[0]);
         coef_zeta[2] = (coef_x[0] * coef_y[1] - coef_x[1] * coef_y[0]);
-        coef_zeta[3] = -(coef_z[3] * coef_zeta[0] + coef_z[3] * coef_zeta[1] + coef_z[3] * coef_zeta[2]);
+        coef_zeta[3] = -(coef_x[3] * coef_zeta[0] + coef_y[3] * coef_zeta[1] + coef_z[3] * coef_zeta[2]);
 
         coef_tau[0] = 0.0;
         coef_tau[1] = 0.0;
