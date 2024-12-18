@@ -803,6 +803,8 @@ namespace zaran
 		int node_num = grid->GetTotalNodeNum();
 		int equ_num = GetPara()->GetEqNum();
 		int nonphysical_node_num = 0;
+		auto density = data_manager->GetPrim(ID_DENSITY);
+		auto pressure = data_manager->GetPrim(ID_PRESSURE);
 #pragma omp parallel for reduction(+ : nonphysical_node_num)
 		for (int iNode = 0; iNode < node_num; ++iNode)
 		{
@@ -810,7 +812,7 @@ namespace zaran
 			data_manager->SetNonPhysical(iNode, -1);
 			if (node->GetType(iNode) != NodeType::inner && node->GetType(iNode) != NodeType::hole)
 				continue;
-			if (data_manager->GetDensity(iNode) < 0 || data_manager->GetPressure(iNode) < 0)
+			if (density[iNode] < 0 || pressure[iNode]< 0)
 			{
 				exist_nonphysical = true;
 			}
@@ -975,6 +977,11 @@ namespace zaran
 		double cfl = para->GetCflNumber();
 		int inner_node_num = grid->GetInnerNodeNum();
 		int* inner_node = grid->GetInnerNode();
+		auto density = data_manager->GetPrim(ID_DENSITY);
+		auto pressure = data_manager->GetPrim(ID_PRESSURE);
+		auto velocity_x = data_manager->GetPrim(ID_VELOCITY_X);
+		auto velocity_y = data_manager->GetPrim(ID_VELOCITY_Y);
+		auto velocity_z = data_manager->GetPrim(ID_VELOCITY_Z);
 #pragma omp parallel for 
 		for (int iNode = 0; iNode < inner_node_num; ++iNode)
 		{
@@ -983,13 +990,13 @@ namespace zaran
 			auto eta = m_node_metric->GetEta(idx);
 			auto zeta = m_node_metric->GetZeta(idx);
 			auto jacobi = m_node_metric->GetJacobian(idx);
-			double c = sqrt(gamma * data_manager->GetPressure(idx) / data_manager->GetDensity(idx));
+			double c = sqrt(gamma * pressure[idx] / density[idx]);
 			double norm_xi = sqrt(xi[0] * xi[0] + xi[1] * xi[1] + xi[2] * xi[2]);
 			double norm_eta = sqrt(eta[0] * eta[0] + eta[1] * eta[1] + eta[2] * eta[2]);
 			double norm_zeta = sqrt(zeta[0] * zeta[0] + zeta[1] * zeta[1] + zeta[2] * zeta[2]);
-			double u_xi = data_manager->GetVelocity(0, idx) * xi[0] + data_manager->GetVelocity(1, idx) * xi[1] + data_manager->GetVelocity(2, idx) * xi[2];
-			double u_eta = data_manager->GetVelocity(0, idx) * eta[0] + data_manager->GetVelocity(1, idx) * eta[1] + data_manager->GetVelocity(2, idx) * eta[2];
-			double u_zeta = data_manager->GetVelocity(0, idx) * zeta[0] + data_manager->GetVelocity(1, idx) * zeta[1] + data_manager->GetVelocity(2, idx) * zeta[2];
+			double u_xi = velocity_x[idx] * xi[0] + velocity_y[idx] * xi[1] + velocity_z[idx] * xi[2];
+			double u_eta = velocity_x[idx] * eta[0] + velocity_y[idx] * eta[1] + velocity_z[idx] * eta[2];
+			double u_zeta = velocity_x[idx] * zeta[0] + velocity_y[idx] * zeta[1] + velocity_z[idx] * zeta[2];
 			double lamda = abs(u_xi) + abs(u_eta) + abs(u_zeta) + c * (norm_xi + norm_eta + norm_zeta);
 			lamda = lamda * jacobi;
 			data_manager->SetTimeStep(idx, cfl / lamda);
@@ -1186,7 +1193,7 @@ namespace zaran
 				grad_w[iDim] = data_manager->GetPrimGrad(3, iDim, iNode);
 				grad_p[iDim] = data_manager->GetPrimGrad(4, iDim, iNode);
 			}
-			tempeture = gas->CalcTemperature(data_manager->GetDensity(iNode), data_manager->GetPressure(iNode));
+			tempeture = gas->CalcTemperature(data_manager->GetPrim(ID_DENSITY,iNode), data_manager->GetPrim(ID_PRESSURE,iNode));
 			vis_coef = gas->CalcMu(tempeture);
 			lamda = 2.0 / 3.0 * vis_coef;
 			therm_coef = gas->CalcK(tempeture);
@@ -1246,7 +1253,7 @@ namespace zaran
 			auto face2node = face->GetFace2Node(iFace);
 			for (int iNode = 0; iNode < face->GetFaceNodeNum(iFace); ++iNode)
 			{
-				face_pressure += data_manager->GetPressure(face2node[iNode]);
+				face_pressure += data_manager->GetPrim(ID_PRESSURE, face2node[iNode]);
 			}
 			face_pressure /= face->GetFaceNodeNum(iFace);
 			face_pressure -= dimensionless.GetPressureDL(0);

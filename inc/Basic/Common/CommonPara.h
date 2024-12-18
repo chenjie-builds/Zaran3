@@ -24,12 +24,12 @@ namespace zaran
 	const dimension_type TWO_DIM = 2;
 	const dimension_type THREE_DIM = 3;
 
-	const index_type id_density = 0;
-	const index_type id_velocity_x = 1;
-	const index_type id_velocity_y = 2;
-	const index_type id_velocity_z = 3;
-	const index_type id_pressure = 4;
-	const index_type id_temperature = 5;
+	const index_type ID_DENSITY = 0;
+	const index_type ID_VELOCITY_X = 1;
+	const index_type ID_VELOCITY_Y = 2;
+	const index_type ID_VELOCITY_Z = 3;
+	const index_type ID_PRESSURE = 4;
+	const index_type ID_TEMPERATURE = 5;
 
 	const double LARGE_NUMBER = 1.0e40;
 	const double SMALL_NUMBER = 1.0e-40;

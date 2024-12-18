@@ -15,11 +15,11 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldFNFDM> field)
 	auto node = grid->GetNode();
 
 	const double* density, * velocity_x, * velocity_y, * velocity_z, * pressure;
-	density = data_manager->GetDensity();
-	velocity_x = data_manager->GetVelocity(0);
-	velocity_y = data_manager->GetVelocity(1);
-	velocity_z = data_manager->GetVelocity(2);
-	pressure = data_manager->GetPressure();
+	density = data_manager->GetPrim(ID_DENSITY);
+	velocity_x = data_manager->GetPrim(ID_VELOCITY_X);
+	velocity_y = data_manager->GetPrim(ID_VELOCITY_Y);
+	velocity_z = data_manager->GetPrim(ID_VELOCITY_Z);
+	pressure = data_manager->GetPrim(ID_PRESSURE);
 
 	INTEGER4 node_num = grid->GetTotalNodeNum();
 	INTEGER4 cell_num = cell->GetCellNum();
@@ -169,7 +169,7 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldStruct> field, std::ostream& os)
 			for (int i = is; i <= ie; ++i)
 			{
 				int idx = idx_proxy->GetIdx(i, j, k);
-				double density = data_manager->GetDensity(idx);
+				double density = data_manager->GetPrim(ID_DENSITY, idx);
 				os << density << "\n";
 			}
 		}
@@ -184,9 +184,9 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldStruct> field, std::ostream& os)
 			for (int i = is; i <= ie; ++i)
 			{
 				int idx = idx_proxy->GetIdx(i, j, k);
-				double vx = data_manager->GetVelocity(0, idx);
-				double vy = data_manager->GetVelocity(1, idx);
-				double vz = data_manager->GetVelocity(2, idx);
+				double vx = data_manager->GetPrim(ID_VELOCITY_X, idx);
+				double vy = data_manager->GetPrim(ID_VELOCITY_Y, idx);
+				double vz = data_manager->GetPrim(ID_VELOCITY_Z, idx);
 				os << vx << " " << vy << " " << vz << "\n";
 			}
 		}
@@ -202,7 +202,7 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldStruct> field, std::ostream& os)
 			for (int i = is; i <= ie; ++i)
 			{
 				int idx = idx_proxy->GetIdx(i, j, k);
-				double pressure = data_manager->GetPressure(idx);
+				double pressure = data_manager->GetPrim(ID_PRESSURE, idx);
 				os << pressure << "\n";
 			}
 		}
@@ -212,7 +212,7 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldStruct> field, std::ostream& os)
 void Visual::WriteVtkASCII(shared_ptr<FieldManager> field_manager)
 {
 	std::string work_dir = GlobalData::GetString("work_dir");
-	std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + ".vtk";
+	std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + ".vtu";
 	file_name = work_dir + "\\" + file_name;
 	std::ofstream out(file_name);
 	for (size_t iter_field = 0; iter_field < field_manager->GetFieldNum(); iter_field++)
@@ -326,11 +326,11 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostr
 	int nj = je - js + 1;
 	int nk = ke - ks + 1;
 	int node_num = ni * nj * nk;
-	const double* density = data_manager->GetDensity();
-	const double* velocity_x = data_manager->GetVelocity(0);
-	const double* velocity_y = data_manager->GetVelocity(1);
-	const double* velocity_z = data_manager->GetVelocity(2);
-	const double* pressure = data_manager->GetPressure();
+	const double* density = data_manager->GetPrim(ID_DENSITY);
+	const double* velocity_x = data_manager->GetPrim(ID_VELOCITY_X);
+	const double* velocity_y = data_manager->GetPrim(ID_VELOCITY_Y);
+	const double* velocity_z = data_manager->GetPrim(ID_VELOCITY_Z);
+	const double* pressure = data_manager->GetPrim(ID_PRESSURE);
 
 	os << "TITLE=\"NSFieldStruct Field\"\n";
 	os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\"\n";
@@ -358,11 +358,11 @@ void Visual::WriteTecplotASCII(shared_ptr<NSFieldFNFDM> field, std::ostream& os)
 	auto data_manager = field->GetDataManager();
 	auto solver = field->GetSolver();
 	auto node_num = grid->GetTotalNodeNum();
-	const double* density = data_manager->GetDensity();
-	const double* velocity_x = data_manager->GetVelocity(0);
-	const double* velocity_y = data_manager->GetVelocity(1);
-	const double* velocity_z = data_manager->GetVelocity(2);
-	const double* pressure = data_manager->GetPressure();
+	const double* density = data_manager->GetPrim(ID_DENSITY);
+	const double* velocity_x = data_manager->GetPrim(ID_VELOCITY_X);
+	const double* velocity_y = data_manager->GetPrim(ID_VELOCITY_Y);
+	const double* velocity_z = data_manager->GetPrim(ID_VELOCITY_Z);
+	const double* pressure = data_manager->GetPrim(ID_PRESSURE);
 	os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\"\n";
 	//非结构网格
 	os << "ZONE T=\"NSFieldFNFDM Field\", N=" << node_num << ", E=" << cell->GetCellNum() << ", F=FEPOINT, ET=BRICK\n";
@@ -432,11 +432,11 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldZaran> field, std::ostre
 	int nj = je - js + 1;
 	int nk = ke - ks + 1;
 	int node_num = ni * nj * nk;
-	const double* density = data_manager->GetDensity();
-	const double* velocity_x = data_manager->GetVelocity(0);
-	const double* velocity_y = data_manager->GetVelocity(1);
-	const double* velocity_z = data_manager->GetVelocity(2);
-	const double* pressure = data_manager->GetPressure();
+	const double* density = data_manager->GetPrim(ID_DENSITY);
+	const double* velocity_x = data_manager->GetPrim(ID_VELOCITY_X);
+	const double* velocity_y = data_manager->GetPrim(ID_VELOCITY_Y);
+	const double* velocity_z = data_manager->GetPrim(ID_VELOCITY_Z);
+	const double* pressure = data_manager->GetPrim(ID_PRESSURE);
 	// 以ASCII格式写入，后期可以改为二进制格式
 	os << "TITLE=\"Flow Field\"\n";
 	os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\",\"iBlank\"\n";
@@ -486,11 +486,11 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldZaran> field)
 				y[idx] = node->GetCoord(i + is, j + js, k + ks)[1];
 				z[idx] = node->GetCoord(i + is, j + js, k + ks)[2];
 				index_type idx0 = idx_proxy->GetIdx(i + is, j + js, k + ks);
-				density[idx] = data_manager->GetDensity(idx0);
-				velocity_x[idx] = data_manager->GetVelocity(0, idx0);
-				velocity_y[idx] = data_manager->GetVelocity(1, idx0);
-				velocity_z[idx] = data_manager->GetVelocity(2, idx0);
-				pressure[idx] = data_manager->GetPressure(idx0);
+				density[idx] = data_manager->GetPrim(ID_DENSITY,idx0);
+				velocity_x[idx] = data_manager->GetPrim(ID_VELOCITY_X, idx0);
+				velocity_y[idx] = data_manager->GetPrim(ID_VELOCITY_Y, idx0);
+				velocity_z[idx] = data_manager->GetPrim(ID_VELOCITY_Z, idx0);
+				pressure[idx] = data_manager->GetPrim(ID_PRESSURE,idx0);
 			}
 		}
 	}
@@ -573,11 +573,11 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldStruct> field)
 				y[idx] = node->GetCoord(i + is, j + js, k + ks)[1];
 				z[idx] = node->GetCoord(i + is, j + js, k + ks)[2];
 				int idx0 = idx_proxy->GetIdx(i + is, j + js, k + ks);
-				density[idx] = data_manager->GetDensity(idx0);
-				velocity_x[idx] = data_manager->GetVelocity(0, idx0);
-				velocity_y[idx] = data_manager->GetVelocity(1, idx0);
-				velocity_z[idx] = data_manager->GetVelocity(2, idx0);
-				pressure[idx] = data_manager->GetPressure(idx0);
+				density[idx] = data_manager->GetPrim(ID_DENSITY,idx0);
+				velocity_x[idx] = data_manager->GetPrim(ID_VELOCITY_X, idx0);
+				velocity_y[idx] = data_manager->GetPrim(ID_VELOCITY_Y, idx0);
+				velocity_z[idx] = data_manager->GetPrim(ID_VELOCITY_Z, idx0);
+				pressure[idx] = data_manager->GetPrim(ID_PRESSURE,idx0);
 				double gamma = 1.4;
 				double beta = 5.0;
 				double r2 = x[idx] * x[idx] + y[idx] * y[idx];

@@ -6661,6 +6661,12 @@ namespace zaran
 		auto para = GetPara();
 		double cfl = para->GetCflNumber();
 		double gamma = GetGas()->GetGamma();
+		auto density = data_manager->GetPrim(ID_DENSITY);
+		auto pressure = data_manager->GetPrim(ID_PRESSURE);
+		auto velocity_x = data_manager->GetPrim(ID_VELOCITY_X);
+		auto velocity_y = data_manager->GetPrim(ID_VELOCITY_Y);
+		auto velocity_z = data_manager->GetPrim(ID_VELOCITY_Z);
+
 #pragma omp parallel for
 		for (int k = ks; k <= ke; ++k)
 		{
@@ -6673,17 +6679,13 @@ namespace zaran
 					auto eta = m_node_metrics->GetEta(idx);
 					auto zeta = m_node_metrics->GetZeta(idx);
 					auto jacobi = m_node_metrics->GetJacobian(idx);
-					double c = sqrt(gamma * data_manager->GetPressure(idx) / data_manager->GetDensity(idx));
+					double c = sqrt(gamma * pressure[idx] / density[idx]);
 					double norm_xi = sqrt(xi[0] * xi[0] + xi[1] * xi[1] + xi[2] * xi[2]);
 					double norm_eta = sqrt(eta[0] * eta[0] + eta[1] * eta[1] + eta[2] * eta[2]);
 					double norm_zeta = sqrt(zeta[0] * zeta[0] + zeta[1] * zeta[1] + zeta[2] * zeta[2]);
-					double u_xi = data_manager->GetVelocity(0, idx) * xi[0] + data_manager->GetVelocity(1, idx) * xi[1] +
-						data_manager->GetVelocity(2, idx) * xi[2];
-					double u_eta = data_manager->GetVelocity(0, idx) * eta[0] + data_manager->GetVelocity(1, idx) * eta[1] +
-						data_manager->GetVelocity(2, idx) * eta[2];
-					double u_zeta = data_manager->GetVelocity(0, idx) * zeta[0] +
-						data_manager->GetVelocity(1, idx) * zeta[1] +
-						data_manager->GetVelocity(2, idx) * zeta[2];
+					double u_xi = velocity_x[idx] * xi[0] + velocity_y[idx] * xi[1] + velocity_z[idx] * xi[2];
+					double u_eta = velocity_x[idx] * eta[0] + velocity_y[idx] * eta[1] + velocity_z[idx] * eta[2];
+					double u_zeta = velocity_x[idx] * zeta[0] + velocity_y[idx] * zeta[1] + velocity_z[idx] * zeta[2];
 					double lamda = abs(u_xi) + abs(u_eta) + c * (norm_xi + norm_eta);
 					if (grid->GetDim() == THREE_DIM)
 					{

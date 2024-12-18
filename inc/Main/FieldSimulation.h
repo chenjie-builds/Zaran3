@@ -22,7 +22,7 @@ namespace zaran
     class NSFieldSimulation
     {
     public:
-        NSFieldSimulation(shared_ptr<FieldManager> global_Field);
+        NSFieldSimulation(shared_ptr<FieldManager> field_manager);
         ~NSFieldSimulation();
 
     public:
@@ -51,8 +51,6 @@ namespace zaran
     protected:
         // 输出流场数据
         void SaveFieldData();
-        // 备份边界节点数据
-        void SaveWallNode();
         // 备份残差
         void SaveResidual() const;
         // 输出流场为VTK格式

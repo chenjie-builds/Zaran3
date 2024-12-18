@@ -118,36 +118,7 @@ namespace zaran
 		return  m_prim[idx_eq];
 	}
 
-	double DataManagerNS::GetDensity(int idx_data)
-	{
-		return m_prim[0][idx_data];
-	}
-
-	double* DataManagerNS::GetDensity()
-	{
-		return m_prim[0];
-	}
-
-	double* DataManagerNS::GetVelocity(int idx_dim)
-	{
-		return m_prim[idx_dim + 1];
-	}
-
-	double DataManagerNS::GetVelocity(int idx_dim, int idx_data)
-	{
-		return m_prim[idx_dim + 1][idx_data];
-	}
-
-	double* DataManagerNS::GetPressure()
-	{
-		return m_prim[m_equ_num - 1];
-	}
-
-	double DataManagerNS::GetPressure(int idx_data)
-	{
-		return m_prim[m_equ_num - 1][idx_data];
-	}
-
+	
 	double DataManagerNS::GetTimeStep(int idx_data)
 	{
 		return m_dt[idx_data];

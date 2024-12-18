@@ -88,17 +88,8 @@ namespace zaran
         /// @param idx_eq 变量索引
         /// @return 第 idx_eq 个基本变量
         double* GetPrim(int idx_eq);
-        double* GetDensity();
-        double GetDensity(int idx_data);
-        double* GetVelocity(int idx_dim);
-        //! @brief 获取速度
-        /// @param idx_dim 速度维度索引
-        /// @param idx_data 数据索引
-        double GetVelocity(int idx_dim, int idx_data);
-        double* GetPressure();
-        double GetPressure(int idx_data);
         double GetTimeStep(int idx_data);
-        double* GetTemperature();
+		double* GetTemperature();
         double GetTemperature(int idx_data);
         double* GetConservative(int idx_eq);
         double* GetConsOld(int idx_eq);
