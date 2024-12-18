@@ -37,8 +37,8 @@ void NSFieldSimulation::Initialize()
 
 void NSFieldSimulation::SaveDataTecplot()
 {
-	//m_visual->WriteTecASCII(m_field_manager);
-	m_visual->WriteTecplotBinary(m_field_manager);
+	m_visual->WriteTecASCII(m_field_manager);
+	//m_visual->WriteTecplotBinary(m_field_manager);
 	//m_visual->WriteVtkBinary(m_field_manager);
 }
 void NSFieldSimulation::SaveDataVTK(std::ostream& os)

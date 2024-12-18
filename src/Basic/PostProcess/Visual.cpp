@@ -363,13 +363,13 @@ void Visual::WriteTecplotASCII(shared_ptr<NSFieldFNFDM> field, std::ostream& os)
 	const double* velocity_y = data_manager->GetPrim(ID_VELOCITY_Y);
 	const double* velocity_z = data_manager->GetPrim(ID_VELOCITY_Z);
 	const double* pressure = data_manager->GetPrim(ID_PRESSURE);
-	os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\"\n";
+	os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\",\"iBlank\"\n";
 	//非结构网格
 	os << "ZONE T=\"NSFieldFNFDM Field\", N=" << node_num << ", E=" << cell->GetCellNum() << ", F=FEPOINT, ET=BRICK\n";
 	for (int iNode = 0; iNode < node_num; ++iNode)
 	{
 		auto coord = node->GetCoord(iNode);
-		os << coord[0] << " " << coord[1] << " " << coord[2] << " " << density[iNode] << " " << velocity_x[iNode] << " " << velocity_y[iNode] << " " << velocity_z[iNode] << " " << pressure[iNode] << "\n";
+		os << coord[0] << " " << coord[1] << " " << coord[2] << " " << density[iNode] << " " << velocity_x[iNode] << " " << velocity_y[iNode] << " " << velocity_z[iNode] << " " << pressure[iNode] << " " << 0 << "\n";
 	}
 	for (index_type iCell = 0; iCell < cell->GetCellNum(); ++iCell)
 	{
@@ -378,38 +378,38 @@ void Visual::WriteTecplotASCII(shared_ptr<NSFieldFNFDM> field, std::ostream& os)
 		{
 			os << cell2node[iNode] + 1 << " ";
 		}
-		//if (node_num < 8)
-		//{
-		//	for (int i = node_num; i < 8; ++i)
-		//	{
-		//		os << cell2node[node_num] + 1 << " ";
-		//	}
-		//}
+		if (node_num < 8)
+		{
+			for (int i = node_num; i < 8; ++i)
+			{
+				os << cell2node[node_num] + 1 << " ";
+			}
+		}
 		os << "\n";
 	}
-	//os << "ZONE T=\"Bound\", N=" << node_num << ", E=" << face->GetFaceNum() << ", F=FEPOINT, ET=QUADRILATERAL\n";
-	//for (int iNode = 0; iNode < node_num; ++iNode)
-	//{
-	//	auto coord = node->GetCoord(iNode);
-	//	os << coord[0] << " " << coord[1] << " " << coord[2] << " " << density[iNode] << " " << velocity_x[iNode] << " " << velocity_y[iNode] << " " << velocity_z[iNode] << " " << pressure[iNode] << "\n";
-	//}
-	//for (int iFace = 0; iFace < face->GetFaceNum(); ++iFace)
-	//{
-	//	auto face2node = face->GetFace2Node(iFace);
-	//	auto n_node = face->GetFaceNodeNum(iFace);
-	//	for (int iNode = 0; iNode < n_node; ++iNode)
-	//	{
-	//		os << face2node[iNode] + 1 << " ";
-	//	}
-	//	if (n_node < 4)
-	//	{
-	//		for (int i = n_node; i < 4; ++i)
-	//		{
-	//			os << face2node[0] + 1 << " ";
-	//		}
-	//	}
-	//	os << "\n";
-	//}
+	os << "ZONE T=\"Bound\", N=" << node_num << ", E=" << face->GetFaceNum() << ", F=FEPOINT, ET=QUADRILATERAL\n";
+	for (int iNode = 0; iNode < node_num; ++iNode)
+	{
+		auto coord = node->GetCoord(iNode);
+		os << coord[0] << " " << coord[1] << " " << coord[2] << " " << density[iNode] << " " << velocity_x[iNode] << " " << velocity_y[iNode] << " " << velocity_z[iNode] << " " << pressure[iNode]<<"  "<<0 << "\n";
+	}
+	for (int iFace = 0; iFace < face->GetFaceNum(); ++iFace)
+	{
+		auto face2node = face->GetFace2Node(iFace);
+		auto n_node = face->GetFaceNodeNum(iFace);
+		for (int iNode = 0; iNode < n_node; ++iNode)
+		{
+			os << face2node[iNode] + 1 << " ";
+		}
+		if (n_node < 4)
+		{
+			for (int i = n_node; i < 4; ++i)
+			{
+				os << face2node[0] + 1 << " ";
+			}
+		}
+		os << "\n";
+	}
 
 
 
@@ -440,7 +440,7 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldZaran> field, std::ostre
 	// 以ASCII格式写入，后期可以改为二进制格式
 	os << "TITLE=\"Flow Field\"\n";
 	os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\",\"iBlank\"\n";
-	os << "ZONE I=" << ni << ", J=" << nj << ", K=" << nk << ", F=POINT\n";
+	os << "ZONE T=\"block grid\", I=" << ni << ", J=" << nj << ", K=" << nk << ", F=POINT\n";
 	for (int k = ks; k <= ke; ++k)
 	{
 		for (int j = js; j <= je; ++j)
@@ -453,8 +453,6 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldZaran> field, std::ostre
 			}
 		}
 	}
-	auto slave_field = field->GetSlaveField();
-	WriteTecplotASCII(slave_field, os);
 }
 void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldZaran> field)
 {
@@ -641,8 +639,8 @@ void Visual::WriteTecASCII(shared_ptr<FieldManager> field_manager)
 	std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + ".dat";
 	file_name = work_dir + "\\" + file_name;
 	std::ofstream out(file_name);
-	out << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\"\n";
-	out << "TITLE=\"Flow Field\"\n";
+	//out << "TITLE=\"Flow Field\"\n";
+	//out << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\",\"iBlank\"\n";
 	double solution_time = GlobalData::GetDouble("currentTime");
 	out << "SOLUTIONTIME=" << solution_time << "\n";
 	for (size_t iter_field = 0; iter_field < field_manager->GetFieldNum(); iter_field++)
@@ -659,11 +657,15 @@ void Visual::WriteTecASCII(shared_ptr<FieldManager> field_manager)
 			auto field_zaran = std::dynamic_pointer_cast<NSFieldZaran>(field);
 			WriteTecplotASCII(field_zaran, out);
 		}
+		else if (field_type == FieldType::NS_FlexibleNode)
+		{
+			auto field_fn = std::dynamic_pointer_cast<NSFieldFNFDM>(field);
+			WriteTecplotASCII(field_fn, out);
+		}
 		else
 		{
 			Log::warn("Field type is not supported!");
 		}
-
 	}
 
 }
