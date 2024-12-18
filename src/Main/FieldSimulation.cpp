@@ -7,18 +7,18 @@
 #include "NSFieldFN.h"
 using namespace zaran;
 
-FieldSimulation::FieldSimulation(shared_ptr<FieldManager> global_Field)
+NSFieldSimulation::NSFieldSimulation(shared_ptr<FieldManager> global_Field)
 {
 	m_field_manager = global_Field;
 	m_res_flag = false;
 }
 
-FieldSimulation::~FieldSimulation()
+NSFieldSimulation::~NSFieldSimulation()
 {
 
 }
 
-void FieldSimulation::Initialize()
+void NSFieldSimulation::Initialize()
 {
 	if (!GlobalData::IsExist("currentIter"))
 	{
@@ -35,13 +35,13 @@ void FieldSimulation::Initialize()
 	}
 }
 
-void FieldSimulation::SaveDataTecplot()
+void NSFieldSimulation::SaveDataTecplot()
 {
 	//m_visual->WriteTecASCII(m_field_manager);
 	m_visual->WriteTecplotBinary(m_field_manager);
 	//m_visual->WriteVtkBinary(m_field_manager);
 }
-void FieldSimulation::SaveDataVTK(std::ostream& os)
+void NSFieldSimulation::SaveDataVTK(std::ostream& os)
 {
 	/*os << "# vtk DataFile Version 4.2\n";
 	for (size_t iGrid = 0; iGrid < grid_.size(); iGrid++)
@@ -82,7 +82,7 @@ void FieldSimulation::SaveDataVTK(std::ostream& os)
 	}*/
 }
 
-void FieldSimulation::SolveField()
+void NSFieldSimulation::SolveField()
 {
 	Log::info("Start to solve field!");
 	Initialize();
@@ -101,7 +101,7 @@ void FieldSimulation::SolveField()
 	SaveFieldData();
 }
 
-void FieldSimulation::CalcResidual()
+void NSFieldSimulation::CalcResidual()
 {
 	m_res_max = -LARGE_NUMBER;
 	m_res_ave = 0;
@@ -116,7 +116,7 @@ void FieldSimulation::CalcResidual()
 	m_res_flag = true;
 }
 
-void FieldSimulation::SaveFieldData()
+void NSFieldSimulation::SaveFieldData()
 {
 	SaveDataTecplot();
 	std::string back_dir = GlobalData::GetString("backupFieldFolder");
@@ -131,7 +131,7 @@ void FieldSimulation::SaveFieldData()
 	BackupGlobalData(back_dir);
 }
 
-void FieldSimulation::BackupFieldData(std::string& back_folder)
+void NSFieldSimulation::BackupFieldData(std::string& back_folder)
 {
 	for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
 	{
@@ -140,7 +140,7 @@ void FieldSimulation::BackupFieldData(std::string& back_folder)
 	}
 }
 
-void FieldSimulation::BackupResidual(std::string& back_folder)
+void NSFieldSimulation::BackupResidual(std::string& back_folder)
 {
 	std::string residual_file = GlobalData::GetString("residualFileName");
 	std::string residual_file_back = back_folder + "/" + residual_file;
@@ -156,7 +156,7 @@ void FieldSimulation::BackupResidual(std::string& back_folder)
 	CopySingleFile(residual_file, residual_file_back);
 }
 
-void FieldSimulation::BackupLog(std::string& back_folder)
+void NSFieldSimulation::BackupLog(std::string& back_folder)
 {
 	std::string log_file = "log.txt";
 	std::string log_file_back = back_folder + "/" + log_file;
@@ -172,7 +172,7 @@ void FieldSimulation::BackupLog(std::string& back_folder)
 	CopySingleFile(log_file, log_file_back);
 }
 
-void FieldSimulation::BackupGlobalData(std::string& back_folder)
+void NSFieldSimulation::BackupGlobalData(std::string& back_folder)
 {
 	std::string global_file = "zaran.ini";
 	std::string global_file_back = back_folder + "/" + global_file;
@@ -187,7 +187,7 @@ void FieldSimulation::BackupGlobalData(std::string& back_folder)
 	GlobalData::Backup(back_folder);
 }
 
-bool FieldSimulation::ContinueSolve()
+bool NSFieldSimulation::ContinueSolve()
 {
 	double end_time = GlobalData::GetDouble("endTime");
 	int current_iter = GlobalData::GetInt("currentIter");
@@ -215,7 +215,7 @@ bool FieldSimulation::ContinueSolve()
 	}
 	return true;
 }
-void FieldSimulation::SaveResidual()
+void NSFieldSimulation::SaveResidual() const
 {
 	int current_iter = GlobalData::GetInt("currentIter");
 	string residual_file = GlobalData::GetString("residualFileName");
@@ -236,7 +236,7 @@ void FieldSimulation::SaveResidual()
 	}
 }
 
-void FieldSimulation::SolveOneStep()
+void NSFieldSimulation::SolveOneStep()
 {
 	for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
 	{
@@ -245,18 +245,46 @@ void FieldSimulation::SolveOneStep()
 	}
 }
 
-void FieldSimulation::PreSolve()
+void NSFieldSimulation::PreSolve()
 {
 	int currentIter = GlobalData::GetInt("currentIter");
 	GlobalData::Update("currentIter", ++currentIter);
+	double min_dt_global = LARGE_NUMBER;
 	for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
 	{
 		auto solver = m_field_manager->GetField(iter_field)->GetSolver();
-		solver->Preprocess();
+		auto ns_solver = std::dynamic_pointer_cast<NSSolver>(solver);
+		ns_solver->CalcTimeStepLocal();
+		double min_dt_local = LARGE_NUMBER;
+		ns_solver->CalcMinTimeStep(min_dt_local);
+		min_dt_global = Min(min_dt_global, min_dt_local);
+	}
+	GlobalData::Update("dt", min_dt_global);
+	double current_time = GlobalData::GetDouble("currentTime");
+	double end_time = GlobalData::GetDouble("endTime");
+	if (current_time + min_dt_global > end_time)
+	{
+		min_dt_global = end_time - current_time;
+		current_time = end_time;
+	}
+	else
+	{
+		current_time += min_dt_global;
+	}
+	GlobalData::Update("currentTime", current_time);
+	int isSteady = GlobalData::GetInt("isSteady");
+	if (isSteady == 0)
+	{
+		for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
+		{
+			auto solver = m_field_manager->GetField(iter_field)->GetSolver();
+			auto ns_solver = std::dynamic_pointer_cast<NSSolver>(solver);
+			ns_solver->ReduceTimeStep(min_dt_global);
+		}
 	}
 }
 
-void FieldSimulation::PostSolve()
+void NSFieldSimulation::PostSolve()
 {
 	for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
 	{
@@ -281,7 +309,7 @@ void FieldSimulation::PostSolve()
 	}
 }
 
-void FieldSimulation::CommFieldData()
+void NSFieldSimulation::CommFieldData()
 {
 	for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
 	{

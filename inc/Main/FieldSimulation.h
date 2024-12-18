@@ -19,11 +19,11 @@ namespace zaran
 {
     /// @brief 控制器类，用于控制流场求解
     /// @details 控制流场求解的前处理，求解，后处理，Feild之间的交互
-    class FieldSimulation
+    class NSFieldSimulation
     {
     public:
-        FieldSimulation(shared_ptr<FieldManager> global_Field);
-        ~FieldSimulation();
+        NSFieldSimulation(shared_ptr<FieldManager> global_Field);
+        ~NSFieldSimulation();
 
     public:
         // 流场求解
@@ -53,7 +53,7 @@ namespace zaran
         // 备份边界节点数据
         void SaveWallNode();
         // 备份残差
-        void SaveResidual();
+        void SaveResidual() const;
         // 输出流场为VTK格式
         void SaveDataVTK(std::ostream &os);
         // 输出流场为Tecplot格式

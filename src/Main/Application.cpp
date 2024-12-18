@@ -118,7 +118,7 @@ namespace zaran
 		Log::info(">>>>>>>>Simulation Task: {}<<<<<<<<", GlobalData::GetString("simulationTask"));
 	}
 
-	void Application::SolveField()
+	void Application::SolveField() const
 	{
 		std::string reslut_folder = GlobalData::GetString("resultFolder");
 		std::string backup_folder = GlobalData::GetString("backupFieldFolder");
@@ -169,7 +169,7 @@ namespace zaran
 		shared_ptr<FieldGenerator> fieldFactory = make_shared<FieldGenerator>(grid_type, solver_type, dim);
 		//FieldGeneratorBuildingExplosion* fieldFactory = new FieldGeneratorBuildingExplosion(grid_type, solver_type, dim);
 		shared_ptr<FieldManager> global_field = fieldFactory->Create();
-		shared_ptr<FieldSimulation> controller = make_shared <FieldSimulation>(global_field);
+		shared_ptr<NSFieldSimulation> controller = make_shared <NSFieldSimulation>(global_field);
 		controller->SolveField();
 	}
 

@@ -3,7 +3,7 @@
 #include "BasicType.h"
 #include <iostream>
 #include"File.h"
-int main(int argc,char**argv)
+int main(int argc, char** argv)
 {
 	std::string work_dir = "";
 	std::string control_file = "zaran.ini";
@@ -30,9 +30,8 @@ int main(int argc,char**argv)
 	}
 	using namespace zaran;
 	Logger::Start(work_dir);
-	Application* app = new Application(work_dir);
+	shared_ptr<Application> app = make_shared<Application>(work_dir);
 	app->Run();
-	delete app;
 	for (int i = 10; i > 0; i--)
 	{
 		std::cout << "\r" << "Program will exit in " << i << " seconds.";

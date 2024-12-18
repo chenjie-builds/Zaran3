@@ -48,7 +48,7 @@ namespace zaran
         void ReadGlobalData();
         void InitTask();
         void ShowInfo();
-        void SolveField();
+        void SolveField() const;
         void ConvertGrid();
         void ReadModel();
     private:
