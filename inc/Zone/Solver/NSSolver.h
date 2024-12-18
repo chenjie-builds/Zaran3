@@ -44,7 +44,6 @@ namespace zaran
 		 * 时间步计算与时间推进相关函数
 		 */
 	public:
-		void CalcTimeStep() override;
 		void TimeAdvance() override;
 		// 计算当地时间步
 		virtual void CalcTimeStepLocal() = 0;

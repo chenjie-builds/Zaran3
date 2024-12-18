@@ -38,6 +38,7 @@ namespace zaran
         void PostSolve();
 
     protected:
+		void CalcTimeStep();
         // 初始化，包括求解器初始化和流场初始化
         void Initialize();
         // 计算残差

@@ -93,6 +93,8 @@ void NSFieldSimulation::SolveField()
 	SaveResidual();
 	while (ContinueSolve())
 	{
+		int currentIter = GlobalData::GetInt("currentIter");
+		GlobalData::Update("currentIter", ++currentIter);
 		PreSolve();
 		SolveOneStep();
 		PostSolve();
@@ -253,35 +255,9 @@ void NSFieldSimulation::PreSolve()
 	for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
 	{
 		auto solver = m_field_manager->GetField(iter_field)->GetSolver();
-		auto ns_solver = std::dynamic_pointer_cast<NSSolver>(solver);
-		ns_solver->CalcTimeStepLocal();
-		double min_dt_local = LARGE_NUMBER;
-		ns_solver->CalcMinTimeStep(min_dt_local);
-		min_dt_global = Min(min_dt_global, min_dt_local);
+		solver->Preprocess();
 	}
-	GlobalData::Update("dt", min_dt_global);
-	double current_time = GlobalData::GetDouble("currentTime");
-	double end_time = GlobalData::GetDouble("endTime");
-	if (current_time + min_dt_global > end_time)
-	{
-		min_dt_global = end_time - current_time;
-		current_time = end_time;
-	}
-	else
-	{
-		current_time += min_dt_global;
-	}
-	GlobalData::Update("currentTime", current_time);
-	int isSteady = GlobalData::GetInt("isSteady");
-	if (isSteady == 0)
-	{
-		for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
-		{
-			auto solver = m_field_manager->GetField(iter_field)->GetSolver();
-			auto ns_solver = std::dynamic_pointer_cast<NSSolver>(solver);
-			ns_solver->ReduceTimeStep(min_dt_global);
-		}
-	}
+	CalcTimeStep();
 }
 
 void NSFieldSimulation::PostSolve()
@@ -355,6 +331,43 @@ void NSFieldSimulation::CommFieldData()
 				std::string data_name = recv_data_name[i_recv_name];
 				field_data->GetData(data_name, recv_node[i_recv_node]) = comm_info->GetSrcDataBuffer(i_recv_name, i_recv_node);
 			}
+		}
+	}
+}
+
+void NSFieldSimulation::CalcTimeStep()
+{
+	double min_dt_global = LARGE_NUMBER;
+	for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
+	{
+		auto solver = m_field_manager->GetField(iter_field)->GetSolver();
+		auto ns_solver = std::dynamic_pointer_cast<NSSolver>(solver);
+		ns_solver->CalcTimeStepLocal();
+		double min_dt_local = LARGE_NUMBER;
+		ns_solver->CalcMinTimeStep(min_dt_local);
+		min_dt_global = Min(min_dt_global, min_dt_local);
+	}
+	GlobalData::Update("dt", min_dt_global);
+	double current_time = GlobalData::GetDouble("currentTime");
+	double end_time = GlobalData::GetDouble("endTime");
+	if (current_time + min_dt_global > end_time)
+	{
+		min_dt_global = end_time - current_time;
+		current_time = end_time;
+	}
+	else
+	{
+		current_time += min_dt_global;
+	}
+	GlobalData::Update("currentTime", current_time);
+	int isSteady = GlobalData::GetInt("isSteady");
+	if (isSteady == 0)
+	{
+		for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
+		{
+			auto solver = m_field_manager->GetField(iter_field)->GetSolver();
+			auto ns_solver = std::dynamic_pointer_cast<NSSolver>(solver);
+			ns_solver->ReduceTimeStep(min_dt_global);
 		}
 	}
 }

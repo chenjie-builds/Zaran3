@@ -24,8 +24,6 @@ namespace zaran
 	public:
 		void InitField() override;
 		void InitSolver() override;
-		// 计算时间步长
-		virtual void CalcTimeStep() = 0;
 		void Solve() override;
 		void Postprocess() override;
 		// 同步时间步长为全局时间步

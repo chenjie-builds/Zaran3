@@ -71,8 +71,7 @@ namespace zaran
 	{
 		auto para = GetPara();
 		para->SetCurrentStep(para->GetCurrentStep() + 1);
-		CalcTimeStep();
-		//BoundaryCondition();
+		BoundaryCondition();
 	}
 
 	void NSSolver::Postprocess()
@@ -88,28 +87,6 @@ namespace zaran
 		TimeAdvance();
 	}
 
-	void NSSolver::CalcTimeStep()
-	{
-		CalcTimeStepLocal();
-		double min_dt;
-		CalcMinTimeStep(min_dt);
-		GlobalData::Update("dt", min_dt);
-		double current_time = GlobalData::GetDouble("currentTime");
-		double end_time = GlobalData::GetDouble("endTime");
-		if (current_time + min_dt > end_time)
-		{
-			min_dt = end_time - current_time;
-			current_time = end_time;
-		}
-		else
-			current_time += min_dt;
-		GlobalData::Update("currentTime", current_time);
-		int isSteady = GlobalData::GetInt("isSteady");
-		if (isSteady == 0)
-		{
-			ReduceTimeStep(min_dt);
-		}
-	}
 	void NSSolver::TimeAdvance()
 	{
 		RungeKutta();
