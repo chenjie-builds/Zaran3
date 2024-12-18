@@ -1,18 +1,6 @@
 #include "NodeStruct.h"
 using namespace zaran;
-NodeStruct::NodeStruct()
-{
-	m_coord.resize(0);
-	m_i_num = 0;
-	m_j_num = 0;
-	m_k_num = 0;
-
-}
-NodeStruct::~NodeStruct()
-{
-}
-
-void zaran::NodeStruct::Allocate(index_type i_num, index_type j_num, index_type k_num)
+NodeStruct::NodeStruct(index_type i_num, index_type j_num, index_type k_num)
 {
 	m_i_num = i_num;
 	m_j_num = j_num;
@@ -20,7 +8,9 @@ void zaran::NodeStruct::Allocate(index_type i_num, index_type j_num, index_type 
 	m_coord.resize(3 * i_num * j_num * k_num);
 	SetCount(i_num * j_num * k_num);
 }
-
+NodeStruct::~NodeStruct()
+{
+}
 zaran::Coord NodeStruct::GetCoord(index_type idx) const
 {
 	return &m_coord[3 * idx];

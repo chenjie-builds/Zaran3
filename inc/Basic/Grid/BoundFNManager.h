@@ -14,14 +14,14 @@
 #include"BasicType.h"
 namespace zaran
 {
-	class BoundMapFN
+	class BoundManagerFN
 	{
 	public:
 		void AddBoundary(const string& name, BoundFN&& bound);
-		void CreateBoundary(const string& name);
-		int GetBoundaryTypeName() { return m_bound_map.size(); }
-		dynamic_array<BoundFN>& GetBoundary(const string& name);
-		map<string, dynamic_array<BoundFN>>& GetBoundaryMap() { return m_bound_map; }
+		void AllocateBound(const string& name);
+		count_type GetBoundCount() const { return m_bound_map.size(); }
+		dynamic_array<BoundFN>& GetBound(const string& name);
+		map<string, dynamic_array<BoundFN>>& GetBoundMap() { return m_bound_map; }
 	private:
 		map<string, dynamic_array<BoundFN>>m_bound_map;
 	};

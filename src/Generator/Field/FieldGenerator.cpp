@@ -70,8 +70,8 @@ namespace zaran
 				int nj = grid_struct->GetNj();
 				int nk = grid_struct->GetNk();
 				auto bound_map = grid_struct->GetBoundMap();
-				if (bound_map->IsBoundaryExist("connection")) {
-					auto& connect_bound = bound_map->GetBoundary("connection");
+				if (bound_map->HasBound("connection")) {
+					auto& connect_bound = bound_map->GetBound("connection");
 					IdProxyStruct* src_idx_proxy = new IdProxyStruct(ni, nj, nk);
 					recv_node_idx_local.resize(connect_bound.size());
 					recv_field_idx_global.resize(connect_bound.size());

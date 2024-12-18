@@ -2,7 +2,7 @@
 # 并包含子项目。
 #
 cmake_minimum_required( VERSION 3.21 )
-set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
+#set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
 # set(CMAKE_TOOLCHAIN_FILE C:/vcpkg/scripts/buildsystems/vcpkg.cmake)
 # 项目名称

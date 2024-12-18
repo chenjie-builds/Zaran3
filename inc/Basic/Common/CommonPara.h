@@ -20,16 +20,16 @@ namespace zaran
 		two = 2,
 		three = 3
 	};
-	const dimension_type one = 1;
-	const dimension_type two = 2;
-	const dimension_type three = 3;
+	const dimension_type ONE_DIM = 1;
+	const dimension_type TWO_DIM = 2;
+	const dimension_type THREE_DIM = 3;
 
-	const index_type density = 0;
-	const index_type velocity_x = 1;
-	const index_type velocity_y = 2;
-	const index_type velocity_z = 3;
-	const index_type pressure = 4;
-	const index_type temperature = 5;
+	const index_type id_density = 0;
+	const index_type id_velocity_x = 1;
+	const index_type id_velocity_y = 2;
+	const index_type id_velocity_z = 3;
+	const index_type id_pressure = 4;
+	const index_type id_temperature = 5;
 
 	const double LARGE_NUMBER = 1.0e40;
 	const double SMALL_NUMBER = 1.0e-40;

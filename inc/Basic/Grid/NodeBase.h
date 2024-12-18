@@ -11,6 +11,7 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
+#include "BasicType.h"
 namespace zaran
 {
   class NodeBase
@@ -20,10 +21,10 @@ namespace zaran
     virtual ~NodeBase();
   public:
     // 返回节点总数
-    const size_t& GetCount() const;
+    const count_type& GetCount() const;
   protected:
-    void SetCount(size_t count);
+    void SetCount(count_type count);
   private:
-    size_t m_count;
+    count_type m_count;
   };
 } // namespace zaran

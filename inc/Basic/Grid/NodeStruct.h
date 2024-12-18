@@ -20,9 +20,8 @@ namespace zaran
 	{
 
 	public:
-		NodeStruct();
+		NodeStruct(index_type i_num, index_type j_num, index_type k_num);
 		~NodeStruct();
-		void Allocate(index_type i_num, index_type j_num, index_type k_num);
 		/// @brief 设置节点坐标
 		/// @param idx_i i方向上的索引
 		/// @param idx_j j方向上的索引
@@ -37,16 +36,16 @@ namespace zaran
 		Coord GetCoord(index_type idx_i, index_type idx_j, index_type idx_k) const;
 		Coord GetCoord(IdProxyStruct* idx_proxy) const;
 		Coord GetCoord(index_type idx)const;
-		int GetINum() const { return m_i_num; }
-		int GetJNum() const { return m_j_num; }
-		int GetKNum() const { return m_k_num; }
+		count_type GetINum() const { return m_i_num; }
+		count_type GetJNum() const { return m_j_num; }
+		count_type GetKNum() const { return m_k_num; }
 	protected:
 		/// @brief 将i,j,k转换为一维数组的索引，用于访问坐标数组
 		/// @return 一维数组的索引
 		index_type GetIdx(index_type i, index_type j, index_type k) const;
 	protected:
 		/// @brief 节点个数，分别为i,j,k方向上的节点个数
-		int m_i_num, m_j_num, m_k_num;
+		count_type m_i_num, m_j_num, m_k_num;
 		/// @brief 节点坐标，按照每个节点x,y,z的顺序存储
 		dynamic_array<double>m_coord;
 	};

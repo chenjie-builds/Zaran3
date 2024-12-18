@@ -56,7 +56,7 @@ namespace zaran
                         {
                             norm_inf = res_val;
                             norm_inf_node = idx;
-                            for (int iDim = 0; iDim < grid->GetDim(); iDim++)
+                            for (dimension_type iDim = 0; iDim < grid->GetDim(); iDim++)
                             {
                                 norm_inf_coord[iDim] = coord[iDim];
                             }

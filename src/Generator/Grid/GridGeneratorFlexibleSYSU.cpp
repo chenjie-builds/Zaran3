@@ -973,7 +973,7 @@ namespace zaran
 		}
 		grid->SetFace(face);
 
-		BoundMapFN* boundary_map = new BoundMapFN();
+		BoundManagerFN* boundary_map = new BoundManagerFN();
 		for (int iFace = 0; iFace < m_bound_node.size(); iFace++)
 		{
 			boundary_map->AddBoundary(m_bound_node[iFace].type, BoundFN(m_bound_node[iFace].bound_index, m_bound_node[iFace].ref_index, 0, m_bound_node[iFace].normal));

@@ -358,7 +358,7 @@ namespace zaran
 					coef_z[2] = coord_k[Idx(i, j, k)][2] - coord_k[Idx(i, j, k - 1)][2];
 					coef_x[3] = 0.0;
 					coef_y[3] = 0.0;
-					if (grid->GetDim() == 2)
+					if (grid->GetDim() == TWO_DIM)
 					{
 						coef_x[2] = 0.0;
 						coef_y[2] = 0.0;
@@ -584,7 +584,7 @@ namespace zaran
 					}
 					auto coef_z = coef->GetZ(Idx(i, j, k));
 					coef_z[0] = NodeDifferece6th(diff_temp);
-					if (grid->GetDim() == 2)
+					if (grid->GetDim() == TWO_DIM)
 					{
 						coef_z[0] = 0.0;
 					}
@@ -616,7 +616,7 @@ namespace zaran
 						diff_temp[iTemp] = coord_j[Idx(i, j + iTemp - 3, k)][2];
 					}
 					coef_z[1] = NodeDifferece6th(diff_temp);
-					if (grid->GetDim() == 2)
+					if (grid->GetDim() == TWO_DIM)
 					{
 						coef_z[1] = 0.0;
 					}
@@ -648,7 +648,7 @@ namespace zaran
 						diff_temp[iTemp] = coord_k[Idx(i, j, k + iTemp - 3)][2];
 					}
 					coef_z[2] = NodeDifferece6th(diff_temp);
-					if (grid->GetDim() == 2)
+					if (grid->GetDim() == TWO_DIM)
 					{
 						coef_x[2] = 0.0;
 						coef_y[2] = 0.0;
@@ -786,7 +786,7 @@ namespace zaran
 				}
 				coef->GetZ(Idx(i, j, nk - 2))[2] = NodeDifferece4thLeft(diff_temp);
 				coef->GetZ(Idx(i, j, nk - 3))[2] = -NodeDifferece4th(diff_temp);
-				if (grid->GetDim() == 2)
+				if (grid->GetDim() == TWO_DIM)
 				{
 					coef->GetX(Idx(i, j, 1))[2] = 0.0;
 					coef->GetX(Idx(i, j, 2))[2] = 0.0;
@@ -845,7 +845,7 @@ namespace zaran
 	}
 	void NSSolverStruct::CalcMetrics()
 	{
-		if (GetGrid()->GetDim() == 2)
+		if (GetGrid()->GetDim() == TWO_DIM)
 		{
 			Log::warn("2D case, use standard format metrics");
 			CalcMetricsS0();
@@ -877,7 +877,7 @@ namespace zaran
 	}
 	void NSSolverStruct::CalcJacobian()
 	{
-		if (GetGrid()->GetDim() == 2)
+		if (GetGrid()->GetDim() == TWO_DIM)
 		{
 			Log::warn("2D case, use standard format Jacobian");
 			CalcJacobianV1();
@@ -1499,7 +1499,7 @@ namespace zaran
 					coef_x[3] = 0.0;
 					coef_y[3] = 0.0;
 					coef_z[3] = 0.0;
-					if (grid->GetDim() == 2)
+					if (grid->GetDim() == TWO_DIM)
 					{
 						coef_z[0] = 0.0;
 						coef_z[1] = 0.0;
@@ -1758,7 +1758,7 @@ namespace zaran
 					coef_eta[0] += temp[3][1] - temp[3][0];
 					coef_eta[1] += temp[4][1] - temp[4][0];
 					coef_eta[2] += temp[5][1] - temp[5][0];
-					if (grid->GetDim() == 2)
+					if (grid->GetDim() == TWO_DIM)
 					{
 						coef_zeta[0] = 0.0;
 						coef_zeta[1] = 0.0;
@@ -2022,7 +2022,7 @@ namespace zaran
 						diff_temp[iTemp] = coord_k[Idx(i, j, k + iTemp - 3)][2];
 					}
 					coef_z[2] = NodeDifferece6th(diff_temp);
-					if (grid->GetDim() == 2)
+					if (grid->GetDim() == TWO_DIM)
 					{
 						coef_x[2] = 0.0;
 						coef_y[2] = 0.0;
@@ -2160,7 +2160,7 @@ namespace zaran
 				}
 				coef->GetZ(Idx(i, j, nk - 2))[2] = NodeDifferece4thLeft(diff_temp);
 				coef->GetZ(Idx(i, j, nk - 3))[2] = -NodeDifferece4th(diff_temp);
-				if (grid->GetDim() == 2)
+				if (grid->GetDim() == TWO_DIM)
 				{
 					coef->GetZ(Idx(i, j, 1))[0] = coef->GetZ(Idx(i, j, 1))[1] = 0.0;
 					coef->GetZ(Idx(i, j, 2))[0] = coef->GetZ(Idx(i, j, 2))[1] = 0.0;
@@ -2993,7 +2993,7 @@ namespace zaran
 					coef_x[3] = 0.0;
 					coef_y[3] = 0.0;
 					coef_z[3] = 0.0;
-					if (grid->GetDim() == 2)
+					if (grid->GetDim() == TWO_DIM)
 					{
 						coef_z[0] = 0.0;
 						coef_z[1] = 0.0;
@@ -3260,7 +3260,7 @@ namespace zaran
 					coef_eta[0] += temp[3][1] - temp[3][0];
 					coef_eta[1] += temp[4][1] - temp[4][0];
 					coef_eta[2] += temp[5][1] - temp[5][0];
-					if (grid->GetDim() == 2)
+					if (grid->GetDim() == TWO_DIM)
 					{
 						coef_zeta[0] = 0.0;
 						coef_zeta[1] = 0.0;
@@ -3524,7 +3524,7 @@ namespace zaran
 						diff_temp[iTemp] = coord_k[Idx(i, j, k + iTemp - 3)][2];
 					}
 					coef_z[2] = NodeDifferece6th(diff_temp);
-					if (grid->GetDim() == 2)
+					if (grid->GetDim() == TWO_DIM)
 					{
 						coef_x[2] = 0.0;
 						coef_y[2] = 0.0;
@@ -3662,7 +3662,7 @@ namespace zaran
 				}
 				coef->GetZ(Idx(i, j, nk - 2))[2] = NodeDifferece4thLeft(diff_temp);
 				coef->GetZ(Idx(i, j, nk - 3))[2] = -NodeDifferece4th(diff_temp);
-				if (grid->GetDim() == 2)
+				if (grid->GetDim() == TWO_DIM)
 				{
 					coef->GetZ(Idx(i, j, 1))[0] = coef->GetZ(Idx(i, j, 1))[1] = 0.0;
 					coef->GetZ(Idx(i, j, 2))[0] = coef->GetZ(Idx(i, j, 2))[1] = 0.0;
@@ -4494,7 +4494,7 @@ namespace zaran
 					coef_x[3] = 0.0;
 					coef_y[3] = 0.0;
 					coef_z[3] = 0.0;
-					if (grid->GetDim() == 2)
+					if (grid->GetDim() == TWO_DIM)
 					{
 						coef_z[0] = 0.0;
 						coef_z[1] = 0.0;
@@ -4883,7 +4883,7 @@ namespace zaran
 					coef_eta[0] += temp[3][1] - temp[3][0];
 					coef_eta[1] += temp[4][1] - temp[4][0];
 					coef_eta[2] += temp[5][1] - temp[5][0];
-					if (grid->GetDim() == 2)
+					if (grid->GetDim() == TWO_DIM)
 					{
 						coef_zeta[0] = 0.0;
 						coef_zeta[1] = 0.0;
@@ -5147,7 +5147,7 @@ namespace zaran
 						diff_temp[iTemp] = coord_k[Idx(i, j, k + iTemp - 3)][2];
 					}
 					coef_z[2] = NodeDifferece6th(diff_temp);
-					if (grid->GetDim() == 2)
+					if (grid->GetDim() == TWO_DIM)
 					{
 						coef_x[2] = 0.0;
 						coef_y[2] = 0.0;
@@ -5285,7 +5285,7 @@ namespace zaran
 				}
 				coef->GetZ(Idx(i, j, nk - 2))[2] = NodeDifferece4thLeft(diff_temp);
 				coef->GetZ(Idx(i, j, nk - 3))[2] = -NodeDifferece4th(diff_temp);
-				if (grid->GetDim() == 2)
+				if (grid->GetDim() == TWO_DIM)
 				{
 					coef->GetZ(Idx(i, j, 1))[0] = coef->GetZ(Idx(i, j, 1))[1] = 0.0;
 					coef->GetZ(Idx(i, j, 2))[0] = coef->GetZ(Idx(i, j, 2))[1] = 0.0;
@@ -6394,11 +6394,11 @@ namespace zaran
 	void NSSolverStruct::CalcPrimGradWLS()
 	{
 		auto grid = GetGrid();
-		if (grid->GetDim() == 2)
+		if (grid->GetDim() == TWO_DIM)
 		{
 			CalcPrimGradWLS2D();
 		}
-		else if (grid->GetDim() == 3)
+		else if (grid->GetDim() == THREE_DIM)
 		{
 			CalcPrimGradWLS3D();
 		}
@@ -6574,7 +6574,7 @@ namespace zaran
 		double max_val, min_val;
 		int neighbor_num = 4;
 		dynamic_array<int> temp_i, temp_j, temp_k;
-		if (grid->GetDim() == 2)
+		if (grid->GetDim() == TWO_DIM)
 		{
 			temp_i.resize(neighbor_num);
 			temp_j.resize(neighbor_num);
@@ -6602,7 +6602,7 @@ namespace zaran
 						temp_i[1] = i + 1, temp_j[1] = j, temp_k[1] = k;
 						temp_i[2] = i, temp_j[2] = j - 1, temp_k[2] = k;
 						temp_i[3] = i, temp_j[3] = j + 1, temp_k[3] = k;
-						if (grid->GetDim() == 3)
+						if (grid->GetDim() == THREE_DIM)
 						{
 							temp_i[4] = i, temp_j[4] = j, temp_k[4] = k - 1;
 							temp_i[5] = i, temp_j[5] = j, temp_k[5] = k + 1;
@@ -6685,7 +6685,7 @@ namespace zaran
 						data_manager->GetVelocity(1, idx) * zeta[1] +
 						data_manager->GetVelocity(2, idx) * zeta[2];
 					double lamda = abs(u_xi) + abs(u_eta) + c * (norm_xi + norm_eta);
-					if (grid->GetDim() == 3)
+					if (grid->GetDim() == THREE_DIM)
 					{
 						lamda += abs(u_zeta) + c * norm_zeta;
 					}
@@ -6899,7 +6899,7 @@ namespace zaran
 						data_manager->SetMidNodePrim(idx_eq, 1, idx, data_manager->GetPrim(idx_eq, idx),
 							data_manager->GetPrim(idx_eq, idx_right));
 					}
-					if (grid->GetDim() == 3)
+					if (grid->GetDim() == THREE_DIM)
 					{
 						idx_right = m_idx_proxy->GetIdx(i, j, k + 1);
 						for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
@@ -6949,7 +6949,7 @@ namespace zaran
 					{
 						data_manager->SetMidNodePrim(idx_eq, 1, idx, value_left[idx_eq], value_right[idx_eq]);
 					}
-					if (grid->GetDim() == 3)
+					if (grid->GetDim() == THREE_DIM)
 					{
 						idx_right = m_idx_proxy->GetIdx(i, j, k + 1);
 						coord_vec[0] = node->GetCoord(i, j, k + 1)[0] - node->GetCoord(i, j, k)[0];
@@ -6989,7 +6989,7 @@ namespace zaran
 			{
 				for (int i = is; i <= ie; ++i)
 				{
-					for (int iDim = 0; iDim < grid->GetDim(); ++iDim)
+					for (dimension_type iDim = 0; iDim < grid->GetDim(); ++iDim)
 					{
 						for (int iTemp = 0; iTemp < 5; ++iTemp)
 						{
@@ -7044,7 +7044,7 @@ namespace zaran
 			{
 				for (int i = is; i <= ie; ++i)
 				{
-					for (int iDim = 0; iDim < grid->GetDim(); ++iDim)
+					for (dimension_type iDim = 0; iDim < grid->GetDim(); ++iDim)
 					{
 						for (int iTemp = 0; iTemp < 5; ++iTemp)
 						{
@@ -7140,7 +7140,7 @@ namespace zaran
 			}
 		}
 
-		if (grid->GetDim() == 3)
+		if (grid->GetDim() == THREE_DIM)
 		{
 #pragma omp parallel for private(value, left_value, right_value, idx_temp)
 			for (int j = js; j <= je; ++j)
@@ -7248,7 +7248,7 @@ namespace zaran
 			}
 		}
 
-		if (grid->GetDim() == 3)
+		if (grid->GetDim() == THREE_DIM)
 		{
 			for (j = js; j <= je; ++j)
 			{
@@ -7444,7 +7444,7 @@ namespace zaran
 			}
 		}
 
-		if (grid->GetDim() == 3)
+		if (grid->GetDim() == THREE_DIM)
 		{
 #pragma omp parallel for private(i, j, idx_temp_left, idx_temp_right, value_left, value_right, left_value, right_value)
 			for (j = js; j <= je; ++j)
@@ -7752,7 +7752,7 @@ namespace zaran
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
-		for (auto& boundary : bound_map->GetBoundaryMap())
+		for (auto& boundary : bound_map->GetBoundMap())
 		{
 			auto& bound_name = boundary.first;
 			auto& bound = boundary.second;

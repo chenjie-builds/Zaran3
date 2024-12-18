@@ -58,9 +58,9 @@ namespace zaran
         int is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
         // i minus
-        if (!bnd_manager->IsBoundaryExist(m_grid_info.bound_type_i_minus))
-            bnd_manager->CreateBoundary(m_grid_info.bound_type_i_minus);
-        auto &bnd_im = bnd_manager->GetBoundary(m_grid_info.bound_type_i_minus);
+        if (!bnd_manager->HasBound(m_grid_info.bound_type_i_minus))
+            bnd_manager->AllocateBound(m_grid_info.bound_type_i_minus);
+        auto &bnd_im = bnd_manager->GetBound(m_grid_info.bound_type_i_minus);
         int bnd_size = (je - js + 1) * (ke - ks + 1);
         int bnd_idx = bnd_im.size();
         bnd_im.resize(bnd_im.size() + bnd_size);
@@ -81,9 +81,9 @@ namespace zaran
             }
         }
         // i plus
-        if (!bnd_manager->IsBoundaryExist(m_grid_info.bound_type_i_plus))
-            bnd_manager->CreateBoundary(m_grid_info.bound_type_i_plus);
-        auto &bnd_ip = bnd_manager->GetBoundary(m_grid_info.bound_type_i_plus);
+        if (!bnd_manager->HasBound(m_grid_info.bound_type_i_plus))
+            bnd_manager->AllocateBound(m_grid_info.bound_type_i_plus);
+        auto &bnd_ip = bnd_manager->GetBound(m_grid_info.bound_type_i_plus);
         bnd_size = (je - js + 1) * (ke - ks + 1);
         bnd_idx = bnd_ip.size();
         bnd_ip.resize(bnd_ip.size() + bnd_size);
@@ -103,9 +103,9 @@ namespace zaran
             }
         }
         // j minus
-        if (!bnd_manager->IsBoundaryExist(m_grid_info.bound_type_j_minus))
-            bnd_manager->CreateBoundary(m_grid_info.bound_type_j_minus);
-        auto &bnd_jm = bnd_manager->GetBoundary(m_grid_info.bound_type_j_minus);
+        if (!bnd_manager->HasBound(m_grid_info.bound_type_j_minus))
+            bnd_manager->AllocateBound(m_grid_info.bound_type_j_minus);
+        auto &bnd_jm = bnd_manager->GetBound(m_grid_info.bound_type_j_minus);
         bnd_size = (ie - is + 1) * (ke - ks + 1);
         bnd_idx = bnd_jm.size();
         bnd_jm.resize(bnd_jm.size() + bnd_size);
@@ -125,9 +125,9 @@ namespace zaran
             }
         }
         // j plus
-        if (!bnd_manager->IsBoundaryExist(m_grid_info.bound_type_j_plus))
-            bnd_manager->CreateBoundary(m_grid_info.bound_type_j_plus);
-        auto &bnd_jp = bnd_manager->GetBoundary(m_grid_info.bound_type_j_plus);
+        if (!bnd_manager->HasBound(m_grid_info.bound_type_j_plus))
+            bnd_manager->AllocateBound(m_grid_info.bound_type_j_plus);
+        auto &bnd_jp = bnd_manager->GetBound(m_grid_info.bound_type_j_plus);
         bnd_size = (ie - is + 1) * (ke - ks + 1);
         bnd_idx = bnd_jp.size();
         bnd_jp.resize(bnd_jp.size() + bnd_size);
@@ -147,9 +147,9 @@ namespace zaran
             }
         }
         // k minus
-        if (!bnd_manager->IsBoundaryExist(m_grid_info.bound_type_k_minus))
-            bnd_manager->CreateBoundary(m_grid_info.bound_type_k_minus);
-        auto &bnd_km = bnd_manager->GetBoundary(m_grid_info.bound_type_k_minus);
+        if (!bnd_manager->HasBound(m_grid_info.bound_type_k_minus))
+            bnd_manager->AllocateBound(m_grid_info.bound_type_k_minus);
+        auto &bnd_km = bnd_manager->GetBound(m_grid_info.bound_type_k_minus);
         bnd_size = (ie - is + 1) * (je - js + 1);
         bnd_idx = bnd_km.size();
         bnd_km.resize(bnd_km.size() + bnd_size);
@@ -169,9 +169,9 @@ namespace zaran
             }
         }
         // k plus
-        if (!bnd_manager->IsBoundaryExist(m_grid_info.bound_type_k_plus))
-            bnd_manager->CreateBoundary(m_grid_info.bound_type_k_plus);
-        auto &bnd_kp = bnd_manager->GetBoundary(m_grid_info.bound_type_k_plus);
+        if (!bnd_manager->HasBound(m_grid_info.bound_type_k_plus))
+            bnd_manager->AllocateBound(m_grid_info.bound_type_k_plus);
+        auto &bnd_kp = bnd_manager->GetBound(m_grid_info.bound_type_k_plus);
         bnd_size = (ie - is + 1) * (je - js + 1);
         bnd_idx = bnd_kp.size();
         bnd_kp.resize(bnd_kp.size() + bnd_size);

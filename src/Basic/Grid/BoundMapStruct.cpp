@@ -1,11 +1,11 @@
-#include "BoundMapStruct.h"
+#include "BoundStructManager.h"
 #include "Log.h"
 namespace zaran
 {
 
-    void BoundManagerStruct::AddBoundary(const string &name, BoundStruct &bound)
+    void BoundStructManager::AddBound(const string &name, BoundStruct &bound)
     {
-        CreateBoundary(name);
+        AllocateBound(name);
         auto &bound_vec = m_bound_map[name];
         for (int iBound = 0; iBound < bound_vec.size(); ++iBound)
         {
@@ -17,7 +17,7 @@ namespace zaran
         m_bound_map[name].emplace_back(bound);
     }
 
-    void BoundManagerStruct::CreateBoundary(const string &name)
+    void BoundStructManager::AllocateBound(const string &name)
     {
         auto it = m_bound_map.find(name);
         if (it == m_bound_map.end())
@@ -26,7 +26,7 @@ namespace zaran
         }
     }
 
-    dynamic_array<BoundStruct> &BoundManagerStruct::GetBoundary(const string &name)
+    dynamic_array<BoundStruct> &BoundStructManager::GetBound(const string &name)
     {
         auto it = m_bound_map.find(name);
         if (it == m_bound_map.end())

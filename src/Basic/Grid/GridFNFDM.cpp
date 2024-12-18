@@ -1,7 +1,7 @@
 #include "GridFNFDM.h"
 namespace zaran
 {
-    GridFN::GridFN(const string& name, int index, int dim) :GridBase(name, index, dim, GridType::Flexible)
+    GridFN::GridFN(const string& name, int index, dimension_type dim) :GridBase(name, index, dim, GridType::Flexible)
     {
         m_node = nullptr;
         m_face = nullptr;
@@ -60,7 +60,7 @@ namespace zaran
     {
         m_cell = cell;
     }
-    void GridFN::SetBoundaryMap(BoundMapFN* boundaryMap)
+    void GridFN::SetBoundaryMap(BoundManagerFN* boundaryMap)
     {
         m_boundary_map = boundaryMap;
     }
@@ -88,7 +88,7 @@ namespace zaran
     {
         return m_cell;
     }
-    BoundMapFN* GridFN::GetBoundaryMap()
+    BoundManagerFN* GridFN::GetBoundaryMap()
     {
         return m_boundary_map;
     }

@@ -105,7 +105,7 @@ namespace zaran
 						{
 							norm_inf = abs(res[idx]);
 							norm_inf_node = idx;
-							for (int iDim = 0; iDim < grid->GetDim(); iDim++)
+							for (dimension_type iDim = 0; iDim < grid->GetDim(); iDim++)
 							{
 								norm_inf_coord[iDim] = node->GetCoord(i, j, k)[iDim];
 							}
@@ -125,7 +125,7 @@ namespace zaran
 	{
 		int idx = field_manager->GetFieldNum();
 		auto block = GetGrid();
-		int dim = block->GetDim();
+		dimension_type dim = block->GetDim();
 		GridFNFactoryZaran grid_factory;
 		shared_ptr<GridFN>grid = make_shared<GridFN>("ZaranSlaveGrid", idx, dim);
 		grid_factory.CreateGrid(block, grid, GetModelManager());

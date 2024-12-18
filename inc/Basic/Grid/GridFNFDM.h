@@ -14,20 +14,20 @@
 #include "NodeFNFDM.h"
 #include "FaceFNFDM.h"
 #include "CellFNFDM.h"
-#include"BoundMapFN.h"
+#include"BoundFNManager.h"
 namespace zaran
 {
   class GridFN : public GridBase
   {
   public:
-    GridFN(const string& name, int index, int dim);
+    GridFN(const string& name, int index, dimension_type dim);
     virtual ~GridFN();
 
   public:
     void SetNode(NodeFN* node);
     void SetFace(FaceFN* face);
     void SetCell(CellFN* cell);
-    void SetBoundaryMap(BoundMapFN* boundaryMap);
+    void SetBoundaryMap(BoundManagerFN* boundaryMap);
   public:
     int GetTotalNodeNum() const;
     int GetInnerNodeNum() const;
@@ -35,7 +35,7 @@ namespace zaran
     NodeFN* GetNode();
     FaceFN* GetFace();
     CellFN* GetCell();
-    BoundMapFN* GetBoundaryMap();
+    BoundManagerFN* GetBoundaryMap();
     int* GetInnerNode();
     int* GetBoundNode();
   protected:
@@ -44,7 +44,7 @@ namespace zaran
     NodeFN* m_node;
     FaceFN* m_face;
     CellFN* m_cell;
-    BoundMapFN* m_boundary_map;
+    BoundManagerFN* m_boundary_map;
     int m_inner_node_num;
     int* m_inner_node_index;
     int m_bound_node_num;

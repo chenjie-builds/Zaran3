@@ -25,7 +25,7 @@ namespace zaran
 	class GridBase
 	{
 	public:
-		GridBase(const string& name, index_type index,index_type dim,GridType type)
+		GridBase(const string& name, index_type index, dimension_type dim,GridType type)
 			:m_name(name),m_index(index),m_dim(dim),m_type(type){}
 		virtual ~GridBase() {}
 		void SetName(const std::string& name) { m_name = name; }
@@ -35,12 +35,12 @@ namespace zaran
 	public:
 		const string& GetName()const { return m_name; }
 		const index_type& GetIndex()const { return m_index; }
-		const index_type& GetDim()const { return m_dim; }
+		const dimension_type& GetDim()const { return m_dim; }
 		const GridType& GetType()const { return m_type; }
 	private:
 		string m_name;//网格名称
 		index_type m_index;//网格索引
-		index_type m_dim;//网格维度
+		dimension_type m_dim;//网格维度
 		GridType m_type;//网格类型
 	};
 }

@@ -39,7 +39,7 @@ namespace zaran
 					{
 						res_tmp[idx_eq] = data_manager->GetResidual(idx_eq, idx);
 					}
-					for (int dim = 0; dim < grid->GetDim(); dim++)
+					for (dimension_type dim = 0; dim < grid->GetDim(); dim++)
 					{
 						for (int iTemp = 0; iTemp < 2; iTemp++)
 						{
@@ -175,7 +175,7 @@ namespace zaran
 						res_tmp[iVal] -= (riemann_para[2].flux[iVal] - riemann_para[3].flux[iVal]);
 					}
 					// k direction
-					if (grid->GetDim() == 3)
+					if (grid->GetDim() == THREE_DIM)
 					{
 						left_coord = node->GetCoord(i, j, k - 1);
 						coord = node->GetCoord(i, j, k);
@@ -246,7 +246,7 @@ namespace zaran
 					{
 						res_tmp[idx_eq] = data_manager->GetResidual(idx_eq, idx);
 					}
-					for (int dim = 0; dim < grid->GetDim(); dim++)
+					for (dimension_type dim = 0; dim < grid->GetDim(); dim++)
 					{
 						for (int iTemp = 0; iTemp < 4; iTemp++)
 						{
@@ -310,7 +310,7 @@ namespace zaran
 					{
 						res_tmp[idx_eq] = data_manager->GetResidual(idx_eq, idx);
 					}
-					for (int dim = 0; dim < grid->GetDim(); dim++)
+					for (dimension_type dim = 0; dim < grid->GetDim(); dim++)
 					{
 						for (int iTemp = 0; iTemp < 6; iTemp++)
 						{

@@ -58,7 +58,7 @@ namespace zaran
 		}
 	}
 
-	void BoundStruct::GetIdx(index_type& i, index_type& j, index_type& k)
+	void BoundStruct::GetIdx(index_type& i, index_type& j, index_type& k) const
 	{
 		i = m_i_bnd_src;
 		j = m_j_bnd_src;

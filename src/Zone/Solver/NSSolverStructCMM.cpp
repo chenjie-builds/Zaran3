@@ -533,7 +533,7 @@ namespace zaran
 					}
 
 					// k direction
-					if (grid->GetDim() == 3)
+					if (grid->GetDim() == THREE_DIM)
 					{
 						riemann_para.norm[0] = GetMidMetricsK()->GetZeta(idx)[0];
 						riemann_para.norm[1] = GetMidMetricsK()->GetZeta(idx)[1];
@@ -582,7 +582,7 @@ namespace zaran
 					{
 						res_tmp[idx_eq] = data_manager->GetResidual(idx_eq, idx);
 					}
-					for (int dim = 0; dim < grid->GetDim(); ++dim)
+					for (dimension_type dim = 0; dim < grid->GetDim(); ++dim)
 					{
 						for (int iTemp = 0; iTemp < 3; iTemp++)
 						{
@@ -632,7 +632,7 @@ namespace zaran
 					{
 						res_tmp[idx_eq] = data_manager->GetResidual(idx_eq, idx);
 					}
-					for (int dim = 0; dim < grid->GetDim(); ++dim)
+					for (dimension_type dim = 0; dim < grid->GetDim(); ++dim)
 					{
 						for (int iTemp = 0; iTemp < 6; iTemp++)
 						{

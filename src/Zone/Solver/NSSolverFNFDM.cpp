@@ -146,8 +146,8 @@ namespace zaran
 			const double* xRight = node->GetCoord(neighbors[1]);
 			const double* yLeft = node->GetCoord(neighbors[2]);
 			const double* yRight = node->GetCoord(neighbors[3]);
-			const double* zLeft = (grid->GetDim() == 3) ? node->GetCoord(neighbors[4]) : nullptr;
-			const double* zRight = (grid->GetDim() == 3) ? node->GetCoord(neighbors[5]) : nullptr;
+			const double* zLeft = (grid->GetDim() == THREE_DIM) ? node->GetCoord(neighbors[4]) : nullptr;
+			const double* zRight = (grid->GetDim() == THREE_DIM) ? node->GetCoord(neighbors[5]) : nullptr;
 
 			m_node_metric->CalcMetric(iNode, xRight, xLeft, yRight, yLeft, zRight, zLeft);
 
@@ -327,8 +327,8 @@ namespace zaran
 	void NSSolverFNFDM::BoundaryCondition()
 	{
 		auto grid = GetGrid();
-		BoundMapFN* bound_map = grid->GetBoundaryMap();
-		for (auto& boundary : bound_map->GetBoundaryMap())
+		BoundManagerFN* bound_map = grid->GetBoundaryMap();
+		for (auto& boundary : bound_map->GetBoundMap())
 		{
 			auto& bound_name = boundary.first;
 			auto& bound = boundary.second;
@@ -534,8 +534,8 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
-		BoundMapFN* bound_map = grid->GetBoundaryMap();
-		auto& boundaryMap = bound_map->GetBoundaryMap();
+		BoundManagerFN* bound_map = grid->GetBoundaryMap();
+		auto& boundaryMap = bound_map->GetBoundMap();
 		for (auto& boundary : boundaryMap)
 		{
 			auto& boundName = boundary.first;
@@ -775,7 +775,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		auto boundaryMapPtr = grid->GetBoundaryMap();
-		auto& boundaryMap = boundaryMapPtr->GetBoundaryMap();
+		auto& boundaryMap = boundaryMapPtr->GetBoundMap();
 		for (auto& boundary : boundaryMap)
 		{
 			auto& boundName = boundary.first;

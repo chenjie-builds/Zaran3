@@ -14,7 +14,7 @@
 #include "NodeStruct.h"
 #include "FaceStruct.h"
 #include "CellStruct.h"
-#include "BoundMapStruct.h"
+#include "BoundStructManager.h"
 #include "StructIdxProxy.h"
 #include <memory>
 namespace zaran
@@ -40,7 +40,7 @@ namespace zaran
 		NodeStruct* GetNode() { return m_node.get(); }
 		FaceStruct* GetFace() { return m_face.get(); }
 		CellStruct* GetCell() { return m_cell.get(); }
-		BoundManagerStruct* GetBoundMap() { return m_bound_map.get(); }
+		BoundStructManager* GetBoundMap() { return m_bound_map.get(); }
 		/// @brief 获取ghost节点层数
 		/// @return  ghost节点层数
 		int GetGhostLevel() const { return m_ghost_level; }
@@ -65,7 +65,7 @@ namespace zaran
 		/// @brief 	结构网格单元
 		shared_ptr<CellStruct>m_cell;
 		/// @brief 	边界条件
-		shared_ptr<BoundManagerStruct> m_bound_map;
+		shared_ptr<BoundStructManager> m_bound_map;
 		shared_ptr<IdProxyStruct> m_idx_proxy;
 	};
 }

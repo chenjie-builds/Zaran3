@@ -1,7 +1,7 @@
-#include "BoundMapFN.h"
+#include "BoundFNManager.h"
 #include "Log.h"
 using namespace zaran;
-void BoundMapFN::AddBoundary(const std::string& name, BoundFN&& bound)
+void BoundManagerFN::AddBoundary(const std::string& name, BoundFN&& bound)
 {
 	auto it = m_bound_map.find(name);
 	if (it == m_bound_map.end())
@@ -27,7 +27,7 @@ void BoundMapFN::AddBoundary(const std::string& name, BoundFN&& bound)
 	}
 }
 
-void zaran::BoundMapFN::CreateBoundary(const string &name)
+void zaran::BoundManagerFN::AllocateBound(const string &name)
 {
 	auto it = m_bound_map.find(name);
 	if (it == m_bound_map.end())
@@ -36,7 +36,7 @@ void zaran::BoundMapFN::CreateBoundary(const string &name)
 	}
 }
 
-dynamic_array<BoundFN>& BoundMapFN::GetBoundary(const std::string& name)
+dynamic_array<BoundFN>& BoundManagerFN::GetBound(const std::string& name)
 {
 	auto it = m_bound_map.find(name);
 	if (it == m_bound_map.end())

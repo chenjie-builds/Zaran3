@@ -504,7 +504,7 @@ namespace zaran
 									neighbor_node_coord.push_back(node_src->GetCoord(i_bnd_src + 1, j_bnd_src, k_bns_src));
 								}
 							}
-							if (grid_src->GetDim() == 2)
+							if (grid_src->GetDim() == TWO_DIM)
 							{
 								double a, b, c;
 								LineFit2D(neighbor_node_coord.data(), neighbor_node_coord.size(), a, b, c);
@@ -590,18 +590,18 @@ namespace zaran
 									j_bnd_tgt -= bound_info.dir_t[1];
 									k_bns_tgt -= bound_info.dir_t[2];
 									BoundStruct bound(i_bnd_src, j_bnd_src, k_bns_src, bound_info.dir_s, norm, i_bnd_tgt, j_bnd_tgt, k_bns_tgt, bound_info.dir_t, bound_info.block_indx_target);
-									bnd_manager->AddBoundary(gridgen_bound[bound_info.bound_type], bound);
+									bnd_manager->AddBound(gridgen_bound[bound_info.bound_type], bound);
 									node_src->SetCoord(i_bnd_src, j_bnd_src, k_bns_src, node_tgt->GetCoord(i_bnd_tgt, j_bnd_tgt, k_bns_tgt));
 
 								}
 								BoundStruct bound(i_bnd_src, j_bnd_src, k_bns_src, bound_info.dir_s, norm, i_bnd_tgt, j_bnd_tgt, k_bns_tgt, bound_info.dir_t, bound_info.block_indx_target);
-								bnd_manager->AddBoundary(gridgen_bound[bound_info.bound_type], bound);
+								bnd_manager->AddBound(gridgen_bound[bound_info.bound_type], bound);
 
 							}
 							else
 							{
 								BoundStruct bound(i_bnd_src, j_bnd_src, k_bns_src, bound_info.dir_s, norm);
-								bnd_manager->AddBoundary(gridgen_bound[bound_info.bound_type], bound);
+								bnd_manager->AddBound(gridgen_bound[bound_info.bound_type], bound);
 							}
 						}
 					}
@@ -1008,7 +1008,7 @@ namespace zaran
 			int iter_bnd_s, iter_bnd_e;
 			const double* bnd_node_coord, * ref_node_coord;
 			double ghost_node_coord[3];
-			for (auto& boundary : bound_map->GetBoundaryMap())
+			for (auto& boundary : bound_map->GetBoundMap())
 			{
 				auto& bound_name = boundary.first;
 				auto& bound = boundary.second;

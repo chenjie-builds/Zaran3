@@ -35,7 +35,7 @@ namespace zaran
         /// @param i_bnd the index of the boundary in i direction
         /// @param j_bnd the index of the boundary in j direction
         /// @param k_bnd the index of the boundary in k direction
-        void GetIdx(index_type&i_bnd, index_type&j_bnd, index_type&k_bnd);
+        void GetIdx(index_type&i_bnd, index_type&j_bnd, index_type&k_bnd) const;
         /// @brief  get direction vector of the boundary
         /// @return a 3-element array, each element is -1, 0 or 1
         const int *GetDirectionSrc();

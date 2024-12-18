@@ -835,9 +835,9 @@ namespace zaran {
 
 	void GridFNFactoryZaran::SetFNGridBoundary() {
 		auto grid = GetFNGrid();
-		BoundMapFN* bound = new BoundMapFN();
-		bound->CreateBoundary("wall");
-		auto& wall = bound->GetBoundary("wall");
+		BoundManagerFN* bound = new BoundManagerFN();
+		bound->AllocateBound("wall");
+		auto& wall = bound->GetBound("wall");
 		index_type node_num = m_fn_info.node[m_layer_num].size();
 		wall.resize(node_num);
 		for (index_type iNode = 0; iNode < node_num; iNode++) {

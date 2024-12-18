@@ -49,7 +49,7 @@ namespace zaran
                 {
                     norm_inf = abs(res[iNode]);
                     norm_inf_node = iNode;
-                    for (int iDim = 0;iDim < grid->GetDim();iDim++)
+                    for (dimension_type iDim = 0;iDim < grid->GetDim();iDim++)
                     {
                         norm_inf_coord[iDim] = node->GetCoord(iNode)[iDim];
                     }
