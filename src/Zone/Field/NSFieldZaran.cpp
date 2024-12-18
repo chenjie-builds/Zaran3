@@ -121,6 +121,35 @@ namespace zaran
 			m_res_info->SetInfNormIdx(iEqu, norm_inf_node);
 		}
 	}
+
+	void NSFieldZaran::DeleteSlaveField(shared_ptr<FieldManager> field_manager)
+	{
+		auto slave_field_id = m_slave_field->GetIdx();
+		field_manager->RemoveField(m_slave_field);
+		auto data_comm= field_manager->GetFieldDataCommInfo(this->GetIdx());
+		auto src_node_num = data_comm->GetRecvNodeNum();
+		auto src_node_idx = data_comm->GetSrcDataIdx();
+		auto tgt_node_idx = data_comm->GetTgtNodeIdx();
+		auto tgt_field_idx = data_comm->GetTgtFieldIdx();
+		dynamic_array <index_type> new_src_node_idx(src_node_num), new_tgt_node_idx(src_node_num), new_tgt_field_idx(src_node_num);
+		count_type new_src_node_num = 0;
+		for (int i = 0; i < src_node_num; i++)
+		{
+			if (tgt_field_idx[i] != slave_field_id)
+			{
+				new_src_node_idx.push_back(src_node_idx[i]);
+				new_tgt_node_idx.push_back(tgt_node_idx[i]);
+				new_tgt_field_idx.push_back(tgt_field_idx[i]);
+				new_src_node_num++;
+			}
+		}
+		new_src_node_idx.resize(new_src_node_num);
+		new_tgt_field_idx.resize(new_src_node_num);
+		new_tgt_node_idx.resize(new_src_node_num);
+		shared_ptr <FieldDataCommInfo> new_data_comm = make_shared <FieldDataCommInfo>(new_src_node_idx.size(), data_comm->GetRecvDataName(), new_src_node_idx.data(), new_tgt_field_idx.data(), new_tgt_node_idx.data());
+		field_manager->SetFieldDataCommInfo(this->GetIdx(), new_data_comm);
+	}
+
 	void NSFieldZaran::CreateSlaveField(shared_ptr<FieldManager> field_manager)
 	{
 		int idx = field_manager->GetFieldNum();
