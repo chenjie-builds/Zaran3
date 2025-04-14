@@ -53,8 +53,6 @@ namespace zaran
         void SaveFieldData();
         // 备份残差
         void SaveResidual() const;
-        // 输出流场为VTK格式
-        void SaveDataVTK(std::ostream &os);
         // 输出流场为Tecplot格式
         void SaveDataTecplot();
         // 备份流场数据，用于续算

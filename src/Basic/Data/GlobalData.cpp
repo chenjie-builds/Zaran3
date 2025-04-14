@@ -1,4 +1,4 @@
-#include "GlobalData.h"
+﻿#include "GlobalData.h"
 #include "Log.h"
 #include <fstream>
 using namespace zaran;
@@ -32,17 +32,17 @@ const dataVariant& GlobalData::Get(const string& dataName)
 
 const int GlobalData::GetInt(const string& dataName)
 {
-	return *(std::get_if<int>(&Get(dataName)));
+	return GetData<int>(dataName);
 }
 
 const double GlobalData::GetDouble(const string& dataName)
 {
-	return *(std::get_if<double>(&Get(dataName)));
+	return GetData<double>(dataName);
 }
 
 const string GlobalData::GetString(const string& dataName)
 {
-	return *(std::get_if<string>(&Get(dataName)));
+	return GetData<string>(dataName);
 }
 
 map<string, dataVariant > GlobalData::dataMap_;

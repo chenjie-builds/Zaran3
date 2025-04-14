@@ -1,10 +1,11 @@
-#include "Visual.h"
+﻿#include "Visual.h"
 #include "GlobalData.h"
 #include "Log.h"
-#include "TecIO.h"
+#include <TECIO.h>
 #include <fstream>
 #include <string>
 #include <vector>
+#include <cgnslib.h>
 #include "NSFieldFN.h"
 using namespace zaran;
 void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldFNFDM> field)
@@ -74,6 +75,10 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldFNFDM> field)
 	/// bound face
 	auto face_topo = grid->GetFace();
 	cell_num = face_topo->GetFaceNum();
+	if (cell_num == 0)
+	{
+		return;
+	}
 	zone_name = "grid_" + grid->GetName() + "_bound";
 	zone_type = 3; // Brick
 	face_num = 6;
@@ -118,6 +123,452 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldFNFDM> field)
 	}
 
 	i = TECNODE142(&connectivityCount, face_nodes.data());
+
+}
+
+void Visual::WriteCGNS(shared_ptr<NSFieldFNFDM> field, cgsize_t index_file1, cgsize_t index_base1)
+{
+	std::string work_dir = GlobalData::GetString("work_dir");
+	std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + "_bound" + ".cgns";
+	file_name = work_dir + "\\" + file_name;
+	int index_file;
+	cg_open(file_name.c_str(), CG_MODE_WRITE, &index_file);
+	int cell_dim = 3;
+	int phys_dim = 3;
+	int index_base;
+	cg_base_write(index_file, "Base", cell_dim, phys_dim, &index_base);
+
+	auto data_manager = field->GetDataManager();
+	auto grid = field->GetGrid();
+	auto cell = grid->GetCell();
+	auto node = grid->GetNode();
+
+	const double* density, * velocity_x, * velocity_y, * velocity_z, * pressure;
+	density = data_manager->GetPrim(ID_DENSITY);
+	velocity_x = data_manager->GetPrim(ID_VELOCITY_X);
+	velocity_y = data_manager->GetPrim(ID_VELOCITY_Y);
+	velocity_z = data_manager->GetPrim(ID_VELOCITY_Z);
+	pressure = data_manager->GetPrim(ID_PRESSURE);
+
+	int node_num = grid->GetTotalNodeNum();
+	int cell_num = cell->GetCellNum();
+	dynamic_array<double> x(node_num), y(node_num), z(node_num);
+	for (int iNode = 0; iNode < node_num; ++iNode)
+	{
+		x[iNode] = node->GetCoord(iNode)[0];
+		y[iNode] = node->GetCoord(iNode)[1];
+		z[iNode] = node->GetCoord(iNode)[2];
+	}
+	int index_zone;
+	cgsize_t isize[3];
+	isize[0] = node_num;
+	isize[1] = cell_num;
+	isize[2] = 0;
+	cg_zone_write(index_file, index_base, "FN_Zone", isize, CGNS_ENUMV(Unstructured), &index_zone);
+	int index_coord;
+	cg_coord_write(index_file, index_base, index_zone, CGNS_ENUMV(RealDouble), "CoordinateX", x.data(), &index_coord);
+	cg_coord_write(index_file, index_base, index_zone, CGNS_ENUMV(RealDouble), "CoordinateY", y.data(), &index_coord);
+	cg_coord_write(index_file, index_base, index_zone, CGNS_ENUMV(RealDouble), "CoordinateZ", z.data(), &index_coord);
+	dynamic_array<cgsize_t>elements(cell_num * 8);
+	for (int iCell = 0; iCell < cell_num; ++iCell)
+	{
+		int cell_node_num = cell->GetNodeNum(iCell);
+		auto cell2node = cell->GetNode(iCell);
+		for (int iNode = 0; iNode < cell_node_num; ++iNode)
+		{
+			elements[iCell * 8 + iNode] = cell2node[iNode] + 1;
+		}
+	}
+	int index_section;
+	cg_section_write(index_file, index_base, index_zone, "Section", CGNS_ENUMV(HEXA_8), 1, cell_num, 0, elements.data(), &index_section);
+	int index_field;
+	cg_sol_write(index_file, index_base, index_zone, "FlowSolution", CGNS_ENUMV(Vertex), &index_field);
+	cg_field_write(index_file, index_base, index_zone, index_field, CGNS_ENUMV(RealDouble), "Density", density, &index_field);
+	cg_field_write(index_file, index_base, index_zone, index_field, CGNS_ENUMV(RealDouble), "VelocityX", velocity_x, &index_field);
+	cg_field_write(index_file, index_base, index_zone, index_field, CGNS_ENUMV(RealDouble), "VelocityY", velocity_y, &index_field);
+	cg_field_write(index_file, index_base, index_zone, index_field, CGNS_ENUMV(RealDouble), "VelocityZ", velocity_z, &index_field);
+	cg_field_write(index_file, index_base, index_zone, index_field, CGNS_ENUMV(RealDouble), "Pressure", pressure, &index_field);
+	//输出边界面
+	int index_file2, index_base2;
+	file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + "_bound_face" + ".cgns";
+	file_name = work_dir + "\\" + file_name;
+	cg_open(file_name.c_str(), CG_MODE_WRITE, &index_file2);
+	cg_base_write(index_file2, "Base", cell_dim, phys_dim, &index_base2);
+	auto face_topo = grid->GetFace();
+	int face_num = face_topo->GetFaceNum();
+	dynamic_array<cgsize_t> faces(face_num * 4);
+	for (int iFace = 0; iFace < face_num; ++iFace)
+	{
+		auto face2node = face_topo->GetFace2Node(iFace);
+		for (int iNode = 0; iNode < 4; ++iNode)
+		{
+			faces[iFace * 4 + iNode] = face2node[iNode] + 1;
+		}
+	}
+	int index_zone1;
+	cgsize_t isize1[3];
+	isize1[0] = node_num;
+	isize1[1] = face_num;
+	isize1[2] = 0;
+	cg_zone_write(index_file2, index_base2, "bound_Zone", isize1, CGNS_ENUMV(Unstructured), &index_zone1);
+	int index_coord1;
+	cg_coord_write(index_file2, index_base2, index_zone1, CGNS_ENUMV(RealDouble), "CoordinateX", x.data(), &index_coord1);
+	cg_coord_write(index_file2, index_base2, index_zone1, CGNS_ENUMV(RealDouble), "CoordinateY", y.data(), &index_coord1);
+	cg_coord_write(index_file2, index_base2, index_zone1, CGNS_ENUMV(RealDouble), "CoordinateZ", z.data(), &index_coord1);
+	int index_section1;
+	cg_section_write(index_file2, index_base2, index_zone1, "bound_Section", CGNS_ENUMV(QUAD_4), 1, face_num, 0, faces.data(), &index_section1);
+	int index_field1;
+	cg_sol_write(index_file2, index_base2, index_zone1, "bound_FlowSolution", CGNS_ENUMV(Vertex), &index_field1);
+	cg_field_write(index_file2, index_base2, index_zone1, index_field1, CGNS_ENUMV(RealDouble), "Density", density, &index_field1);
+	cg_field_write(index_file2, index_base2, index_zone1, index_field1, CGNS_ENUMV(RealDouble), "VelocityX", velocity_x, &index_field1);
+	cg_field_write(index_file2, index_base2, index_zone1, index_field1, CGNS_ENUMV(RealDouble), "VelocityY", velocity_y, &index_field1);
+	cg_field_write(index_file2, index_base2, index_zone1, index_field1, CGNS_ENUMV(RealDouble), "VelocityZ", velocity_z, &index_field1);
+	cg_field_write(index_file2, index_base2, index_zone1, index_field1, CGNS_ENUMV(RealDouble), "Pressure", pressure, &index_field1);
+}
+
+void Visual::WriteCGNS(shared_ptr<NSFieldZaran> field, cgsize_t index_file1, cgsize_t index_base1)
+{
+	std::string work_dir = GlobalData::GetString("work_dir");
+	std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + "_back" + ".cgns";
+	file_name = work_dir + "\\" + file_name;
+	int index_file;
+	cg_open(file_name.c_str(), CG_MODE_WRITE, &index_file);
+	int cell_dim = 3;
+	int phys_dim = 3;
+	int index_base;
+	cg_base_write(index_file, "Base", cell_dim, phys_dim, &index_base);
+
+	auto grid = field->GetGrid();
+	auto node = grid->GetNode();
+	auto cell = grid->GetCell();
+	auto data_manager = field->GetDataManager();
+	auto idx_proxy = grid->GetIdxProxy();
+	int is, ie, js, je, ks, ke;
+	grid->GetRange(is, ie, js, je, ks, ke);
+	int ni = ie - is + 1;
+	int nj = je - js + 1;
+	int nk = ke - ks + 1;
+	int grid_ni = grid->GetNi();
+	int grid_nj = grid->GetNj();
+	int grid_nk = grid->GetNk();
+	int node_num = ni * nj * nk;
+	// 创建 zone
+	cgsize_t isize[3][3];
+	isize[0][0] = ni;
+	isize[0][1] = nj;
+	isize[0][2] = nk;
+	isize[1][0] = isize[0][0] - 1;
+	isize[1][1] = isize[0][1] - 1;
+	isize[1][2] = isize[0][2] - 1;
+	isize[2][0] = 0;
+	isize[2][1] = 0;
+	isize[2][2] = 0;
+	int index_zone;
+	cg_zone_write(index_file, index_base, "FN_Zone", *isize, CGNS_ENUMV(Structured), &index_zone);
+	dynamic_array<double> x(node_num), y(node_num), z(node_num);
+	dynamic_array<double> density(node_num), velocity_x(node_num), velocity_y(node_num), velocity_z(node_num), pressure(node_num);
+	for (index_type k = 0; k < nk; ++k)
+	{
+		for (index_type j = 0; j < nj; ++j)
+		{
+			for (index_type i = 0; i < ni; ++i)
+			{
+				index_type idx = i + ni * j + ni * nj * k;
+				auto coord = node->GetCoord(i + is, j + js, k + ks);
+				x[idx] = coord[0];
+				y[idx] = coord[1];
+				z[idx] = coord[2];
+				int idx0 = idx_proxy->GetIdx(i + is, j + js, k + ks);
+				density[idx] = data_manager->GetPrim(ID_DENSITY, idx0);
+				velocity_x[idx] = data_manager->GetPrim(ID_VELOCITY_X, idx0);
+				velocity_y[idx] = data_manager->GetPrim(ID_VELOCITY_Y, idx0);
+				velocity_z[idx] = data_manager->GetPrim(ID_VELOCITY_Z, idx0);
+				pressure[idx] = data_manager->GetPrim(ID_PRESSURE, idx0);
+			}
+		}
+	}
+	int index_coord;
+	cg_coord_write(index_file, index_base, index_zone, CGNS_ENUMV(RealDouble), "CoordinateX", x.data(), &index_coord);
+	cg_coord_write(index_file, index_base, index_zone, CGNS_ENUMV(RealDouble), "CoordinateY", y.data(), &index_coord);
+	cg_coord_write(index_file, index_base, index_zone, CGNS_ENUMV(RealDouble), "CoordinateZ", z.data(), &index_coord);
+
+	int index_field;
+	cg_sol_write(index_file, index_base, index_zone, "FlowSolution", CGNS_ENUMV(Vertex), &index_field);
+	cg_field_write(index_file, index_base, index_zone, index_field, CGNS_ENUMV(RealDouble), "Density", density.data(), &index_field);
+	cg_field_write(index_file, index_base, index_zone, index_field, CGNS_ENUMV(RealDouble), "VelocityX", velocity_x.data(), &index_field);
+	cg_field_write(index_file, index_base, index_zone, index_field, CGNS_ENUMV(RealDouble), "VelocityY", velocity_y.data(), &index_field);
+	cg_field_write(index_file, index_base, index_zone, index_field, CGNS_ENUMV(RealDouble), "VelocityZ", velocity_z.data(), &index_field);
+	cg_field_write(index_file, index_base, index_zone, index_field, CGNS_ENUMV(RealDouble), "Pressure", pressure.data(), &index_field);
+	cg_close(index_file);
+
+
+
+}
+
+void Visual::WriteCGNS(shared_ptr<NSFieldStruct> field, cgsize_t index_file1, cgsize_t index_base1)
+{
+	std::string work_dir = GlobalData::GetString("work_dir");
+	std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + "_back" + ".cgns";
+	file_name = work_dir + "\\" + file_name;
+	int index_file;
+	cg_open(file_name.c_str(), CG_MODE_WRITE, &index_file);
+	int cell_dim = 3;
+	int phys_dim = 3;
+	int index_base;
+	cg_base_write(index_file, "Base", cell_dim, phys_dim, &index_base);
+
+	auto grid = field->GetGrid();
+	auto node = grid->GetNode();
+	auto cell = grid->GetCell();
+	auto data_manager = field->GetDataManager();
+	auto idx_proxy = grid->GetIdxProxy();
+	int is, ie, js, je, ks, ke;
+	grid->GetRange(is, ie, js, je, ks, ke);
+	int ni = ie - is + 1;
+	int nj = je - js + 1;
+	int nk = ke - ks + 1;
+	int grid_ni = grid->GetNi();
+	int grid_nj = grid->GetNj();
+	int grid_nk = grid->GetNk();
+	int node_num = ni * nj * nk;
+	// 创建 zone
+	cgsize_t isize[3][3];
+	isize[0][0] = nk;
+	isize[0][1] = nj;
+	isize[0][2] = ni;
+	isize[1][0] = isize[0][0] - 1;
+	isize[1][1] = isize[0][1] - 1;
+	isize[1][2] = isize[0][2] - 1;
+	isize[2][0] = 0;
+	isize[2][1] = 0;
+	isize[2][2] = 0;
+	int index_zone;
+	cg_zone_write(index_file, index_base, "Structured_Zone", *isize, CGNS_ENUMV(Structured), &index_zone);
+	dynamic_array<double> x(node_num), y(node_num), z(node_num);
+	dynamic_array<double> density(node_num), velocity_x(node_num), velocity_y(node_num), velocity_z(node_num), pressure(node_num);
+	for (index_type k = 0; k < nk; ++k)
+	{
+		for (index_type j = 0; j < nj; ++j)
+		{
+			for (index_type i = 0; i < ni; ++i)
+			{
+				index_type idx = i + ni * j + ni * nj * k;
+				x[idx] = node->GetCoord(i + is, j + js, k + ks)[0];
+				y[idx] = node->GetCoord(i + is, j + js, k + ks)[1];
+				z[idx] = node->GetCoord(i + is, j + js, k + ks)[2];
+				int idx0 = idx_proxy->GetIdx(i + is, j + js, k + ks);
+				density[idx] = data_manager->GetPrim(ID_DENSITY, idx0);
+				velocity_x[idx] = data_manager->GetPrim(ID_VELOCITY_X, idx0);
+				velocity_y[idx] = data_manager->GetPrim(ID_VELOCITY_Y, idx0);
+				velocity_z[idx] = data_manager->GetPrim(ID_VELOCITY_Z, idx0);
+				pressure[idx] = data_manager->GetPrim(ID_PRESSURE, idx0);
+			}
+		}
+	}
+	int index_coord;
+	cg_coord_write(index_file, index_base, index_zone, CGNS_ENUMV(RealDouble), "CoordinateX", x.data(), &index_coord);
+	cg_coord_write(index_file, index_base, index_zone, CGNS_ENUMV(RealDouble), "CoordinateY", y.data(), &index_coord);
+	cg_coord_write(index_file, index_base, index_zone, CGNS_ENUMV(RealDouble), "CoordinateZ", z.data(), &index_coord);
+
+	int index_field;
+	cg_sol_write(index_file, index_base, index_zone, "FlowSolution", CGNS_ENUMV(Vertex), &index_field);
+	cg_field_write(index_file, index_base, index_zone, index_field, CGNS_ENUMV(RealDouble), "Density", density.data(), &index_field);
+	cg_field_write(index_file, index_base, index_zone, index_field, CGNS_ENUMV(RealDouble), "VelocityX", velocity_x.data(), &index_field);
+	cg_field_write(index_file, index_base, index_zone, index_field, CGNS_ENUMV(RealDouble), "VelocityY", velocity_y.data(), &index_field);
+	cg_field_write(index_file, index_base, index_zone, index_field, CGNS_ENUMV(RealDouble), "VelocityZ", velocity_z.data(), &index_field);
+	cg_field_write(index_file, index_base, index_zone, index_field, CGNS_ENUMV(RealDouble), "Pressure", pressure.data(), &index_field);
+	cg_close(index_file);
+
+}
+
+void Visual::WriteCGNS(shared_ptr<FieldManager> field_manager)
+{
+	//std::string work_dir = GlobalData::GetString("work_dir");
+	//std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + ".cgns";
+	//file_name = work_dir + "\\" + file_name;
+	int index_file;
+	//cg_open(file_name.c_str(), CG_MODE_WRITE, &index_file);
+	int index_base;
+	//int cell_dim = 3;
+	//int phys_dim = 3;
+	//cg_base_write(index_file, "Base", cell_dim, phys_dim, &index_base);
+	for (size_t iter_field = 0; iter_field < field_manager->GetFieldNum(); iter_field++)
+	{
+		auto field = field_manager->GetField(iter_field);
+		auto field_type = field->GetFieldType();
+		if (field_type == FieldType::NS_Structured)
+		{
+			auto field_struct = std::dynamic_pointer_cast<NSFieldStruct>(field);
+			WriteCGNS(field_struct, index_file, index_base);
+		}
+		else if (field_type == FieldType::NS_Zaran)
+		{
+			auto field_zaran = std::dynamic_pointer_cast<NSFieldZaran>(field);
+			WriteCGNS(field_zaran, index_file, index_base);
+		}
+		else if (field_type == FieldType::NS_FlexibleNode)
+		{
+			auto field_fn = std::dynamic_pointer_cast<NSFieldFNFDM>(field);
+			WriteCGNS(field_fn, index_file, index_base);
+		}
+		else
+		{
+			Log::warn("Field type is not supported!");
+		}
+	}
+	//cg_close(index_file);
+
+
+
+}
+
+void Visual::WriteVtkASCII(shared_ptr<NSFieldZaran> field, std::ostream& os)
+{
+	auto grid = field->GetGrid();
+	auto node = grid->GetNode();
+	auto data_manager = field->GetDataManager();
+	auto idx_proxy = grid->GetIdxProxy();
+
+	int is, ie, js, je, ks, ke;
+	grid->GetRange(is, ie, js, je, ks, ke);
+	int ni = ie - is + 1;
+	int nj = je - js + 1;
+	int nk = ke - ks + 1;
+	int node_num = ni * nj * nk;
+
+	// 写入 VTK 文件头
+	os << "# vtk DataFile Version 3.0\n";
+	os << "Flow Field Data\n";
+	os << "ASCII\n";
+	os << "DATASET STRUCTURED_GRID\n";
+	os << "DIMENSIONS " << ni << " " << nj << " " << nk << "\n";
+	os << "POINTS " << node_num << " double\n";
+
+	// 写入点坐标
+	for (int k = ks; k <= ke; ++k)
+	{
+		for (int j = js; j <= je; ++j)
+		{
+			for (int i = is; i <= ie; ++i)
+			{
+				auto coord = node->GetCoord(i, j, k);
+				os << coord[0] << " " << coord[1] << " " << coord[2] << "\n";
+			}
+		}
+	}
+
+	// 写入点数据
+	os << "\nPOINT_DATA " << node_num << "\n";
+
+	// 写入标量数据：密度
+	os << "SCALARS Density double 1\n";
+	os << "LOOKUP_TABLE default\n";
+	for (int k = ks; k <= ke; ++k)
+	{
+		for (int j = js; j <= je; ++j)
+		{
+			for (int i = is; i <= ie; ++i)
+			{
+				int idx = idx_proxy->GetIdx(i, j, k);
+				double density = data_manager->GetPrim(ID_DENSITY, idx);
+				os << density << "\n";
+			}
+		}
+	}
+
+	// 写入向量数据：速度
+	os << "\nVECTORS Velocity double\n";
+	for (int k = ks; k <= ke; ++k)
+	{
+		for (int j = js; j <= je; ++j)
+		{
+			for (int i = is; i <= ie; ++i)
+			{
+				int idx = idx_proxy->GetIdx(i, j, k);
+				double vx = data_manager->GetPrim(ID_VELOCITY_X, idx);
+				double vy = data_manager->GetPrim(ID_VELOCITY_Y, idx);
+				double vz = data_manager->GetPrim(ID_VELOCITY_Z, idx);
+				os << vx << " " << vy << " " << vz << "\n";
+			}
+		}
+	}
+
+	// 写入标量数据：压力
+	os << "\nSCALARS Pressure double 1\n";
+	os << "LOOKUP_TABLE default\n";
+	for (int k = ks; k <= ke; ++k)
+	{
+		for (int j = js; j <= je; ++j)
+		{
+			for (int i = is; i <= ie; ++i)
+			{
+				int idx = idx_proxy->GetIdx(i, j, k);
+				double pressure = data_manager->GetPrim(ID_PRESSURE, idx);
+				os << pressure << "\n";
+			}
+		}
+	}
+}
+
+void Visual::WriteVtkASCII(shared_ptr<NSFieldFNFDM> field, std::ostream& os)
+{
+	auto grid = field->GetGrid();
+	auto node = grid->GetNode();
+	auto cell = grid->GetCell();
+	auto data_manager = field->GetDataManager();
+	auto node_num = grid->GetTotalNodeNum();
+	const double* density = data_manager->GetPrim(ID_DENSITY);
+	const double* velocity_x = data_manager->GetPrim(ID_VELOCITY_X);
+	const double* velocity_y = data_manager->GetPrim(ID_VELOCITY_Y);
+	const double* velocity_z = data_manager->GetPrim(ID_VELOCITY_Z);
+	const double* pressure = data_manager->GetPrim(ID_PRESSURE);
+	os << "# vtk DataFile Version 3.0\n";
+	os << "Flow Field Data\n";
+	os << "ASCII\n";
+	os << "DATASET UNSTRUCTURED_GRID\n";
+	os << "POINTS " << node_num << " double\n";
+	for (int iNode = 0; iNode < node_num; ++iNode)
+	{
+		auto coord = node->GetCoord(iNode);
+		os << coord[0] << " " << coord[1] << " " << coord[2] << "\n";
+	}
+	int cell_num = cell->GetCellNum();
+	int cell_node_num = 8;
+	int cell_count = cell_num * cell_node_num;
+	os << "CELLS " << cell_num << " " << cell_count << "\n";
+	for (int iCell = 0; iCell < cell_num; ++iCell)
+	{
+		auto cell2node = cell->GetNode(iCell);
+		os << cell_node_num << " ";
+		for (int i = 0; i < cell_node_num; ++i)
+		{
+			os << cell2node[i] << " ";
+		}
+		os << "\n";
+	}
+	os << "CELL_TYPES " << 12 << "\n";
+	for (int iCell = 0; iCell < cell_num; ++iCell)
+	{
+		os << 12 << "\n";
+	}
+	os << "POINT_DATA " << node_num << "\n";
+	os << "SCALARS Density double 1\n";
+	os << "LOOKUP_TABLE default\n";
+	for (int iNode = 0; iNode < node_num; ++iNode)
+	{
+		os << density[iNode] << "\n";
+	}
+	os << "VECTORS Velocity double\n";
+	for (int iNode = 0; iNode < node_num; ++iNode)
+	{
+		os << velocity_x[iNode] << " " << velocity_y[iNode] << " " << velocity_z[iNode] << "\n";
+	}
+	os << "SCALARS Pressure double 1\n";
+	os << "LOOKUP_TABLE default\n";
+	for (int iNode = 0; iNode < node_num; ++iNode)
+	{
+		os << pressure[iNode] << "\n";
+	}
 
 }
 
@@ -223,6 +674,16 @@ void Visual::WriteVtkASCII(shared_ptr<FieldManager> field_manager)
 		{
 			auto field_struct = std::dynamic_pointer_cast<NSFieldStruct>(field);
 			WriteVtkASCII(field_struct, out);
+		}
+		else if (field_type == FieldType::NS_Zaran)
+		{
+			auto field_zaran = std::dynamic_pointer_cast<NSFieldZaran>(field);
+			WriteVtkASCII(field_zaran, out);
+		}
+		else if (field_type == FieldType::NS_FlexibleNode)
+		{
+			auto field_fn = std::dynamic_pointer_cast<NSFieldFNFDM>(field);
+			WriteVtkASCII(field_fn, out);
 		}
 		else
 		{
@@ -331,22 +792,51 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostr
 	const double* velocity_y = data_manager->GetPrim(ID_VELOCITY_Y);
 	const double* velocity_z = data_manager->GetPrim(ID_VELOCITY_Z);
 	const double* pressure = data_manager->GetPrim(ID_PRESSURE);
+	//double zeta_z_Linf = -LARGE_NUMBER;
+	//double zeta_z_L2 = 0.0;
+	//double zeta_z_error;
+	//double zeta_z_exact = 100;
+	//for (int k = ks; k <= ke; ++k)
+	//{
+	//	for (int j = js; j <= je; ++j)
+	//	{
+	//		for (int i = is; i <= ie; ++i)
+	//		{
+	//			int idx = idx_proxy->GetIdx(i, j, k);
+	//			zeta_z_error = metrics->GetZeta(idx)[2] * metrics->GetJacobian(idx) - zeta_z_exact;
+	//			zeta_z_error /= zeta_z_exact;
+	//			zeta_z_error = std::abs(zeta_z_error);
+	//			zeta_z_Linf = std::max(zeta_z_Linf, zeta_z_error);
+	//			zeta_z_L2 += zeta_z_error* zeta_z_error;
+	//		}
+	//	}
+	//}
+	//zeta_z_L2 /= node_num;
+	//zeta_z_L2 = std::sqrt(zeta_z_L2);
 
 	os << "TITLE=\"NSFieldStruct Field\"\n";
 	os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\"\n";
-	os << "ZONE I=" << ni + 6 << ", J=" << nj + 6 << ", K=" << nk << ", F=POINT\n";
+	//os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure,\"zeta_z\n";
+	os << "ZONE I=" << ni << ", J=" << nj << ", K=" << nk << ", F=POINT\n";
 	for (int k = ks; k <= ke; ++k)
 	{
-		for (int j = js - 3; j <= je + 3; ++j)
+		for (int j = js; j <= je; ++j)
 		{
-			for (int i = is - 3; i <= ie + 3; ++i)
+			for (int i = is; i <= ie; ++i)
 			{
 				int idx = idx_proxy->GetIdx(i, j, k);
-				os << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1] << " " << node->GetCoord(i, j, k)[2] << " " << density[idx] << " " << velocity_x[idx] << " " << velocity_y[idx] << " " << velocity_z[idx] << " " << pressure[idx] << "\n";
+				//double x = node->GetCoord(i, j, k)[0];
+				//double y = node->GetCoord(i, j, k)[1];
+				//double rho = 1.0 - 0.005 * x + 0.01 * y;
+				os << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1] << " " << node->GetCoord(i, j, k)[2] << " "
+					<< density[idx] << " " << velocity_x[idx] << " " << velocity_y[idx] << " " << velocity_z[idx] << " "
+					//<< pressure[idx] << " " << (metrics->GetZeta(idx)[2] * metrics->GetJacobian(idx)-zeta_z_exac)/zeta_z_exact << "\n";
+					<< pressure[idx]  << "\n";
 			}
 		}
 	}
 	delete idx_proxy;
+	//Log::info("zeta_z L_inf norm:{:2E}, L_2 norm:{:2E}", zeta_z_Linf, zeta_z_L2);
 }
 
 void Visual::WriteTecplotASCII(shared_ptr<NSFieldFNFDM> field, std::ostream& os)
@@ -391,7 +881,7 @@ void Visual::WriteTecplotASCII(shared_ptr<NSFieldFNFDM> field, std::ostream& os)
 	for (int iNode = 0; iNode < node_num; ++iNode)
 	{
 		auto coord = node->GetCoord(iNode);
-		os << coord[0] << " " << coord[1] << " " << coord[2] << " " << density[iNode] << " " << velocity_x[iNode] << " " << velocity_y[iNode] << " " << velocity_z[iNode] << " " << pressure[iNode]<<"  "<<0 << "\n";
+		os << coord[0] << " " << coord[1] << " " << coord[2] << " " << density[iNode] << " " << velocity_x[iNode] << " " << velocity_y[iNode] << " " << velocity_z[iNode] << " " << pressure[iNode] << "  " << 0 << "\n";
 	}
 	for (int iFace = 0; iFace < face->GetFaceNum(); ++iFace)
 	{
@@ -484,11 +974,11 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldZaran> field)
 				y[idx] = node->GetCoord(i + is, j + js, k + ks)[1];
 				z[idx] = node->GetCoord(i + is, j + js, k + ks)[2];
 				index_type idx0 = idx_proxy->GetIdx(i + is, j + js, k + ks);
-				density[idx] = data_manager->GetPrim(ID_DENSITY,idx0);
+				density[idx] = data_manager->GetPrim(ID_DENSITY, idx0);
 				velocity_x[idx] = data_manager->GetPrim(ID_VELOCITY_X, idx0);
 				velocity_y[idx] = data_manager->GetPrim(ID_VELOCITY_Y, idx0);
 				velocity_z[idx] = data_manager->GetPrim(ID_VELOCITY_Z, idx0);
-				pressure[idx] = data_manager->GetPrim(ID_PRESSURE,idx0);
+				pressure[idx] = data_manager->GetPrim(ID_PRESSURE, idx0);
 			}
 		}
 	}
@@ -571,11 +1061,11 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldStruct> field)
 				y[idx] = node->GetCoord(i + is, j + js, k + ks)[1];
 				z[idx] = node->GetCoord(i + is, j + js, k + ks)[2];
 				int idx0 = idx_proxy->GetIdx(i + is, j + js, k + ks);
-				density[idx] = data_manager->GetPrim(ID_DENSITY,idx0);
+				density[idx] = data_manager->GetPrim(ID_DENSITY, idx0);
 				velocity_x[idx] = data_manager->GetPrim(ID_VELOCITY_X, idx0);
 				velocity_y[idx] = data_manager->GetPrim(ID_VELOCITY_Y, idx0);
 				velocity_z[idx] = data_manager->GetPrim(ID_VELOCITY_Z, idx0);
-				pressure[idx] = data_manager->GetPrim(ID_PRESSURE,idx0);
+				pressure[idx] = data_manager->GetPrim(ID_PRESSURE, idx0);
 				double gamma = 1.4;
 				double beta = 5.0;
 				double r2 = x[idx] * x[idx] + y[idx] * y[idx];

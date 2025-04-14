@@ -15,12 +15,12 @@ namespace zaran
     public:
         shared_ptr<FlowSolverParam> GetSolverPara();
 		shared_ptr<DataManagerNS> GetDataManager();
-        ResInfo* GetResInfo() { return m_res_info; }
+		ResInfo* GetResInfo() { return m_res_info.get(); }
         virtual void CalcResidual() = 0;
         virtual void AllocateSolverPara()override;
     protected:
         virtual void AllocateResInfo();
         /// @brief 残差信息，用于存储残差
-        ResInfo* m_res_info;
+		shared_ptr<ResInfo> m_res_info;
     };
 }

@@ -11,6 +11,7 @@
 //==============================================================================||
 #pragma once
 #include "BasicType.h"
+#include <cstring>
 namespace zaran
 {
 	enum class FieldDataType
@@ -40,7 +41,9 @@ namespace zaran
 		dynamic_array<int> m_data_num;
 		/// @brief 用于记录数据
 		/// @note 第一维是数据索引，第二维是数据
-		dynamic_array<void *> m_data;
+		dynamic_array<dynamic_array<std::byte>> m_data;
 	};
+
+
 
 }

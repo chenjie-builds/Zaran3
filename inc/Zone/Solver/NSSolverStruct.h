@@ -59,7 +59,10 @@ namespace zaran
 		void CalcPrimGradWLS();
 		void CalcPrimGradWLS2D();
 		void CalcPrimGradWLS3D();
+		void CalcLimiter();
 		void CalcLimiterVK();
+		void CalcLimiterNone();
+		void CalcLimiterFirstOrder();
 		void CalcTimeStepLocal() override;
 		void CalcMinTimeStep(double& dt) override;
 		void ReduceTimeStep(double& dt) override;

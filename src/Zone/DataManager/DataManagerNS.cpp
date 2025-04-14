@@ -25,8 +25,6 @@ namespace zaran
 		delete[] m_viscous_flux;
 		delete[] m_prim_grad;
 		delete[] m_viscous_flux_grad;
-		delete[] m_dt;
-		delete[] m_temperture;
 		delete[] m_temperture_grad;
 	}
 

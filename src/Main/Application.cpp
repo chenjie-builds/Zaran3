@@ -8,6 +8,7 @@
 #include"ReadSTL.h"
 #include"PolyData.h"
 #include"File.h"
+#include "GridConvert.h"
 namespace zaran
 {
 	void Application::Run()
@@ -175,7 +176,14 @@ namespace zaran
 
 	void Application::ConvertGrid()
 	{
-		Log::info("Convert Grid!");
+		Log::info("Convert Grid Start!");
+		string grid_file_name = "ZoneTestInput.dat";
+		shared_ptr<GridConvertPiflow2Flexible> gridConvert = make_shared<GridConvertPiflow2Flexible>();
+		gridConvert->SetFileName(grid_file_name);
+		gridConvert->ReadFile();
+		gridConvert->WriteFile();
+
+
 	}
 
 	void Application::ReadModel()

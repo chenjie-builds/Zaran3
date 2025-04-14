@@ -1,4 +1,4 @@
-#include "NSSolverStructDEER.h"
+﻿#include "NSSolverStructDEER.h"
 namespace zaran
 {
 	NSSolverStructDEER::NSSolverStructDEER(index_type index, string name, shared_ptr<FlowSolverParamStruct> para, shared_ptr < GridStruct> grid, shared_ptr < DataManagerNSStruct>data_manager)
@@ -11,11 +11,11 @@ namespace zaran
 	void NSSolverStructDEER::FluxDifference2nd()
 	{
 		auto para = GetPara();
-		if (para->GetInterSchme() == InterpolationScheme::Grad)
-		{
-			FlueDifference2nd_MoveMidNode();
-			return;
-		}
+		//if (para->GetInterSchme() == InterpolationScheme::Grad)
+		//{
+		//	FlueDifference2nd_MoveMidNode();
+		//	return;
+		//}
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		auto node_metrics = GetNodeMetrics();

@@ -1,4 +1,4 @@
-//==============================================================================||
+﻿//==============================================================================||
 //*	ZaRan	-	A Totally Automatic CFD Software								||
 //*	Copyright (C) ,Since 2020													||
 //*-----------------------------------------------------------------------------||
@@ -11,6 +11,7 @@
 //==============================================================================||
 #pragma once
 #include"BasicType.h"
+#include <span>
 namespace zaran
 {
 	using dataVariant = variant<string, int, double>;
@@ -22,6 +23,8 @@ namespace zaran
 		static const int GetInt(const string& dataName);
 		static const double GetDouble(const string& dataName);
 		static const string GetString(const string& dataName);
+		template<typename T>
+		static const T GetData(const string& dataName) { return *(std::get_if<T>(&Get(dataName))); }
 		static void Update(const string& dataName, const dataVariant& dataValue);
 		static void Backup(const string& back_file_name);
 	private:

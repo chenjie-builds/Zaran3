@@ -1,5 +1,6 @@
 #include "FieldGenerator.h"
 #include "GridGeneratorFlexibleSYSU.h"
+#include "GridGeneratorFlexible.h"
 #include "GridGeneratorBlock.h"
 #include "GridGenerator.h"
 #include "GridGeneratorStructGridgen.h"
@@ -28,7 +29,9 @@ namespace zaran
 			std::string node_file_name = work_dir + "/node.dat";
 			std::string ele_file_name = work_dir + "/cell.dat";
 			std::string bnd_file_name = work_dir + "/bound.dat";
-			grid_factory = make_shared<GridBuilderSYSU_FN>(node_file_name, ele_file_name, bnd_file_name);
+			//注意SYSU的网格文件格式不再使用
+			//grid_factory = make_shared<GridBuilderSYSU_FN>(node_file_name, ele_file_name, bnd_file_name);
+			grid_factory = make_shared<GridGeneratorFlexible>(node_file_name, ele_file_name, bnd_file_name);
 		}
 		else if (m_grid_type == GridType::Structured)
 		{

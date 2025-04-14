@@ -461,6 +461,13 @@ namespace zaran
 		}
 	}
 
+	void NSSolverStructCMM::CalcConvectionRes_Grad()
+	{
+		InterMidNodePrim_Grad();
+		CalcConvectionFluxMidNode();
+		FluxDifference();
+	}
+
 	void NSSolverStructCMM::CalcConvectionFluxMidNode()
 	{
 		auto grid = GetGrid();

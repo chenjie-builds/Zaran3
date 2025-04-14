@@ -25,6 +25,9 @@ namespace zaran
     void CalcConvectionRes_1st() override;
     void CalcConvectionRes_MUSCL() override;
     void CalcConvectionRes_WCNS5() override;
+	void CalcConvectionRes_Grad() override;
+
+
     //@brief 根据半点左右值计算数值通量
     void CalcConvectionFluxMidNode();
 

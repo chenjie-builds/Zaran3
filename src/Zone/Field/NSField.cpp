@@ -7,6 +7,7 @@ namespace zaran
 	}
 	FieldNS::~FieldNS()
 	{
+
 	}
 	void FieldNS::AllocateSolverPara()
 	{
@@ -31,11 +32,8 @@ namespace zaran
 
 	void FieldNS::AllocateResInfo()
 	{
-		if (m_res_info != nullptr)
-		{
-			delete m_res_info;
-		}
-		m_res_info = new ResInfo(GetSolverPara()->GetEqNum());
+
+		m_res_info = make_shared<ResInfo>(GetSolverPara()->GetEqNum());
 	}
 
 }

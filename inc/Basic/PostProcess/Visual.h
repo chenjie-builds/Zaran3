@@ -10,6 +10,7 @@
 //*	@author	Chen Jie.															||
 //==============================================================================||
 #pragma once
+#include <cgnslib.h>
 #include "Field.h"
 #include "NSFieldStruct.h"
 #include "NSFieldZaran.h"
@@ -30,7 +31,16 @@ namespace zaran
 
 		void WriteVtkASCII(shared_ptr<FieldManager> field_manager);
 		void WriteVtkASCII(shared_ptr<NSFieldStruct> field, std::ostream& os);
+		void WriteVtkASCII(shared_ptr<NSFieldZaran> field, std::ostream& os);
+		void WriteVtkASCII(shared_ptr<NSFieldFNFDM> field, std::ostream& os);
 		void WriteVtkBinary(shared_ptr<FieldManager> field_manager);
 		void WriteVtkBinary(shared_ptr<NSFieldStruct> field, std::ostream& os);
+
+		void WriteCGNS(shared_ptr<FieldManager> field_manager);
+		void WriteCGNS(shared_ptr<NSFieldStruct> field, cgsize_t index_file, cgsize_t index_base);
+		void WriteCGNS(shared_ptr<NSFieldZaran> field, cgsize_t index_file, cgsize_t index_base);
+		void WriteCGNS(shared_ptr<NSFieldFNFDM> field, cgsize_t index_file, cgsize_t index_base);
+
+
 	};
 }

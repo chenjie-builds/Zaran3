@@ -1,4 +1,4 @@
-#include "FieldSimulation.h"
+﻿#include "FieldSimulation.h"
 #include "Log.h"
 #include <fstream>
 #include "FlowSolver.h"
@@ -37,49 +37,10 @@ void NSFieldSimulation::Initialize()
 
 void NSFieldSimulation::SaveDataTecplot()
 {
-	m_visual->WriteTecASCII(m_field_manager);
-	//m_visual->WriteTecplotBinary(m_field_manager);
-	//m_visual->WriteVtkBinary(m_field_manager);
-}
-void NSFieldSimulation::SaveDataVTK(std::ostream& os)
-{
-	/*os << "# vtk DataFile Version 4.2\n";
-	for (size_t iGrid = 0; iGrid < grid_.size(); iGrid++)
-	{
-		auto& currentGrid = grid_[iGrid];
-		os << "grid" << iGrid << "\n"
-			<< "ASCII\n"
-			<< "DATASET UNSTRUCTURED_GRID\n"
-			<< "POINTS " << currentGrid->GetNodeNum() << " double\n";
-		for (size_t iNode = 0; iNode < currentGrid->GetNodeNum(); iNode++)
-		{
-			auto& currentNode = currentGrid->GetNode(iNode);
-			auto& currentNodeCoord = currentNode.GetCoord();
-			os << currentNodeCoord.x() << "  " << currentNodeCoord.y() << " " << currentNodeCoord.z() << "\n";
-		}
-		size_t elementNodeNum = 0;
-		for (size_t iElem = 0; iElem < currentGrid->GetElementNum(); ++iElem)
-		{
-			elementNodeNum += currentGrid->GetElement(iElem).GetNode().size();
-		}
-		os << "CELLS " << currentGrid->GetElementNum() << " " << currentGrid->GetElementNum() + elementNodeNum << "\n";
-		for (size_t iElem = 0; iElem < currentGrid->GetElementNum(); ++iElem)
-		{
-			auto& currentElement = currentGrid->GetElement(iElem);
-			os << currentElement.GetNode().size() << " ";
-			for (auto& iNode : currentElement.GetNode())
-			{
-				os << iNode->GetIndex() << "  ";
-			}
-			os << "\n";
-		}
-		os << "CELL_TYPES " << currentGrid->GetElementNum() << "\n";
-		for (size_t iElem = 0; iElem < currentGrid->GetElementNum(); ++iElem)
-		{
-			os << 7 << "\n";
-		}
-		os << "\n";
-	}*/
+	//m_visual->WriteTecASCII(m_field_manager);
+	m_visual->WriteTecplotBinary(m_field_manager);
+	//m_visual->WriteVtkASCII(m_field_manager);
+	//m_visual->WriteCGNS(m_field_manager);
 }
 
 void NSFieldSimulation::SolveField()
