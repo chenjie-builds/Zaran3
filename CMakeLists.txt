@@ -122,6 +122,7 @@ file(COPY ${Tecio_DLLS} DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 #span-lite库
 set( SpanLite_DIR  ${PROJECT_SOURCE_DIR}/3rdparty/span-lite )
 set( SpanLite_INC_DIR ${SpanLite_DIR}/include/nonstd )
+message(STATUS "SpanLite_INC_DIR: ${SpanLite_INC_DIR}")
 target_include_directories( ${EXECUTABLE_NAME} PRIVATE ${SpanLite_INC_DIR})
 
 set( CMAKE_NINJA_FORCE_RESPONSE_FILE "ON" CACHE BOOL "Force Ninja to use response files." )
