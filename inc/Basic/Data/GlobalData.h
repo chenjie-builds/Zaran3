@@ -11,7 +11,6 @@
 //==============================================================================||
 #pragma once
 #include"BasicType.h"
-#include <span>
 namespace zaran
 {
 	using dataVariant = variant<string, int, double>;

@@ -1,4 +1,4 @@
-# CMakeList.txt: 顶层 CMake 项目文件，在此处执行全局配置
+﻿# CMakeList.txt: 顶层 CMake 项目文件，在此处执行全局配置
 # 并包含子项目。
 #
 cmake_minimum_required( VERSION 3.21 )
@@ -118,6 +118,11 @@ file( GLOB Tecio_DLLS "${Tecio_LIB_DIR}/*.dll" )
 target_include_directories( ${EXECUTABLE_NAME} PRIVATE ${Tecio_INC_DIR} )
 target_link_libraries( ${EXECUTABLE_NAME} PRIVATE ${Tecio_LIBS} )
 file(COPY ${Tecio_DLLS} DESTINATION ${EXECUTABLE_OUTPUT_PATH})
+
+#span-lite库
+set( SpanLite_DIR  ${PROJECT_SOURCE_DIR}/3rdparty/span-lite )
+set( SpanLite_INC_DIR ${SpanLite_DIR}/include/nonstd )
+target_include_directories( ${EXECUTABLE_NAME} PRIVATE ${SpanLite_INC_DIR})
 
 set( CMAKE_NINJA_FORCE_RESPONSE_FILE "ON" CACHE BOOL "Force Ninja to use response files." )
 message( STATUS "CXX_COMPILER_ID:" ${CMAKE_CXX_COMPILER_ID} )
