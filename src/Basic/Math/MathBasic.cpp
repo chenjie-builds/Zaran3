@@ -1,15 +1,15 @@
-#include <cmath>
+﻿#include <cmath>
 #include "MathBasic.h"
 #include "CommonPara.h"
 #include "Eigen/Dense"
 namespace zaran
 {
 
-	double DistanceOfTwoPoints(const double *pt1, const double *pt2)
+	double DistanceOfTwoPoints(const double* pt1, const double* pt2)
 	{
 		return sqrt((pt1[0] - pt2[0]) * (pt1[0] - pt2[0]) +
-					(pt1[1] - pt2[1]) * (pt1[1] - pt2[1]) +
-					(pt1[2] - pt2[2]) * (pt1[2] - pt2[2]));
+			(pt1[1] - pt2[1]) * (pt1[1] - pt2[1]) +
+			(pt1[2] - pt2[2]) * (pt1[2] - pt2[2]));
 	}
 
 	template <typename T>
@@ -28,7 +28,7 @@ namespace zaran
 #endif
 		return true;
 	}
-	double GetRand(const double &range_low, const double &range_high)
+	double GetRand(const double& range_low, const double& range_high)
 	{
 		return rand() / double(RAND_MAX) * (range_high - range_low) + range_low;
 	}
@@ -38,7 +38,7 @@ namespace zaran
 		return mu0 * pow(T / T0, 1.5) * (T0 + Ts) / (T + Ts);
 	}
 
-	void CircleFrom3Point(const double *pt1, const double *pt2, const double *pt3, double &radius, double *center)
+	void CircleFrom3Point(const double* pt1, const double* pt2, const double* pt3, double& radius, double* center)
 	{
 		double x1 = pt1[0], x2 = pt2[0], x3 = pt3[0];
 		double y1 = pt1[1], y2 = pt2[1], y3 = pt3[1];
@@ -62,7 +62,7 @@ namespace zaran
 
 		radius = zaran::DistanceOfTwoPoints(pt1, center);
 	}
-	double AngleOfTwoArray(const double &x1, const double &y1, const double &x2, const double &y2)
+	double AngleOfTwoArray(const double& x1, const double& y1, const double& x2, const double& y2)
 	{
 		double dot = x2 * x1 + y2 * y1;
 		double cross = x2 * y1 - y2 * x1;
@@ -71,7 +71,7 @@ namespace zaran
 			angle += 2 * PI;
 		return angle;
 	}
-	double AngleOfTwoArray3D(const double *A, const double *B)
+	double AngleOfTwoArray3D(const double* A, const double* B)
 	{
 		// 计算点积
 		double dot = A[0] * B[0] + A[1] * B[1] + A[2] * B[2];
@@ -90,7 +90,7 @@ namespace zaran
 		// 计算并返回夹角（弧度）
 		return acos(cosTheta);
 	}
-	double TriangleArea(const double *pt1, const double *pt2, const double *pt3)
+	double TriangleArea(const double* pt1, const double* pt2, const double* pt3)
 	{
 		double a = DistanceOfTwoPoints(pt1, pt2);
 		double b = DistanceOfTwoPoints(pt2, pt3);
@@ -101,29 +101,29 @@ namespace zaran
 	// 计算四边形面积
 	// 可能存在四个点不在一个平面上的情况
 	// 先计算四边形的中心点，然后分割成四个三角形进行计算
-	double QuadrangleArea(const double *pt1, const double *pt2, const double *pt3, const double *pt4)
+	double QuadrangleArea(const double* pt1, const double* pt2, const double* pt3, const double* pt4)
 	{
-		double center[3] = {0};
+		double center[3] = { 0 };
 		for (int i = 0; i < 3; i++)
 		{
 			center[i] = (pt1[i] + pt2[i] + pt3[i] + pt4[i]) / 4;
 		}
 		double area = TriangleArea(pt1, pt2, center) + TriangleArea(pt2, pt3, center) +
-					  TriangleArea(pt3, pt4, center) + TriangleArea(pt4, pt1, center);
+			TriangleArea(pt3, pt4, center) + TriangleArea(pt4, pt1, center);
 		return area;
 	}
 
-	void CrossProduct(const double *A, const double *B, double *C)
+	void CrossProduct(const double* A, const double* B, double* C)
 	{
 		C[0] = A[1] * B[2] - A[2] * B[1];
 		C[1] = A[2] * B[0] - A[0] * B[2];
 		C[2] = A[0] * B[1] - A[1] * B[0];
 	}
-	double DotProduct(const double *A, const double *B)
+	double DotProduct(const double* A, const double* B)
 	{
 		return A[0] * B[0] + A[1] * B[1] + A[2] * B[2];
 	}
-	void LineFit2D(const double **coord, int point_num, double &a, double &b, double &c)
+	void LineFit2D(const double** coord, int point_num, double& a, double& b, double& c)
 	{
 		if (point_num < 2)
 		{
@@ -189,7 +189,7 @@ namespace zaran
 			b = -1;
 		}
 	}
-	void PlaneFit3D(const double **coord, int point_num, double &A, double &B, double &C, double &D)
+	void PlaneFit3D(const double** coord, int point_num, double& A, double& B, double& C, double& D)
 	{
 		if (point_num < 3)
 		{
@@ -226,21 +226,22 @@ namespace zaran
 				break;
 			}
 		}
-		if(is_same_x)
+		if (is_same_x)
 		{
 			A = 1;
 			B = C = 0;
-			D = -coord[0][0]; 
+			D = -coord[0][0];
 			return;
 		}
-		if(is_same_y)
+		if (is_same_y)
 		{
-			A = B = 0;
-			C = 1;
+			A = 0;
+			B = 1;
+			C = 0;
 			D = -coord[0][1]; // 使用y的平均值
 			return;
 		}
-		if(is_same_z)
+		if (is_same_z)
 		{
 			A = B = 0;
 			C = 1;
@@ -271,8 +272,8 @@ namespace zaran
 		// 构建矩阵 A
 		Eigen::Matrix3d A_matrix;
 		A_matrix << sum_xx, sum_xy, sum_xz,
-					sum_xy, sum_yy, sum_yz,
-					sum_xz, sum_yz, sum_zz;
+			sum_xy, sum_yy, sum_yz,
+			sum_xz, sum_yz, sum_zz;
 
 		Eigen::Vector3d B_vector(sum_x, sum_y, sum_z);
 
@@ -284,5 +285,5 @@ namespace zaran
 
 		// 计算常数项 D
 		D = -1;
-}
+	}
 } // namespace zaran
