@@ -1,4 +1,4 @@
-#include "NSSolverFNFDM.h"
+﻿#include "NSSolverFNFDM.h"
 #include "File.h"
 #include <fstream>
 #include "Log.h"
@@ -133,8 +133,9 @@ namespace zaran
 		double min_jacobian = LARGE_NUMBER;
 		int max_jacobian_node = -1;
 		int min_jacobian_node = -1;
-
+#ifdef USE_OMP
 #pragma omp parallel for reduction(max : max_jacobian) reduction(min : min_jacobian)
+#endif // USE_OMP
 		for (int iNode = 0; iNode < node_num; ++iNode)
 		{
 			if (node->GetType(iNode) != NodeType::inner)
@@ -212,7 +213,9 @@ namespace zaran
 		int rk_step = para->GetRkStep();
 		auto node = grid->GetNode();
 		int n_node = grid->GetTotalNodeNum();
+#ifdef USE_OMP
 #pragma omp parallel for
+#endif // USE_OMP
 		for (int iNode = 0; iNode < n_node; ++iNode)
 		{
 			for (int iVal = 0; iVal < 5; ++iVal)
@@ -225,7 +228,9 @@ namespace zaran
 			BoundaryCondition();
 			CalcResidual();
 			auto& rk_coef = para->GetRkCoef(iStep);
-#pragma omp parallel for 
+#ifdef USE_OMP
+#pragma omp parallel for
+#endif // USE_OMP
 			for (int iNode = 0; iNode < n_node; ++iNode)
 			{
 				if (node->GetType(iNode) != NodeType::inner)
@@ -249,7 +254,10 @@ namespace zaran
 		auto gas = GetGas();
 		auto data_manager = GetDataManager();
 		int node_num = grid->GetTotalNodeNum();
+#ifdef USE_OMP
 #pragma omp parallel for
+#endif // USE_OMP
+
 		for (int iNode = 0; iNode < node_num; ++iNode)
 		{
 			double prim[5];
@@ -812,7 +820,7 @@ namespace zaran
 			data_manager->SetNonPhysical(iNode, -1);
 			if (node->GetType(iNode) != NodeType::inner && node->GetType(iNode) != NodeType::hole)
 				continue;
-			if (density[iNode] < 0 || pressure[iNode]< 0)
+			if (density[iNode] < 0 || pressure[iNode] < 0)
 			{
 				exist_nonphysical = true;
 			}
@@ -1072,7 +1080,6 @@ namespace zaran
 			}
 			bool exist_negative = false;
 			int idx = inner_node[iNode];
-			exist_negative = false;
 			double jacobi = m_node_metric->GetJacobian(idx);
 			auto neighbor = node->GetNeighborNode(idx);
 			// i direction
@@ -1193,7 +1200,7 @@ namespace zaran
 				grad_w[iDim] = data_manager->GetPrimGrad(3, iDim, iNode);
 				grad_p[iDim] = data_manager->GetPrimGrad(4, iDim, iNode);
 			}
-			tempeture = gas->CalcTemperature(data_manager->GetPrim(ID_DENSITY,iNode), data_manager->GetPrim(ID_PRESSURE,iNode));
+			tempeture = gas->CalcTemperature(data_manager->GetPrim(ID_DENSITY, iNode), data_manager->GetPrim(ID_PRESSURE, iNode));
 			vis_coef = gas->CalcMu(tempeture);
 			lamda = 2.0 / 3.0 * vis_coef;
 			therm_coef = gas->CalcK(tempeture);

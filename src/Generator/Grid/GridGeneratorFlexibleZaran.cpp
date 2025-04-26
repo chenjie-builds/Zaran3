@@ -1,10 +1,10 @@
-#include "GridGeneratorFlexibleZaran.h"
+﻿#include "GridGeneratorFlexibleZaran.h"
 #include "Log.h"
 #include "MathBasic.h"
 #include <omp.h>
 #include<cmath>
 namespace zaran {
-	void GridFNFactoryZaran::CreateGrid(shared_ptr<GridBlock> block, shared_ptr<GridFN> grid, shared_ptr<ModelManager> model_manager) 
+	void GridFNFactoryZaran::CreateGrid(shared_ptr<GridBlock> block, shared_ptr<GridFN> grid, shared_ptr<ModelManager> model_manager)
 	{
 		m_model_manager = model_manager;
 		m_block_grid = block;
@@ -47,12 +47,14 @@ namespace zaran {
 		SetFNGridBoundaryFace();
 	}
 
-	void GridFNFactoryZaran::TagBlockGrid() {
+	void GridFNFactoryZaran::TagBlockGrid() 
+	{
 		TagCells();
 		TagNodes();
 	}
 
-	void GridFNFactoryZaran::TagCells() {
+	void GridFNFactoryZaran::TagCells()
+	{
 		auto grid = GetBlockGrid();
 		int ni, nj, nk;
 		ni = grid->GetNi();

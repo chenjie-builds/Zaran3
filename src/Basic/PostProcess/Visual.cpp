@@ -827,11 +827,11 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostr
 				int idx = idx_proxy->GetIdx(i, j, k);
 				//double x = node->GetCoord(i, j, k)[0];
 				//double y = node->GetCoord(i, j, k)[1];
-				//double rho = 1.0 - 0.005 * x + 0.01 * y;
+				//double rho = 1.0 + 0.01 * y;
 				os << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1] << " " << node->GetCoord(i, j, k)[2] << " "
 					<< density[idx] << " " << velocity_x[idx] << " " << velocity_y[idx] << " " << velocity_z[idx] << " "
 					//<< pressure[idx] << " " << (metrics->GetZeta(idx)[2] * metrics->GetJacobian(idx)-zeta_z_exac)/zeta_z_exact << "\n";
-					<< pressure[idx]  << "\n";
+					<< pressure[idx] << "\n";
 			}
 		}
 	}

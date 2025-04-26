@@ -122,8 +122,8 @@ namespace zaran
 	}
 	void NSSolverStruct::InitFieldFarFieldZeroVel()
 	{
-		InitFieldVortex();
-		return;
+		//InitFieldVortex();
+		//return;
 
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
@@ -138,10 +138,10 @@ namespace zaran
 		prim_far[2] = 0;
 		prim_far[3] = 0;
 		prim_far[4] = para->GetInflowPressure();
-		// prim_far[1] = 0.0;
-		// prim_far[2] = 0.0;
-		// prim_far[3] = 0.0;
-		// prim_far[4] = 1.4;
+		//prim_far[1] = 3.0;
+		//prim_far[2] = 0.0;
+		//prim_far[3] = 0.0;
+		//prim_far[4] = 1.4;
 		//double prim_left[5] = { 8.0,8.25 * cos(30.0 / 180.0 * PI),-8.25 * sin(30.0 / 180.0 * PI),0.0,116.5 };
 		//double prim_left[5] = { 6.4,3.125,0,0,18.5 };
 		//double prim_right[5] = { 1.4,0.0,0.0,0.0,1.0 };
@@ -153,9 +153,9 @@ namespace zaran
 				{
 					m_idx_proxy->SetIdx(i, j, k);
 					int idx = m_idx_proxy->GetIdx();
-					double x = grid->GetNode()->GetCoord(i, j, k)[0];
-					double y = grid->GetNode()->GetCoord(i, j, k)[1];
-					//prim_far[0] = 1.0 - 0.005 * x + 0.01 * y;
+					//double x = grid->GetNode()->GetCoord(i, j, k)[0];
+					//double y = grid->GetNode()->GetCoord(i, j, k)[1];
+					//prim_far[0] = 1.0 + 0.01 * y;
 					data_manager->SetPrim(idx, prim_far);
 					//auto coord = node->GetCoord(idx);
 					//if (coord[0] <= 1.0 / 6.0 + coord[1] / tan(60.0 / 180.0 * PI))
@@ -7878,7 +7878,7 @@ namespace zaran
 							  GetPara()->GetInflowVelocityY(), GetPara()->GetInflowVelocityZ(),
 							  GetPara()->GetInflowPressure() };
 		//prim_far[1] = 3.0;
-		//prim_far[2] = 1.5;
+		//prim_far[2] = 0;
 		//prim_far[3] = 0.0;
 		//prim_far[4] = 1.4;
 		//double prim_far[5] = { 8.0,8.25 * cos(30.0 / 180.0 * PI),-8.25 * sin(30.0 / 180.0 * PI),0.0,116.5 };
@@ -7900,7 +7900,7 @@ namespace zaran
 				index_type idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
 				//double x = node->GetCoord(i_ghost, j_ghost, k_ghost)[0];
 				//double y = node->GetCoord(i_ghost, j_ghost, k_ghost)[1];
-				//prim_far[0] = 1.0 - 0.005 * x + 0.01 * y;
+				//prim_far[0] = 1.0 + 0.01 * y;
 				GetGas()->Prim2Cons(prim_far, cons_far);
 				data_manager->SetPrim(idx_ghost, prim_far);
 				data_manager->SetCons(idx_ghost, cons_far);
