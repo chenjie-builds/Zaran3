@@ -1,4 +1,4 @@
-#include "Application.h"
+﻿#include "Application.h"
 #include "Log.h"
 #include "BasicType.h"
 #include <iostream>
@@ -10,7 +10,7 @@ int main(int argc, char** argv)
 	if (argc == 1)
 	{
 		work_dir = zaran::GetCurPath();
-		control_file = work_dir + "/" + control_file;
+		control_file = work_dir + "\\" + control_file;
 		if (zaran::IsFileExist(control_file))
 		{
 			Log::info("Use default control file: {}", control_file);
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 	else
 	{
 		work_dir = argv[1];
-		control_file = work_dir + "/" + control_file;
+		control_file = work_dir + "\\" + control_file;
 		Log::info("Control file:{}", control_file);
 	}
 	using namespace zaran;

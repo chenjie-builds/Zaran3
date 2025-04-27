@@ -1,4 +1,4 @@
-#include<fstream>
+﻿#include<fstream>
 #include"Application.h"
 #include "GlobalData.h"
 #include"GlobalField.h"
@@ -40,7 +40,7 @@ namespace zaran
 		while (!IsFileExist(m_control_file))
 		{
 			Log::warn("Control File:{}, is NOT exist! Please Check!", m_control_file);
-			system("pause");
+			exit(0);
 		}
 		std::ifstream fin(m_control_file);
 		std::string line;
