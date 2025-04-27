@@ -243,7 +243,7 @@ void Visual::WriteCGNS(shared_ptr<NSFieldZaran> field, cgsize_t index_file1, cgs
 	auto node = grid->GetNode();
 	auto cell = grid->GetCell();
 	auto data_manager = field->GetDataManager();
-	auto idx_proxy = grid->GetIdxProxy();
+	IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 	int is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
 	int ni = ie - is + 1;
@@ -279,7 +279,7 @@ void Visual::WriteCGNS(shared_ptr<NSFieldZaran> field, cgsize_t index_file1, cgs
 				x[idx] = coord[0];
 				y[idx] = coord[1];
 				z[idx] = coord[2];
-				int idx0 = idx_proxy->GetIdx(i + is, j + js, k + ks);
+				int idx0 = idx_proxy(i + is, j + js, k + ks);
 				density[idx] = data_manager->GetPrim(ID_DENSITY, idx0);
 				velocity_x[idx] = data_manager->GetPrim(ID_VELOCITY_X, idx0);
 				velocity_y[idx] = data_manager->GetPrim(ID_VELOCITY_Y, idx0);
@@ -322,7 +322,7 @@ void Visual::WriteCGNS(shared_ptr<NSFieldStruct> field, cgsize_t index_file1, cg
 	auto node = grid->GetNode();
 	auto cell = grid->GetCell();
 	auto data_manager = field->GetDataManager();
-	auto idx_proxy = grid->GetIdxProxy();
+	IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 	int is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
 	int ni = ie - is + 1;
@@ -357,7 +357,7 @@ void Visual::WriteCGNS(shared_ptr<NSFieldStruct> field, cgsize_t index_file1, cg
 				x[idx] = node->GetCoord(i + is, j + js, k + ks)[0];
 				y[idx] = node->GetCoord(i + is, j + js, k + ks)[1];
 				z[idx] = node->GetCoord(i + is, j + js, k + ks)[2];
-				int idx0 = idx_proxy->GetIdx(i + is, j + js, k + ks);
+				int idx0 = idx_proxy(i + is, j + js, k + ks);
 				density[idx] = data_manager->GetPrim(ID_DENSITY, idx0);
 				velocity_x[idx] = data_manager->GetPrim(ID_VELOCITY_X, idx0);
 				velocity_y[idx] = data_manager->GetPrim(ID_VELOCITY_Y, idx0);
@@ -428,7 +428,7 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldZaran> field, std::ostream& os)
 	auto grid = field->GetGrid();
 	auto node = grid->GetNode();
 	auto data_manager = field->GetDataManager();
-	auto idx_proxy = grid->GetIdxProxy();
+	IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 
 	int is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
@@ -470,7 +470,7 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldZaran> field, std::ostream& os)
 		{
 			for (int i = is; i <= ie; ++i)
 			{
-				int idx = idx_proxy->GetIdx(i, j, k);
+				int idx = idx_proxy(i, j, k);
 				double density = data_manager->GetPrim(ID_DENSITY, idx);
 				os << density << "\n";
 			}
@@ -485,7 +485,7 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldZaran> field, std::ostream& os)
 		{
 			for (int i = is; i <= ie; ++i)
 			{
-				int idx = idx_proxy->GetIdx(i, j, k);
+				int idx = idx_proxy(i, j, k);
 				double vx = data_manager->GetPrim(ID_VELOCITY_X, idx);
 				double vy = data_manager->GetPrim(ID_VELOCITY_Y, idx);
 				double vz = data_manager->GetPrim(ID_VELOCITY_Z, idx);
@@ -503,7 +503,7 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldZaran> field, std::ostream& os)
 		{
 			for (int i = is; i <= ie; ++i)
 			{
-				int idx = idx_proxy->GetIdx(i, j, k);
+				int idx = idx_proxy(i, j, k);
 				double pressure = data_manager->GetPrim(ID_PRESSURE, idx);
 				os << pressure << "\n";
 			}
@@ -578,7 +578,7 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldStruct> field, std::ostream& os)
 	auto grid = field->GetGrid();
 	auto node = grid->GetNode();
 	auto data_manager = field->GetDataManager();
-	auto idx_proxy = grid->GetIdxProxy();
+	IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 
 	int is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
@@ -620,7 +620,7 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldStruct> field, std::ostream& os)
 		{
 			for (int i = is; i <= ie; ++i)
 			{
-				int idx = idx_proxy->GetIdx(i, j, k);
+				int idx = idx_proxy(i, j, k);
 				double density = data_manager->GetPrim(ID_DENSITY, idx);
 				os << density << "\n";
 			}
@@ -635,7 +635,7 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldStruct> field, std::ostream& os)
 		{
 			for (int i = is; i <= ie; ++i)
 			{
-				int idx = idx_proxy->GetIdx(i, j, k);
+				int idx = idx_proxy(i, j, k);
 				double vx = data_manager->GetPrim(ID_VELOCITY_X, idx);
 				double vy = data_manager->GetPrim(ID_VELOCITY_Y, idx);
 				double vz = data_manager->GetPrim(ID_VELOCITY_Z, idx);
@@ -653,7 +653,7 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldStruct> field, std::ostream& os)
 		{
 			for (int i = is; i <= ie; ++i)
 			{
-				int idx = idx_proxy->GetIdx(i, j, k);
+				int idx = idx_proxy(i, j, k);
 				double pressure = data_manager->GetPrim(ID_PRESSURE, idx);
 				os << pressure << "\n";
 			}
@@ -720,7 +720,7 @@ void Visual::WriteVtkBinary(shared_ptr<NSFieldStruct> field, std::ostream& os)
 	auto grid = field->GetGrid();
 	auto node = grid->GetNode();
 	auto data_manager = field->GetDataManager();
-	auto idx_proxy = grid->GetIdxProxy();
+	IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 
 	int is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
@@ -781,7 +781,7 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostr
 	int grid_ni = grid->GetNi();
 	int grid_nj = grid->GetNj();
 	int grid_nk = grid->GetNk();
-	IdProxyStruct* idx_proxy = new IdProxyStruct(grid_ni, grid_nj, grid_nk);
+	IdProxyStruct idx_proxy(grid_ni, grid_nj, grid_nk);
 	int is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
 	int ni = ie - is + 1;
@@ -825,7 +825,7 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostr
 		{
 			for (int i = is; i <= ie; ++i)
 			{
-				int idx = idx_proxy->GetIdx(i, j, k);
+				int idx = idx_proxy(i, j, k);
 				//double x = node->GetCoord(i, j, k)[0];
 				//double y = node->GetCoord(i, j, k)[1];
 				//double rho = 1.0 + 0.01 * y;
@@ -836,7 +836,6 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostr
 			}
 		}
 	}
-	delete idx_proxy;
 	//Log::info("zeta_z L_inf norm:{:2E}, L_2 norm:{:2E}", zeta_z_Linf, zeta_z_L2);
 }
 
@@ -916,7 +915,7 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldZaran> field, std::ostre
 	int grid_ni = grid->GetNi();
 	int grid_nj = grid->GetNj();
 	int grid_nk = grid->GetNk();
-	auto idx_proxy = grid->GetIdxProxy();
+	IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 	int is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
 	int ni = ie - is + 1;
@@ -938,7 +937,7 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldZaran> field, std::ostre
 		{
 			for (int i = is; i <= ie; ++i)
 			{
-				int idx = idx_proxy->GetIdx(i, j, k);
+				int idx = idx_proxy(i, j, k);
 				os << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1] << " " << node->GetCoord(i, j, k)[2] << " " << density[idx] << " "
 					<< velocity_x[idx] << " " << velocity_y[idx] << " " << velocity_z[idx] << " " << pressure[idx] << "  " << (int)grid->GetIBlank(i, j, k) << "\n";
 			}
@@ -958,7 +957,7 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldZaran> field)
 	int grid_ni = grid->GetNi();
 	int grid_nj = grid->GetNj();
 	int grid_nk = grid->GetNk();
-	auto idx_proxy = new IdProxyStruct(grid_ni, grid_nj, grid_nk);
+	IdProxyStruct idx_proxy(ni, nj, nk);
 	INTEGER4 node_num = ni * nj * nk;
 	INTEGER4 cell_num = (ni - 1) * (nj - 1) * (nk - 1);
 	dynamic_array<double> x(node_num), y(node_num), z(node_num), density(node_num),
@@ -970,11 +969,11 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldZaran> field)
 		{
 			for (index_type i = 0; i < ni; ++i)
 			{
-				index_type idx = i + ni * j + ni * nj * k;
+				index_type idx = idx_proxy(i, j, k);
 				x[idx] = node->GetCoord(i + is, j + js, k + ks)[0];
 				y[idx] = node->GetCoord(i + is, j + js, k + ks)[1];
 				z[idx] = node->GetCoord(i + is, j + js, k + ks)[2];
-				index_type idx0 = idx_proxy->GetIdx(i + is, j + js, k + ks);
+				index_type idx0 = idx_proxy(i + is, j + js, k + ks);
 				density[idx] = data_manager->GetPrim(ID_DENSITY, idx0);
 				velocity_x[idx] = data_manager->GetPrim(ID_VELOCITY_X, idx0);
 				velocity_y[idx] = data_manager->GetPrim(ID_VELOCITY_Y, idx0);
@@ -1030,7 +1029,6 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldZaran> field)
 	i = TECDAT142(&node_num, velocity_y.data(), &vIsDouble);
 	i = TECDAT142(&node_num, velocity_z.data(), &vIsDouble);
 	i = TECDAT142(&node_num, pressure.data(), &vIsDouble);
-	delete idx_proxy;
 }
 void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldStruct> field)
 {
@@ -1045,7 +1043,7 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldStruct> field)
 	int grid_ni = grid->GetNi();
 	int grid_nj = grid->GetNj();
 	int grid_nk = grid->GetNk();
-	auto idx_proxy = new IdProxyStruct(grid_ni, grid_nj, grid_nk);
+	IdProxyStruct idx_proxy(grid_ni, grid_nj, grid_nk);
 	INTEGER4 node_num = ni * nj * nk;
 	INTEGER4 cell_num = (ni - 1) * (nj - 1) * (nk - 1);
 	dynamic_array<double> x(node_num), y(node_num), z(node_num), density(node_num),
@@ -1061,7 +1059,7 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldStruct> field)
 				x[idx] = node->GetCoord(i + is, j + js, k + ks)[0];
 				y[idx] = node->GetCoord(i + is, j + js, k + ks)[1];
 				z[idx] = node->GetCoord(i + is, j + js, k + ks)[2];
-				int idx0 = idx_proxy->GetIdx(i + is, j + js, k + ks);
+				int idx0 = idx_proxy(i + is, j + js, k + ks);
 				density[idx] = data_manager->GetPrim(ID_DENSITY, idx0);
 				velocity_x[idx] = data_manager->GetPrim(ID_VELOCITY_X, idx0);
 				velocity_y[idx] = data_manager->GetPrim(ID_VELOCITY_Y, idx0);
@@ -1122,7 +1120,6 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldStruct> field)
 	i = TECDAT142(&node_num, velocity_y.data(), &vIsDouble);
 	i = TECDAT142(&node_num, velocity_z.data(), &vIsDouble);
 	i = TECDAT142(&node_num, pressure.data(), &vIsDouble);
-	delete idx_proxy;
 }
 void Visual::WriteTecASCII(shared_ptr<FieldManager> field_manager)
 {

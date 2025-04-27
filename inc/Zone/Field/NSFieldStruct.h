@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "NSField.h"
 #include "GridStruct.h"
 #include "NSSolverStruct.h"
@@ -19,7 +19,7 @@ namespace zaran
 		shared_ptr<NSSolverStruct>GetSolver();
 		shared_ptr<DataManagerNSStruct>GetDataManager();
         void CalcResidual() override;
-        IdProxyStruct& GetIdxProxy() { return *(GetGrid()->GetIdxProxy()); }
+        IdProxyStruct& GetIdxProxy() { return GetGrid()->GetIdxProxy(); }
     protected:
         void AllocateResInfo() override;
         void AllocateSolver() override;

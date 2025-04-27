@@ -1,4 +1,4 @@
-#include "NSFieldZaran.h"
+﻿#include "NSFieldZaran.h"
 #include "GlobalData.h"
 #include "Log.h"
 #include <fstream>
@@ -80,6 +80,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
+		IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 		auto para = GetSolverPara();
 		int equ_num = para->GetEqNum();
 		int is, ie, js, je, ks, ke;
@@ -100,7 +101,7 @@ namespace zaran
 				{
 					for (int i = is; i <= ie; i++)
 					{
-						int idx = m_idx_proxy->GetIdx(i, j, k);
+						int idx = idx_proxy(i, j, k);
 						if (abs(res[idx]) > norm_inf)
 						{
 							norm_inf = abs(res[idx]);

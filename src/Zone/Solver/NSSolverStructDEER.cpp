@@ -19,7 +19,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		auto node_metrics = GetNodeMetrics();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto gas = GetGas();
 		auto equ_num = para->GetEqNum();
 		int is, ie, js, je, ks, ke;
@@ -34,7 +34,7 @@ namespace zaran
 			{
 				for (int i = is; i <= ie; ++i)
 				{
-					int idx = idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 					{
 						res_tmp[idx_eq] = data_manager->GetResidual(idx_eq, idx);
@@ -48,7 +48,7 @@ namespace zaran
 							riemann_para[iTemp].norm(1) = node_metrics->GetMetrics(dim, idx)[1];
 							riemann_para[iTemp].norm(2) = node_metrics->GetMetrics(dim, idx)[2];
 							riemann_para[iTemp].nt = node_metrics->GetMetrics(dim, idx)[3];
-							int idx_temp = idx_proxy->GetIdx(
+							int idx_temp = idx_proxy(
 								i + (iTemp - 1) * direction[dim][0],
 								j + (iTemp - 1) * direction[dim][1],
 								k + (iTemp - 1) * direction[dim][2]);
@@ -79,7 +79,7 @@ namespace zaran
 		auto para = GetPara();
 		auto data_manager = GetDataManager();
 		auto node_metrics = GetNodeMetrics();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto gas = GetGas();
 		auto equ_num = para->GetEqNum();
 		int is, ie, js, je, ks, ke;
@@ -101,21 +101,21 @@ namespace zaran
 		double move_vector[3];                        // mid_coord到i的向量用于移动mid_coord_left和mid_coord_right
 #pragma omp parallel for private(idx, idx_temp, value, res_tmp, mid_coord_left, mid_coord_right, mid_coord,            \
                                      move_vector, riemann_para)
-		for (int k = ks; k <= ke; ++k)
+		for (index_type k = ks; k <= ke; ++k)
 		{
-			for (int j = js; j <= je; ++j)
+			for (index_type j = js; j <= je; ++j)
 			{
-				for (int i = is; i <= ie; ++i)
+				for (index_type i = is; i <= ie; ++i)
 				{
-					for (int iVal = 0; iVal < equ_num; ++iVal)
+					for (index_type iVal = 0; iVal < equ_num; ++iVal)
 					{
-						res_tmp[iVal] = data_manager->GetResidual(iVal, idx_proxy->GetIdx(i, j, k));
+						res_tmp[iVal] = data_manager->GetResidual(iVal, idx_proxy(i, j, k));
 					}
 					// i direction
 					auto left_coord = node->GetCoord(i - 1, j, k);
 					auto coord = node->GetCoord(i, j, k);
 					auto right_coord = node->GetCoord(i + 1, j, k);
-					for (int iDim = 0; iDim < 3; ++iDim)
+					for (index_type iDim = 0; iDim < 3; ++iDim)
 					{
 						mid_coord_left[iDim] = (left_coord[iDim] + coord[iDim]) / 2;
 						mid_coord_right[iDim] = (right_coord[iDim] + coord[iDim]) / 2;
@@ -124,7 +124,7 @@ namespace zaran
 						mid_coord_left[iDim] += move_vector[iDim];
 						mid_coord_right[iDim] += move_vector[iDim];
 					}
-					idx = idx_proxy->GetIdx(i, j, k);
+					idx = idx_proxy(i, j, k);
 					riemann_para[0].norm(0) = node_metrics->GetXi(idx)[0];
 					riemann_para[0].norm(1) = node_metrics->GetXi(idx)[1];
 					riemann_para[0].norm(2) = node_metrics->GetXi(idx)[2];
@@ -133,13 +133,13 @@ namespace zaran
 					riemann_para[1].norm(1) = node_metrics->GetXi(idx)[1];
 					riemann_para[1].norm(2) = node_metrics->GetXi(idx)[2];
 					riemann_para[1].nt = node_metrics->GetXi(idx)[3];
-					InterMidNodePrim_Grad(idx_proxy->GetIdx(i, j, k), idx_proxy->GetIdx(i + 1, j, k), coord, mid_coord_right,
+					InterMidNodePrim_Grad(idx_proxy(i, j, k), idx_proxy(i + 1, j, k), coord, mid_coord_right,
 						right_coord, riemann_para[0].prim_left.data(), riemann_para[0].prim_right.data());
-					InterMidNodePrim_Grad(idx_proxy->GetIdx(i - 1, j, k), idx_proxy->GetIdx(i, j, k), left_coord, mid_coord_left,
+					InterMidNodePrim_Grad(idx_proxy(i - 1, j, k), idx_proxy(i, j, k), left_coord, mid_coord_left,
 						coord, riemann_para[1].prim_left.data(), riemann_para[1].prim_right.data());
 					m_riemann_solver->Solver(riemann_para[0]);
 					m_riemann_solver->Solver(riemann_para[1]);
-					for (int iVal = 0; iVal < equ_num; ++iVal)
+					for (index_type iVal = 0; iVal < equ_num; ++iVal)
 					{
 						res_tmp[iVal] -= (riemann_para[0].flux[iVal] - riemann_para[1].flux[iVal]);
 					}
@@ -147,7 +147,7 @@ namespace zaran
 					left_coord = node->GetCoord(i, j - 1, k);
 					coord = node->GetCoord(i, j, k);
 					right_coord = node->GetCoord(i, j + 1, k);
-					for (int iDim = 0; iDim < 3; ++iDim)
+					for (index_type iDim = 0; iDim < 3; ++iDim)
 					{
 						mid_coord_left[iDim] = (left_coord[iDim] + coord[iDim]) / 2;
 						mid_coord_right[iDim] = (right_coord[iDim] + coord[iDim]) / 2;
@@ -164,13 +164,13 @@ namespace zaran
 					riemann_para[3].norm(1) = node_metrics->GetEta(idx)[1];
 					riemann_para[3].norm(2) = node_metrics->GetEta(idx)[2];
 					riemann_para[3].nt = node_metrics->GetEta(idx)[3];
-					InterMidNodePrim_Grad(idx_proxy->GetIdx(i, j, k), idx_proxy->GetIdx(i, j + 1, k), coord, mid_coord_right,
+					InterMidNodePrim_Grad(idx_proxy(i, j, k), idx_proxy(i, j + 1, k), coord, mid_coord_right,
 						right_coord, riemann_para[2].prim_left.data(), riemann_para[2].prim_right.data());
-					InterMidNodePrim_Grad(idx_proxy->GetIdx(i, j - 1, k), idx_proxy->GetIdx(i, j, k), left_coord, mid_coord_left,
+					InterMidNodePrim_Grad(idx_proxy(i, j - 1, k), idx_proxy(i, j, k), left_coord, mid_coord_left,
 						coord, riemann_para[3].prim_left.data(), riemann_para[3].prim_right.data());
 					m_riemann_solver->Solver(riemann_para[2]);
 					m_riemann_solver->Solver(riemann_para[3]);
-					for (int iVal = 0; iVal < equ_num; ++iVal)
+					for (index_type iVal = 0; iVal < equ_num; ++iVal)
 					{
 						res_tmp[iVal] -= (riemann_para[2].flux[iVal] - riemann_para[3].flux[iVal]);
 					}
@@ -180,7 +180,7 @@ namespace zaran
 						left_coord = node->GetCoord(i, j, k - 1);
 						coord = node->GetCoord(i, j, k);
 						right_coord = node->GetCoord(i, j, k + 1);
-						for (int iDim = 0; iDim < 3; ++iDim)
+						for (index_type iDim = 0; iDim < 3; ++iDim)
 						{
 							mid_coord_left[iDim] = (left_coord[iDim] + coord[iDim]) / 2;
 							mid_coord_right[iDim] = (right_coord[iDim] + coord[iDim]) / 2;
@@ -197,18 +197,18 @@ namespace zaran
 						riemann_para[5].norm(1) = node_metrics->GetZeta(idx)[1];
 						riemann_para[5].norm(2) = node_metrics->GetZeta(idx)[2];
 						riemann_para[5].nt = node_metrics->GetZeta(idx)[3];
-						InterMidNodePrim_Grad(idx_proxy->GetIdx(i, j, k), idx_proxy->GetIdx(i, j, k + 1), coord, mid_coord_right,
+						InterMidNodePrim_Grad(idx_proxy(i, j, k), idx_proxy(i, j, k + 1), coord, mid_coord_right,
 							right_coord, riemann_para[4].prim_left.data(), riemann_para[4].prim_right.data());
-						InterMidNodePrim_Grad(idx_proxy->GetIdx(i, j, k - 1), idx_proxy->GetIdx(i, j, k), left_coord, mid_coord_left,
+						InterMidNodePrim_Grad(idx_proxy(i, j, k - 1), idx_proxy(i, j, k), left_coord, mid_coord_left,
 							coord, riemann_para[5].prim_left.data(), riemann_para[5].prim_right.data());
 						m_riemann_solver->Solver(riemann_para[4]);
 						m_riemann_solver->Solver(riemann_para[5]);
-						for (int iVal = 0; iVal < equ_num; ++iVal)
+						for (index_type iVal = 0; iVal < equ_num; ++iVal)
 						{
 							res_tmp[iVal] -= (riemann_para[4].flux[iVal] - riemann_para[5].flux[iVal]);
 						}
 					}
-					for (int iVar = 0; iVar < equ_num; ++iVar)
+					for (index_type iVar = 0; iVar < equ_num; ++iVar)
 					{
 						data_manager->SetResidual(iVar, idx, res_tmp[iVar]);
 					}
@@ -222,7 +222,7 @@ namespace zaran
 		auto para = GetPara();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto node_metrics = GetNodeMetrics();
 		auto gas = GetGas();
 		auto equ_num = para->GetEqNum();
@@ -241,7 +241,7 @@ namespace zaran
 			{
 				for (int i = is; i <= ie; ++i)
 				{
-					int idx = idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 					{
 						res_tmp[idx_eq] = data_manager->GetResidual(idx_eq, idx);
@@ -255,7 +255,7 @@ namespace zaran
 							riemann_para[iTemp].norm(1) = node_metrics->GetMetrics(dim, idx)[1];
 							riemann_para[iTemp].norm(2) = node_metrics->GetMetrics(dim, idx)[2];
 							riemann_para[iTemp].nt = node_metrics->GetMetrics(dim, idx)[3];
-							int idx_temp = idx_proxy->GetIdx(
+							int idx_temp = idx_proxy(
 								i + (iTemp - 2) * direction[dim][0],
 								j + (iTemp - 2) * direction[dim][1],
 								k + (iTemp - 2) * direction[dim][2]);
@@ -285,7 +285,7 @@ namespace zaran
 		auto para = GetPara();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto node_metrics = GetNodeMetrics();
 		auto gas = GetGas();
 		auto equ_num = para->GetEqNum();
@@ -305,7 +305,7 @@ namespace zaran
 			{
 				for (int i = is; i <= ie; ++i)
 				{
-					int idx = idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 					{
 						res_tmp[idx_eq] = data_manager->GetResidual(idx_eq, idx);
@@ -319,7 +319,7 @@ namespace zaran
 							riemann_para[iTemp].norm(1) = node_metrics->GetMetrics(dim, idx)[1];
 							riemann_para[iTemp].norm(2) = node_metrics->GetMetrics(dim, idx)[2];
 							riemann_para[iTemp].nt = node_metrics->GetMetrics(dim, idx)[3];
-							int idx_temp = idx_proxy->GetIdx(
+							int idx_temp = idx_proxy(
 								i + (iTemp - 3) * direction[dim][0],
 								j + (iTemp - 3) * direction[dim][1],
 								k + (iTemp - 3) * direction[dim][2]);

@@ -1,4 +1,4 @@
-#include"GridGeneratorBlockExplosion.h"
+﻿#include"GridGeneratorBlockExplosion.h"
 #include<fstream>
 namespace zaran
 {
@@ -28,7 +28,7 @@ namespace zaran
 		int nj = grid->GetNj();
 		int nk = grid->GetNk();
 		auto node = grid->GetNode();
-		auto idx_proxy = grid->GetIdxProxy();
+		IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 		std::ofstream fout("block_explosion.dat");
 		fout << "TITLE = \"block_explosion\"" << std::endl;
 		fout << "VARIABLES = \"X\", \"Y\", \"Z\", \"IBLANK\"" << std::endl;
@@ -39,7 +39,7 @@ namespace zaran
 			{
 				for (int i = 0; i < ni; ++i)
 				{
-					auto id = idx_proxy->GetIdx(i, j, k);
+					auto id = idx_proxy(i, j, k);
 					auto coord = node->GetCoord(id);
 					fout << coord[0] << " " << coord[1] << " " << coord[2] << " " << int(grid->GetIBlank(i, j, k)) << std::endl;
 				}

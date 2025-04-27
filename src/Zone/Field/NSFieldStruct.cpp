@@ -19,6 +19,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto para = GetSolverPara();
+		IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 		int equ_num = para->GetEqNum();
 		auto data_manager = GetDataManager();
 		int is, ie, js, je, ks, ke;
@@ -40,7 +41,7 @@ namespace zaran
 				{
 					for (int i = is; i <= ie; i++)
 					{
-						int idx = GetIdxProxy().GetIdx(i, j, k);
+						int idx =idx_proxy(i, j, k);
 						double res_val = abs(res[idx]);
 						auto coord = node->GetCoord(i, j, k);
 						//if (iEqu == 0)

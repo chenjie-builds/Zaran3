@@ -1,4 +1,4 @@
-#include "NSSolverStructCMM.h"
+﻿#include "NSSolverStructCMM.h"
 #include "Log.h"
 #include "NSSolverStruct.h"
 #include "Metric.h"
@@ -44,7 +44,7 @@ namespace zaran
 		coef_mid[0] = GetMidMetricsI();
 		coef_mid[1] = GetMidMetricsJ();
 		coef_mid[2] = GetMidMetricsK();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		int ni = grid->GetNi();
 		int nj = grid->GetNj();
 		int nk = grid->GetNk();
@@ -58,14 +58,14 @@ namespace zaran
 			{
 				for (int i = 1; i < ni - 2; ++i)
 				{
-					int idx = idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					for (int iDim = 0; iDim < 3; iDim++)
 					{
 						auto coef_xi = coef_mid[iDim]->GetXi(idx);
 						auto coef_eta = coef_mid[iDim]->GetEta(idx);
 						auto coef_zeta = coef_mid[iDim]->GetZeta(idx);
-						idx_temp[0] = idx_proxy->GetIdx(i, j, k);
-						idx_temp[1] = idx_proxy->GetIdx(i + 1 * idx_direct[iDim][0], j + 1 * idx_direct[iDim][1],
+						idx_temp[0] = idx_proxy(i, j, k);
+						idx_temp[1] = idx_proxy(i + 1 * idx_direct[iDim][0], j + 1 * idx_direct[iDim][1],
 							k + 1 * idx_direct[iDim][2]);
 						for (int jDim = 0; jDim < 3; ++jDim)
 						{
@@ -83,26 +83,26 @@ namespace zaran
 		{
 			for (int j = 1; j < nj - 1; ++j)
 			{
-				auto coef_xi_left = coef_mid[0]->GetXi(idx_proxy->GetIdx(0, j, k));           // xi[1/2]
-				auto coef_eta_left = coef_mid[0]->GetEta(idx_proxy->GetIdx(0, j, k));         // eta[1/2]
-				auto coef_zeta_left = coef_mid[0]->GetZeta(idx_proxy->GetIdx(0, j, k));       // zeta[1/2]
-				auto coef_xi_right = coef_mid[0]->GetXi(idx_proxy->GetIdx(ni - 2, j, k));     // xi[(ni-1)-1/2]
-				auto coef_eta_right = coef_mid[0]->GetEta(idx_proxy->GetIdx(ni - 2, j, k));   // eta[(ni-1)-1/2]
-				auto coef_zeta_right = coef_mid[0]->GetZeta(idx_proxy->GetIdx(ni - 2, j, k)); // zeta[(ni-1)-1/2]
+				auto coef_xi_left = coef_mid[0]->GetXi(idx_proxy(0, j, k));           // xi[1/2]
+				auto coef_eta_left = coef_mid[0]->GetEta(idx_proxy(0, j, k));         // eta[1/2]
+				auto coef_zeta_left = coef_mid[0]->GetZeta(idx_proxy(0, j, k));       // zeta[1/2]
+				auto coef_xi_right = coef_mid[0]->GetXi(idx_proxy(ni - 2, j, k));     // xi[(ni-1)-1/2]
+				auto coef_eta_right = coef_mid[0]->GetEta(idx_proxy(ni - 2, j, k));   // eta[(ni-1)-1/2]
+				auto coef_zeta_right = coef_mid[0]->GetZeta(idx_proxy(ni - 2, j, k)); // zeta[(ni-1)-1/2]
 				for (int iDim = 0; iDim < 3; ++iDim)
 				{
-					coef_xi_left[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy->GetIdx(1, j, k))[iDim] -
-						coef->GetXi(idx_proxy->GetIdx(2, j, k))[iDim]);
-					coef_eta_left[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy->GetIdx(1, j, k))[iDim] -
-						coef->GetEta(idx_proxy->GetIdx(2, j, k))[iDim]);
-					coef_zeta_left[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy->GetIdx(1, j, k))[iDim] -
-						coef->GetZeta(idx_proxy->GetIdx(2, j, k))[iDim]);
-					coef_xi_right[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy->GetIdx(ni - 2, j, k))[iDim] -
-						coef->GetXi(idx_proxy->GetIdx(ni - 3, j, k))[iDim]);
-					coef_eta_right[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy->GetIdx(ni - 2, j, k))[iDim] -
-						coef->GetEta(idx_proxy->GetIdx(ni - 3, j, k))[iDim]);
-					coef_zeta_right[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy->GetIdx(ni - 2, j, k))[iDim] -
-						coef->GetZeta(idx_proxy->GetIdx(ni - 3, j, k))[iDim]);
+					coef_xi_left[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy(1, j, k))[iDim] -
+						coef->GetXi(idx_proxy(2, j, k))[iDim]);
+					coef_eta_left[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy(1, j, k))[iDim] -
+						coef->GetEta(idx_proxy(2, j, k))[iDim]);
+					coef_zeta_left[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy(1, j, k))[iDim] -
+						coef->GetZeta(idx_proxy(2, j, k))[iDim]);
+					coef_xi_right[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy(ni - 2, j, k))[iDim] -
+						coef->GetXi(idx_proxy(ni - 3, j, k))[iDim]);
+					coef_eta_right[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy(ni - 2, j, k))[iDim] -
+						coef->GetEta(idx_proxy(ni - 3, j, k))[iDim]);
+					coef_zeta_right[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy(ni - 2, j, k))[iDim] -
+						coef->GetZeta(idx_proxy(ni - 3, j, k))[iDim]);
 				}
 			}
 		}
@@ -111,26 +111,26 @@ namespace zaran
 		{
 			for (int i = 1; i < ni - 1; ++i)
 			{
-				auto coef_xi_left = coef_mid[1]->GetXi(idx_proxy->GetIdx(i, 0, k));           // xi[1/2]
-				auto coef_eta_left = coef_mid[1]->GetEta(idx_proxy->GetIdx(i, 0, k));         // eta[1/2]
-				auto coef_zeta_left = coef_mid[1]->GetZeta(idx_proxy->GetIdx(i, 0, k));       // zeta[1/2]
-				auto coef_xi_right = coef_mid[1]->GetXi(idx_proxy->GetIdx(i, nj - 2, k));     // xi[(nj-1)-1/2]
-				auto coef_eta_right = coef_mid[1]->GetEta(idx_proxy->GetIdx(i, nj - 2, k));   // eta[(nj-1)-1/2]
-				auto coef_zeta_right = coef_mid[1]->GetZeta(idx_proxy->GetIdx(i, nj - 2, k)); // zeta[(nj-1)-1/2]
+				auto coef_xi_left = coef_mid[1]->GetXi(idx_proxy(i, 0, k));           // xi[1/2]
+				auto coef_eta_left = coef_mid[1]->GetEta(idx_proxy(i, 0, k));         // eta[1/2]
+				auto coef_zeta_left = coef_mid[1]->GetZeta(idx_proxy(i, 0, k));       // zeta[1/2]
+				auto coef_xi_right = coef_mid[1]->GetXi(idx_proxy(i, nj - 2, k));     // xi[(nj-1)-1/2]
+				auto coef_eta_right = coef_mid[1]->GetEta(idx_proxy(i, nj - 2, k));   // eta[(nj-1)-1/2]
+				auto coef_zeta_right = coef_mid[1]->GetZeta(idx_proxy(i, nj - 2, k)); // zeta[(nj-1)-1/2]
 				for (int iDim = 0; iDim < 3; ++iDim)
 				{
-					coef_xi_left[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy->GetIdx(i, 1, k))[iDim] -
-						coef->GetXi(idx_proxy->GetIdx(i, 2, k))[iDim]);
-					coef_eta_left[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy->GetIdx(i, 1, k))[iDim] -
-						coef->GetEta(idx_proxy->GetIdx(i, 2, k))[iDim]);
-					coef_zeta_left[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy->GetIdx(i, 1, k))[iDim] -
-						coef->GetZeta(idx_proxy->GetIdx(i, 2, k))[iDim]);
-					coef_xi_right[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy->GetIdx(i, nj - 2, k))[iDim] -
-						coef->GetXi(idx_proxy->GetIdx(i, nj - 3, k))[iDim]);
-					coef_eta_right[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy->GetIdx(i, nj - 2, k))[iDim] -
-						coef->GetEta(idx_proxy->GetIdx(i, nj - 3, k))[iDim]);
-					coef_zeta_right[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy->GetIdx(i, nj - 2, k))[iDim] -
-						coef->GetZeta(idx_proxy->GetIdx(i, nj - 3, k))[iDim]);
+					coef_xi_left[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy(i, 1, k))[iDim] -
+						coef->GetXi(idx_proxy(i, 2, k))[iDim]);
+					coef_eta_left[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy(i, 1, k))[iDim] -
+						coef->GetEta(idx_proxy(i, 2, k))[iDim]);
+					coef_zeta_left[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy(i, 1, k))[iDim] -
+						coef->GetZeta(idx_proxy(i, 2, k))[iDim]);
+					coef_xi_right[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy(i, nj - 2, k))[iDim] -
+						coef->GetXi(idx_proxy(i, nj - 3, k))[iDim]);
+					coef_eta_right[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy(i, nj - 2, k))[iDim] -
+						coef->GetEta(idx_proxy(i, nj - 3, k))[iDim]);
+					coef_zeta_right[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy(i, nj - 2, k))[iDim] -
+						coef->GetZeta(idx_proxy(i, nj - 3, k))[iDim]);
 				}
 			}
 		}
@@ -139,26 +139,26 @@ namespace zaran
 		{
 			for (int i = 1; i < ni - 1; ++i)
 			{
-				auto coef_xi_left = coef_mid[2]->GetXi(idx_proxy->GetIdx(i, j, 0));           // xi[1/2]
-				auto coef_eta_left = coef_mid[2]->GetEta(idx_proxy->GetIdx(i, j, 0));         // eta[1/2]
-				auto coef_zeta_left = coef_mid[2]->GetZeta(idx_proxy->GetIdx(i, j, 0));       // zeta[1/2]
-				auto coef_xi_right = coef_mid[2]->GetXi(idx_proxy->GetIdx(i, j, nk - 2));     // xi[(nk-1)-1/2]
-				auto coef_eta_right = coef_mid[2]->GetEta(idx_proxy->GetIdx(i, j, nk - 2));   // eta[(nk-1)-1/2]
-				auto coef_zeta_right = coef_mid[2]->GetZeta(idx_proxy->GetIdx(i, j, nk - 2)); // zeta[(nk-1)-1/2]
+				auto coef_xi_left = coef_mid[2]->GetXi(idx_proxy(i, j, 0));           // xi[1/2]
+				auto coef_eta_left = coef_mid[2]->GetEta(idx_proxy(i, j, 0));         // eta[1/2]
+				auto coef_zeta_left = coef_mid[2]->GetZeta(idx_proxy(i, j, 0));       // zeta[1/2]
+				auto coef_xi_right = coef_mid[2]->GetXi(idx_proxy(i, j, nk - 2));     // xi[(nk-1)-1/2]
+				auto coef_eta_right = coef_mid[2]->GetEta(idx_proxy(i, j, nk - 2));   // eta[(nk-1)-1/2]
+				auto coef_zeta_right = coef_mid[2]->GetZeta(idx_proxy(i, j, nk - 2)); // zeta[(nk-1)-1/2]
 				for (int iDim = 0; iDim < 3; ++iDim)
 				{
-					coef_xi_left[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy->GetIdx(i, j, 1))[iDim] -
-						coef->GetXi(idx_proxy->GetIdx(i, j, 2))[iDim]);
-					coef_eta_left[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy->GetIdx(i, j, 1))[iDim] -
-						coef->GetEta(idx_proxy->GetIdx(i, j, 2))[iDim]);
-					coef_zeta_left[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy->GetIdx(i, j, 1))[iDim] -
-						coef->GetZeta(idx_proxy->GetIdx(i, j, 2))[iDim]);
-					coef_xi_right[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy->GetIdx(i, j, nk - 2))[iDim] -
-						coef->GetXi(idx_proxy->GetIdx(i, j, nk - 3))[iDim]);
-					coef_eta_right[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy->GetIdx(i, j, nk - 2))[iDim] -
-						coef->GetEta(idx_proxy->GetIdx(i, j, nk - 3))[iDim]);
-					coef_zeta_right[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy->GetIdx(i, j, nk - 2))[iDim] -
-						coef->GetZeta(idx_proxy->GetIdx(i, j, nk - 3))[iDim]);
+					coef_xi_left[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy(i, j, 1))[iDim] -
+						coef->GetXi(idx_proxy(i, j, 2))[iDim]);
+					coef_eta_left[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy(i, j, 1))[iDim] -
+						coef->GetEta(idx_proxy(i, j, 2))[iDim]);
+					coef_zeta_left[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy(i, j, 1))[iDim] -
+						coef->GetZeta(idx_proxy(i, j, 2))[iDim]);
+					coef_xi_right[iDim] = 0.5 * (3.0 * coef->GetXi(idx_proxy(i, j, nk - 2))[iDim] -
+						coef->GetXi(idx_proxy(i, j, nk - 3))[iDim]);
+					coef_eta_right[iDim] = 0.5 * (3.0 * coef->GetEta(idx_proxy(i, j, nk - 2))[iDim] -
+						coef->GetEta(idx_proxy(i, j, nk - 3))[iDim]);
+					coef_zeta_right[iDim] = 0.5 * (3.0 * coef->GetZeta(idx_proxy(i, j, nk - 2))[iDim] -
+						coef->GetZeta(idx_proxy(i, j, nk - 3))[iDim]);
 				}
 			}
 		}
@@ -169,8 +169,8 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
 		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
-		auto idx_proxy = GetIdxProxy();
-		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
+		IdProxyStruct& idx_proxy = GetIdxProxy();
+		auto Idx = [&](int i, int j, int k) { return idx_proxy(i, j, k); };
 		int ni = grid->GetNi();
 		int nj = grid->GetNj();
 		int nk = grid->GetNk();
@@ -474,7 +474,7 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		auto node_metrics = GetNodeMetrics();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto gas = GetGas();
 		auto equ_num = GetPara()->GetEqNum();
 		int ni, nj, nk;
@@ -490,7 +490,7 @@ namespace zaran
 				for (int i = 0; i < ni - 1; ++i)
 				{
 					riemann_para.gamma_left = riemann_para.gamma_right = gas->GetGamma();
-					int idx = idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					double jacobi = node_metrics->GetJacobian(idx);
 					// i direction
 					riemann_para.norm[0] = GetMidMetricsI()->GetXi(idx)[0];
@@ -567,7 +567,7 @@ namespace zaran
 		auto para = GetPara();
 		auto data_manager = GetDataManager();
 		auto node_metrics = GetNodeMetrics();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto gas = GetGas();
 		auto equ_num = para->GetEqNum();
 		int is, ie, js, je, ks, ke;
@@ -584,7 +584,7 @@ namespace zaran
 			{
 				for (int i = is; i <= ie; ++i)
 				{
-					int idx = idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 					{
 						res_tmp[idx_eq] = data_manager->GetResidual(idx_eq, idx);
@@ -593,7 +593,7 @@ namespace zaran
 					{
 						for (int iTemp = 0; iTemp < 3; iTemp++)
 						{
-							idx_temp[iTemp] = idx_proxy->GetIdx(
+							idx_temp[iTemp] = idx_proxy(
 								i + (iTemp - 1) * direction[dim][0],
 								j + (iTemp - 1) * direction[dim][1],
 								k + (iTemp - 1) * direction[dim][2]);
@@ -615,7 +615,7 @@ namespace zaran
 		auto para = GetPara();
 		auto data_manager = GetDataManager();
 		auto node_metrics = GetNodeMetrics();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto gas = GetGas();
 		auto equ_num = para->GetEqNum();
 		int is, ie, js, je, ks, ke;
@@ -634,7 +634,7 @@ namespace zaran
 			{
 				for (int i = is; i <= ie; ++i)
 				{
-					int idx = idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 					{
 						res_tmp[idx_eq] = data_manager->GetResidual(idx_eq, idx);
@@ -643,7 +643,7 @@ namespace zaran
 					{
 						for (int iTemp = 0; iTemp < 6; iTemp++)
 						{
-							idx_temp[iTemp] = idx_proxy->GetIdx(
+							idx_temp[iTemp] = idx_proxy(
 								i + (iTemp - 3) * direction[dim][0],
 								j + (iTemp - 3) * direction[dim][1],
 								k + (iTemp - 3) * direction[dim][2]);

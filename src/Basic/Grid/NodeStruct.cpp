@@ -1,4 +1,4 @@
-#include "NodeStruct.h"
+﻿#include "NodeStruct.h"
 using namespace zaran;
 NodeStruct::NodeStruct(index_type i_num, index_type j_num, index_type k_num)
 {
@@ -27,10 +27,6 @@ void NodeStruct::SetCoord(index_type idx_i, index_type idx_j, index_type idx_k, 
 const double* NodeStruct::GetCoord(index_type idx_i, index_type idx_j, index_type idx_k) const
 {
 	return GetCoord(GetIdx(idx_i, idx_j, idx_k));
-}
-const double* NodeStruct::GetCoord(IdProxyStruct* idx_proxy) const
-{
-	return GetCoord(idx_proxy->GetIdx());
 }
 index_type NodeStruct::GetIdx(index_type idx_i, index_type idx_j, index_type idx_k) const
 {

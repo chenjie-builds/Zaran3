@@ -1,4 +1,4 @@
-//==============================================================================||
+﻿//==============================================================================||
 //*	ZaRan	-	A Totally Automatic CFD Software								||
 //*	Copyright (C) ,Since 2020													||
 //*-----------------------------------------------------------------------------||
@@ -34,7 +34,6 @@ namespace zaran
 		/// @param idx_k k方向上的索引
 		/// @return 返回节点坐标，长度为3，不可修改
 		Coord GetCoord(index_type idx_i, index_type idx_j, index_type idx_k) const;
-		Coord GetCoord(IdProxyStruct* idx_proxy) const;
 		Coord GetCoord(index_type idx)const;
 		count_type GetINum() const { return m_i_num; }
 		count_type GetJNum() const { return m_j_num; }

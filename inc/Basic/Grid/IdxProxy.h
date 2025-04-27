@@ -1,4 +1,4 @@
-//==============================================================================||
+﻿//==============================================================================||
 //*	ZaRan	-	A Totally Automatic CFD Software								||
 //*	Copyright (C) ,Since 2020													||
 //*-----------------------------------------------------------------------------||
@@ -18,12 +18,9 @@ namespace zaran
     class IdProxy
     {
     public:
-        IdProxy() = default;
-        IdProxy(index_type idx);
-        ~IdProxy();
-        index_type GetIdx() const;
-        void SetIdx(index_type idx);
+        IdProxy(index_type max_idx);
+        index_type operator()(index_type idx) const;
     private:
-        index_type m_idx; // 索引
+        index_type m_max_idx;
     };
 }

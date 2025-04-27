@@ -75,7 +75,7 @@ namespace zaran
 				auto bound_map = grid_struct->GetBoundMap();
 				if (bound_map->HasBound("connection")) {
 					auto& connect_bound = bound_map->GetBound("connection");
-					IdProxyStruct* src_idx_proxy = new IdProxyStruct(ni, nj, nk);
+					IdProxyStruct src_idx_proxy(ni, nj, nk);
 					recv_node_idx_local.resize(connect_bound.size());
 					recv_field_idx_global.resize(connect_bound.size());
 					recv_node_idx_global.resize(connect_bound.size());
@@ -83,20 +83,17 @@ namespace zaran
 					{
 						index_type idx_i, idx_j, idx_k;
 						connect_bound[i].GetIdx(idx_i, idx_j, idx_k);
-						int idx = src_idx_proxy->GetIdx(idx_i, idx_j, idx_k);
+						int idx = src_idx_proxy(idx_i, idx_j, idx_k);
 						recv_node_idx_local[i] = idx;
 						recv_field_idx_global[i] = connect_bound[i].GetTargetBlock();
 						auto recv_grid_struct = std::dynamic_pointer_cast<GridStruct>(grid_list[recv_field_idx_global[i]]);
 						int recv_ni = recv_grid_struct->GetNi();
 						int recv_nj = recv_grid_struct->GetNj();
 						int recv_nk = recv_grid_struct->GetNk();
-						IdProxyStruct* tgt_idx_proxy =
-							new IdProxyStruct(recv_ni, recv_nj, recv_nk);
+						IdProxyStruct tgt_idx_proxy (recv_ni, recv_nj, recv_nk);
 						connect_bound[i].GetIdxTgt(idx_i, idx_j, idx_k);
-						recv_node_idx_global[i] = tgt_idx_proxy->GetIdx(idx_i, idx_j, idx_k);
-						delete tgt_idx_proxy;
+						recv_node_idx_global[i] = tgt_idx_proxy(idx_i, idx_j, idx_k);
 					}
-					delete src_idx_proxy;
 				}
 			}
 			else

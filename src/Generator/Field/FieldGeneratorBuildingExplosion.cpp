@@ -1,4 +1,4 @@
-#include "FieldGeneratorBuildingExplosion.h"
+﻿#include "FieldGeneratorBuildingExplosion.h"
 #include <omp.h>
 #include <fstream>
 #include "Log.h"
@@ -50,7 +50,7 @@ namespace zaran
 	void FieldGeneratorBuildingExplosion::TagGrid()
 	{
 		auto grid = std::static_pointer_cast<GridBlock>(m_grid);
-		auto idx_proxy = grid->GetIdxProxy();
+		IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 		auto node = grid->GetNode();
 		int ni = grid->GetNi();
 		int nj = grid->GetNj();
@@ -61,7 +61,7 @@ namespace zaran
 			{
 				for (int i = 0; i < ni; i++)
 				{
-					auto id = idx_proxy->GetIdx(i, j, k);
+					auto id = idx_proxy(i, j, k);
 					auto iblank = grid->GetIBlank(i, j, k);
 					iblank = IBlank::Trans;
 					auto coord = node->GetCoord(id);
@@ -122,7 +122,7 @@ namespace zaran
 		//out tecplot data format
 		std::ofstream out("test.dat");
 		auto grid = std::static_pointer_cast<GridBlock>(m_grid);
-		auto idx_proxy = grid->GetIdxProxy();
+		IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 		auto node = grid->GetNode();
 		int ni = grid->GetNi();
 		int nj = grid->GetNj();
@@ -136,7 +136,7 @@ namespace zaran
 			{
 				for (int i = 0; i < ni; i++)
 				{
-					auto id = idx_proxy->GetIdx(i, j, k);
+					auto id = idx_proxy(i, j, k);
 					auto coord = node->GetCoord(id);
 					out << coord[0] << " " << coord[1] << " " << coord[2] << " " << int(grid->GetIBlank(i, j, k)) << std::endl;
 				}

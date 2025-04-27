@@ -16,32 +16,16 @@ namespace zaran
 		nk = grid->GetNk();
 		m_idx_proxy = make_shared<IdProxyStruct>(ni, nj, nk);
 		int node_num = ni * nj * nk;
-		m_node_metrics = make_shared<Metric>(node_num);
-		m_metrics_mid_i = new Metric(node_num);
-		m_metrics_mid_j = new Metric(node_num);
-		m_metrics_mid_k = new Metric(node_num);
+		m_node_metrics = make_unique<Metric>(node_num);
+		m_metrics_mid_i = make_unique<Metric>(node_num);
+		m_metrics_mid_j = make_unique<Metric>(node_num);
+		m_metrics_mid_k = make_unique<Metric>(node_num);
 		m_grid = grid;
 		m_data_manager = data_manager;
 		m_para = para;
 	}
 	NSSolverStruct::~NSSolverStruct()
 	{
-
-		if (m_metrics_mid_i)
-		{
-			delete m_metrics_mid_i;
-			m_metrics_mid_i = nullptr;
-		}
-		if (m_metrics_mid_j)
-		{
-			delete m_metrics_mid_j;
-			m_metrics_mid_j = nullptr;
-		}
-		if (m_metrics_mid_k)
-		{
-			delete m_metrics_mid_k;
-			m_metrics_mid_k = nullptr;
-		}
 	}
 	DataManagerNSStruct* NSSolverStruct::GetDataManager()
 	{
@@ -51,9 +35,9 @@ namespace zaran
 	{
 		return m_node_metrics.get();
 	}
-	IdProxyStruct* NSSolverStruct::GetIdxProxy()
+	IdProxyStruct& NSSolverStruct::GetIdxProxy()
 	{
-		return m_idx_proxy.get();
+		return *m_idx_proxy;
 	}
 	FlowSolverParamStruct* NSSolverStruct::GetPara()
 	{
@@ -80,6 +64,7 @@ namespace zaran
 		// return;
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
@@ -99,14 +84,13 @@ namespace zaran
 		// prim_far[2] = 0;
 		// prim_far[3] = 0.0;
 		// prim_far[4] = 4.82466;
-		for (int k = 0; k < nk; ++k)
+		for (index_type k = 0; k < nk; ++k)
 		{
-			for (int j = 0; j < nj; ++j)
+			for (index_type j = 0; j < nj; ++j)
 			{
-				for (int i = 0; i < ni; ++i)
+				for (index_type i = 0; i < ni; ++i)
 				{
-					m_idx_proxy->SetIdx(i, j, k);
-					int idx = m_idx_proxy->GetIdx();
+					auto idx = idx_proxy(i, j, k);
 					//double x = grid->GetNode()->GetCoord(i, j, k)[0];
 					//double y = grid->GetNode()->GetCoord(i, j, k)[1];
 					//prim_far[0] = pow(x, 3.5) + pow(y, 1.1);
@@ -126,6 +110,7 @@ namespace zaran
 		//return;
 
 		auto grid = GetGrid();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		auto ni = grid->GetNi();
@@ -145,14 +130,13 @@ namespace zaran
 		//double prim_left[5] = { 8.0,8.25 * cos(30.0 / 180.0 * PI),-8.25 * sin(30.0 / 180.0 * PI),0.0,116.5 };
 		//double prim_left[5] = { 6.4,3.125,0,0,18.5 };
 		//double prim_right[5] = { 1.4,0.0,0.0,0.0,1.0 };
-		for (int k = 0; k < nk; ++k)
+		for (index_type k = 0; k < nk; ++k)
 		{
-			for (int j = 0; j < nj; ++j)
+			for (index_type j = 0; j < nj; ++j)
 			{
-				for (int i = 0; i < ni; ++i)
+				for (index_type i = 0; i < ni; ++i)
 				{
-					m_idx_proxy->SetIdx(i, j, k);
-					int idx = m_idx_proxy->GetIdx();
+					index_type idx = idx_proxy(i, j, k);
 					//double x = grid->GetNode()->GetCoord(i, j, k)[0];
 					//double y = grid->GetNode()->GetCoord(i, j, k)[1];
 					//prim_far[0] = 1.0 + 0.01 * y;
@@ -179,6 +163,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
@@ -196,8 +181,7 @@ namespace zaran
 			{
 				for (int i = 0; i < ni; ++i)
 				{
-					m_idx_proxy->SetIdx(i, j, k);
-					int idx = m_idx_proxy->GetIdx();
+					int idx = idx_proxy(i, j, k);
 					x = node->GetCoord(i, j, k)[0];
 					y = node->GetCoord(i, j, k)[1];
 					z = node->GetCoord(i, j, k)[2];
@@ -218,6 +202,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
@@ -241,14 +226,13 @@ namespace zaran
 		explosion_center[2] = GlobalData::GetDouble("explosion_center_z");
 		double explosion_radius = GlobalData::GetDouble("explosion_radius");
 		double x, y, z;
-		for (int k = 0; k < nk; ++k)
+		for (index_type k = 0; k < nk; ++k)
 		{
-			for (int j = 0; j < nj; ++j)
+			for (index_type j = 0; j < nj; ++j)
 			{
-				for (int i = 0; i < ni; ++i)
+				for (index_type i = 0; i < ni; ++i)
 				{
-					m_idx_proxy->SetIdx(i, j, k);
-					auto idx = m_idx_proxy->GetIdx();
+					auto idx = idx_proxy(i, j, k);
 					auto coord = node->GetCoord(idx);
 					double dist = sqrt(pow(coord[0] - explosion_center[0], 2)
 						+ pow(coord[1] - explosion_center[1], 2)
@@ -290,8 +274,8 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
 		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
-		auto idx_proxy = GetIdxProxy();
-		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
+		auto& idx_proxy = GetIdxProxy();
+		auto Idx = [&](int i, int j, int k) { return idx_proxy(i, j, k); };
 		int ni = grid->GetNi();
 		int nj = grid->GetNj();
 		int nk = grid->GetNk();
@@ -335,7 +319,7 @@ namespace zaran
 				{
 					for (int iDim = 0; iDim < 3; ++iDim)
 					{
-						int idx = idx_proxy->GetIdx(i, j, k);
+						int idx = idx_proxy(i, j, k);
 						coord_i[idx][iDim] = 0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i + 1, j, k)[iDim]);
 						coord_j[idx][iDim] = 0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j + 1, k)[iDim]);
 						coord_k[idx][iDim] = 0.5 * (node->GetCoord(i, j, k)[iDim] + node->GetCoord(i, j, k + 1)[iDim]);
@@ -350,7 +334,7 @@ namespace zaran
 			{
 				for (int i = 1; i < ni - 1; ++i)
 				{
-					int idx = idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					auto coef_x = coef->GetX(idx);
 					auto coef_y = coef->GetY(idx);
 					auto coef_z = coef->GetZ(idx);
@@ -374,17 +358,17 @@ namespace zaran
 						coef_z[2] = 1.0;
 					}
 					// 计算xi,eta,zeta
-					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
+					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy(i, j, k));
 					coef_xi[0] = coef_y[1] * coef_z[2] - coef_z[1] * coef_y[2];
 					coef_xi[1] = coef_z[1] * coef_x[2] - coef_x[1] * coef_z[2];
 					coef_xi[2] = coef_x[1] * coef_y[2] - coef_y[1] * coef_x[2];
 					coef_xi[3] = 0.0;
-					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
+					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy(i, j, k));
 					coef_eta[0] = coef_y[2] * coef_z[0] - coef_z[2] * coef_y[0];
 					coef_eta[1] = coef_z[2] * coef_x[0] - coef_x[2] * coef_z[0];
 					coef_eta[2] = coef_x[2] * coef_y[0] - coef_y[2] * coef_x[0];
 					coef_eta[3] = 0.0;
-					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy(i, j, k));
 					coef_zeta[0] = coef_y[0] * coef_z[1] - coef_z[0] * coef_y[1];
 					coef_zeta[1] = coef_z[0] * coef_x[1] - coef_x[0] * coef_z[1];
 					coef_zeta[2] = coef_x[0] * coef_y[1] - coef_y[0] * coef_x[1];
@@ -400,8 +384,8 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
 		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
-		auto idx_proxy = GetIdxProxy();
-		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
+		IdProxyStruct& idx_proxy = GetIdxProxy();
+		auto Idx = [&](int i, int j, int k) { return idx_proxy(i, j, k); };
 		int ni = grid->GetNi();
 		int nj = grid->GetNj();
 		int nk = grid->GetNk();
@@ -822,20 +806,20 @@ namespace zaran
 				for (int i = 1; i <= ni - 2; ++i)
 				{
 					// 计算xi,eta,zeta
-					auto coef_x = GetNodeMetrics()->GetX(idx_proxy->GetIdx(i, j, k));
-					auto coef_y = GetNodeMetrics()->GetY(idx_proxy->GetIdx(i, j, k));
-					auto coef_z = GetNodeMetrics()->GetZ(idx_proxy->GetIdx(i, j, k));
-					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
+					auto coef_x = GetNodeMetrics()->GetX(idx_proxy(i, j, k));
+					auto coef_y = GetNodeMetrics()->GetY(idx_proxy(i, j, k));
+					auto coef_z = GetNodeMetrics()->GetZ(idx_proxy(i, j, k));
+					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy(i, j, k));
 					coef_xi[0] = coef_y[1] * coef_z[2] - coef_z[1] * coef_y[2];
 					coef_xi[1] = coef_z[1] * coef_x[2] - coef_x[1] * coef_z[2];
 					coef_xi[2] = coef_x[1] * coef_y[2] - coef_y[1] * coef_x[2];
 					coef_xi[3] = 0.0;
-					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
+					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy(i, j, k));
 					coef_eta[0] = coef_y[2] * coef_z[0] - coef_z[2] * coef_y[0];
 					coef_eta[1] = coef_z[2] * coef_x[0] - coef_x[2] * coef_z[0];
 					coef_eta[2] = coef_x[2] * coef_y[0] - coef_y[2] * coef_x[0];
 					coef_eta[3] = 0.0;
-					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy(i, j, k));
 					coef_zeta[0] = coef_y[0] * coef_z[1] - coef_z[0] * coef_y[1];
 					coef_zeta[1] = coef_z[0] * coef_x[1] - coef_x[0] * coef_z[1];
 					coef_zeta[2] = coef_x[0] * coef_y[1] - coef_y[0] * coef_x[1];
@@ -917,7 +901,7 @@ namespace zaran
 		int ni = grid->GetNi();
 		int nj = grid->GetNj();
 		int nk = grid->GetNk();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto node_metrics = GetNodeMetrics();
 		for (int k = 1; k < nk - 1; ++k)
 		{
@@ -925,7 +909,7 @@ namespace zaran
 			{
 				for (int i = 1; i < ni - 1; ++i)
 				{
-					auto idx = idx_proxy->GetIdx(i, j, k);
+					auto idx = idx_proxy(i, j, k);
 					auto& jacobian = node_metrics->GetJacobian(idx);
 					auto coef_x = node_metrics->GetX(idx);
 					auto coef_y = node_metrics->GetY(idx);
@@ -945,7 +929,7 @@ namespace zaran
 		int ni = grid->GetNi();
 		int nj = grid->GetNj();
 		int nk = grid->GetNk();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto node_metrics = GetNodeMetrics();
 		for (int k = 1; k < nk - 1; ++k)
 		{
@@ -953,7 +937,7 @@ namespace zaran
 			{
 				for (int i = 1; i < ni - 1; ++i)
 				{
-					auto idx = idx_proxy->GetIdx(i, j, k);
+					auto idx = idx_proxy(i, j, k);
 					auto& jacobian = node_metrics->GetJacobian(idx);
 					auto coef_x = node_metrics->GetX(idx);
 					auto coef_y = node_metrics->GetY(idx);
@@ -994,8 +978,8 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
-		auto idx_proxy = GetIdxProxy();
-		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
+		IdProxyStruct& idx_proxy = GetIdxProxy();
+		auto Idx = [&](int i, int j, int k) { return idx_proxy(i, j, k); };
 		int ni = grid->GetNi();
 		int nj = grid->GetNj();
 		int nk = grid->GetNk();
@@ -1135,8 +1119,8 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
-		auto idx_proxy = GetIdxProxy();
-		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
+		IdProxyStruct& idx_proxy = GetIdxProxy();
+		auto Idx = [&](int i, int j, int k) { return idx_proxy(i, j, k); };
 		int ni = grid->GetNi();
 		int nj = grid->GetNj();
 		int nk = grid->GetNk();
@@ -1427,8 +1411,8 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
 		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
-		auto idx_proxy = GetIdxProxy();
-		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
+		IdProxyStruct& idx_proxy = GetIdxProxy();
+		auto Idx = [&](int i, int j, int k) { return idx_proxy(i, j, k); };
 		int ni = grid->GetNi();
 		int nj = grid->GetNj();
 		int nk = grid->GetNk();
@@ -1490,7 +1474,7 @@ namespace zaran
 			{
 				for (int i = 1; i < ni - 1; ++i)
 				{
-					int idx = idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					auto coef_x = coef->GetX(idx);
 					auto coef_y = coef->GetY(idx);
 					auto coef_z = coef->GetZ(idx);
@@ -1782,8 +1766,8 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
 		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
-		auto idx_proxy = GetIdxProxy();
-		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
+		IdProxyStruct& idx_proxy = GetIdxProxy();
+		auto Idx = [&](int i, int j, int k) { return idx_proxy(i, j, k); };
 		int ni = grid->GetNi();
 		int nj = grid->GetNj();
 		int nk = grid->GetNk();
@@ -2625,9 +2609,9 @@ namespace zaran
 			{
 				for (int i = 3; i < ni - 3; ++i)
 				{
-					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
-					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
-					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy(i, j, k));
+					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy(i, j, k));
+					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy(i, j, k));
 					// i direction
 					for (int iTemp = 0; iTemp < 6; iTemp++)
 					{
@@ -2655,9 +2639,9 @@ namespace zaran
 			{
 				for (int i = 1; i < ni - 1; ++i)
 				{
-					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
-					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
-					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy(i, j, k));
+					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy(i, j, k));
+					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy(i, j, k));
 					for (int iTemp = 0; iTemp < 6; iTemp++)
 					{
 						int idx = Idx(i, j - 3 + iTemp, k);
@@ -2684,9 +2668,9 @@ namespace zaran
 			{
 				for (int i = 1; i < ni - 1; ++i)
 				{
-					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
-					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
-					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy(i, j, k));
+					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy(i, j, k));
+					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy(i, j, k));
 					for (int iTemp = 0; iTemp < 6; iTemp++)
 					{
 						int idx = Idx(i, j, k - 3 + iTemp);
@@ -2712,12 +2696,12 @@ namespace zaran
 		{
 			for (int j = 1; j < nj - 1; ++j)
 			{
-				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(1, j, k));
-				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(1, j, k));
-				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(1, j, k));
-				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(2, j, k));
-				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(2, j, k));
-				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(2, j, k));
+				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy(1, j, k));
+				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy(1, j, k));
+				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy(1, j, k));
+				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy(2, j, k));
+				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy(2, j, k));
+				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy(2, j, k));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(0 + iTemp, j, k);
@@ -2740,12 +2724,12 @@ namespace zaran
 				coef_zeta2[0] += NodeDifferece4th(temp[3]);
 				coef_zeta2[1] += NodeDifferece4th(temp[4]);
 				coef_zeta2[2] = NodeDifferece4th(temp[5]);
-				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(ni - 2, j, k));
-				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(ni - 2, j, k));
-				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(ni - 2, j, k));
-				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(ni - 3, j, k));
-				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(ni - 3, j, k));
-				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(ni - 3, j, k));
+				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy(ni - 2, j, k));
+				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy(ni - 2, j, k));
+				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy(ni - 2, j, k));
+				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy(ni - 3, j, k));
+				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy(ni - 3, j, k));
+				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy(ni - 3, j, k));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(ni - 2 - iTemp, j, k);
@@ -2775,12 +2759,12 @@ namespace zaran
 		{
 			for (int i = 1; i < ni - 1; ++i)
 			{
-				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, 1, k));
-				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, 1, k));
-				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, 1, k));
-				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, 2, k));
-				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, 2, k));
-				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, 2, k));
+				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy(i, 1, k));
+				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy(i, 1, k));
+				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy(i, 1, k));
+				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy(i, 2, k));
+				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy(i, 2, k));
+				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy(i, 2, k));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(i, 0 + iTemp, k);
@@ -2803,12 +2787,12 @@ namespace zaran
 				coef_zeta2[0] += NodeDifferece4th(temp[3]);
 				coef_zeta2[1] += NodeDifferece4th(temp[4]);
 				coef_zeta2[2] += NodeDifferece4th(temp[5]);
-				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, nj - 2, k));
-				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, nj - 2, k));
-				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, nj - 2, k));
-				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, nj - 3, k));
-				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, nj - 3, k));
-				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, nj - 3, k));
+				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy(i, nj - 2, k));
+				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy(i, nj - 2, k));
+				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy(i, nj - 2, k));
+				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy(i, nj - 3, k));
+				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy(i, nj - 3, k));
+				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy(i, nj - 3, k));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(i, nj - 2 - iTemp, k);
@@ -2838,12 +2822,12 @@ namespace zaran
 		{
 			for (int i = 1; i < ni - 1; ++i)
 			{
-				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, 1));
-				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, 1));
-				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, 1));
-				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, 2));
-				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, 2));
-				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, 2));
+				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy(i, j, 1));
+				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy(i, j, 1));
+				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy(i, j, 1));
+				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy(i, j, 2));
+				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy(i, j, 2));
+				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy(i, j, 2));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(i, j, 0 + iTemp);
@@ -2866,12 +2850,12 @@ namespace zaran
 				coef_eta2[0] += NodeDifferece4th(temp[3]);
 				coef_eta2[1] += NodeDifferece4th(temp[4]);
 				coef_eta2[2] += NodeDifferece4th(temp[5]);
-				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, nk - 2));
-				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, nk - 2));
-				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, nk - 2));
-				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, nk - 3));
-				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, nk - 3));
-				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, nk - 3));
+				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy(i, j, nk - 2));
+				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy(i, j, nk - 2));
+				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy(i, j, nk - 2));
+				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy(i, j, nk - 3));
+				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy(i, j, nk - 3));
+				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy(i, j, nk - 3));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(i, j, nk - 2 - iTemp);
@@ -2921,8 +2905,8 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
 		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
-		auto idx_proxy = GetIdxProxy();
-		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
+		IdProxyStruct& idx_proxy = GetIdxProxy();
+		auto Idx = [&](int i, int j, int k) { return idx_proxy(i, j, k); };
 		int ni = grid->GetNi();
 		int nj = grid->GetNj();
 		int nk = grid->GetNk();
@@ -2984,7 +2968,7 @@ namespace zaran
 			{
 				for (int i = 1; i < ni - 1; ++i)
 				{
-					int idx = idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					auto coef_x = coef->GetX(idx);
 					auto coef_y = coef->GetY(idx);
 					auto coef_z = coef->GetZ(idx);
@@ -3284,8 +3268,8 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
 		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
-		auto idx_proxy = GetIdxProxy();
-		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
+		IdProxyStruct& idx_proxy = GetIdxProxy();
+		auto Idx = [&](int i, int j, int k) { return idx_proxy(i, j, k); };
 		int ni = grid->GetNi();
 		int nj = grid->GetNj();
 		int nk = grid->GetNk();
@@ -4126,9 +4110,9 @@ namespace zaran
 			{
 				for (int i = 3; i < ni - 3; ++i)
 				{
-					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
-					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
-					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy(i, j, k));
+					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy(i, j, k));
+					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy(i, j, k));
 					// i direction
 					for (int iTemp = 0; iTemp < 6; iTemp++)
 					{
@@ -4156,9 +4140,9 @@ namespace zaran
 			{
 				for (int i = 1; i < ni - 1; ++i)
 				{
-					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
-					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
-					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy(i, j, k));
+					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy(i, j, k));
+					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy(i, j, k));
 					for (int iTemp = 0; iTemp < 6; iTemp++)
 					{
 						int idx = Idx(i, j - 3 + iTemp, k);
@@ -4185,9 +4169,9 @@ namespace zaran
 			{
 				for (int i = 1; i < ni - 1; ++i)
 				{
-					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
-					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
-					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy(i, j, k));
+					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy(i, j, k));
+					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy(i, j, k));
 					for (int iTemp = 0; iTemp < 6; iTemp++)
 					{
 						int idx = Idx(i, j, k - 3 + iTemp);
@@ -4213,12 +4197,12 @@ namespace zaran
 		{
 			for (int j = 1; j < nj - 1; ++j)
 			{
-				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(1, j, k));
-				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(1, j, k));
-				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(1, j, k));
-				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(2, j, k));
-				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(2, j, k));
-				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(2, j, k));
+				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy(1, j, k));
+				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy(1, j, k));
+				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy(1, j, k));
+				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy(2, j, k));
+				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy(2, j, k));
+				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy(2, j, k));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(0 + iTemp, j, k);
@@ -4241,12 +4225,12 @@ namespace zaran
 				coef_zeta2[0] += NodeDifferece4th(temp[3]);
 				coef_zeta2[1] += NodeDifferece4th(temp[4]);
 				coef_zeta2[2] = NodeDifferece4th(temp[5]);
-				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(ni - 2, j, k));
-				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(ni - 2, j, k));
-				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(ni - 2, j, k));
-				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(ni - 3, j, k));
-				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(ni - 3, j, k));
-				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(ni - 3, j, k));
+				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy(ni - 2, j, k));
+				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy(ni - 2, j, k));
+				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy(ni - 2, j, k));
+				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy(ni - 3, j, k));
+				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy(ni - 3, j, k));
+				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy(ni - 3, j, k));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(ni - 2 - iTemp, j, k);
@@ -4276,12 +4260,12 @@ namespace zaran
 		{
 			for (int i = 1; i < ni - 1; ++i)
 			{
-				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, 1, k));
-				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, 1, k));
-				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, 1, k));
-				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, 2, k));
-				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, 2, k));
-				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, 2, k));
+				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy(i, 1, k));
+				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy(i, 1, k));
+				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy(i, 1, k));
+				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy(i, 2, k));
+				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy(i, 2, k));
+				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy(i, 2, k));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(i, 0 + iTemp, k);
@@ -4304,12 +4288,12 @@ namespace zaran
 				coef_zeta2[0] += NodeDifferece4th(temp[3]);
 				coef_zeta2[1] += NodeDifferece4th(temp[4]);
 				coef_zeta2[2] += NodeDifferece4th(temp[5]);
-				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, nj - 2, k));
-				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, nj - 2, k));
-				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, nj - 2, k));
-				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, nj - 3, k));
-				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, nj - 3, k));
-				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, nj - 3, k));
+				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy(i, nj - 2, k));
+				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy(i, nj - 2, k));
+				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy(i, nj - 2, k));
+				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy(i, nj - 3, k));
+				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy(i, nj - 3, k));
+				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy(i, nj - 3, k));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(i, nj - 2 - iTemp, k);
@@ -4339,12 +4323,12 @@ namespace zaran
 		{
 			for (int i = 1; i < ni - 1; ++i)
 			{
-				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, 1));
-				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, 1));
-				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, 1));
-				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, 2));
-				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, 2));
-				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, 2));
+				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy(i, j, 1));
+				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy(i, j, 1));
+				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy(i, j, 1));
+				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy(i, j, 2));
+				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy(i, j, 2));
+				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy(i, j, 2));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(i, j, 0 + iTemp);
@@ -4367,12 +4351,12 @@ namespace zaran
 				coef_eta2[0] += NodeDifferece4th(temp[3]);
 				coef_eta2[1] += NodeDifferece4th(temp[4]);
 				coef_eta2[2] += NodeDifferece4th(temp[5]);
-				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, nk - 2));
-				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, nk - 2));
-				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, nk - 2));
-				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, nk - 3));
-				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, nk - 3));
-				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, nk - 3));
+				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy(i, j, nk - 2));
+				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy(i, j, nk - 2));
+				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy(i, j, nk - 2));
+				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy(i, j, nk - 3));
+				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy(i, j, nk - 3));
+				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy(i, j, nk - 3));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(i, j, nk - 2 - iTemp);
@@ -4422,8 +4406,8 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
 		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
-		auto idx_proxy = GetIdxProxy();
-		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
+		IdProxyStruct& idx_proxy = GetIdxProxy();
+		auto Idx = [&](int i, int j, int k) { return idx_proxy(i, j, k); };
 		int ni = grid->GetNi();
 		int nj = grid->GetNj();
 		int nk = grid->GetNk();
@@ -4485,7 +4469,7 @@ namespace zaran
 			{
 				for (int i = 1; i < ni - 1; ++i)
 				{
-					int idx = idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					auto coef_x = coef->GetX(idx);
 					auto coef_y = coef->GetY(idx);
 					auto coef_z = coef->GetZ(idx);
@@ -4907,8 +4891,8 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto coef = GetNodeMetrics();
 		Metric* coef_mid[3] = { GetMidMetricsI(), GetMidMetricsJ(), GetMidMetricsK() };
-		auto idx_proxy = GetIdxProxy();
-		auto Idx = [&](int i, int j, int k) { return idx_proxy->GetIdx(i, j, k); };
+		IdProxyStruct& idx_proxy = GetIdxProxy();
+		auto Idx = [&](int i, int j, int k) { return idx_proxy(i, j, k); };
 		int ni = grid->GetNi();
 		int nj = grid->GetNj();
 		int nk = grid->GetNk();
@@ -6112,9 +6096,9 @@ namespace zaran
 			{
 				for (int i = 3; i < ni - 3; ++i)
 				{
-					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
-					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
-					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy(i, j, k));
+					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy(i, j, k));
+					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy(i, j, k));
 					// i direction
 					for (int iTemp = 0; iTemp < 6; iTemp++)
 					{
@@ -6142,9 +6126,9 @@ namespace zaran
 			{
 				for (int i = 1; i < ni - 1; ++i)
 				{
-					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
-					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
-					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy(i, j, k));
+					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy(i, j, k));
+					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy(i, j, k));
 					for (int iTemp = 0; iTemp < 6; iTemp++)
 					{
 						int idx = Idx(i, j - 3 + iTemp, k);
@@ -6171,9 +6155,9 @@ namespace zaran
 			{
 				for (int i = 1; i < ni - 1; ++i)
 				{
-					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, k));
-					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, k));
-					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, k));
+					auto coef_xi = GetNodeMetrics()->GetXi(idx_proxy(i, j, k));
+					auto coef_eta = GetNodeMetrics()->GetEta(idx_proxy(i, j, k));
+					auto coef_zeta = GetNodeMetrics()->GetZeta(idx_proxy(i, j, k));
 					for (int iTemp = 0; iTemp < 6; iTemp++)
 					{
 						int idx = Idx(i, j, k - 3 + iTemp);
@@ -6199,12 +6183,12 @@ namespace zaran
 		{
 			for (int j = 1; j < nj - 1; ++j)
 			{
-				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(1, j, k));
-				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(1, j, k));
-				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(1, j, k));
-				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(2, j, k));
-				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(2, j, k));
-				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(2, j, k));
+				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy(1, j, k));
+				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy(1, j, k));
+				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy(1, j, k));
+				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy(2, j, k));
+				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy(2, j, k));
+				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy(2, j, k));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(0 + iTemp, j, k);
@@ -6227,12 +6211,12 @@ namespace zaran
 				coef_zeta2[0] += NodeDifferece4th(temp[3]);
 				coef_zeta2[1] += NodeDifferece4th(temp[4]);
 				coef_zeta2[2] = NodeDifferece4th(temp[5]);
-				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(ni - 2, j, k));
-				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(ni - 2, j, k));
-				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(ni - 2, j, k));
-				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(ni - 3, j, k));
-				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(ni - 3, j, k));
-				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(ni - 3, j, k));
+				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy(ni - 2, j, k));
+				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy(ni - 2, j, k));
+				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy(ni - 2, j, k));
+				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy(ni - 3, j, k));
+				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy(ni - 3, j, k));
+				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy(ni - 3, j, k));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(ni - 2 - iTemp, j, k);
@@ -6262,12 +6246,12 @@ namespace zaran
 		{
 			for (int i = 1; i < ni - 1; ++i)
 			{
-				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, 1, k));
-				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, 1, k));
-				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, 1, k));
-				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, 2, k));
-				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, 2, k));
-				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, 2, k));
+				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy(i, 1, k));
+				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy(i, 1, k));
+				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy(i, 1, k));
+				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy(i, 2, k));
+				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy(i, 2, k));
+				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy(i, 2, k));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(i, 0 + iTemp, k);
@@ -6290,12 +6274,12 @@ namespace zaran
 				coef_zeta2[0] += NodeDifferece4th(temp[3]);
 				coef_zeta2[1] += NodeDifferece4th(temp[4]);
 				coef_zeta2[2] += NodeDifferece4th(temp[5]);
-				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, nj - 2, k));
-				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, nj - 2, k));
-				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, nj - 2, k));
-				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, nj - 3, k));
-				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, nj - 3, k));
-				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, nj - 3, k));
+				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy(i, nj - 2, k));
+				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy(i, nj - 2, k));
+				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy(i, nj - 2, k));
+				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy(i, nj - 3, k));
+				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy(i, nj - 3, k));
+				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy(i, nj - 3, k));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(i, nj - 2 - iTemp, k);
@@ -6325,12 +6309,12 @@ namespace zaran
 		{
 			for (int i = 1; i < ni - 1; ++i)
 			{
-				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, 1));
-				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, 1));
-				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, 1));
-				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, 2));
-				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, 2));
-				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, 2));
+				auto coef_xi1 = GetNodeMetrics()->GetXi(idx_proxy(i, j, 1));
+				auto coef_eta1 = GetNodeMetrics()->GetEta(idx_proxy(i, j, 1));
+				auto coef_zeta1 = GetNodeMetrics()->GetZeta(idx_proxy(i, j, 1));
+				auto coef_xi2 = GetNodeMetrics()->GetXi(idx_proxy(i, j, 2));
+				auto coef_eta2 = GetNodeMetrics()->GetEta(idx_proxy(i, j, 2));
+				auto coef_zeta2 = GetNodeMetrics()->GetZeta(idx_proxy(i, j, 2));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(i, j, 0 + iTemp);
@@ -6353,12 +6337,12 @@ namespace zaran
 				coef_eta2[0] += NodeDifferece4th(temp[3]);
 				coef_eta2[1] += NodeDifferece4th(temp[4]);
 				coef_eta2[2] += NodeDifferece4th(temp[5]);
-				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, nk - 2));
-				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, nk - 2));
-				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, nk - 2));
-				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy->GetIdx(i, j, nk - 3));
-				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy->GetIdx(i, j, nk - 3));
-				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy->GetIdx(i, j, nk - 3));
+				auto coef_xi_n2 = GetNodeMetrics()->GetXi(idx_proxy(i, j, nk - 2));
+				auto coef_eta_n2 = GetNodeMetrics()->GetEta(idx_proxy(i, j, nk - 2));
+				auto coef_zeta_n2 = GetNodeMetrics()->GetZeta(idx_proxy(i, j, nk - 2));
+				auto coef_xi_n3 = GetNodeMetrics()->GetXi(idx_proxy(i, j, nk - 3));
+				auto coef_eta_n3 = GetNodeMetrics()->GetEta(idx_proxy(i, j, nk - 3));
+				auto coef_zeta_n3 = GetNodeMetrics()->GetZeta(idx_proxy(i, j, nk - 3));
 				for (int iTemp = 0; iTemp < 5; iTemp++)
 				{
 					int idx = Idx(i, j, nk - 2 - iTemp);
@@ -6414,7 +6398,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto data_manager = GetDataManager();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
@@ -6436,7 +6420,7 @@ namespace zaran
 				for (int i = 1; i < ni - 1; ++i)
 				{
 					A.setZero();
-					int idx = idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					auto coord = node->GetCoord(i, j, k);
 					temp_i[0] = i - 1, temp_j[0] = j, temp_k[0] = k;
 					temp_i[1] = i + 1, temp_j[1] = j, temp_k[1] = k;
@@ -6460,7 +6444,7 @@ namespace zaran
 						b.setZero();
 						for (int iNeigh = 0; iNeigh < neighbor_num; ++iNeigh)
 						{
-							delta_val = data_manager->GetPrim(idx_eq, idx_proxy->GetIdx(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh])) - data_manager->GetPrim(idx_eq, idx);
+							delta_val = data_manager->GetPrim(idx_eq, idx_proxy(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh])) - data_manager->GetPrim(idx_eq, idx);
 							auto coord_neigh = node->GetCoord(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh]);
 							delta_x = coord_neigh[0] - coord[0];
 							delta_y = coord_neigh[1] - coord[1];
@@ -6487,7 +6471,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto data_manager = GetDataManager();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
@@ -6510,7 +6494,7 @@ namespace zaran
 				for (int i = 1; i < ni - 1; ++i)
 				{
 					A.setZero();
-					int idx = idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					auto coord = node->GetCoord(i, j, k);
 					temp_i[0] = i - 1, temp_j[0] = j, temp_k[0] = k;
 					temp_i[1] = i + 1, temp_j[1] = j, temp_k[1] = k;
@@ -6543,7 +6527,7 @@ namespace zaran
 						for (int iNeigh = 0; iNeigh < neighbor_num; ++iNeigh)
 						{
 							delta_val = data_manager->GetPrim(
-								idx_eq, idx_proxy->GetIdx(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh])) -
+								idx_eq, idx_proxy(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh])) -
 								data_manager->GetPrim(idx_eq, idx);
 							auto coord_neigh = node->GetCoord(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh]);
 							delta_x = coord_neigh[0] - coord[0];
@@ -6599,7 +6583,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		double eps = 1e-6;
 		double vk_coef = 1.0e-5;
 		auto ni = grid->GetNi();
@@ -6630,7 +6614,7 @@ namespace zaran
 				{
 					for (int i = 1; i < ni - 1; ++i)
 					{
-						int idx = idx_proxy->GetIdx(i, j, k);
+						int idx = idx_proxy(i, j, k);
 						auto coord = node->GetCoord(i, j, k);
 						temp_i[0] = i - 1, temp_j[0] = j, temp_k[0] = k;
 						temp_i[1] = i + 1, temp_j[1] = j, temp_k[1] = k;
@@ -6645,7 +6629,7 @@ namespace zaran
 						min_val = data_manager->GetPrim(idx_eq, idx);
 						for (int iNeigh = 0; iNeigh < neighbor_num; ++iNeigh)
 						{
-							int idx_neigh = idx_proxy->GetIdx(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh]);
+							int idx_neigh = idx_proxy(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh]);
 							max_val = Max(max_val, data_manager->GetPrim(idx_eq, idx_neigh));
 							min_val = Min(min_val, data_manager->GetPrim(idx_eq, idx_neigh));
 						}
@@ -6656,7 +6640,7 @@ namespace zaran
 						double temp_coef = LARGE_NUMBER;
 						for (int iNeigh = 0; iNeigh < neighbor_num; ++iNeigh)
 						{
-							int idx_neigh = idx_proxy->GetIdx(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh]);
+							int idx_neigh = idx_proxy(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh]);
 							auto coord_neigh = node->GetCoord(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh]);
 							double delta2 = 0.0;
 							for (int iDim = 0; iDim < 3; ++iDim)
@@ -6691,7 +6675,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
@@ -6703,7 +6687,7 @@ namespace zaran
 				{
 					for (int i = 1; i < ni - 1; ++i)
 					{
-						int idx = idx_proxy->GetIdx(i, j, k);
+						int idx = idx_proxy(i, j, k);
 						data_manager->SetLimiter(idx_eq, idx, 1.0);
 					}
 				}
@@ -6716,7 +6700,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
@@ -6728,7 +6712,7 @@ namespace zaran
 				{
 					for (int i = 1; i < ni - 1; ++i)
 					{
-						int idx = idx_proxy->GetIdx(i, j, k);
+						int idx = idx_proxy(i, j, k);
 						data_manager->SetLimiter(idx_eq, idx, 0.0);
 					}
 				}
@@ -6740,6 +6724,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		auto para = GetPara();
@@ -6758,7 +6743,7 @@ namespace zaran
 			{
 				for (int i = is; i <= ie; ++i)
 				{
-					int idx = m_idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					auto xi = m_node_metrics->GetXi(idx);
 					auto eta = m_node_metrics->GetEta(idx);
 					auto zeta = m_node_metrics->GetZeta(idx);
@@ -6787,6 +6772,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		auto para = GetPara();
@@ -6800,7 +6786,7 @@ namespace zaran
 			{
 				for (int i = is; i <= ie; ++i)
 				{
-					int idx = m_idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					if (data_manager->GetTimeStep(idx) < min_dt)
 					{
 						min_dt = data_manager->GetTimeStep(idx);
@@ -6814,6 +6800,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
@@ -6824,7 +6811,7 @@ namespace zaran
 			{
 				for (int i = 0; i < ni; ++i)
 				{
-					int idx = m_idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					data_manager->SetTimeStep(idx, dt);
 				}
 			}
@@ -6835,6 +6822,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto para = GetPara();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		int rk_step = para->GetRkStep();
@@ -6845,7 +6833,7 @@ namespace zaran
 			{
 				for (int i = is; i <= ie; ++i)
 				{
-					int idx = m_idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
 					{
 						data_manager->SetConsOld(idx_eq, idx, data_manager->GetCons(idx_eq, idx));
@@ -6865,7 +6853,7 @@ namespace zaran
 				{
 					for (int i = is; i <= ie; ++i)
 					{
-						int idx = m_idx_proxy->GetIdx(i, j, k);
+						int idx = idx_proxy(i, j, k);
 						double dt = data_manager->GetTimeStep(idx);
 						double jacobi = m_node_metrics->GetJacobian(idx);
 						for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
@@ -6886,6 +6874,7 @@ namespace zaran
 		auto gas = GetGas();
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
@@ -6897,7 +6886,7 @@ namespace zaran
 			{
 				for (int i = 0; i < ni; ++i)
 				{
-					int idx = m_idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					for (int idx_eq = 0; idx_eq < GetPara()->GetEqNum(); ++idx_eq)
 					{
 						prim[idx_eq] = data_manager->GetPrim(idx_eq, idx);
@@ -6913,6 +6902,7 @@ namespace zaran
 		auto gas = GetGas();
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
@@ -6924,7 +6914,7 @@ namespace zaran
 			{
 				for (int i = 0; i < ni; ++i)
 				{
-					int idx = m_idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					for (int idx_eq = 0; idx_eq < GetPara()->GetEqNum(); ++idx_eq)
 					{
 						cons[idx_eq] = data_manager->GetCons(idx_eq, idx);
@@ -6939,6 +6929,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
@@ -6950,7 +6941,7 @@ namespace zaran
 			{
 				for (int i = 0; i < ni; ++i)
 				{
-					int idx = m_idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					data_manager->SetResidual(idx, res);
 				}
 			}
@@ -6961,6 +6952,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
@@ -6972,14 +6964,14 @@ namespace zaran
 			{
 				for (int i = 1; i < ni - 1; ++i)
 				{
-					int idx = m_idx_proxy->GetIdx(i, j, k);
-					int idx_right = m_idx_proxy->GetIdx(i + 1, j, k);
+					int idx = idx_proxy(i, j, k);
+					int idx_right = idx_proxy(i + 1, j, k);
 					for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
 					{
 						data_manager->SetMidNodePrim(idx_eq, 0, idx, data_manager->GetPrim(idx_eq, idx),
 							data_manager->GetPrim(idx_eq, idx_right));
 					}
-					idx_right = m_idx_proxy->GetIdx(i, j + 1, k);
+					idx_right = idx_proxy(i, j + 1, k);
 					for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
 					{
 						data_manager->SetMidNodePrim(idx_eq, 1, idx, data_manager->GetPrim(idx_eq, idx),
@@ -6987,7 +6979,7 @@ namespace zaran
 					}
 					if (grid->GetDim() == THREE_DIM)
 					{
-						idx_right = m_idx_proxy->GetIdx(i, j, k + 1);
+						idx_right = idx_proxy(i, j, k + 1);
 						for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
 						{
 							data_manager->SetMidNodePrim(idx_eq, 2, idx, data_manager->GetPrim(idx_eq, idx),
@@ -7003,6 +6995,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
@@ -7015,8 +7008,8 @@ namespace zaran
 			{
 				for (int i = 1; i < ni - 1; ++i)
 				{
-					int idx = m_idx_proxy->GetIdx(i, j, k);
-					int idx_right = m_idx_proxy->GetIdx(i + 1, j, k);
+					int idx = idx_proxy(i, j, k);
+					int idx_right = idx_proxy(i + 1, j, k);
 					coord_vec[0] = node->GetCoord(i + 1, j, k)[0] - node->GetCoord(i, j, k)[0];
 					coord_vec[1] = node->GetCoord(i + 1, j, k)[1] - node->GetCoord(i, j, k)[1];
 					coord_vec[2] = node->GetCoord(i + 1, j, k)[2] - node->GetCoord(i, j, k)[2];
@@ -7026,7 +7019,7 @@ namespace zaran
 						data_manager->SetMidNodePrim(idx_eq, 0, idx, value_left[idx_eq], value_right[idx_eq]);
 					}
 
-					idx_right = m_idx_proxy->GetIdx(i, j + 1, k);
+					idx_right = idx_proxy(i, j + 1, k);
 					coord_vec[0] = node->GetCoord(i, j + 1, k)[0] - node->GetCoord(i, j, k)[0];
 					coord_vec[1] = node->GetCoord(i, j + 1, k)[1] - node->GetCoord(i, j, k)[1];
 					coord_vec[2] = node->GetCoord(i, j + 1, k)[2] - node->GetCoord(i, j, k)[2];
@@ -7037,7 +7030,7 @@ namespace zaran
 					}
 					if (grid->GetDim() == THREE_DIM)
 					{
-						idx_right = m_idx_proxy->GetIdx(i, j, k + 1);
+						idx_right = idx_proxy(i, j, k + 1);
 						coord_vec[0] = node->GetCoord(i, j, k + 1)[0] - node->GetCoord(i, j, k)[0];
 						coord_vec[1] = node->GetCoord(i, j, k + 1)[1] - node->GetCoord(i, j, k)[1];
 						coord_vec[2] = node->GetCoord(i, j, k + 1)[2] - node->GetCoord(i, j, k)[2];
@@ -7055,6 +7048,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		int equ_num = GetPara()->GetEqNum();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
@@ -7083,13 +7077,13 @@ namespace zaran
 							j_temp[iTemp] = j + direction[iDim][1] * (iTemp - 2);
 							k_temp[iTemp] = k + direction[iDim][2] * (iTemp - 2);
 						}
-						auto idx = m_idx_proxy->GetIdx(i, j, k);
+						auto idx = idx_proxy(i, j, k);
 						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 						{
 							for (int iTemp = 0; iTemp < 5; ++iTemp)
 							{
 								value_temp[iTemp] = data_manager->GetPrim(
-									idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
+									idx_eq, idx_proxy(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
 							}
 							InterMidNodePrim_MUSCL(value_temp, left_value, right_value);
 							data_manager->SetMidNodePrim(idx_eq, iDim, idx, left_value, right_value);
@@ -7105,6 +7099,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		int equ_num = GetPara()->GetEqNum();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
@@ -7138,13 +7133,13 @@ namespace zaran
 							j_temp[iTemp] = j + direction[iDim][1] * (iTemp - 2);
 							k_temp[iTemp] = k + direction[iDim][2] * (iTemp - 2);
 						}
-						auto idx = m_idx_proxy->GetIdx(i, j, k);
+						auto idx = idx_proxy(i, j, k);
 						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 						{
 							for (int iTemp = 0; iTemp < 5; ++iTemp)
 							{
 								value_temp[iTemp] = data_manager->GetPrim(
-									idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
+									idx_eq, idx_proxy(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
 								for (int jDim = 0; jDim < 3; ++jDim)
 								{
 									coord_temp[iTemp][jDim] = node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[jDim];
@@ -7168,6 +7163,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		int equ_num = GetPara()->GetEqNum();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
@@ -7184,11 +7180,11 @@ namespace zaran
 			{
 				// i=is-1处的值
 				// 不存在i-2处的值且不参与计算,用i-1处的值代替，不影响计算结果
-				idx_temp[0] = m_idx_proxy->GetIdx(is - 3, j, k);
-				idx_temp[1] = m_idx_proxy->GetIdx(is - 2, j, k);
-				idx_temp[2] = m_idx_proxy->GetIdx(is - 1, j, k);
-				idx_temp[3] = m_idx_proxy->GetIdx(is, j, k);
-				idx_temp[4] = m_idx_proxy->GetIdx(is + 1, j, k);
+				idx_temp[0] = idx_proxy(is - 3, j, k);
+				idx_temp[1] = idx_proxy(is - 2, j, k);
+				idx_temp[2] = idx_proxy(is - 1, j, k);
+				idx_temp[3] = idx_proxy(is, j, k);
+				idx_temp[4] = idx_proxy(is + 1, j, k);
 				for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 				{
 					value[0] = data_manager->GetPrim(idx_eq, idx_temp[0]);
@@ -7208,11 +7204,11 @@ namespace zaran
 			{
 				// j=js-1处的值，(js-1/2)右值会用到，但(js-1/2)左值在计算中不会使用
 				// 不存在j-2处的值,用j-1处的值代替，不影响计算结果
-				idx_temp[0] = m_idx_proxy->GetIdx(i, js - 3, k);
-				idx_temp[1] = m_idx_proxy->GetIdx(i, js - 2, k);
-				idx_temp[2] = m_idx_proxy->GetIdx(i, js - 1, k);
-				idx_temp[3] = m_idx_proxy->GetIdx(i, js, k);
-				idx_temp[4] = m_idx_proxy->GetIdx(i, js + 1, k);
+				idx_temp[0] = idx_proxy(i, js - 3, k);
+				idx_temp[1] = idx_proxy(i, js - 2, k);
+				idx_temp[2] = idx_proxy(i, js - 1, k);
+				idx_temp[3] = idx_proxy(i, js, k);
+				idx_temp[4] = idx_proxy(i, js + 1, k);
 				for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 				{
 					value[0] = data_manager->GetPrim(idx_eq, idx_temp[0]);
@@ -7235,11 +7231,11 @@ namespace zaran
 				{
 					// k=ks-1处的值，(ks-1/2)右值会用到，但(ks-1/2)左值在计算中不会使用
 					// 不存在k-2处的值,用k-1处的值代替，不影响计算结果
-					idx_temp[0] = m_idx_proxy->GetIdx(i, j, ks - 2);
-					idx_temp[1] = m_idx_proxy->GetIdx(i, j, ks - 2);
-					idx_temp[2] = m_idx_proxy->GetIdx(i, j, ks - 1);
-					idx_temp[3] = m_idx_proxy->GetIdx(i, j, ks);
-					idx_temp[4] = m_idx_proxy->GetIdx(i, j, ks + 1);
+					idx_temp[0] = idx_proxy(i, j, ks - 2);
+					idx_temp[1] = idx_proxy(i, j, ks - 2);
+					idx_temp[2] = idx_proxy(i, j, ks - 1);
+					idx_temp[3] = idx_proxy(i, j, ks);
+					idx_temp[4] = idx_proxy(i, j, ks + 1);
 					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 					{
 						value[0] = data_manager->GetPrim(idx_eq, idx_temp[0]);
@@ -7260,6 +7256,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		int equ_num = GetPara()->GetEqNum();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
@@ -7286,13 +7283,13 @@ namespace zaran
 				j_temp[0] = j_temp[1] = j_temp[2] = j_temp[3] = j_temp[4] = j;
 				k_temp[0] = k_temp[1] = k_temp[2] = k_temp[3] = k_temp[4] = k;
 
-				auto idx = m_idx_proxy->GetIdx(is - 1, j, k);
+				auto idx = idx_proxy(is - 1, j, k);
 				for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 				{
 					for (int iTemp = 0; iTemp < 5; ++iTemp)
 					{
 						value_temp[iTemp] =
-							data_manager->GetPrim(idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
+							data_manager->GetPrim(idx_eq, idx_proxy(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
 						for (int iDim = 0; iDim < 3; ++iDim)
 						{
 							coord_temp[iTemp][iDim] = node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[iDim];
@@ -7315,13 +7312,13 @@ namespace zaran
 				j_temp[0] = js - 2, j_temp[1] = js - 2, j_temp[2] = js - 1, j_temp[3] = js, j_temp[4] = js + 1;
 				k_temp[0] = k_temp[1] = k_temp[2] = k_temp[3] = k_temp[4] = k;
 
-				auto idx = m_idx_proxy->GetIdx(i, js - 1, k);
+				auto idx = idx_proxy(i, js - 1, k);
 				for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 				{
 					for (int iTemp = 0; iTemp < 5; ++iTemp)
 					{
 						value_temp[iTemp] =
-							data_manager->GetPrim(idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
+							data_manager->GetPrim(idx_eq, idx_proxy(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
 						for (int iDim = 0; iDim < 3; ++iDim)
 						{
 							coord_temp[iTemp][iDim] = node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[iDim];
@@ -7346,13 +7343,13 @@ namespace zaran
 					j_temp[0] = j_temp[1] = j_temp[2] = j_temp[3] = j_temp[4] = j;
 					k_temp[0] = ks - 2, k_temp[1] = ks - 2, k_temp[2] = ks - 1, k_temp[3] = ks, k_temp[4] = ks + 1;
 
-					auto idx = m_idx_proxy->GetIdx(i, j, ks - 1);
+					auto idx = idx_proxy(i, j, ks - 1);
 					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 					{
 						for (int iTemp = 0; iTemp < 5; ++iTemp)
 						{
 							value_temp[iTemp] = data_manager->GetPrim(
-								idx_eq, m_idx_proxy->GetIdx(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
+								idx_eq, idx_proxy(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp]));
 							for (int iDim = 0; iDim < 3; ++iDim)
 							{
 								coord_temp[iTemp][iDim] = node->GetCoord(i_temp[iTemp], j_temp[iTemp], k_temp[iTemp])[iDim];
@@ -7372,6 +7369,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		int equ_num = GetPara()->GetEqNum();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
@@ -7399,7 +7397,7 @@ namespace zaran
 					{
 						for (int iTemp = 0; iTemp < 5; ++iTemp)
 						{
-							idx_temp[iTemp] = m_idx_proxy->GetIdx(i + direction[iDim][0] * (iTemp - 2),
+							idx_temp[iTemp] = idx_proxy(i + direction[iDim][0] * (iTemp - 2),
 								j + direction[iDim][1] * (iTemp - 2), k + direction[iDim][2] * (iTemp - 2));
 						}
 						double value_base[5];
@@ -7428,7 +7426,7 @@ namespace zaran
 						//		right_value[idx_eq] = data_manager->GetPrim(idx_eq, idx_temp[2]);
 						//	}
 						//}
-						auto idx = m_idx_proxy->GetIdx(i, j, k);
+						auto idx = idx_proxy(i, j, k);
 						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 						{
 							data_manager->SetMidNodePrimLeft(idx_eq, iDim, idx_temp[2], left_value[idx_eq] * value_base[idx_eq]);
@@ -7444,6 +7442,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		int equ_num = GetPara()->GetEqNum();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
@@ -7462,8 +7461,8 @@ namespace zaran
 			{
 				for (int iTemp = 0; iTemp < 5; ++iTemp)
 				{
-					idx_temp_left[iTemp] = m_idx_proxy->GetIdx(iTemp, j, k);
-					idx_temp_right[iTemp] = m_idx_proxy->GetIdx(ni - 5 + iTemp, j, k);
+					idx_temp_left[iTemp] = idx_proxy(iTemp, j, k);
+					idx_temp_right[iTemp] = idx_proxy(ni - 5 + iTemp, j, k);
 				}
 				for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 				{
@@ -7500,8 +7499,8 @@ namespace zaran
 				// 不存在j-2处的值,用j-1处的值代替，不影响计算结果
 				for (int iTemp = 0; iTemp < 5; ++iTemp)
 				{
-					idx_temp_left[iTemp] = m_idx_proxy->GetIdx(i, iTemp, k);
-					idx_temp_right[iTemp] = m_idx_proxy->GetIdx(i, nj - 5 + iTemp, k);
+					idx_temp_left[iTemp] = idx_proxy(i, iTemp, k);
+					idx_temp_right[iTemp] = idx_proxy(i, nj - 5 + iTemp, k);
 				}
 				for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 				{
@@ -7541,8 +7540,8 @@ namespace zaran
 					// 不存在k-2处的值,用k-1处的值代替，不影响计算结果
 					for (int iTemp = 0; iTemp < 5; ++iTemp)
 					{
-						idx_temp_left[iTemp] = m_idx_proxy->GetIdx(i, j, iTemp);
-						idx_temp_right[iTemp] = m_idx_proxy->GetIdx(i, j, nk - 5 + iTemp);
+						idx_temp_left[iTemp] = idx_proxy(i, j, iTemp);
+						idx_temp_right[iTemp] = idx_proxy(i, j, nk - 5 + iTemp);
 					}
 					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 					{
@@ -7873,6 +7872,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		int ghost_size = grid->GetGhostLevel();
 		double prim_far[5] = { GetPara()->GetInflowDensity(), GetPara()->GetInflowVelocityX(),
 							  GetPara()->GetInflowVelocityY(), GetPara()->GetInflowVelocityZ(),
@@ -7897,7 +7897,7 @@ namespace zaran
 				i_ghost = i_bound + iGhost * bound_direction[0];
 				j_ghost = j_bound + iGhost * bound_direction[1];
 				k_ghost = k_bound + iGhost * bound_direction[2];
-				index_type idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				index_type idx_ghost = idx_proxy(i_ghost, j_ghost, k_ghost);
 				//double x = node->GetCoord(i_ghost, j_ghost, k_ghost)[0];
 				//double y = node->GetCoord(i_ghost, j_ghost, k_ghost)[1];
 				//prim_far[0] = 1.0 + 0.01 * y;
@@ -7914,6 +7914,7 @@ namespace zaran
 		//return;
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		size_t ghost_size = grid->GetGhostLevel();
 		index_type eq_num = GetPara()->GetEqNum();
 		double prim_vals[5], cons_vals[5];
@@ -7923,7 +7924,7 @@ namespace zaran
 			index_type i_bound, j_bound, k_bound;
 			index_type i_ghost, j_ghost, k_ghost;
 			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
-			index_type idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+			index_type idx_bound = idx_proxy(i_bound, j_bound, k_bound);
 			auto bound_direction = bound[iBound].GetDirectionSrc();
 			// 预先获取边界的原始变量和守恒变量
 			for (size_t idx_eq = 0; idx_eq < eq_num; ++idx_eq)
@@ -7936,7 +7937,7 @@ namespace zaran
 				i_ghost = i_bound + iGhost * bound_direction[0];
 				j_ghost = j_bound + iGhost * bound_direction[1];
 				k_ghost = k_bound + iGhost * bound_direction[2];
-				index_type idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				index_type idx_ghost = idx_proxy(i_ghost, j_ghost, k_ghost);
 				data_manager->SetPrim(idx_ghost, prim_vals);
 				data_manager->SetCons(idx_ghost, cons_vals);
 			}
@@ -7948,6 +7949,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		int ghost_size = grid->GetGhostLevel();
 #pragma omp parallel for
 		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
@@ -7957,18 +7959,18 @@ namespace zaran
 			index_type i_ghost, j_ghost, k_ghost;
 			auto norm_bnd = bound[iBound].GetNorm();
 			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
-			index_type idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+			index_type idx_bound = idx_proxy(i_bound, j_bound, k_bound);
 			auto bound_coord = node->GetCoord(i_bound, j_bound, k_bound);
 			for (size_t iGhost = 1; iGhost <= ghost_size; ++iGhost)
 			{
 				i_ghost = i_bound + iGhost * bound[iBound].GetDirectionSrc()[0];
 				j_ghost = j_bound + iGhost * bound[iBound].GetDirectionSrc()[1];
 				k_ghost = k_bound + iGhost * bound[iBound].GetDirectionSrc()[2];
-				index_type idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				index_type idx_ghost = idx_proxy(i_ghost, j_ghost, k_ghost);
 				i_ref = i_bound - iGhost * bound[iBound].GetDirectionSrc()[0];
 				j_ref = j_bound - iGhost * bound[iBound].GetDirectionSrc()[1];
 				k_ref = k_bound - iGhost * bound[iBound].GetDirectionSrc()[2];
-				index_type idx_ref = m_idx_proxy->GetIdx(i_ref, j_ref, k_ref);
+				index_type idx_ref = idx_proxy(i_ref, j_ref, k_ref);
 				double prim_ghost[5];
 				for (int idx_eq = 0; idx_eq < data_manager->GetEqNum(); ++idx_eq)
 				{
@@ -7990,19 +7992,20 @@ namespace zaran
 	void NSSolverStruct::BCFarfield(dynamic_array<BoundStruct>& bound)
 	{
 		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 #pragma omp parallel for
 		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
 			index_type i_bound, j_bound, k_bound;
 			index_type i_ghost, j_ghost, k_ghost;
 			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
-			int idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+			int idx_bound = idx_proxy(i_bound, j_bound, k_bound);
 			i_ghost = i_bound + bound[iBound].GetDirectionSrc()[0];
 			j_ghost = j_bound + bound[iBound].GetDirectionSrc()[1];
 			k_ghost = k_bound + bound[iBound].GetDirectionSrc()[2];
 
-			int idx_ref = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
-			int idx_bnd = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+			int idx_ref = idx_proxy(i_ghost, j_ghost, k_ghost);
+			int idx_bnd = idx_proxy(i_bound, j_bound, k_bound);
 			auto norm_bnd = bound[iBound].GetNorm();
 			double prim_in[5] = { data_manager->GetPrim(0, idx_ref), data_manager->GetPrim(1, idx_ref),
 								 data_manager->GetPrim(2, idx_ref), data_manager->GetPrim(3, idx_ref),
@@ -8076,7 +8079,7 @@ namespace zaran
 				i_ghost = i_bound + iGhost * bound[iBound].GetDirectionSrc()[0];
 				j_ghost = j_bound + iGhost * bound[iBound].GetDirectionSrc()[1];
 				k_ghost = k_bound + iGhost * bound[iBound].GetDirectionSrc()[2];
-				int idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				int idx_ghost = idx_proxy(i_ghost, j_ghost, k_ghost);
 				data_manager->SetPrim(idx_ghost, prim_bnd);
 				data_manager->SetCons(idx_ghost, cons_bound);
 			}
@@ -8093,6 +8096,7 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto para = GetPara();
 		auto data_manager = GetDataManager();
 		int ghost_size = grid->GetGhostLevel();
@@ -8108,13 +8112,13 @@ namespace zaran
 			index_type i_bound, j_bound, k_bound;
 			index_type i_ghost, j_ghost, k_ghost;
 			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
-			index_type idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+			index_type idx_bound = idx_proxy(i_bound, j_bound, k_bound);
 			for (size_t iGhost = 1; iGhost <= ghost_size; ++iGhost)
 			{
 				i_ghost = i_bound + iGhost * bound[iBound].GetDirectionSrc()[0];
 				j_ghost = j_bound + iGhost * bound[iBound].GetDirectionSrc()[1];
 				k_ghost = k_bound + iGhost * bound[iBound].GetDirectionSrc()[2];
-				index_type idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				index_type idx_ghost = idx_proxy(i_ghost, j_ghost, k_ghost);
 				auto coord = node->GetCoord(i_ghost, j_ghost, k_ghost);
 				r2 = (coord[0] - xc) * (coord[0] - xc) + (coord[1] - yc) * (coord[1] - yc);
 				prim[0] = pow(1.0 - (gamma - 1.0) * beta * beta * exp(1.0 - r2) / (8.0 * gamma * PI * PI), 1.0 / (gamma - 1.0));
@@ -8129,6 +8133,7 @@ namespace zaran
 
 	void NSSolverStruct::BCDoubleMach(dynamic_array<BoundStruct>& bound)
 	{
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		double current_time = GlobalData::GetDouble("currentTime");
 		double shock_velocity = 10.0 / sin(PI / 3.0);
 		double shock_x = 1.0 / 6.0 + 1.0 / tan(PI / 3.0) + shock_velocity * current_time;
@@ -8145,14 +8150,14 @@ namespace zaran
 		{
 			index_type i_bound, j_bound, k_bound;
 			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
-			index_type idx_bound = m_idx_proxy->GetIdx(i_bound, j_bound, k_bound);
+			index_type idx_bound = idx_proxy(i_bound, j_bound, k_bound);
 			auto bound_direction = bound[iBound].GetDirectionSrc();
 			for (size_t iGhost = 1; iGhost <= ghost_size; ++iGhost)
 			{
 				index_type i_ghost = i_bound + iGhost * bound_direction[0];
 				index_type j_ghost = j_bound + iGhost * bound_direction[1];
 				index_type k_ghost = k_bound + iGhost * bound_direction[2];
-				index_type idx_ghost = m_idx_proxy->GetIdx(i_ghost, j_ghost, k_ghost);
+				index_type idx_ghost = idx_proxy(i_ghost, j_ghost, k_ghost);
 				double x = grid->GetNode()->GetCoord(i_ghost, j_ghost, k_ghost)[0];
 				if (x <= shock_x)
 				{
@@ -8188,17 +8193,17 @@ namespace zaran
 	}
 	Metric* NSSolverStruct::GetMidMetricsI()
 	{
-		return m_metrics_mid_i;
+		return m_metrics_mid_i.get();
 	}
 
 	Metric* NSSolverStruct::GetMidMetricsJ()
 	{
-		return m_metrics_mid_j;
+		return m_metrics_mid_j.get();
 	}
 
 	Metric* NSSolverStruct::GetMidMetricsK()
 	{
-		return m_metrics_mid_k;
+		return m_metrics_mid_k.get();
 	}
 
 	double NSSolverStruct::NodeDifferece2nd(double* mid_data)

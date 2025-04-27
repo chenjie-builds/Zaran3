@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "DataManagerNSStruct.h"
 #include "FlowSolverStructPara.h"
 #include "GridStruct.h"
@@ -15,7 +15,7 @@ namespace zaran
 		~NSSolverStruct();
 		DataManagerNSStruct* GetDataManager();
 		Metric* GetNodeMetrics();
-		IdProxyStruct* GetIdxProxy();
+		IdProxyStruct& GetIdxProxy();
 		FlowSolverParamStruct* GetPara();
 
 	protected:
@@ -222,12 +222,12 @@ namespace zaran
 
 	private:
 		/// @brief 节点度量
-		shared_ptr<Metric> m_node_metrics;
+		unique_ptr<Metric> m_node_metrics;
 		/// @brief 索引代理，用于将结构节点索引转换为场数据索引
 		shared_ptr<IdProxyStruct>	 m_idx_proxy;
-		Metric* m_metrics_mid_i; // 半点度量系数(i+1/2)
-		Metric* m_metrics_mid_j; // 半点度量系数(j+1/2)
-		Metric* m_metrics_mid_k; // 半点度量系数(k+1/2)
+		unique_ptr<Metric> m_metrics_mid_i; // 半点度量系数(i+1/2)
+		unique_ptr<Metric> m_metrics_mid_j; // 半点度量系数(j+1/2)
+		unique_ptr<Metric> m_metrics_mid_k; // 半点度量系数(k+1/2)
 		shared_ptr<GridStruct> m_grid;
 		shared_ptr<DataManagerNSStruct> m_data_manager;
 		shared_ptr<FlowSolverParamStruct> m_para;

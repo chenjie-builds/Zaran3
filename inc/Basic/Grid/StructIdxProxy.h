@@ -1,4 +1,4 @@
-//==============================================================================||
+﻿//==============================================================================||
 //*	ZaRan	-	A Totally Automatic CFD Software								||
 //*	Copyright (C) ,Since 2020													||
 //*-----------------------------------------------------------------------------||
@@ -19,20 +19,17 @@ namespace zaran
     class IdProxyStruct : public IdProxy
     {
     public:
-        IdProxyStruct() = default;
-        IdProxyStruct(index_type ni, index_type nj, index_type nk);
-        ~IdProxyStruct();
-        void SetIdx(index_type i, index_type j, index_type k);
-        void SetIdx(index_type idx);
-        void GetIdxStruct(index_type&i, index_type&j, index_type&k) const ;
-        using IdProxy::GetIdx;
-        index_type GetIdx(index_type i, index_type j, index_type k) const
-        {
-            return i + j * m_ni + k * m_ni * m_nj;
-        }
+        IdProxyStruct(index_type max_i, index_type max_j, index_type max_k);
+        index_type operator()(index_type i, index_type j, index_type k);
+		void GetIdxStruct(index_type idx, index_type& i, index_type& j, index_type& k) const
+		{
+			k = idx / m_ij_plane_size;
+			j = (idx - k * m_ij_plane_size) / m_ni;
+			i = idx - k * m_ij_plane_size - j * m_ni;
+		}
     private:
-        index_type m_idx_i, m_idx_j, m_idx_k;
 		// 网格的节点个数
         index_type m_ni, m_nj, m_nk;
+        index_type m_ij_plane_size;
     };
 }

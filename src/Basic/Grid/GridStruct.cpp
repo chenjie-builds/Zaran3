@@ -1,4 +1,4 @@
-#include "GridStruct.h"
+﻿#include "GridStruct.h"
 namespace zaran
 {
 	GridStruct::GridStruct(const string &name, index_type index, index_type dim) : GridBase(name, index, dim, GridType::Structured)
@@ -11,11 +11,11 @@ namespace zaran
 	void GridStruct::Allocate(index_type ni, index_type nj, index_type nk, index_type ghost_level)
 	{
 		m_ghost_level = ghost_level;
-		m_node = make_shared<NodeStruct>(ni + ghost_level * 2, nj + ghost_level * 2, nk + ghost_level * 2);
-		m_face = make_shared<FaceStruct>();
-		m_cell = make_shared<CellStruct>();
+		m_node = make_unique<NodeStruct>(ni + ghost_level * 2, nj + ghost_level * 2, nk + ghost_level * 2);
+		m_face = make_unique<FaceStruct>();
+		m_cell = make_unique<CellStruct>();
 		m_cell->Allocate(ni + ghost_level * 2 - 1, nj + ghost_level * 2 - 1, nk + ghost_level * 2 - 1);
-		m_bound_map = make_shared<BoundStructManager>();
+		m_bound_map = make_unique<BoundStructManager>();
 		m_idx_proxy = make_shared<IdProxyStruct>(ni + ghost_level * 2, nj + ghost_level * 2, nk + ghost_level * 2);
 	}
 	int GridStruct::GetNi()const

@@ -73,7 +73,7 @@ namespace zaran {
 		auto model_manager = GetModelManager();
 		auto& box = grid->GetBoundBox();
 		auto& model_box = model_manager->GetBox();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = *m_idx_proxy;
 		ProcessCell(0, ni, 0, nj, 0, nk);
 		// #pragma omp parallel for
 		//         for (int iCell = 0; iCell < ni * nj * nk; iCell++)
@@ -110,29 +110,29 @@ namespace zaran {
 		//                 }
 		//             }
 		//         }
-		m_cell_type[m_idx_proxy->GetIdx(0, 0, 0)] = PhysicalType::Fluid;
+		m_cell_type[idx_proxy(0, 0, 0)] = PhysicalType::Fluid;
 		auto IsValidCell = [&](int i, int j, int k) -> bool {
 			return i >= 0 && i < ni && j >= 0 && j < nj && k >= 0 && k < nk;
 			};
 		for (int k = 0; k < nk; k++) {
 			for (int j = 0; j < nj; j++) {
 				for (int i = 0; i < ni; i++) {
-					int idx = m_idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					if (m_cell_type[idx] == PhysicalType::Fluid) {
 						if (IsValidCell(i + 1, j, k) &&
-							m_cell_type[m_idx_proxy->GetIdx(i + 1, j, k)] ==
+							m_cell_type[idx_proxy(i + 1, j, k)] ==
 							PhysicalType::Unset) {
-							m_cell_type[m_idx_proxy->GetIdx(i + 1, j, k)] = PhysicalType::Fluid;
+							m_cell_type[idx_proxy(i + 1, j, k)] = PhysicalType::Fluid;
 						}
 						if (IsValidCell(i, j + 1, k) &&
-							m_cell_type[m_idx_proxy->GetIdx(i, j + 1, k)] ==
+							m_cell_type[idx_proxy(i, j + 1, k)] ==
 							PhysicalType::Unset) {
-							m_cell_type[m_idx_proxy->GetIdx(i, j + 1, k)] = PhysicalType::Fluid;
+							m_cell_type[idx_proxy(i, j + 1, k)] = PhysicalType::Fluid;
 						}
 						if (IsValidCell(i, j, k + 1) &&
-							m_cell_type[m_idx_proxy->GetIdx(i, j, k + 1)] ==
+							m_cell_type[idx_proxy(i, j, k + 1)] ==
 							PhysicalType::Unset) {
-							m_cell_type[m_idx_proxy->GetIdx(i, j, k + 1)] = PhysicalType::Fluid;
+							m_cell_type[idx_proxy(i, j, k + 1)] = PhysicalType::Fluid;
 						}
 					}
 				}
@@ -143,7 +143,7 @@ namespace zaran {
 		for (int i = 0; i < ni - 1; i++) {
 			for (int j = 0; j < nj - 1; j++) {
 				for (int k = 0; k < nk - 1; k++) {
-					int idx = m_idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					if (m_cell_type[idx] == PhysicalType::Unset) {
 						m_cell_type[idx] = PhysicalType::Solid;
 					}
@@ -157,26 +157,26 @@ namespace zaran {
 			for (int i = 0; i < ni - 1; i++) {
 				for (int j = 0; j < nj - 1; j++) {
 					for (int k = 0; k < -1; k++) {
-						int idx = m_idx_proxy->GetIdx(i, j, k);
+						int idx = idx_proxy(i, j, k);
 						if (m_cell_type[idx] != PhysicalType::Fluid)
 							continue;
-						if (m_cell_type[m_idx_proxy->GetIdx(i + 1, j, k)] ==
+						if (m_cell_type[idx_proxy(i + 1, j, k)] ==
 							PhysicalType::Solid &&
-							m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k)] ==
+							m_cell_type[idx_proxy(i - 1, j, k)] ==
 							PhysicalType::Solid) {
 							m_cell_type[idx] = PhysicalType::Solid;
 							new_solid_num++;
 						}
-						else if (m_cell_type[m_idx_proxy->GetIdx(i, j + 1, k)] ==
+						else if (m_cell_type[idx_proxy(i, j + 1, k)] ==
 							PhysicalType::Solid &&
-							m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k)] ==
+							m_cell_type[idx_proxy(i, j - 1, k)] ==
 							PhysicalType::Solid) {
 							m_cell_type[idx] = PhysicalType::Solid;
 							new_solid_num++;
 						}
-						else if (m_cell_type[m_idx_proxy->GetIdx(i, j, k + 1)] ==
+						else if (m_cell_type[idx_proxy(i, j, k + 1)] ==
 							PhysicalType::Solid &&
-							m_cell_type[m_idx_proxy->GetIdx(i, j, k - 1)] ==
+							m_cell_type[idx_proxy(i, j, k - 1)] ==
 							PhysicalType::Solid) {
 							m_cell_type[idx] = PhysicalType::Solid;
 							new_solid_num++;
@@ -192,42 +192,42 @@ namespace zaran {
 		for (int k = 1; k < nk - 1; k++) {
 			for (int j = 1; j < nj - 1; j++) {
 				for (int i = 1; i < ni - 1; i++) {
-					int idx = m_idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					if (m_cell_type[idx] != PhysicalType::Fluid)
 						continue;
-					if (m_cell_type[m_idx_proxy->GetIdx(i + 1, j, k)] ==
+					if (m_cell_type[idx_proxy(i + 1, j, k)] ==
 						PhysicalType::Solid ||
-						m_cell_type[m_idx_proxy->GetIdx(i + 1, j, k)] ==
+						m_cell_type[idx_proxy(i + 1, j, k)] ==
 						PhysicalType::Unset) {
 						m_cell_type[idx] = PhysicalType::FluidSolid;
 					}
-					if (m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k)] ==
+					if (m_cell_type[idx_proxy(i - 1, j, k)] ==
 						PhysicalType::Solid ||
-						m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k)] ==
+						m_cell_type[idx_proxy(i - 1, j, k)] ==
 						PhysicalType::Unset) {
 						m_cell_type[idx] = PhysicalType::FluidSolid;
 					}
-					if (m_cell_type[m_idx_proxy->GetIdx(i, j + 1, k)] ==
+					if (m_cell_type[idx_proxy(i, j + 1, k)] ==
 						PhysicalType::Solid ||
-						m_cell_type[m_idx_proxy->GetIdx(i, j + 1, k)] ==
+						m_cell_type[idx_proxy(i, j + 1, k)] ==
 						PhysicalType::Unset) {
 						m_cell_type[idx] = PhysicalType::FluidSolid;
 					}
-					if (m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k)] ==
+					if (m_cell_type[idx_proxy(i, j - 1, k)] ==
 						PhysicalType::Solid ||
-						m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k)] ==
+						m_cell_type[idx_proxy(i, j - 1, k)] ==
 						PhysicalType::Unset) {
 						m_cell_type[idx] = PhysicalType::FluidSolid;
 					}
-					if (m_cell_type[m_idx_proxy->GetIdx(i, j, k + 1)] ==
+					if (m_cell_type[idx_proxy(i, j, k + 1)] ==
 						PhysicalType::Solid ||
-						m_cell_type[m_idx_proxy->GetIdx(i, j, k + 1)] ==
+						m_cell_type[idx_proxy(i, j, k + 1)] ==
 						PhysicalType::Unset) {
 						m_cell_type[idx] = PhysicalType::FluidSolid;
 					}
-					if (m_cell_type[m_idx_proxy->GetIdx(i, j, k - 1)] ==
+					if (m_cell_type[idx_proxy(i, j, k - 1)] ==
 						PhysicalType::Solid ||
-						m_cell_type[m_idx_proxy->GetIdx(i, j, k - 1)] ==
+						m_cell_type[idx_proxy(i, j, k - 1)] ==
 						PhysicalType::Unset) {
 						m_cell_type[idx] = PhysicalType::FluidSolid;
 					}
@@ -238,6 +238,7 @@ namespace zaran {
 	void GridFNFactoryZaran::TagNodes() {
 		auto grid = GetBlockGrid();
 		auto node = grid->GetNode();
+		IdProxyStruct& idx_proxy = *m_idx_proxy;
 		int ni, nj, nk;
 		ni = grid->GetNi();
 		nj = grid->GetNj();
@@ -252,9 +253,8 @@ namespace zaran {
 		grid->GetRange(is, ie, js, je, ks, ke);
 		m_node_type.resize(ni * nj * nk);
 		for (int idx = 0; idx < ni * nj * nk; idx++) {
-			m_idx_proxy->SetIdx(idx);
 			index_type i, j, k;
-			m_idx_proxy->GetIdxStruct(i, j, k);
+			idx_proxy.GetIdxStruct(idx,i, j, k);
 			if (i < is || i >= ie || j < js || j >= je || k < ks || k >= ke) {
 				m_node_type[idx] = PhysicalType::Fluid;
 			}
@@ -267,64 +267,64 @@ namespace zaran {
 		for (int k = ks; k <= ke; k++) {
 			for (int j = js; j <= je; j++) {
 				for (int i = is; i <= ie; i++) {
-					auto idx = m_idx_proxy->GetIdx(i, j, k);
+					auto idx = idx_proxy(i, j, k);
 					if (IsValidCell(i - 1, j, k)) {
-						int idx_left = m_idx_proxy->GetIdx(i - 1, j, k);
+						int idx_left = idx_proxy(i - 1, j, k);
 						if (m_cell_type[idx_left] == PhysicalType::FluidSolid &&
 							m_cell_type[idx] == PhysicalType::Fluid ||
 							m_cell_type[idx_left] == PhysicalType::Fluid &&
 							m_cell_type[idx] == PhysicalType::FluidSolid) {
 							trans_face_set.insert(TransFace{
-								{m_idx_proxy->GetIdx(i, j, k), m_idx_proxy->GetIdx(i, j + 1, k),
-								 m_idx_proxy->GetIdx(i, j + 1, k + 1),
-								 m_idx_proxy->GetIdx(i, j, k + 1)} });
-							m_node_type[m_idx_proxy->GetIdx(i, j, k)] =
+								{idx_proxy(i, j, k), idx_proxy(i, j + 1, k),
+								 idx_proxy(i, j + 1, k + 1),
+								 idx_proxy(i, j, k + 1)} });
+							m_node_type[idx_proxy(i, j, k)] =
 								PhysicalType::FluidSolid;
-							m_node_type[m_idx_proxy->GetIdx(i, j + 1, k)] =
+							m_node_type[idx_proxy(i, j + 1, k)] =
 								PhysicalType::FluidSolid;
-							m_node_type[m_idx_proxy->GetIdx(i, j, k + 1)] =
+							m_node_type[idx_proxy(i, j, k + 1)] =
 								PhysicalType::FluidSolid;
-							m_node_type[m_idx_proxy->GetIdx(i, j + 1, k + 1)] =
+							m_node_type[idx_proxy(i, j + 1, k + 1)] =
 								PhysicalType::FluidSolid;
 						}
 					}
 					if (IsValidCell(i, j - 1, k)) {
-						int idx_down = m_idx_proxy->GetIdx(i, j - 1, k);
+						int idx_down = idx_proxy(i, j - 1, k);
 						if (m_cell_type[idx_down] == PhysicalType::FluidSolid &&
 							m_cell_type[idx] == PhysicalType::Fluid ||
 							m_cell_type[idx_down] == PhysicalType::Fluid &&
 							m_cell_type[idx] == PhysicalType::FluidSolid) {
 							trans_face_set.insert(TransFace{
-								{m_idx_proxy->GetIdx(i, j, k), m_idx_proxy->GetIdx(i + 1, j, k),
-								 m_idx_proxy->GetIdx(i + 1, j, k + 1),
-								 m_idx_proxy->GetIdx(i, j, k + 1)} });
-							m_node_type[m_idx_proxy->GetIdx(i, j, k)] =
+								{idx_proxy(i, j, k), idx_proxy(i + 1, j, k),
+								 idx_proxy(i + 1, j, k + 1),
+								 idx_proxy(i, j, k + 1)} });
+							m_node_type[idx_proxy(i, j, k)] =
 								PhysicalType::FluidSolid;
-							m_node_type[m_idx_proxy->GetIdx(i + 1, j, k)] =
+							m_node_type[idx_proxy(i + 1, j, k)] =
 								PhysicalType::FluidSolid;
-							m_node_type[m_idx_proxy->GetIdx(i, j, k + 1)] =
+							m_node_type[idx_proxy(i, j, k + 1)] =
 								PhysicalType::FluidSolid;
-							m_node_type[m_idx_proxy->GetIdx(i + 1, j, k + 1)] =
+							m_node_type[idx_proxy(i + 1, j, k + 1)] =
 								PhysicalType::FluidSolid;
 						}
 					}
 					if (IsValidCell(i, j, k - 1)) {
-						int idx_back = m_idx_proxy->GetIdx(i, j, k - 1);
+						int idx_back = idx_proxy(i, j, k - 1);
 						if (m_cell_type[idx_back] == PhysicalType::FluidSolid &&
 							m_cell_type[idx] == PhysicalType::Fluid ||
 							m_cell_type[idx_back] == PhysicalType::Fluid &&
 							m_cell_type[idx] == PhysicalType::FluidSolid) {
 							trans_face_set.insert(TransFace{
-								{m_idx_proxy->GetIdx(i, j, k), m_idx_proxy->GetIdx(i + 1, j, k),
-								 m_idx_proxy->GetIdx(i + 1, j + 1, k),
-								 m_idx_proxy->GetIdx(i, j + 1, k)} });
-							m_node_type[m_idx_proxy->GetIdx(i, j, k)] =
+								{idx_proxy(i, j, k), idx_proxy(i + 1, j, k),
+								 idx_proxy(i + 1, j + 1, k),
+								 idx_proxy(i, j + 1, k)} });
+							m_node_type[idx_proxy(i, j, k)] =
 								PhysicalType::FluidSolid;
-							m_node_type[m_idx_proxy->GetIdx(i + 1, j, k)] =
+							m_node_type[idx_proxy(i + 1, j, k)] =
 								PhysicalType::FluidSolid;
-							m_node_type[m_idx_proxy->GetIdx(i, j + 1, k)] =
+							m_node_type[idx_proxy(i, j + 1, k)] =
 								PhysicalType::FluidSolid;
-							m_node_type[m_idx_proxy->GetIdx(i + 1, j + 1, k)] =
+							m_node_type[idx_proxy(i + 1, j + 1, k)] =
 								PhysicalType::FluidSolid;
 						}
 					}
@@ -338,28 +338,28 @@ namespace zaran {
 			m_trans_face[idx++].idx_block = trans.idx_block;
 		}
 
-		m_node_type[m_idx_proxy->GetIdx(0, 0, 0)] = PhysicalType::Fluid;
+		m_node_type[idx_proxy(0, 0, 0)] = PhysicalType::Fluid;
 		// find the fluid nodes
 		for (int k = 0; k < nk; k++) {
 			for (int j = 0; j < nj; j++) {
 				for (int i = 0; i < ni; i++) {
-					int idx = m_idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					if (m_node_type[idx] != PhysicalType::Fluid)
 						continue;
 					if (IsValidNode(i + 1, j, k)) {
-						if (m_node_type[m_idx_proxy->GetIdx(i + 1, j, k)] ==
+						if (m_node_type[idx_proxy(i + 1, j, k)] ==
 							PhysicalType::Unset)
-							m_node_type[m_idx_proxy->GetIdx(i + 1, j, k)] = PhysicalType::Fluid;
+							m_node_type[idx_proxy(i + 1, j, k)] = PhysicalType::Fluid;
 					}
 					if (IsValidNode(i, j + 1, k)) {
-						if (m_node_type[m_idx_proxy->GetIdx(i, j + 1, k)] ==
+						if (m_node_type[idx_proxy(i, j + 1, k)] ==
 							PhysicalType::Unset)
-							m_node_type[m_idx_proxy->GetIdx(i, j + 1, k)] = PhysicalType::Fluid;
+							m_node_type[idx_proxy(i, j + 1, k)] = PhysicalType::Fluid;
 					}
 					if (IsValidNode(i, j, k + 1)) {
-						if (m_node_type[m_idx_proxy->GetIdx(i, j, k + 1)] ==
+						if (m_node_type[idx_proxy(i, j, k + 1)] ==
 							PhysicalType::Unset)
-							m_node_type[m_idx_proxy->GetIdx(i, j, k + 1)] = PhysicalType::Fluid;
+							m_node_type[idx_proxy(i, j, k + 1)] = PhysicalType::Fluid;
 					}
 				}
 			}
@@ -377,10 +377,12 @@ namespace zaran {
 	}
 
 	void GridFNFactoryZaran::ProcessCell(int start_i, int end_i, int start_j,
-		int end_j, int start_k, int end_k) {
+		int end_j, int start_k, int end_k)
+	{
 		// Log::info("start_i={}, end_i={}, start_j={}, end_j={}, start_k={},
 		// end_k={}", start_i, end_i, start_j, end_j, start_k, end_k);
 		auto grid = GetBlockGrid();
+		IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 		auto& grid_box = grid->GetBoundBox();
 		auto model_manager = GetModelManager();
 		auto& model_box = model_manager->GetBox();
@@ -437,7 +439,7 @@ namespace zaran {
 		if (start_i == mid_i) {
 			if (start_j == mid_j) {
 				if (start_k == mid_k) {
-					int idx = m_idx_proxy->GetIdx(start_i, start_j, start_k);
+					int idx = idx_proxy(start_i, start_j, start_k);
 					if (cell_type == PhysicalType::Solid) {
 						m_cell_type[idx] = PhysicalType::Solid;
 					}
@@ -495,15 +497,18 @@ namespace zaran {
 		}
 	}
 
-	void GridFNFactoryZaran::ReTagCells() {
+	void GridFNFactoryZaran::ReTagCells()
+	{
 		// 去掉所有的FluidSolid标记
-		for (int iCell = 0; iCell < m_cell_type.size(); iCell++) {
+		for (int iCell = 0; iCell < m_cell_type.size(); iCell++) 
+		{
 			if (m_cell_type[iCell] == PhysicalType::FluidSolid) {
 				m_cell_type[iCell] = PhysicalType::Fluid;
 			}
 		}
 
 		auto grid = GetBlockGrid();
+		IdProxyStruct& idx_proxy = *m_idx_proxy;
 		int ni, nj, nk;
 		ni = grid->GetNi();
 		nj = grid->GetNj();
@@ -515,26 +520,26 @@ namespace zaran {
 			for (int i = 0; i < ni - 1; i++) {
 				for (int j = 0; j < nj - 1; j++) {
 					for (int k = 0; k < -1; k++) {
-						int idx = m_idx_proxy->GetIdx(i, j, k);
+						int idx = idx_proxy(i, j, k);
 						if (m_cell_type[idx] != PhysicalType::Fluid)
 							continue;
-						if (m_cell_type[m_idx_proxy->GetIdx(i + 1, j, k)] ==
+						if (m_cell_type[idx_proxy(i + 1, j, k)] ==
 							PhysicalType::Solid &&
-							m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k)] ==
+							m_cell_type[idx_proxy(i - 1, j, k)] ==
 							PhysicalType::Solid) {
 							m_cell_type[idx] = PhysicalType::Solid;
 							new_solid_num++;
 						}
-						else if (m_cell_type[m_idx_proxy->GetIdx(i, j + 1, k)] ==
+						else if (m_cell_type[idx_proxy(i, j + 1, k)] ==
 							PhysicalType::Solid &&
-							m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k)] ==
+							m_cell_type[idx_proxy(i, j - 1, k)] ==
 							PhysicalType::Solid) {
 							m_cell_type[idx] = PhysicalType::Solid;
 							new_solid_num++;
 						}
-						else if (m_cell_type[m_idx_proxy->GetIdx(i, j, k + 1)] ==
+						else if (m_cell_type[idx_proxy(i, j, k + 1)] ==
 							PhysicalType::Solid &&
-							m_cell_type[m_idx_proxy->GetIdx(i, j, k - 1)] ==
+							m_cell_type[idx_proxy(i, j, k - 1)] ==
 							PhysicalType::Solid) {
 							m_cell_type[idx] = PhysicalType::Solid;
 							new_solid_num++;
@@ -550,30 +555,30 @@ namespace zaran {
 		for (int k = 1; k < nk - 1; k++) {
 			for (int j = 1; j < nj - 1; j++) {
 				for (int i = 1; i < ni - 1; i++) {
-					int idx = m_idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					if (m_cell_type[idx] != PhysicalType::Fluid)
 						continue;
-					if (m_cell_type[m_idx_proxy->GetIdx(i + 1, j, k)] ==
+					if (m_cell_type[idx_proxy(i + 1, j, k)] ==
 						PhysicalType::Solid) {
 						m_cell_type[idx] = PhysicalType::FluidSolid;
 					}
-					if (m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k)] ==
+					if (m_cell_type[idx_proxy(i - 1, j, k)] ==
 						PhysicalType::Solid) {
 						m_cell_type[idx] = PhysicalType::FluidSolid;
 					}
-					if (m_cell_type[m_idx_proxy->GetIdx(i, j + 1, k)] ==
+					if (m_cell_type[idx_proxy(i, j + 1, k)] ==
 						PhysicalType::Solid) {
 						m_cell_type[idx] = PhysicalType::FluidSolid;
 					}
-					if (m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k)] ==
+					if (m_cell_type[idx_proxy(i, j - 1, k)] ==
 						PhysicalType::Solid) {
 						m_cell_type[idx] = PhysicalType::FluidSolid;
 					}
-					if (m_cell_type[m_idx_proxy->GetIdx(i, j, k + 1)] ==
+					if (m_cell_type[idx_proxy(i, j, k + 1)] ==
 						PhysicalType::Solid) {
 						m_cell_type[idx] = PhysicalType::FluidSolid;
 					}
-					if (m_cell_type[m_idx_proxy->GetIdx(i, j, k - 1)] ==
+					if (m_cell_type[idx_proxy(i, j, k - 1)] ==
 						PhysicalType::Solid) {
 						m_cell_type[idx] = PhysicalType::FluidSolid;
 					}
@@ -585,12 +590,13 @@ namespace zaran {
 	void GridFNFactoryZaran::SetNodeTag() {
 		auto grid = GetBlockGrid();
 		auto node = grid->GetNode();
+		IdProxyStruct& idx_proxy = *m_idx_proxy;
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		for (int k = ks; k <= ke; k++) {
 			for (int j = js; j <= je; j++) {
 				for (int i = is; i <= ie; i++) {
-					int idx = m_idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					if (m_node_type[idx] == PhysicalType::FluidSolid) {
 						grid->SetIBlank(i, j, k, IBlank::Trans);
 					}
@@ -620,7 +626,7 @@ namespace zaran {
 		for (int k = ks; k <= ke; k++) {
 			for (int j = js; j <= je; j++) {
 				for (int i = is; i <= ie; i++) {
-					int idx = m_idx_proxy->GetIdx(i, j, k);
+					int idx = (i, j, k);
 					out << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1]
 						<< " " << node->GetCoord(i, j, k)[2] << " " << (int)m_node_type[idx]
 						<< std::endl;
@@ -890,37 +896,38 @@ namespace zaran {
 	void GridFNFactoryZaran::BuildRefNode() {
 		auto grid = GetBlockGrid();
 		auto node = grid->GetNode();
+		IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		std::set<index_type> ref_node_idx_set;
 		for (int k = ks; k <= ke; k++) {
 			for (int j = js; j <= je; j++) {
 				for (int i = is; i <= ie; i++) {
-					int idx = m_idx_proxy->GetIdx(i, j, k);
+					int idx = idx_proxy(i, j, k);
 					if (m_node_type[idx] == PhysicalType::FluidSolid) {
-						if (m_node_type[m_idx_proxy->GetIdx(i + 1, j, k)] ==
+						if (m_node_type[idx_proxy(i + 1, j, k)] ==
 							PhysicalType::Fluid) {
-							ref_node_idx_set.insert(m_idx_proxy->GetIdx(i + 1, j, k));
+							ref_node_idx_set.insert(idx_proxy(i + 1, j, k));
 						}
-						if (m_node_type[m_idx_proxy->GetIdx(i - 1, j, k)] ==
+						if (m_node_type[idx_proxy(i - 1, j, k)] ==
 							PhysicalType::Fluid) {
-							ref_node_idx_set.insert(m_idx_proxy->GetIdx(i - 1, j, k));
+							ref_node_idx_set.insert(idx_proxy(i - 1, j, k));
 						}
-						if (m_node_type[m_idx_proxy->GetIdx(i, j + 1, k)] ==
+						if (m_node_type[idx_proxy(i, j + 1, k)] ==
 							PhysicalType::Fluid) {
-							ref_node_idx_set.insert(m_idx_proxy->GetIdx(i, j + 1, k));
+							ref_node_idx_set.insert(idx_proxy(i, j + 1, k));
 						}
-						if (m_node_type[m_idx_proxy->GetIdx(i, j - 1, k)] ==
+						if (m_node_type[idx_proxy(i, j - 1, k)] ==
 							PhysicalType::Fluid) {
-							ref_node_idx_set.insert(m_idx_proxy->GetIdx(i, j - 1, k));
+							ref_node_idx_set.insert(idx_proxy(i, j - 1, k));
 						}
-						if (m_node_type[m_idx_proxy->GetIdx(i, j, k + 1)] ==
+						if (m_node_type[idx_proxy(i, j, k + 1)] ==
 							PhysicalType::Fluid) {
-							ref_node_idx_set.insert(m_idx_proxy->GetIdx(i, j, k + 1));
+							ref_node_idx_set.insert(idx_proxy(i, j, k + 1));
 						}
-						if (m_node_type[m_idx_proxy->GetIdx(i, j, k - 1)] ==
+						if (m_node_type[idx_proxy(i, j, k - 1)] ==
 							PhysicalType::Fluid) {
-							ref_node_idx_set.insert(m_idx_proxy->GetIdx(i, j, k - 1));
+							ref_node_idx_set.insert(idx_proxy(i, j, k - 1));
 						}
 					}
 				}
@@ -928,10 +935,10 @@ namespace zaran {
 		}
 		m_fn_info.node[0].resize(ref_node_idx_set.size());
 		index_type idx = 0;
-		for (auto& ref_node_idx : ref_node_idx_set) {
+		for (auto& ref_node_idx : ref_node_idx_set)
+		{
 			index_type i, j, k;
-			m_idx_proxy->SetIdx(ref_node_idx);
-			m_idx_proxy->GetIdxStruct(i, j, k);
+			idx_proxy.GetIdxStruct(ref_node_idx,i, j, k);
 			m_fn_info.node[0][idx].coord[0] = node->GetCoord(i, j, k)[0];
 			m_fn_info.node[0][idx].coord[1] = node->GetCoord(i, j, k)[1];
 			m_fn_info.node[0][idx].coord[2] = node->GetCoord(i, j, k)[2];
@@ -943,6 +950,7 @@ namespace zaran {
 	void GridFNFactoryZaran::BuildTransNode() {
 		auto grid = GetBlockGrid();
 		auto node = grid->GetNode();
+		IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 		// int is, ie, js, je, ks, ke;
 		// grid->GetRange(is, ie, js, je, ks, ke);
 		std::set<index_type> trans_node_idx_set;
@@ -972,8 +980,7 @@ namespace zaran {
 		index_type idx = 0;
 		for (auto& trans_idx : trans_node_idx_set) {
 			index_type i, j, k;
-			m_idx_proxy->SetIdx(trans_idx);
-			m_idx_proxy->GetIdxStruct(i, j, k);
+			idx_proxy.GetIdxStruct(trans_idx,i, j, k);
 			m_fn_info.node[1][idx].coord[0] = node->GetCoord(i, j, k)[0];
 			m_fn_info.node[1][idx].coord[1] = node->GetCoord(i, j, k)[1];
 			m_fn_info.node[1][idx].coord[2] = node->GetCoord(i, j, k)[2];
@@ -1000,20 +1007,21 @@ namespace zaran {
 			}
 		}
 	}
-	bool GridFNFactoryZaran::CheckTransNode() {
+	bool GridFNFactoryZaran::CheckTransNode()
+	{
+		IdProxyStruct& idx_proxy = *m_idx_proxy;
 		int total_error_num = 0;
 		for (int iNode = 0; iNode < m_node_type.size(); iNode++) {
 			index_type i, j, k;
-			m_idx_proxy->SetIdx(iNode);
-			m_idx_proxy->GetIdxStruct(i, j, k);
+			idx_proxy.GetIdxStruct(iNode,i, j, k);
 			if (m_node_type[iNode] != PhysicalType::FluidSolid)
 				continue;
-			auto type_ip = m_node_type[m_idx_proxy->GetIdx(i + 1, j, k)];
-			auto type_im = m_node_type[m_idx_proxy->GetIdx(i - 1, j, k)];
-			auto type_jp = m_node_type[m_idx_proxy->GetIdx(i, j + 1, k)];
-			auto type_jm = m_node_type[m_idx_proxy->GetIdx(i, j - 1, k)];
-			auto type_kp = m_node_type[m_idx_proxy->GetIdx(i, j, k + 1)];
-			auto type_km = m_node_type[m_idx_proxy->GetIdx(i, j, k - 1)];
+			auto type_ip = m_node_type[idx_proxy(i + 1, j, k)];
+			auto type_im = m_node_type[idx_proxy(i - 1, j, k)];
+			auto type_jp = m_node_type[idx_proxy(i, j + 1, k)];
+			auto type_jm = m_node_type[idx_proxy(i, j - 1, k)];
+			auto type_kp = m_node_type[idx_proxy(i, j, k + 1)];
+			auto type_km = m_node_type[idx_proxy(i, j, k - 1)];
 			int error_num = 0;
 			if (type_ip == PhysicalType::Solid && type_im == PhysicalType::Solid) {
 				// Log::warn("The trans node:({},{},{}) i+1 and i-1 are solid", i, j, k);
@@ -1028,14 +1036,14 @@ namespace zaran {
 				error_num++;
 			}
 			if (error_num > 0) {
-				m_cell_type[m_idx_proxy->GetIdx(i, j, k)] = PhysicalType::Solid;
-				m_cell_type[m_idx_proxy->GetIdx(i, j, k - 1)] = PhysicalType::Solid;
-				m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k)] = PhysicalType::Solid;
-				m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k - 1)] = PhysicalType::Solid;
-				m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k)] = PhysicalType::Solid;
-				m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k - 1)] = PhysicalType::Solid;
-				m_cell_type[m_idx_proxy->GetIdx(i - 1, j - 1, k)] = PhysicalType::Solid;
-				m_cell_type[m_idx_proxy->GetIdx(i - 1, j - 1, k - 1)] =
+				m_cell_type[idx_proxy(i, j, k)] = PhysicalType::Solid;
+				m_cell_type[idx_proxy(i, j, k - 1)] = PhysicalType::Solid;
+				m_cell_type[idx_proxy(i, j - 1, k)] = PhysicalType::Solid;
+				m_cell_type[idx_proxy(i, j - 1, k - 1)] = PhysicalType::Solid;
+				m_cell_type[idx_proxy(i - 1, j, k)] = PhysicalType::Solid;
+				m_cell_type[idx_proxy(i - 1, j, k - 1)] = PhysicalType::Solid;
+				m_cell_type[idx_proxy(i - 1, j - 1, k)] = PhysicalType::Solid;
+				m_cell_type[idx_proxy(i - 1, j - 1, k - 1)] =
 					PhysicalType::Solid;
 			}
 			total_error_num += error_num;
@@ -1045,8 +1053,7 @@ namespace zaran {
 				auto grid = GetBlockGrid();
 				auto node = grid->GetNode();
 				index_type i, j, k;
-				m_idx_proxy->SetIdx(iNode);
-				m_idx_proxy->GetIdxStruct(i, j, k);
+				idx_proxy.GetIdxStruct(iNode,i, j, k);
 				if (m_node_type[iNode] != PhysicalType::FluidSolid)
 					continue;
 				double dist = 0;
@@ -1059,14 +1066,14 @@ namespace zaran {
 					grid->GetDy() * grid->GetDy() +
 					grid->GetDz() * grid->GetDz());
 				if (dist < tol) {
-					m_cell_type[m_idx_proxy->GetIdx(i, j, k)] = PhysicalType::Solid;
-					m_cell_type[m_idx_proxy->GetIdx(i, j, k - 1)] = PhysicalType::Solid;
-					m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k)] = PhysicalType::Solid;
-					m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k - 1)] = PhysicalType::Solid;
-					m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k)] = PhysicalType::Solid;
-					m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k - 1)] = PhysicalType::Solid;
-					m_cell_type[m_idx_proxy->GetIdx(i - 1, j - 1, k)] = PhysicalType::Solid;
-					m_cell_type[m_idx_proxy->GetIdx(i - 1, j - 1, k - 1)] =
+					m_cell_type[idx_proxy(i, j, k)] = PhysicalType::Solid;
+					m_cell_type[idx_proxy(i, j, k - 1)] = PhysicalType::Solid;
+					m_cell_type[idx_proxy(i, j - 1, k)] = PhysicalType::Solid;
+					m_cell_type[idx_proxy(i, j - 1, k - 1)] = PhysicalType::Solid;
+					m_cell_type[idx_proxy(i - 1, j, k)] = PhysicalType::Solid;
+					m_cell_type[idx_proxy(i - 1, j, k - 1)] = PhysicalType::Solid;
+					m_cell_type[idx_proxy(i - 1, j - 1, k)] = PhysicalType::Solid;
+					m_cell_type[idx_proxy(i - 1, j - 1, k - 1)] =
 						PhysicalType::Solid;
 					total_error_num++;
 				}
@@ -1084,7 +1091,7 @@ namespace zaran {
 						}
 					}
 					for (index_type iNeighbor = 0; iNeighbor < 6; iNeighbor++) {
-						if (m_node_type[m_idx_proxy->GetIdx(
+						if (m_node_type[idx_proxy(
 							neighbor_i[iNeighbor], neighbor_j[iNeighbor],
 							neighbor_k[iNeighbor])] == PhysicalType::Solid) {
 							direction[iNeighbor] = 0;
@@ -1105,17 +1112,17 @@ namespace zaran {
 					CrossProduct(vec1.data(), vec2.data(), cross);
 					double volume2 = DotProduct(cross, vec3.data());
 					if (abs(volume) < 1e-5 || std::isnan(fabs(volume)) || std::isinf(fabs(volume))) {
-						m_cell_type[m_idx_proxy->GetIdx(i, j, k)] = PhysicalType::Solid;
-						m_cell_type[m_idx_proxy->GetIdx(i, j, k - 1)] = PhysicalType::Solid;
-						m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k)] = PhysicalType::Solid;
-						m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k - 1)] =
+						m_cell_type[idx_proxy(i, j, k)] = PhysicalType::Solid;
+						m_cell_type[idx_proxy(i, j, k - 1)] = PhysicalType::Solid;
+						m_cell_type[idx_proxy(i, j - 1, k)] = PhysicalType::Solid;
+						m_cell_type[idx_proxy(i, j - 1, k - 1)] =
 							PhysicalType::Solid;
-						m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k)] = PhysicalType::Solid;
-						m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k - 1)] =
+						m_cell_type[idx_proxy(i - 1, j, k)] = PhysicalType::Solid;
+						m_cell_type[idx_proxy(i - 1, j, k - 1)] =
 							PhysicalType::Solid;
-						m_cell_type[m_idx_proxy->GetIdx(i - 1, j - 1, k)] =
+						m_cell_type[idx_proxy(i - 1, j - 1, k)] =
 							PhysicalType::Solid;
-						m_cell_type[m_idx_proxy->GetIdx(i - 1, j - 1, k - 1)] =
+						m_cell_type[idx_proxy(i - 1, j - 1, k - 1)] =
 							PhysicalType::Solid;
 						total_error_num++;
 						// Log::info("dist:{}, volume:{}, modify:{},{},{},{},{},{}", dist,
@@ -1565,26 +1572,28 @@ namespace zaran {
 			}
 		}
 	}
-	void GridFNFactoryZaran::BuildTransNodeNeighbor() {
-		for (int iNode = 0; iNode < m_fn_info.node[1].size(); iNode++) {
+	void GridFNFactoryZaran::BuildTransNodeNeighbor() 
+	{
+		IdProxyStruct& idx_proxy = *m_idx_proxy;
+		for (int iNode = 0; iNode < m_fn_info.node[1].size(); iNode++)
+		{
 			m_fn_info.node[1][iNode].neighbor_node.resize(6);
 		}
 		for (auto& nodes : m_trans_node) {
 			index_type i, j, k;
-			m_idx_proxy->SetIdx(nodes.idx_block);
-			m_idx_proxy->GetIdxStruct(i, j, k);
+			idx_proxy.GetIdxStruct(nodes.idx_block,i, j, k);
 			m_fn_info.node[1][nodes.idx_local_layer].neighbor_node[0] =
-				m_idx_proxy->GetIdx(i - 1, j, k);
+				idx_proxy(i - 1, j, k);
 			m_fn_info.node[1][nodes.idx_local_layer].neighbor_node[1] =
-				m_idx_proxy->GetIdx(i + 1, j, k);
+				idx_proxy(i + 1, j, k);
 			m_fn_info.node[1][nodes.idx_local_layer].neighbor_node[2] =
-				m_idx_proxy->GetIdx(i, j - 1, k);
+				idx_proxy(i, j - 1, k);
 			m_fn_info.node[1][nodes.idx_local_layer].neighbor_node[3] =
-				m_idx_proxy->GetIdx(i, j + 1, k);
+				idx_proxy(i, j + 1, k);
 			m_fn_info.node[1][nodes.idx_local_layer].neighbor_node[4] =
-				m_idx_proxy->GetIdx(i, j, k - 1);
+				idx_proxy(i, j, k - 1);
 			m_fn_info.node[1][nodes.idx_local_layer].neighbor_node[5] =
-				m_idx_proxy->GetIdx(i, j, k + 1);
+				idx_proxy(i, j, k + 1);
 		}
 		for (int iNode = 0; iNode < m_fn_info.node[1].size(); iNode++) {
 			int next_layer_node = m_fn_info.node[2][iNode].idx;
@@ -1619,8 +1628,7 @@ namespace zaran {
 				}
 				if (!find) {
 					index_type i, j, k;
-					m_idx_proxy->SetIdx(idx_master);
-					m_idx_proxy->GetIdxStruct(i, j, k);
+					idx_proxy.GetIdxStruct(idx_master,i, j, k);
 					Log::error("Invalid node:{}, {},{},{}, type:{}", idx_master, i, j, k,
 						int(m_node_type[idx_master]));
 				}

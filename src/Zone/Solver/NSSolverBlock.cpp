@@ -1,4 +1,4 @@
-#include "NSSolverBlock.h"
+﻿#include "NSSolverBlock.h"
 #include <omp.h>
 namespace zaran
 {
@@ -23,7 +23,7 @@ namespace zaran
 		auto para = GetPara();
 		auto data_manager = GetDataManager();
 		auto node_metrics = GetNodeMetrics();
-		auto idx_proxy = GetIdxProxy();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto gas = GetGas();
 		auto equ_num = para->GetEqNum();
 		int is, ie, js, je, ks, ke;
@@ -44,11 +44,11 @@ namespace zaran
 		double mid_coord[3];                          // i-1/2,i+1/2的中点
 		double move_vector[3];                        // mid_coord到i的向量用于移动mid_coord_left和mid_coord_right
 		 #pragma omp parallel for private(idx, idx_temp, value, res_tmp, mid_coord_left, mid_coord_right, mid_coord, move_vector, riemann_para)
-		for (int k = ks; k <= ke; ++k)
+		for (index_type k = ks; k <= ke; ++k)
 		{
-			for (int j = js; j <= je; ++j)
+			for (index_type j = js; j <= je; ++j)
 			{
-				for (int i = is; i <= ie; ++i)
+				for (index_type i = is; i <= ie; ++i)
 				{
 					if (grid->GetIBlank(i, j, k) != IBlank::Fluid)
 					{
@@ -56,7 +56,7 @@ namespace zaran
 					}
 					for (int iVal = 0; iVal < equ_num; ++iVal)
 					{
-						res_tmp[iVal] = data_manager->GetResidual(iVal, idx_proxy->GetIdx(i, j, k));
+						res_tmp[iVal] = data_manager->GetResidual(iVal, idx_proxy(i, j, k));
 					}
 					// i direction
 					auto left_coord = node->GetCoord(i - 1, j, k);
@@ -71,7 +71,7 @@ namespace zaran
 						// mid_coord_left[iDim] += move_vector[iDim];
 						// mid_coord_right[iDim] += move_vector[iDim];
 					}
-					idx = idx_proxy->GetIdx(i, j, k);
+					idx = idx_proxy(i, j, k);
 					riemann_para[0].norm(0) = node_metrics->GetXi(idx)[0];
 					riemann_para[0].norm(1) = node_metrics->GetXi(idx)[1];
 					riemann_para[0].norm(2) = node_metrics->GetXi(idx)[2];
@@ -80,9 +80,9 @@ namespace zaran
 					riemann_para[1].norm(1) = node_metrics->GetXi(idx)[1];
 					riemann_para[1].norm(2) = node_metrics->GetXi(idx)[2];
 					riemann_para[1].nt = node_metrics->GetXi(idx)[3];
-					InterMidNodePrim_Grad(idx_proxy->GetIdx(i, j, k), idx_proxy->GetIdx(i + 1, j, k), coord, mid_coord_right, right_coord,
+					InterMidNodePrim_Grad(idx_proxy(i, j, k), idx_proxy(i + 1, j, k), coord, mid_coord_right, right_coord,
 						riemann_para[0].prim_left.data(), riemann_para[0].prim_right.data());
-					InterMidNodePrim_Grad(idx_proxy->GetIdx(i - 1, j, k), idx_proxy->GetIdx(i, j, k), left_coord, mid_coord_left, coord,
+					InterMidNodePrim_Grad(idx_proxy(i - 1, j, k), idx_proxy(i, j, k), left_coord, mid_coord_left, coord,
 						riemann_para[1].prim_left.data(), riemann_para[1].prim_right.data());
 					m_riemann_solver->Solver(riemann_para[0]);
 					m_riemann_solver->Solver(riemann_para[1]);
@@ -111,9 +111,9 @@ namespace zaran
 					riemann_para[3].norm(1) = node_metrics->GetEta(idx)[1];
 					riemann_para[3].norm(2) = node_metrics->GetEta(idx)[2];
 					riemann_para[3].nt = node_metrics->GetEta(idx)[3];
-					InterMidNodePrim_Grad(idx_proxy->GetIdx(i, j, k), idx_proxy->GetIdx(i, j + 1, k), left_coord, mid_coord_left, coord,
+					InterMidNodePrim_Grad(idx_proxy(i, j, k), idx_proxy(i, j + 1, k), left_coord, mid_coord_left, coord,
 						riemann_para[2].prim_left.data(), riemann_para[2].prim_right.data());
-					InterMidNodePrim_Grad(idx_proxy->GetIdx(i, j - 1, k), idx_proxy->GetIdx(i, j, k), coord, mid_coord_right, right_coord,
+					InterMidNodePrim_Grad(idx_proxy(i, j - 1, k), idx_proxy(i, j, k), coord, mid_coord_right, right_coord,
 						riemann_para[3].prim_left.data(), riemann_para[3].prim_right.data());
 					m_riemann_solver->Solver(riemann_para[2]);
 					m_riemann_solver->Solver(riemann_para[3]);
@@ -144,9 +144,9 @@ namespace zaran
 						riemann_para[5].norm(1) = node_metrics->GetZeta(idx)[1];
 						riemann_para[5].norm(2) = node_metrics->GetZeta(idx)[2];
 						riemann_para[5].nt = node_metrics->GetZeta(idx)[3];
-						InterMidNodePrim_Grad(idx_proxy->GetIdx(i, j, k), idx_proxy->GetIdx(i, j, k + 1), left_coord, mid_coord_left, coord,
+						InterMidNodePrim_Grad(idx_proxy(i, j, k), idx_proxy(i, j, k + 1), left_coord, mid_coord_left, coord,
 							riemann_para[4].prim_left.data(), riemann_para[4].prim_right.data());
-						InterMidNodePrim_Grad(idx_proxy->GetIdx(i, j, k - 1), idx_proxy->GetIdx(i, j, k), coord, mid_coord_right, right_coord,
+						InterMidNodePrim_Grad(idx_proxy(i, j, k - 1), idx_proxy(i, j, k), coord, mid_coord_right, right_coord,
 							riemann_para[5].prim_left.data(), riemann_para[5].prim_right.data());
 						m_riemann_solver->Solver(riemann_para[4]);
 						m_riemann_solver->Solver(riemann_para[5]);

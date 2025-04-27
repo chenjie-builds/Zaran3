@@ -1,4 +1,4 @@
-//==============================================================================||
+﻿//==============================================================================||
 //*	ZaRan	-	A Totally Automatic CFD Software								||
 //*	Copyright (C) ,Since 2020													||
 //*-----------------------------------------------------------------------------||
@@ -44,7 +44,7 @@ namespace zaran
 		/// @brief 获取ghost节点层数
 		/// @return  ghost节点层数
 		int GetGhostLevel() const { return m_ghost_level; }
-		IdProxyStruct* GetIdxProxy() { return m_idx_proxy.get(); }
+		IdProxyStruct& GetIdxProxy() { return *m_idx_proxy; }
 	public:
 		/// @brief 返回用于计算的节点范围,不包含ghost节点
 		/// @param iStart i方向上的起始索引
@@ -59,13 +59,13 @@ namespace zaran
 		/// @brief ghost节点层数
 		index_type m_ghost_level;
 		/// @brief 结构网格节点
-		shared_ptr<NodeStruct> m_node;
+		unique_ptr<NodeStruct> m_node;
 		/// @brief 	结构网格面
-		shared_ptr<FaceStruct> m_face;
+		unique_ptr<FaceStruct> m_face;
 		/// @brief 	结构网格单元
-		shared_ptr<CellStruct>m_cell;
+		unique_ptr<CellStruct>m_cell;
 		/// @brief 	边界条件
-		shared_ptr<BoundStructManager> m_bound_map;
+		unique_ptr<BoundStructManager> m_bound_map;
 		shared_ptr<IdProxyStruct> m_idx_proxy;
 	};
 }
