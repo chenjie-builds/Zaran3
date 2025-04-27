@@ -7,6 +7,7 @@
 #include <vector>
 #include <cgnslib.h>
 #include "NSFieldFN.h"
+#include <filesystem>
 using namespace zaran;
 void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldFNFDM> field)
 {
@@ -1170,10 +1171,10 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<FieldManager> field_manager)
 	string grid_name = "grid";
 	string var_name = "x, y, z, density, velocity_x, velocity_y, velocity_z, pressure";
 	std::string work_dir = GlobalData::GetString("work_dir");
-	std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + ".plt";
-	file_name = work_dir + "\\" + file_name;
-	Log::info("Write Tecplot file: {}", file_name);
-	int i = TECINI142(grid_name.c_str(), var_name.c_str(), file_name.c_str(), (char*)".", &file_format, &fileType,
+	std::string file_name = std::to_string(GlobalData::GetInt("currentIter")) + ".plt";
+	std::string temp_file_name = std::to_string(GlobalData::GetInt("currentIter")) + ".tmp";
+	std::string result_dir = work_dir + "\\result";
+	int ierr = TECINI142(grid_name.c_str(), var_name.c_str(), temp_file_name.c_str(), (char*)".", &file_format, &fileType,
 		&debug, &vIsDouble);
 	for (size_t iter_field = 0; iter_field < field_manager->GetFieldNum(); iter_field++)
 	{
@@ -1199,5 +1200,24 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<FieldManager> field_manager)
 			Log::warn("Field type is not supported!");
 		}
 	}
-	i = TECEND142();
+	ierr = TECEND142();
+	if (ierr != 0)
+	{
+		Log::error("Tecplot file write error!");
+		std::filesystem::remove(temp_file_name);
+	}
+	else
+	{
+		//检查result目录是否存在
+		if (!std::filesystem::exists(result_dir))
+		{
+			std::filesystem::create_directory(result_dir);
+		}
+		//将临时文件拷贝到result目录
+		std::filesystem::path temp_file_path(temp_file_name);
+		std::filesystem::path file_path(result_dir + "\\" + file_name);
+		std::filesystem::rename(temp_file_path, file_path);
+		Log::info("Tecplot file write success!");
+		Log::info("File name: {}", file_path.string());
+	}
 }
