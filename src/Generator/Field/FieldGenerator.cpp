@@ -1,4 +1,4 @@
-#include "FieldGenerator.h"
+ï»¿#include "FieldGenerator.h"
 #include "GridGeneratorFlexibleSYSU.h"
 #include "GridGeneratorFlexible.h"
 #include "GridGeneratorBlock.h"
@@ -29,7 +29,7 @@ namespace zaran
 			std::string node_file_name = work_dir + "/node.dat";
 			std::string ele_file_name = work_dir + "/cell.dat";
 			std::string bnd_file_name = work_dir + "/bound.dat";
-			//×¢ÒâSYSUµÄÍø¸ñÎÄ¼ş¸ñÊ½²»ÔÙÊ¹ÓÃ
+			//æ³¨æ„SYSUçš„ç½‘æ ¼æ–‡ä»¶æ ¼å¼ä¸å†ä½¿ç”¨
 			//grid_factory = make_shared<GridBuilderSYSU_FN>(node_file_name, ele_file_name, bnd_file_name);
 			grid_factory = make_shared<GridGeneratorFlexible>(node_file_name, ele_file_name, bnd_file_name);
 		}

@@ -12,8 +12,8 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldFNFDM> field)
 {
 	auto data_manager = field->GetDataManager();
 	auto grid = field->GetGrid();
-	auto cell = grid->GetCell();
-	auto node = grid->GetNode();
+	CellFN& cell = grid->GetCell();
+	NodeFN& node = grid->GetNode();
 
 	const double* density, * velocity_x, * velocity_y, * velocity_z, * pressure;
 	density = data_manager->GetPrim(ID_DENSITY);
@@ -23,13 +23,13 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldFNFDM> field)
 	pressure = data_manager->GetPrim(ID_PRESSURE);
 
 	INTEGER4 node_num = grid->GetTotalNodeNum();
-	INTEGER4 cell_num = cell->GetCellNum();
+	INTEGER4 cell_num = cell.GetCellNum();
 	dynamic_array<double> x(node_num), y(node_num), z(node_num);
 	for (int iNode = 0; iNode < node_num; ++iNode)
 	{
-		x[iNode] = node->GetCoord(iNode)[0];
-		y[iNode] = node->GetCoord(iNode)[1];
-		z[iNode] = node->GetCoord(iNode)[2];
+		x[iNode] = node.GetCoord(iNode)[0];
+		y[iNode] = node.GetCoord(iNode)[1];
+		z[iNode] = node.GetCoord(iNode)[2];
 	}
 	INTEGER4 vIsDouble = 1;
 	string zone_name = "grid_" + std::to_string(field->GetIdx());
@@ -62,8 +62,8 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldFNFDM> field)
 	dynamic_array<INTEGER4> cell_nodes(connectivityCount);
 	for (int iCell = 0; iCell < cell_num; ++iCell)
 	{
-		int node_num = cell->GetNodeNum(iCell);
-		auto cell2node = cell->GetNode(iCell);
+		int node_num = cell.GetNodeNum(iCell);
+		auto cell2node = cell.GetNode(iCell);
 		for (int iNode = 0; iNode < node_num; ++iNode)
 		{
 			cell_nodes[iCell * 8 + iNode] = cell2node[iNode] + 1;
@@ -74,7 +74,7 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldFNFDM> field)
 
 	/// bound face
 	auto face_topo = grid->GetFace();
-	cell_num = face_topo->GetFaceNum();
+	cell_num = face_topo.GetFaceNum();
 	if (cell_num == 0)
 	{
 		return;
@@ -107,8 +107,8 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldFNFDM> field)
 	dynamic_array<INTEGER4> face_nodes(connectivityCount);
 	for (int iFace = 0; iFace < cell_num; ++iFace)
 	{
-		auto face2node = face_topo->GetFace2Node(iFace);
-		int n_node = face_topo->GetFaceNodeNum(iFace);
+		auto face2node = face_topo.GetFace2Node(iFace);
+		int n_node = face_topo.GetFaceNodeNum(iFace);
 		for (int iNode = 0; iNode < n_node; ++iNode)
 		{
 			face_nodes[iFace * node_num_per_cell + iNode] = face2node[iNode] + 1;
@@ -151,13 +151,13 @@ void Visual::WriteCGNS(shared_ptr<NSFieldFNFDM> field, cgsize_t index_file1, cgs
 	pressure = data_manager->GetPrim(ID_PRESSURE);
 
 	int node_num = grid->GetTotalNodeNum();
-	int cell_num = cell->GetCellNum();
+	int cell_num = cell.GetCellNum();
 	dynamic_array<double> x(node_num), y(node_num), z(node_num);
 	for (int iNode = 0; iNode < node_num; ++iNode)
 	{
-		x[iNode] = node->GetCoord(iNode)[0];
-		y[iNode] = node->GetCoord(iNode)[1];
-		z[iNode] = node->GetCoord(iNode)[2];
+		x[iNode] = node.GetCoord(iNode)[0];
+		y[iNode] = node.GetCoord(iNode)[1];
+		z[iNode] = node.GetCoord(iNode)[2];
 	}
 	int index_zone;
 	cgsize_t isize[3];
@@ -172,8 +172,8 @@ void Visual::WriteCGNS(shared_ptr<NSFieldFNFDM> field, cgsize_t index_file1, cgs
 	dynamic_array<cgsize_t>elements(cell_num * 8);
 	for (int iCell = 0; iCell < cell_num; ++iCell)
 	{
-		int cell_node_num = cell->GetNodeNum(iCell);
-		auto cell2node = cell->GetNode(iCell);
+		int cell_node_num = cell.GetNodeNum(iCell);
+		auto cell2node = cell.GetNode(iCell);
 		for (int iNode = 0; iNode < cell_node_num; ++iNode)
 		{
 			elements[iCell * 8 + iNode] = cell2node[iNode] + 1;
@@ -195,11 +195,11 @@ void Visual::WriteCGNS(shared_ptr<NSFieldFNFDM> field, cgsize_t index_file1, cgs
 	cg_open(file_name.c_str(), CG_MODE_WRITE, &index_file2);
 	cg_base_write(index_file2, "Base", cell_dim, phys_dim, &index_base2);
 	auto face_topo = grid->GetFace();
-	int face_num = face_topo->GetFaceNum();
+	int face_num = face_topo.GetFaceNum();
 	dynamic_array<cgsize_t> faces(face_num * 4);
 	for (int iFace = 0; iFace < face_num; ++iFace)
 	{
-		auto face2node = face_topo->GetFace2Node(iFace);
+		auto face2node = face_topo.GetFace2Node(iFace);
 		for (int iNode = 0; iNode < 4; ++iNode)
 		{
 			faces[iFace * 4 + iNode] = face2node[iNode] + 1;
@@ -513,8 +513,8 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldZaran> field, std::ostream& os)
 void Visual::WriteVtkASCII(shared_ptr<NSFieldFNFDM> field, std::ostream& os)
 {
 	auto grid = field->GetGrid();
-	auto node = grid->GetNode();
-	auto cell = grid->GetCell();
+	NodeFN& node = grid->GetNode();
+	CellFN& cell = grid->GetCell();
 	auto data_manager = field->GetDataManager();
 	auto node_num = grid->GetTotalNodeNum();
 	const double* density = data_manager->GetPrim(ID_DENSITY);
@@ -529,16 +529,16 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldFNFDM> field, std::ostream& os)
 	os << "POINTS " << node_num << " double\n";
 	for (int iNode = 0; iNode < node_num; ++iNode)
 	{
-		auto coord = node->GetCoord(iNode);
+		auto coord = node.GetCoord(iNode);
 		os << coord[0] << " " << coord[1] << " " << coord[2] << "\n";
 	}
-	int cell_num = cell->GetCellNum();
+	int cell_num = cell.GetCellNum();
 	int cell_node_num = 8;
 	int cell_count = cell_num * cell_node_num;
 	os << "CELLS " << cell_num << " " << cell_count << "\n";
 	for (int iCell = 0; iCell < cell_num; ++iCell)
 	{
-		auto cell2node = cell->GetNode(iCell);
+		auto cell2node = cell.GetNode(iCell);
 		os << cell_node_num << " ";
 		for (int i = 0; i < cell_node_num; ++i)
 		{
@@ -842,9 +842,9 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostr
 void Visual::WriteTecplotASCII(shared_ptr<NSFieldFNFDM> field, std::ostream& os)
 {
 	auto grid = field->GetGrid();
-	auto node = grid->GetNode();
-	auto cell = grid->GetCell();
-	auto face = grid->GetFace();
+	NodeFN& node = grid->GetNode();
+	CellFN& cell = grid->GetCell();
+	FaceFN& face = grid->GetFace();
 	auto data_manager = field->GetDataManager();
 	auto solver = field->GetSolver();
 	auto node_num = grid->GetTotalNodeNum();
@@ -855,16 +855,16 @@ void Visual::WriteTecplotASCII(shared_ptr<NSFieldFNFDM> field, std::ostream& os)
 	const double* pressure = data_manager->GetPrim(ID_PRESSURE);
 	os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\",\"iBlank\"\n";
 	//非结构网格
-	os << "ZONE T=\"NSFieldFNFDM Field\", N=" << node_num << ", E=" << cell->GetCellNum() << ", F=FEPOINT, ET=BRICK\n";
+	os << "ZONE T=\"NSFieldFNFDM Field\", N=" << node_num << ", E=" << cell.GetCellNum() << ", F=FEPOINT, ET=BRICK\n";
 	for (int iNode = 0; iNode < node_num; ++iNode)
 	{
-		auto coord = node->GetCoord(iNode);
+		auto coord = node.GetCoord(iNode);
 		os << coord[0] << " " << coord[1] << " " << coord[2] << " " << density[iNode] << " " << velocity_x[iNode] << " " << velocity_y[iNode] << " " << velocity_z[iNode] << " " << pressure[iNode] << " " << 0 << "\n";
 	}
-	for (index_type iCell = 0; iCell < cell->GetCellNum(); ++iCell)
+	for (index_type iCell = 0; iCell < cell.GetCellNum(); ++iCell)
 	{
-		auto cell2node = cell->GetNode(iCell);
-		for (int iNode = 0; iNode < cell->GetNodeNum(iCell); ++iNode)
+		auto cell2node = cell.GetNode(iCell);
+		for (int iNode = 0; iNode < cell.GetNodeNum(iCell); ++iNode)
 		{
 			os << cell2node[iNode] + 1 << " ";
 		}
@@ -877,16 +877,16 @@ void Visual::WriteTecplotASCII(shared_ptr<NSFieldFNFDM> field, std::ostream& os)
 		}
 		os << "\n";
 	}
-	os << "ZONE T=\"Bound\", N=" << node_num << ", E=" << face->GetFaceNum() << ", F=FEPOINT, ET=QUADRILATERAL\n";
+	os << "ZONE T=\"Bound\", N=" << node_num << ", E=" << face.GetFaceNum() << ", F=FEPOINT, ET=QUADRILATERAL\n";
 	for (int iNode = 0; iNode < node_num; ++iNode)
 	{
-		auto coord = node->GetCoord(iNode);
+		auto coord = node.GetCoord(iNode);
 		os << coord[0] << " " << coord[1] << " " << coord[2] << " " << density[iNode] << " " << velocity_x[iNode] << " " << velocity_y[iNode] << " " << velocity_z[iNode] << " " << pressure[iNode] << "  " << 0 << "\n";
 	}
-	for (int iFace = 0; iFace < face->GetFaceNum(); ++iFace)
+	for (int iFace = 0; iFace < face.GetFaceNum(); ++iFace)
 	{
-		auto face2node = face->GetFace2Node(iFace);
-		auto n_node = face->GetFaceNodeNum(iFace);
+		auto face2node = face.GetFace2Node(iFace);
+		auto n_node = face.GetFaceNodeNum(iFace);
 		for (int iNode = 0; iNode < n_node; ++iNode)
 		{
 			os << face2node[iNode] + 1 << " ";

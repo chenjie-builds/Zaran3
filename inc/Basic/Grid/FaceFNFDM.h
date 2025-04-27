@@ -1,4 +1,4 @@
-//==============================================================================||
+﻿//==============================================================================||
 //*	ZaRan	-	A Totally Automatic CFD Software								||
 //*	Copyright (C) ,Since 2020													||
 //*-----------------------------------------------------------------------------||
@@ -14,11 +14,13 @@
 #include "FaceBase.h"
 namespace zaran
 {
-	class FaceFN:public FaceBase
+	class FaceFN :public FaceBase
 	{
 	public:
 		FaceFN();
+		FaceFN(index_type face_num);
 		~FaceFN();
+		void SetFaceNum(index_type face_num);
 		void Allocate(index_type nFace, index_type* face_node_num);
 		void SetLeftCell(index_type iFace, index_type iCell) { m_face2cell[2 * iFace] = iCell; }
 		void SetRightCell(index_type iFace, index_type iCell) { m_face2cell[2 * iFace + 1] = iCell; }
@@ -26,24 +28,23 @@ namespace zaran
 		void SetNormal(index_type iFace, double* normal) { m_normal[3 * iFace] = normal[0]; m_normal[3 * iFace + 1] = normal[1]; m_normal[3 * iFace + 2] = normal[2]; }
 		void SetFace2Node(index_type iFace, index_type* node, index_type nNode);
 		index_type GetFaceNodeNum(index_type iFace) { return m_face_node_num[iFace]; }
-		index_type* GetFace2Node(index_type iFace) { return m_face2node + m_node_id[iFace]; }
+		span<index_type> GetFace2Node(index_type iFace) { return span<index_type>(m_face2node.data() + m_node_id[iFace], m_face_node_num[iFace]); }
 		index_type GetLeftCell(index_type iFace) { return m_face2cell[2 * iFace]; }
 		index_type GetRightCell(index_type iFace) { return m_face2cell[2 * iFace + 1]; }
-		double* GetNormal(index_type iFace) { return m_normal + 3 * iFace; }
+		span<double> GetNormal(index_type iFace) { return span<double>(m_normal.data() + 3 * iFace, 3); }
 		double GetArea(index_type iFace) { return m_area[iFace]; }
 	private:
 		// 面元包含的节点，所有的节点都记录在这里
-		index_type* m_face2node;
+		dynamic_array<index_type> m_face2node;
 		// 面元包含的节点个数
-		index_type* m_face_node_num;
+		dynamic_array<index_type> m_face_node_num;
 		// 面元记录节点起始位置在m_face2node中的索引
-		index_type* m_node_id;
+		dynamic_array<index_type> m_node_id;
 		// 面元左右单元
-		index_type* m_face2cell;
+		dynamic_array<index_type> m_face2cell;
 		//面元面积
-		double* m_area;
+		dynamic_array<double> m_area;
 		//面元法向
-		double* m_normal;
-
+		dynamic_array<double> m_normal;
 	};
 }

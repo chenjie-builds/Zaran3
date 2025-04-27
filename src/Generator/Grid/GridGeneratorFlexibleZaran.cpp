@@ -47,7 +47,7 @@ namespace zaran {
 		SetFNGridBoundaryFace();
 	}
 
-	void GridFNFactoryZaran::TagBlockGrid() 
+	void GridFNFactoryZaran::TagBlockGrid()
 	{
 		TagCells();
 		TagNodes();
@@ -773,73 +773,60 @@ namespace zaran {
 		for (int iLayer = 0; iLayer < m_fn_info.node.size(); iLayer++) {
 			node_num += m_fn_info.node[iLayer].size();
 		}
-		NodeFN* node = new NodeFN(node_num);
+		NodeFN& node = grid->GetNode();
+		node.SetNodeNum(node_num);
 		for (int iLayer = 0; iLayer < m_fn_info.node.size(); iLayer++) {
 			for (int iNode = 0; iNode < m_fn_info.node[iLayer].size(); iNode++) {
 				int idx = m_fn_info.node[iLayer][iNode].idx;
 				auto coord = m_fn_info.node[iLayer][iNode].coord;
-				node->SetCoord(idx, coord);
+				node.SetCoord(idx, coord);
 				if (iLayer == 0) {
-					node->SetType(idx, NodeType::ghost);
+					node.SetType(idx, NodeType::ghost);
 				}
 				else if (iLayer == m_layer_num) {
-					node->SetType(idx, NodeType::wall);
+					node.SetType(idx, NodeType::wall);
 				}
 				else {
-					node->SetType(idx, NodeType::inner);
+					node.SetType(idx, NodeType::inner);
 				}
 			}
 		}
-		grid->SetNode(node);
 	}
 
-	void GridFNFactoryZaran::SetFNGridNodeNeighbor() {
+	void GridFNFactoryZaran::SetFNGridNodeNeighbor()
+	{
 		auto grid = GetFNGrid();
-		auto node = grid->GetNode();
-		index_type node_num = node->GetCount();
+		NodeFN& node = grid->GetNode();
+		index_type node_num = node.GetCount();
 		dynamic_array<index_type> neighbor_node_num;
 		neighbor_node_num.resize(node_num);
-		for (index_type iLayer = 0; iLayer < m_fn_info.node.size(); iLayer++) {
-			for (index_type iNode = 0; iNode < m_fn_info.node[iLayer].size(); iNode++) {
+		dynamic_array<dynamic_array<index_type>> neighbor_node(node_num);
+		for (index_type iLayer = 0; iLayer < m_fn_info.node.size(); iLayer++)
+		{
+			for (index_type iNode = 0; iNode < m_fn_info.node[iLayer].size(); iNode++)
+			{
 				index_type idx = m_fn_info.node[iLayer][iNode].idx;
-				neighbor_node_num[idx] =
-					m_fn_info.node[iLayer][iNode].neighbor_node.size();
+				neighbor_node[idx]=m_fn_info.node[iLayer][iNode].neighbor_node;
 			}
 		}
-		index_type total_neighbor_num = 0;
-		for (index_type i = 0; i < node_num; i++) {
-			total_neighbor_num += neighbor_node_num[i];
-		}
-		dynamic_array<index_type> neighbor_node_idx;
-		neighbor_node_idx.resize(total_neighbor_num);
-		index_type idx = 0;
-		for (index_type iLayer = 0; iLayer < m_fn_info.node.size(); iLayer++) {
-			for (index_type iNode = 0; iNode < m_fn_info.node[iLayer].size(); iNode++) {
-				for (index_type iNeighbor = 0;
-					iNeighbor < m_fn_info.node[iLayer][iNode].neighbor_node.size();
-					iNeighbor++) {
-					neighbor_node_idx[idx++] =
-						m_fn_info.node[iLayer][iNode].neighbor_node[iNeighbor];
-				}
-			}
-		}
-		node->SetNeighborNode(node_num, neighbor_node_num.data(),
-			neighbor_node_idx.data());
+		node.SetNeighborNode(neighbor_node);
 	}
 
-	void GridFNFactoryZaran::SetFNGridCell() {
+	void GridFNFactoryZaran::SetFNGridCell() 
+	{
 		auto grid = GetFNGrid();
 		index_type cell_num = m_fn_info.cell.size();
-		CellFN* cell = new CellFN(cell_num);
-		cell->SetNode(m_fn_info.cell);
-		grid->SetCell(cell);
+		CellFN& cell = grid->GetCell();
+		cell.SetCellNum(cell_num);
+		cell.SetNode(m_fn_info.cell);
 	}
 
-	void GridFNFactoryZaran::SetFNGridBoundary() {
+	void GridFNFactoryZaran::SetFNGridBoundary() 
+	{
 		auto grid = GetFNGrid();
-		BoundManagerFN* bound = new BoundManagerFN();
-		bound->AllocateBound("wall");
-		auto& wall = bound->GetBound("wall");
+		auto& bound = grid->GetBoundaryMap();
+		bound.AllocateBound("wall");
+		auto& wall = bound.GetBound("wall");
 		index_type node_num = m_fn_info.node[m_layer_num].size();
 		wall.resize(node_num);
 		for (index_type iNode = 0; iNode < node_num; iNode++) {
@@ -860,19 +847,19 @@ namespace zaran {
 			wall[iNode].SetIdxRef(ref_idx);
 			wall[iNode].SetNorm(normal);
 		}
-		grid->SetBoundaryMap(bound);
 	}
 
-	void GridFNFactoryZaran::SetFNGridBoundaryFace() {
+	void GridFNFactoryZaran::SetFNGridBoundaryFace()
+	{
 		auto grid = GetFNGrid();
-		FaceFN* face = new FaceFN();
 		index_type face_num = m_trans_face.size();
 		dynamic_array<index_type> face_node_num;
 		face_node_num.resize(face_num);
 		for (index_type iFace = 0; iFace < face_num; iFace++) {
 			face_node_num[iFace] = m_trans_face[iFace].idx_block.size();
 		}
-		face->Allocate(face_num, face_node_num.data());
+		FaceFN& face = grid->GetFace();
+		face.Allocate(face_num, face_node_num.data());
 		double normal[3];
 		double area = 0;
 		for (index_type iFace = 0; iFace < face_num; iFace++) {
@@ -894,12 +881,10 @@ namespace zaran {
 				face_node_idx[iNode] =
 					m_fn_info.node[m_layer_num][face_node_idx[iNode]].idx;
 			}
-			face->SetFace2Node(iFace, face_node_idx.data(), face_node_idx.size());
-			face->SetNormal(iFace, normal);
-			face->SetArea(iFace, area);
+			face.SetFace2Node(iFace, face_node_idx.data(), face_node_idx.size());
+			face.SetNormal(iFace, normal);
+			face.SetArea(iFace, area);
 		}
-
-		grid->SetFace(face);
 	}
 
 	void GridFNFactoryZaran::BuildRefNode() {
@@ -1344,8 +1329,8 @@ namespace zaran {
 				main_pair.node2 = neighbor[1];
 				Eigen::Vector3d main_vec;
 				for (int i = 0; i < 3; ++i) {
-					main_vec[i] = node->GetCoord(main_pair.node2)[i] -
-						node->GetCoord(main_pair.node1)[i];
+					main_vec[i] = node.GetCoord(main_pair.node2)[i] -
+						node.GetCoord(main_pair.node1)[i];
 				}
 				main_vec.normalize();
 				neighbor.erase(
@@ -1357,7 +1342,7 @@ namespace zaran {
 				Eigen::Vector3d vec;
 				for (int i = 0; i < neighbor.size(); ++i) {
 					for (int k = 0; k < 3; ++k) {
-						vec[k] = node->GetCoord(neighbor[i])[k] - node->GetCoord(idx)[k];
+						vec[k] = node.GetCoord(neighbor[i])[k] - node.GetCoord(idx)[k];
 					}
 					vec -= vec.dot(main_vec) * main_vec;
 					double vec_norm = vec.norm();
@@ -1499,7 +1484,7 @@ namespace zaran {
 	}
 	void GridFNFactoryZaran::CheckProjectNodeNeighbor() {
 		auto grid = GetFNGrid();
-		auto node = grid->GetNode();
+		NodeFN& node = grid->GetNode();
 		int node_num = m_fn_info.node[1].size();
 		double delta = 15 * PI / 180;
 		double angle;
@@ -1510,11 +1495,11 @@ namespace zaran {
 				dynamic_array<Eigen::Vector3d> vec(3);
 				for (int i = 0; i < 3; i++) {
 					vec[0][i] =
-						node->GetCoord(neighbor[1])[i] - node->GetCoord(neighbor[0])[i];
+						node.GetCoord(neighbor[1])[i] - node.GetCoord(neighbor[0])[i];
 					vec[1][i] =
-						node->GetCoord(neighbor[3])[i] - node->GetCoord(neighbor[2])[i];
+						node.GetCoord(neighbor[3])[i] - node.GetCoord(neighbor[2])[i];
 					vec[2][i] =
-						node->GetCoord(neighbor[5])[i] - node->GetCoord(neighbor[4])[i];
+						node.GetCoord(neighbor[5])[i] - node.GetCoord(neighbor[4])[i];
 				}
 				double volume = vec[0].cross(vec[1]).dot(vec[2]);
 				angle = AngleOfTwoArray3D(vec[1].data(), vec[2].data());
@@ -1555,11 +1540,11 @@ namespace zaran {
 				// 检查是否是右手坐标系
 				for (int i = 0; i < 3; i++) {
 					vec[0][i] =
-						node->GetCoord(neighbor[1])[i] - node->GetCoord(neighbor[0])[i];
+						node.GetCoord(neighbor[1])[i] - node.GetCoord(neighbor[0])[i];
 					vec[1][i] =
-						node->GetCoord(neighbor[3])[i] - node->GetCoord(neighbor[2])[i];
+						node.GetCoord(neighbor[3])[i] - node.GetCoord(neighbor[2])[i];
 					vec[2][i] =
-						node->GetCoord(neighbor[5])[i] - node->GetCoord(neighbor[4])[i];
+						node.GetCoord(neighbor[5])[i] - node.GetCoord(neighbor[4])[i];
 				}
 				if (vec[0].cross(vec[1]).dot(vec[2]) < 0) {
 					std::swap(neighbor[0], neighbor[1]);
@@ -1567,11 +1552,11 @@ namespace zaran {
 				// 检查是否是右手坐标系
 				for (int i = 0; i < 3; i++) {
 					vec[0][i] =
-						node->GetCoord(neighbor[1])[i] - node->GetCoord(neighbor[0])[i];
+						node.GetCoord(neighbor[1])[i] - node.GetCoord(neighbor[0])[i];
 					vec[1][i] =
-						node->GetCoord(neighbor[3])[i] - node->GetCoord(neighbor[2])[i];
+						node.GetCoord(neighbor[3])[i] - node.GetCoord(neighbor[2])[i];
 					vec[2][i] =
-						node->GetCoord(neighbor[5])[i] - node->GetCoord(neighbor[4])[i];
+						node.GetCoord(neighbor[5])[i] - node.GetCoord(neighbor[4])[i];
 				}
 				volume = vec[0].cross(vec[1]).dot(vec[2]);
 				if (volume < 0 || std::isnan(abs(volume)) || std::isinf(abs(volume))) {

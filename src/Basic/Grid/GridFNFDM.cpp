@@ -1,12 +1,12 @@
-#include "GridFNFDM.h"
+﻿#include "GridFNFDM.h"
 namespace zaran
 {
     GridFN::GridFN(const string& name, int index, dimension_type dim) :GridBase(name, index, dim, GridType::Flexible)
     {
-        m_node = nullptr;
-        m_face = nullptr;
-        m_cell = nullptr;
-        m_boundary_map = nullptr;
+		m_node = make_unique<NodeFN>(0);
+        m_face = make_unique<FaceFN>(0);
+		m_cell = make_unique<CellFN>(0);
+		m_boundary_map = make_unique<BoundManagerFN>();
         m_inner_node_num = 0;
         m_inner_node_index = nullptr;
         m_bound_node_num = 0;
@@ -15,26 +15,7 @@ namespace zaran
     }
     GridFN::~GridFN()
     {
-        if (m_node)
-        {
-            delete m_node;
-            m_node = nullptr;
-        }
-        if (m_face)
-        {
-            delete m_face;
-            m_face = nullptr;
-        }
-        if (m_cell)
-        {
-            delete m_cell;
-            m_cell = nullptr;
-        }
-        if (m_boundary_map)
-        {
-            delete m_boundary_map;
-            m_boundary_map = nullptr;
-        }
+
         if (m_inner_node_index)
         {
             delete[] m_inner_node_index;
@@ -46,25 +27,7 @@ namespace zaran
             m_bound_node_index = nullptr;
         }
     }
-    void GridFN::SetNode(NodeFN* node)
-    {
-        m_node = node;
-        if (m_node)
-            InitNode();
-    }
-    void GridFN::SetFace(FaceFN* face)
-    {
-        m_face = face;
-    }
-    void GridFN::SetCell(CellFN* cell)
-    {
-        m_cell = cell;
-    }
-    void GridFN::SetBoundaryMap(BoundManagerFN* boundaryMap)
-    {
-        m_boundary_map = boundaryMap;
-    }
-    int GridFN::GetTotalNodeNum() const
+	int GridFN::GetTotalNodeNum() const
     {
         return m_total_node_num;
     }
@@ -76,21 +39,23 @@ namespace zaran
     {
         return m_bound_node_num;
     }
-    NodeFN* GridFN::GetNode()
+
+	NodeFN& GridFN::GetNode() 
+	{
+        return *m_node;
+	}
+
+	FaceFN& GridFN::GetFace()
     {
-        return m_node;
+        return *m_face;
     }
-    FaceFN* GridFN::GetFace()
+    CellFN& GridFN::GetCell()
     {
-        return m_face;
+        return *m_cell;
     }
-    CellFN* GridFN::GetCell()
+    BoundManagerFN& GridFN::GetBoundaryMap()
     {
-        return m_cell;
-    }
-    BoundManagerFN* GridFN::GetBoundaryMap()
-    {
-        return m_boundary_map;
+        return *m_boundary_map;
     }
     int* GridFN::GetInnerNode()
     {

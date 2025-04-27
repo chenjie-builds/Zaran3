@@ -101,9 +101,9 @@ namespace zaran
 		int n_node = grid->GetTotalNodeNum();
 		for (int iNode = 0; iNode < n_node; ++iNode)
 		{
-			x = grid->GetNode()->GetCoord(iNode)[0];
-			y = grid->GetNode()->GetCoord(iNode)[1];
-			z = grid->GetNode()->GetCoord(iNode)[2];
+			x = grid->GetNode().GetCoord(iNode)[0];
+			y = grid->GetNode().GetCoord(iNode)[1];
+			z = grid->GetNode().GetCoord(iNode)[2];
 			double distance = sqrt((x - explosion_center[0]) * (x - explosion_center[0]) +
 				(y - explosion_center[1]) * (y - explosion_center[1]) +
 				(z - explosion_center[2]) * (z - explosion_center[2]));
@@ -127,7 +127,7 @@ namespace zaran
 	{
 		Log::info("Compute NS 3D Coordination Transformation Coefficients");
 		auto grid = GetGrid();
-		auto node = grid->GetNode();
+		auto& node = grid->GetNode();
 		int node_num = grid->GetTotalNodeNum();
 		double max_jacobian = -LARGE_NUMBER;
 		double min_jacobian = LARGE_NUMBER;
@@ -138,20 +138,25 @@ namespace zaran
 #endif // USE_OMP
 		for (int iNode = 0; iNode < node_num; ++iNode)
 		{
-			if (node->GetType(iNode) != NodeType::inner)
+			if (node.GetType(iNode) != NodeType::inner)
 			{
 				continue;
 			}
-			auto neighbors = node->GetNeighborNode(iNode);
-			const double* xLeft = node->GetCoord(neighbors[0]);
-			const double* xRight = node->GetCoord(neighbors[1]);
-			const double* yLeft = node->GetCoord(neighbors[2]);
-			const double* yRight = node->GetCoord(neighbors[3]);
-			const double* zLeft = (grid->GetDim() == THREE_DIM) ? node->GetCoord(neighbors[4]) : nullptr;
-			const double* zRight = (grid->GetDim() == THREE_DIM) ? node->GetCoord(neighbors[5]) : nullptr;
-
-			m_node_metric->CalcMetric(iNode, xRight, xLeft, yRight, yLeft, zRight, zLeft);
-
+			auto neighbors = node.GetNeighborNode(iNode);
+			auto xLeft = node.GetCoord(neighbors[0]);
+			auto xRight = node.GetCoord(neighbors[1]);
+			auto yLeft = node.GetCoord(neighbors[2]);
+			auto yRight = node.GetCoord(neighbors[3]);
+			if (grid->GetDim() == THREE_DIM)
+			{
+				auto zLeft = node.GetCoord(neighbors[4]);
+				auto zRight = node.GetCoord(neighbors[5]);
+				m_node_metric->CalcMetric(iNode, xRight.data(), xLeft.data(), yRight.data(), yLeft.data(), zRight.data(), zLeft.data());
+			}
+			else
+			{
+				m_node_metric->CalcMetric(iNode, xRight.data(), xLeft.data(), yRight.data(), yLeft.data());
+			}
 			double jacobian = m_node_metric->GetJacobian(iNode);
 			if (jacobian > max_jacobian)
 			{
@@ -167,17 +172,17 @@ namespace zaran
 		Log::info("NS 3D Coordination Transformation Coefficients are computed");
 		Log::info("Max Jacobian = {} at node {}", max_jacobian, max_jacobian_node);
 		Log::info("Min Jacobian = {} at node {}", min_jacobian, min_jacobian_node);
-		auto neighbor = node->GetNeighborNode(min_jacobian_node);
+		auto neighbor = node.GetNeighborNode(min_jacobian_node);
 		Log::info("Neighbor node of min Jacobian node: ");
 		for (int i = 0; i < 6; ++i)
 		{
-			Log::info("Node {} Coord: {} {} {}", neighbor[i], node->GetCoord(neighbor[i])[0], node->GetCoord(neighbor[i])[1], node->GetCoord(neighbor[i])[2]);
+			Log::info("Node {} Coord: {} {} {}", neighbor[i], node.GetCoord(neighbor[i])[0], node.GetCoord(neighbor[i])[1], node.GetCoord(neighbor[i])[2]);
 		}
-		neighbor = node->GetNeighborNode(max_jacobian_node);
-		Log::info("Neighbor node of max Jacobian node: {}, type: {}", max_jacobian_node, (int)node->GetType(max_jacobian_node));
+		neighbor = node.GetNeighborNode(max_jacobian_node);
+		Log::info("Neighbor node of max Jacobian node: {}, type: {}", max_jacobian_node, (int)node.GetType(max_jacobian_node));
 		for (int i = 0; i < 6; ++i)
 		{
-			Log::info("Node {} Coord: {} {} {}", neighbor[i], node->GetCoord(neighbor[i])[0], node->GetCoord(neighbor[i])[1], node->GetCoord(neighbor[i])[2]);
+			Log::info("Node {} Coord: {} {} {}", neighbor[i], node.GetCoord(neighbor[i])[0], node.GetCoord(neighbor[i])[1], node.GetCoord(neighbor[i])[2]);
 		}
 	}
 
@@ -211,7 +216,7 @@ namespace zaran
 		auto data_manager = GetDataManager();
 		auto para = GetPara();
 		int rk_step = para->GetRkStep();
-		auto node = grid->GetNode();
+		auto& node = grid->GetNode();
 		int n_node = grid->GetTotalNodeNum();
 #ifdef USE_OMP
 #pragma omp parallel for
@@ -233,7 +238,7 @@ namespace zaran
 #endif // USE_OMP
 			for (int iNode = 0; iNode < n_node; ++iNode)
 			{
-				if (node->GetType(iNode) != NodeType::inner)
+				if (node.GetType(iNode) != NodeType::inner)
 					continue;
 				double dt = data_manager->GetTimeStep(iNode);
 				double jacobi = m_node_metric->GetJacobian(iNode);
@@ -300,12 +305,12 @@ namespace zaran
 	{
 		int equ_num = GetPara()->GetEqNum();
 		auto grid = GetGrid();
-		auto node = grid->GetNode();
+		NodeFN& node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		double vec_node2neighbor[3];
-		vec_node2neighbor[0] = node->GetCoord(index_right)[0] - node->GetCoord(index_left)[0];
-		vec_node2neighbor[1] = node->GetCoord(index_right)[1] - node->GetCoord(index_left)[1];
-		vec_node2neighbor[2] = node->GetCoord(index_right)[2] - node->GetCoord(index_left)[2];
+		vec_node2neighbor[0] = node.GetCoord(index_right)[0] - node.GetCoord(index_left)[0];
+		vec_node2neighbor[1] = node.GetCoord(index_right)[1] - node.GetCoord(index_left)[1];
+		vec_node2neighbor[2] = node.GetCoord(index_right)[2] - node.GetCoord(index_left)[2];
 		for (int iVal = 0; iVal < equ_num; ++iVal)
 		{
 			value_rec_left[iVal] = data_manager->GetPrim(iVal, index_left) + 0.5 * data_manager->GetLimiter(iVal, index_left) *
@@ -323,7 +328,7 @@ namespace zaran
 	{
 		int equ_num = GetPara()->GetEqNum();
 		auto grid = GetGrid();
-		auto node = grid->GetNode();
+		NodeFN& node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		for (int iVal = 0; iVal < equ_num; ++iVal)
 		{
@@ -335,8 +340,8 @@ namespace zaran
 	void NSSolverFNFDM::BoundaryCondition()
 	{
 		auto grid = GetGrid();
-		BoundManagerFN* bound_map = grid->GetBoundaryMap();
-		for (auto& boundary : bound_map->GetBoundMap())
+		BoundManagerFN& bound_map = grid->GetBoundaryMap();
+		for (auto& boundary : bound_map.GetBoundMap())
 		{
 			auto& bound_name = boundary.first;
 			auto& bound = boundary.second;
@@ -542,8 +547,8 @@ namespace zaran
 		auto grid = GetGrid();
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
-		BoundManagerFN* bound_map = grid->GetBoundaryMap();
-		auto& boundaryMap = bound_map->GetBoundMap();
+		BoundManagerFN& bound_map = grid->GetBoundaryMap();
+		auto& boundaryMap = bound_map.GetBoundMap();
 		for (auto& boundary : boundaryMap)
 		{
 			auto& boundName = boundary.first;
@@ -618,7 +623,7 @@ namespace zaran
 	void NSSolverFNFDM::CalcLimiterVK()
 	{
 		auto grid = GetGrid();
-		auto node = grid->GetNode();
+		NodeFN& node = grid->GetNode();
 		auto para = GetPara();
 		auto data_manager = GetDataManager();
 		int node_num = grid->GetTotalNodeNum();
@@ -633,9 +638,9 @@ namespace zaran
 			{
 				// if (node->GetType(iNode) != NodeType::inner && node->GetType(iNode) != NodeType::hole)
 				// 	continue;
-				auto currentNodeCoord = node->GetCoord(iNode);
-				auto neighborNode = node->GetNeighborNode(iNode);
-				int nNeighbor = node->GetNeighborNodeNum(iNode);
+				auto currentNodeCoord = node.GetCoord(iNode);
+				auto neighborNode = node.GetNeighborNode(iNode);
+				int nNeighbor = node.GetNeighborNodeNum(iNode);
 				double current_val = data_manager->GetPrim(iVal, iNode);
 				double maxVal = current_val;
 				double minVal = current_val;
@@ -660,7 +665,7 @@ namespace zaran
 				data_manager->SetLimiter(iVal, iNode, LARGE_NUMBER);
 				for (int iNeighbor = 0; iNeighbor < nNeighbor; ++iNeighbor)
 				{
-					auto neighborNodeCoord = node->GetCoord(neighborNode[iNeighbor]);
+					auto neighborNodeCoord = node.GetCoord(neighborNode[iNeighbor]);
 					double delta2 = 0.0;
 					for (int iDim = 0; iDim < 3; ++iDim)
 						delta2 += (neighborNodeCoord[iDim] - currentNodeCoord[iDim]) * data_manager->GetPrimGrad(iVal, iDim, iNode);
@@ -687,7 +692,7 @@ namespace zaran
 	void NSSolverFNFDM::CalcLimiterBJ()
 	{
 		auto grid = GetGrid();
-		auto node = grid->GetNode();
+		NodeFN& node = grid->GetNode();
 		auto para = GetPara();
 		auto data_manager = GetDataManager();
 		double max_limit = para->GetMaxLimit();
@@ -699,11 +704,11 @@ namespace zaran
 #pragma omp parallel for private(maxVal, minVal)
 			for (int iNode = 0; iNode < node_num; ++iNode)
 			{
-				if (node->GetType(iNode) != NodeType::inner && node->GetType(iNode) != NodeType::hole)
+				if (node.GetType(iNode) != NodeType::inner && node.GetType(iNode) != NodeType::hole)
 					continue;
-				auto currentNodeCoord = node->GetCoord(iNode);
-				auto neighborNode = node->GetNeighborNode(iNode);
-				auto nNeighbor = node->GetNeighborNodeNum(iNode);
+				auto currentNodeCoord = node.GetCoord(iNode);
+				auto neighborNode = node.GetNeighborNode(iNode);
+				auto nNeighbor = node.GetNeighborNodeNum(iNode);
 				maxVal = data_manager->GetPrim(iVal, iNode);
 				minVal = data_manager->GetPrim(iVal, iNode);
 				for (int iNeighbor = 0; iNeighbor < nNeighbor; ++iNeighbor)
@@ -717,7 +722,7 @@ namespace zaran
 				data_manager->SetLimiter(iVal, iNode, LARGE_NUMBER);
 				for (int iNeighbor = 0; iNeighbor < nNeighbor; ++iNeighbor)
 				{
-					auto neighborNodeCoord = node->GetCoord(neighborNode[iNeighbor]);
+					auto neighborNodeCoord = node.GetCoord(neighborNode[iNeighbor]);
 					double delta2 = 0.0;
 					for (int iDim = 0; iDim < 3; ++iDim)
 						delta2 += (neighborNodeCoord[iDim] - currentNodeCoord[iDim]) * data_manager->GetPrimGrad(iVal, iDim, iNode);
@@ -745,7 +750,7 @@ namespace zaran
 	{
 		auto para = GetPara();
 		auto grid = GetGrid();
-		auto node = grid->GetNode();
+		NodeFN& node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		int node_num = grid->GetTotalNodeNum();
 		for (int iVal = 0; iVal < para->GetEqNum(); ++iVal)
@@ -753,7 +758,7 @@ namespace zaran
 #pragma omp parallel for
 			for (int iNode = 0; iNode < node_num; ++iNode)
 			{
-				if (node->GetType(iNode) != NodeType::inner && node->GetType(iNode) != NodeType::hole)
+				if (node.GetType(iNode) != NodeType::inner && node.GetType(iNode) != NodeType::hole)
 					continue;
 				data_manager->SetLimiter(iVal, iNode, 1.0);
 			}
@@ -764,7 +769,7 @@ namespace zaran
 	{
 		auto para = GetPara();
 		auto grid = GetGrid();
-		auto node = grid->GetNode();
+		NodeFN& node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		int node_num = grid->GetTotalNodeNum();
 		for (int iVal = 0; iVal < para->GetEqNum(); ++iVal)
@@ -782,8 +787,8 @@ namespace zaran
 		int equ_num = GetPara()->GetEqNum();
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
-		auto boundaryMapPtr = grid->GetBoundaryMap();
-		auto& boundaryMap = boundaryMapPtr->GetBoundMap();
+		BoundManagerFN& boundaryMapPtr = grid->GetBoundaryMap();
+		auto& boundaryMap = boundaryMapPtr.GetBoundMap();
 		for (auto& boundary : boundaryMap)
 		{
 			auto& boundName = boundary.first;
@@ -806,7 +811,7 @@ namespace zaran
 	void NSSolverFNFDM::CheckPrimtive()
 	{
 		auto grid = GetGrid();
-		auto node = grid->GetNode();
+		NodeFN& node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		int node_num = grid->GetTotalNodeNum();
 		int equ_num = GetPara()->GetEqNum();
@@ -818,7 +823,7 @@ namespace zaran
 		{
 			bool exist_nonphysical = false;
 			data_manager->SetNonPhysical(iNode, -1);
-			if (node->GetType(iNode) != NodeType::inner && node->GetType(iNode) != NodeType::hole)
+			if (node.GetType(iNode) != NodeType::inner && node.GetType(iNode) != NodeType::hole)
 				continue;
 			if (density[iNode] < 0 || pressure[iNode] < 0)
 			{
@@ -841,24 +846,24 @@ namespace zaran
 				nonphysical_node_num++;
 				Log::info("Step: {}, Non-physical Node: {}", GlobalData::GetInt("currentIter"), iNode);
 				Log::warn("Non-physical Node: {}, neighbor num: {}, prim: {:6E},{:6E},{:6E},{:6E},{:6E}", iNode,
-					node->GetNeighborNodeNum(iNode), data_manager->GetPrim(0, iNode), data_manager->GetPrim(1, iNode),
+					node.GetNeighborNodeNum(iNode), data_manager->GetPrim(0, iNode), data_manager->GetPrim(1, iNode),
 					data_manager->GetPrim(2, iNode), data_manager->GetPrim(3, iNode), data_manager->GetPrim(4, iNode));
-				Log::warn("Non-physical Node: {}, coord: {:6E}, {:6E}, {:6E}", iNode, node->GetCoord(iNode)[0],
-					node->GetCoord(iNode)[1], node->GetCoord(iNode)[2]);
-				int neighbor_num = node->GetNeighborNodeNum(iNode);
+				Log::warn("Non-physical Node: {}, coord: {:6E}, {:6E}, {:6E}", iNode, node.GetCoord(iNode)[0],
+					node.GetCoord(iNode)[1], node.GetCoord(iNode)[2]);
+				int neighbor_num = node.GetNeighborNodeNum(iNode);
 				for (int iNeighbor = 0; iNeighbor < neighbor_num; ++iNeighbor)
 				{
 					Log::warn("Neighbor Node: {}, index:{}, neighbor_num: {}, Jacobian: {:6E},\n prim: {:6E},{:6E},{:6E},{:6E},{:6E}\ndensity_grad: {:6E},{:6E},{:6E},\npressure_grad: {:6E},{:6E},{:6E},\n limiter: {:6E},{:6E},{:6E},{:6E},{:6E}\n",
-						iNeighbor, node->GetNeighborNode(iNode)[iNeighbor], node->GetNeighborNodeNum(node->GetNeighborNode(iNode)[iNeighbor]),
-						m_node_metric->GetJacobian(node->GetNeighborNode(iNode)[iNeighbor]),
-						data_manager->GetPrim(0, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrim(1, node->GetNeighborNode(iNode)[iNeighbor]),
-						data_manager->GetPrim(2, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrim(3, node->GetNeighborNode(iNode)[iNeighbor]),
-						data_manager->GetPrim(4, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(0, 0, node->GetNeighborNode(iNode)[iNeighbor]),
-						data_manager->GetPrimGrad(0, 1, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(0, 2, node->GetNeighborNode(iNode)[iNeighbor]),
-						data_manager->GetPrimGrad(4, 0, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(4, 1, node->GetNeighborNode(iNode)[iNeighbor]),
-						data_manager->GetPrimGrad(4, 2, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(0, node->GetNeighborNode(iNode)[iNeighbor]),
-						data_manager->GetLimiter(1, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(2, node->GetNeighborNode(iNode)[iNeighbor]),
-						data_manager->GetLimiter(3, node->GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(4, node->GetNeighborNode(iNode)[iNeighbor]));
+						iNeighbor, node.GetNeighborNode(iNode)[iNeighbor], node.GetNeighborNodeNum(node.GetNeighborNode(iNode)[iNeighbor]),
+						m_node_metric->GetJacobian(node.GetNeighborNode(iNode)[iNeighbor]),
+						data_manager->GetPrim(0, node.GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrim(1, node.GetNeighborNode(iNode)[iNeighbor]),
+						data_manager->GetPrim(2, node.GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrim(3, node.GetNeighborNode(iNode)[iNeighbor]),
+						data_manager->GetPrim(4, node.GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(0, 0, node.GetNeighborNode(iNode)[iNeighbor]),
+						data_manager->GetPrimGrad(0, 1, node.GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(0, 2, node.GetNeighborNode(iNode)[iNeighbor]),
+						data_manager->GetPrimGrad(4, 0, node.GetNeighborNode(iNode)[iNeighbor]), data_manager->GetPrimGrad(4, 1, node.GetNeighborNode(iNode)[iNeighbor]),
+						data_manager->GetPrimGrad(4, 2, node.GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(0, node.GetNeighborNode(iNode)[iNeighbor]),
+						data_manager->GetLimiter(1, node.GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(2, node.GetNeighborNode(iNode)[iNeighbor]),
+						data_manager->GetLimiter(3, node.GetNeighborNode(iNode)[iNeighbor]), data_manager->GetLimiter(4, node.GetNeighborNode(iNode)[iNeighbor]));
 					// for (int jNeighbor = 0; jNeighbor < node->GetNeighborNodeNum(node->GetNeighborNode(iNode)[iNeighbor]); jNeighbor++)
 					// {
 					// 	Log::warn("Neighbor Node: {}, Neighbor: {}, index: {}, Jacobian: {:6E}",
@@ -886,7 +891,7 @@ namespace zaran
 	void NSSolverFNFDM::FixPrimtive()
 	{
 		auto grid = GetGrid();
-		auto node_topo = grid->GetNode();
+		NodeFN& node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		int total_node_num = grid->GetTotalNodeNum();
 		int equ_num = GetPara()->GetEqNum();
@@ -897,14 +902,14 @@ namespace zaran
 		for (int iNode = 0; iNode < total_node_num; ++iNode)
 		{
 
-			if (node_topo->GetType(iNode) != NodeType::inner && node_topo->GetType(iNode) != NodeType::hole)
+			if (node.GetType(iNode) != NodeType::inner && node.GetType(iNode) != NodeType::hole)
 				continue;
 			if (data_manager->GetNonPhysical(iNode) == -1)
 				continue;
 			physical_neighbor.clear();
-			auto current_node_coord = node_topo->GetCoord(iNode);
-			auto neighborNode = node_topo->GetNeighborNode(iNode);
-			int nNeighbor = node_topo->GetNeighborNodeNum(iNode);
+			auto current_node_coord = node.GetCoord(iNode);
+			auto neighborNode = node.GetNeighborNode(iNode);
+			int nNeighbor = node.GetNeighborNodeNum(iNode);
 			for (int iNeighbor = 0; iNeighbor < nNeighbor; ++iNeighbor)
 			{
 				if (data_manager->GetNonPhysical(neighborNode[iNeighbor]) == 1)
@@ -918,8 +923,8 @@ namespace zaran
 			{
 				if (data_manager->GetNonPhysical(physical_neighbor[iNeighbor]) == 1)
 					continue;
-				auto neighbor_node_coord = node_topo->GetCoord(physical_neighbor[iNeighbor]);
-				distance[iNeighbor] = DistanceOfTwoPoints(current_node_coord, neighbor_node_coord);
+				auto neighbor_node_coord = node.GetCoord(physical_neighbor[iNeighbor]);
+				distance[iNeighbor] = DistanceOfTwoPoints(current_node_coord.data(), neighbor_node_coord.data());
 				sum += 1.0 / distance[iNeighbor];
 			}
 			for (int iNeighbor = 0; iNeighbor < physical_neighbor.size(); ++iNeighbor)
@@ -1065,7 +1070,7 @@ namespace zaran
 	void NSSolverFNFDM::CalcConvectionResidual()
 	{
 		auto grid = GetGrid();
-		auto node = grid->GetNode();
+		NodeFN& node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		int equ_num = GetPara()->GetEqNum();
 		int inner_node_num = grid->GetInnerNodeNum();
@@ -1081,7 +1086,7 @@ namespace zaran
 			bool exist_negative = false;
 			int idx = inner_node[iNode];
 			double jacobi = m_node_metric->GetJacobian(idx);
-			auto neighbor = node->GetNeighborNode(idx);
+			auto neighbor = node.GetNeighborNode(idx);
 			// i direction
 			riemann_para[0].norm(0) = m_node_metric->GetXi(idx)[0];
 			riemann_para[0].norm(1) = m_node_metric->GetXi(idx)[1];
@@ -1153,7 +1158,7 @@ namespace zaran
 		CalcViscousFlux();
 		CalcViscousFluxGrad();
 		auto grid = GetGrid();
-		auto node = grid->GetNode();
+		NodeFN& node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		int node_num = grid->GetTotalNodeNum();
 		int inner_node_num = grid->GetInnerNodeNum();
@@ -1247,26 +1252,26 @@ namespace zaran
 	{
 		return;
 		auto grid = GetGrid();
-		auto face = grid->GetFace();
+		FaceFN& face = grid->GetFace();
 		auto para = GetPara();
 		auto data_manager = GetDataManager();
 		auto dimensionless = para->GetDimensionless();
-		int face_num = face->GetFaceNum();
+		int face_num = face.GetFaceNum();
 		double face_pressure;
 		double force[3] = { 0 };
 		for (int iFace = 0; iFace < face_num; ++iFace)
 		{
 			face_pressure = 0;
-			auto face2node = face->GetFace2Node(iFace);
-			for (int iNode = 0; iNode < face->GetFaceNodeNum(iFace); ++iNode)
+			auto face2node = face.GetFace2Node(iFace);
+			for (int iNode = 0; iNode < face.GetFaceNodeNum(iFace); ++iNode)
 			{
 				face_pressure += data_manager->GetPrim(ID_PRESSURE, face2node[iNode]);
 			}
-			face_pressure /= face->GetFaceNodeNum(iFace);
+			face_pressure /= face.GetFaceNodeNum(iFace);
 			face_pressure -= dimensionless.GetPressureDL(0);
-			force[0] -= face_pressure * face->GetArea(iFace) * face->GetNormal(iFace)[0];
-			force[1] -= face_pressure * face->GetArea(iFace) * face->GetNormal(iFace)[1];
-			force[2] -= face_pressure * face->GetArea(iFace) * face->GetNormal(iFace)[2];
+			force[0] -= face_pressure * face.GetArea(iFace) * face.GetNormal(iFace)[0];
+			force[1] -= face_pressure * face.GetArea(iFace) * face.GetNormal(iFace)[1];
+			force[2] -= face_pressure * face.GetArea(iFace) * face.GetNormal(iFace)[2];
 		}
 		force[0] = dimensionless.GetForceReal(force[0]);
 		force[1] = dimensionless.GetForceReal(force[1]);

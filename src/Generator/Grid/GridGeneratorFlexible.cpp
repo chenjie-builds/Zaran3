@@ -560,61 +560,59 @@ namespace zaran
 			neighbor_face_num[iNode] = 0;
 			neighbor_cell_num[iNode] = 0;
 		}
-		NodeFN* node = new NodeFN(node_num, neighbor_node_num.data(), neighbor_face_num.data(), neighbor_cell_num.data());
-		for (size_t iNode = 0; iNode < m_node_coord.size(); iNode++)
-		{
-			node->SetCoord(iNode, m_node_coord[iNode].data());
-			node->SetType(iNode, m_node_type[iNode]);
-			node->SetNeighborNode(iNode, neighbor_node_num[iNode], m_node_neibor[iNode].data());
-			node->SetNeighborFace(iNode, neighbor_face_num[iNode], nullptr);
-			node->SetNeighborCell(iNode, neighbor_cell_num[iNode], nullptr);
-		}
-		grid->SetNode(node);
-		CellFN* cell = new CellFN(m_cell_node.size());
-		cell->SetNode(m_cell_node);
-		dynamic_array<dynamic_array<index_type>> cell_node_face(m_cell_node.size());
-		cell->SetFace(cell_node_face);
-		double center[3];
+		dynamic_array<dynamic_array<index_type>> neighbor_face(node_num, dynamic_array<index_type>(0));
+		dynamic_array<dynamic_array<index_type>> neighbor_cell(node_num, dynamic_array<index_type>(0));
+		auto& node = grid->GetNode();
+		node.SetNodeNum(node_num);
+		node.SetNeighborNode(m_node_neibor);
+		node.SetCoord(m_node_coord);
+		node.SetType(m_node_type);
+		node.SetNeighborFace(neighbor_face);
+		node.SetNeighborCell(neighbor_cell);
+
+		auto& cell = grid->GetCell();
+		cell.SetCellNum(m_cell_node.size());
+		cell.SetNode(m_cell_node);
+		dynamic_array<dynamic_array<index_type>> cell_node_face(m_cell_node.size(), dynamic_array<index_type>(0));
+		cell.SetFace(cell_node_face);
+		dynamic_array<double> center_coord(3);
 		for (index_type iCell = 0; iCell < m_cell_node.size(); iCell++)
 		{
-			center[0] = center[1] = center[2] = 0;
+			center_coord[0] = center_coord[1] = center_coord[2] = 0;
 			for (index_type iNode = 0; iNode < m_cell_node[iCell].size(); iNode++)
 			{
 				for (index_type i = 0; i < 3; i++)
 				{
-					center[i] += m_node_coord[m_cell_node[iCell][iNode]][i];
+					center_coord[i] += m_node_coord[m_cell_node[iCell][iNode]][i];
 				}
 			}
 			for (index_type i = 0; i < 3; i++)
 			{
-				center[i] /= m_cell_node[iCell].size();
+				center_coord[i] /= m_cell_node[iCell].size();
 			}
-			cell->SetCenter(iCell, center);
+			cell.SetCenterCoord(iCell, center_coord.data());
 		}
-		grid->SetCell(cell);
 
-		FaceFN* face = new FaceFN();
+		FaceFN& face = grid->GetFace();
 
 		dynamic_array<index_type> face_node_num(m_bound_face.size());
 		for (index_type iFace = 0; iFace < m_bound_face.size(); iFace++)
 		{
 			face_node_num[iFace] = m_bound_face[iFace].face_node.size();
 		}
-		face->Allocate(m_bound_face.size(), face_node_num.data());
+		face.Allocate(m_bound_face.size(), face_node_num.data());
 		for (index_type iFace = 0; iFace < m_bound_face.size(); iFace++)
 		{
-			face->SetFace2Node(iFace, m_bound_face[iFace].face_node.data(), m_bound_face[iFace].face_node.size());
-			face->SetNormal(iFace, m_bound_face[iFace].normal.data());
-			face->SetArea(iFace, m_bound_face[iFace].area);
+			face.SetFace2Node(iFace, m_bound_face[iFace].face_node.data(), m_bound_face[iFace].face_node.size());
+			face.SetNormal(iFace, m_bound_face[iFace].normal.data());
+			face.SetArea(iFace, m_bound_face[iFace].area);
 		}
-		grid->SetFace(face);
 
-		BoundManagerFN* boundary_map = new BoundManagerFN();
+		BoundManagerFN& boundary_map = grid->GetBoundaryMap();
 		for (int iFace = 0; iFace < m_bound_node.size(); iFace++)
 		{
-			boundary_map->AddBoundary(m_bound_node[iFace].type, BoundFN(m_bound_node[iFace].bound_index, m_bound_node[iFace].ref_index, 0, m_bound_node[iFace].normal));
+			boundary_map.AddBoundary(m_bound_node[iFace].type, BoundFN(m_bound_node[iFace].bound_index, m_bound_node[iFace].ref_index, 0, m_bound_node[iFace].normal));
 		}
-		grid->SetBoundaryMap(boundary_map);
 	}
 
 } // namespace zaran

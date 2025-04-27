@@ -1,11 +1,11 @@
-#include "GradWLSQ.h"
+﻿#include "GradWLSQ.h"
 #include "Log.h"
 using namespace zaran;
 zaran::GradWLSQ::GradWLSQ(shared_ptr<GridFN>grid) : m_grid(grid)
 {
 	m_grid = grid;
-	auto node = grid->GetNode();
-	int node_num = node->GetCount();
+	auto& node = grid->GetNode();
+	int node_num = node.GetCount();
 	double r11, r12, r13, r22, r23, r23_a, r23_b, r33;
 	double alpha1, alpha2, alpha3;
 	double beta;
@@ -18,8 +18,8 @@ zaran::GradWLSQ::GradWLSQ(shared_ptr<GridFN>grid) : m_grid(grid)
 		//     continue;
 		r11 = r12 = r13 = r22 = r23 = r23_a = r23_b = r33 = 0.0;
 		beta = 0.0;
-		auto neighbors = node->GetNeighborNode(iNode);
-		int neighbor_num = node->GetNeighborNodeNum(iNode);
+		auto neighbors = node.GetNeighborNode(iNode);
+		int neighbor_num = node.GetNeighborNodeNum(iNode);
 		dx.resize(neighbor_num);
 		dy.resize(neighbor_num);
 		dz.resize(neighbor_num);
@@ -27,9 +27,9 @@ zaran::GradWLSQ::GradWLSQ(shared_ptr<GridFN>grid) : m_grid(grid)
 		m_omega[iNode] = new double* [neighbor_num];
 		for (int iNeigh = 0; iNeigh < neighbor_num; iNeigh++)
 		{
-			dx[iNeigh] = node->GetCoord(neighbors[iNeigh])[0] - node->GetCoord(iNode)[0];
-			dy[iNeigh] = node->GetCoord(neighbors[iNeigh])[1] - node->GetCoord(iNode)[1];
-			dz[iNeigh] = node->GetCoord(neighbors[iNeigh])[2] - node->GetCoord(iNode)[2];
+			dx[iNeigh] = node.GetCoord(neighbors[iNeigh])[0] - node.GetCoord(iNode)[0];
+			dy[iNeigh] = node.GetCoord(neighbors[iNeigh])[1] - node.GetCoord(iNode)[1];
+			dz[iNeigh] = node.GetCoord(neighbors[iNeigh])[2] - node.GetCoord(iNode)[2];
 			weight[iNeigh] = 1.0 / (dx[iNeigh] * dx[iNeigh] + dy[iNeigh] * dy[iNeigh] + dz[iNeigh] * dz[iNeigh]);
 			weight[iNeigh] = sqrt(weight[iNeigh]);
 			dx[iNeigh] *= weight[iNeigh];
@@ -98,12 +98,12 @@ zaran::GradWLSQ::GradWLSQ(shared_ptr<GridFN>grid) : m_grid(grid)
 }
 GradWLSQ::~GradWLSQ()
 {
-	auto node = m_grid->GetNode();
-	int node_num = node->GetCount();
+	auto& node = m_grid->GetNode();
+	int node_num = node.GetCount();
 	for (int iNode = 0; iNode < node_num; iNode++)
 	{
-		auto neighbors = node->GetNeighborNode(iNode);
-		int neighbor_num = node->GetNeighborNodeNum(iNode);
+		auto neighbors = node.GetNeighborNode(iNode);
+		int neighbor_num = node.GetNeighborNodeNum(iNode);
 		for (int iNeigh = 0; iNeigh < neighbor_num; iNeigh++)
 		{
 			delete[] m_omega[iNode][iNeigh];
@@ -120,15 +120,15 @@ void GradWLSQ::CalcGradient(shared_ptr<GridFN>grid, const double* data, double* 
 		Log::error("Gradient::CalcGradient: grid is not matched");
 		return;
 	}
-	auto node = grid->GetNode();
-	int node_num = node->GetCount();
+	auto& node = grid->GetNode();
+	int node_num = node.GetCount();
 #pragma omp parallel for
 	for (int iNode = 0; iNode < node_num; iNode++)
 	{
-		if (node->GetType(iNode) != NodeType::inner)
+		if (node.GetType(iNode) != NodeType::inner)
 			continue;
-		auto neighbors = node->GetNeighborNode(iNode);
-		int neighbor_num = node->GetNeighborNodeNum(iNode);
+		auto neighbors = node.GetNeighborNode(iNode);
+		int neighbor_num = node.GetNeighborNodeNum(iNode);
 		grad_x[iNode] = grad_y[iNode] = grad_z[iNode] = 0.0;
 		for (int iNeigh = 0; iNeigh < neighbor_num; iNeigh++)
 		{

@@ -1,4 +1,4 @@
-//==============================================================================||
+﻿//==============================================================================||
 //*	ZaRan	-	A Totally Automatic CFD Software								||
 //*	Copyright (C) ,Since 2020													||
 //*-----------------------------------------------------------------------------||
@@ -17,38 +17,38 @@
 #include"BoundFNManager.h"
 namespace zaran
 {
-  class GridFN : public GridBase
-  {
-  public:
-    GridFN(const string& name, int index, dimension_type dim);
-    virtual ~GridFN();
+	class GridFN : public GridBase
+	{
+	public:
+		GridFN(const string& name, int index, dimension_type dim);
+		virtual ~GridFN();
 
-  public:
-    void SetNode(NodeFN* node);
-    void SetFace(FaceFN* face);
-    void SetCell(CellFN* cell);
-    void SetBoundaryMap(BoundManagerFN* boundaryMap);
-  public:
-    int GetTotalNodeNum() const;
-    int GetInnerNodeNum() const;
-    int GetBoundNodeNum() const;
-    NodeFN* GetNode();
-    FaceFN* GetFace();
-    CellFN* GetCell();
-    BoundManagerFN* GetBoundaryMap();
-    int* GetInnerNode();
-    int* GetBoundNode();
-  protected:
-    void InitNode();
-  private:
-    NodeFN* m_node;
-    FaceFN* m_face;
-    CellFN* m_cell;
-    BoundManagerFN* m_boundary_map;
-    int m_inner_node_num;
-    int* m_inner_node_index;
-    int m_bound_node_num;
-    int* m_bound_node_index;
-    int m_total_node_num;
-  };
+	public:
+		int GetTotalNodeNum() const;
+		int GetInnerNodeNum() const;
+		int GetBoundNodeNum() const;
+		int* GetInnerNode();
+		int* GetBoundNode();
+		//get node
+		NodeFN& GetNode() ;
+		//get face
+		FaceFN& GetFace() ;
+		//get cell
+		CellFN& GetCell() ;
+		//get boundary map
+		BoundManagerFN& GetBoundaryMap() ;
+
+	protected:
+		void InitNode();
+	private:
+		std::unique_ptr<NodeFN> m_node;
+		std::unique_ptr<FaceFN> m_face;
+		std::unique_ptr<CellFN> m_cell;
+		std::unique_ptr<BoundManagerFN> m_boundary_map;
+		int m_inner_node_num;
+		int* m_inner_node_index;
+		int m_bound_node_num;
+		int* m_bound_node_index;
+		int m_total_node_num;
+	};
 } // namespace zaran

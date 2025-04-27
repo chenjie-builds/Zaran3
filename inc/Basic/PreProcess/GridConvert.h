@@ -1,10 +1,10 @@
-#pragma once
+ï»¿#pragma once
 #include "BasicType.h"
 #include <fstream>
 namespace zaran
 {
-	/// @brief ½«piflowµÄÍø¸ñÊı¾İ×ª»»ÎªFlexibleµÄÍø¸ñÊı¾İ
-	/// Êä³öÎªÎÄ¼şnode.dat, cell.dat
+	/// @brief å°†piflowçš„ç½‘æ ¼æ•°æ®è½¬æ¢ä¸ºFlexibleçš„ç½‘æ ¼æ•°æ®
+	/// è¾“å‡ºä¸ºæ–‡ä»¶node.dat, cell.dat
 	class GridConvertPiflow2Flexible
 	{
 	public:
