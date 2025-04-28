@@ -27,9 +27,9 @@ namespace zaran
 		RiemannSolverPara riemann_para[2];
 		double direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
 		double res_tmp[5];
+#pragma omp parallel for collapse(3) private( res_tmp, riemann_para)
 		for (int k = ks; k <= ke; ++k)
 		{
-#pragma omp parallel for private( res_tmp, riemann_para)
 			for (int j = js; j <= je; ++j)
 			{
 				for (int i = is; i <= ie; ++i)
@@ -234,9 +234,9 @@ namespace zaran
 		double coef1 = 27.0 / 24.0;
 		double coef2 = -1.0 / 24.0;
 		double direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
+#pragma omp parallel for collapse(3) private(res_tmp, riemann_para)
 		for (int k = ks; k <= ke; ++k)
 		{
-#pragma omp parallel for private(res_tmp, riemann_para)
 			for (int j = js; j <= je; ++j)
 			{
 				for (int i = is; i <= ie; ++i)
@@ -283,53 +283,65 @@ namespace zaran
 	{
 		auto grid = GetGrid();
 		auto para = GetPara();
-		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
-		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto node_metrics = GetNodeMetrics();
 		auto gas = GetGas();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto equ_num = para->GetEqNum();
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
-		RiemannSolverPara riemann_para[6];
-		// 差分模板的值
-		double res_tmp[5];
-		double coef1 = 75.0 / 64.0;
-		double coef2 = -25.0 / 384.0;
-		double coef3 = 3.0 / 640.0;
-		double direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
+
+		constexpr double coef1 = 75.0 / 64.0;
+		constexpr double coef2 = -25.0 / 384.0;
+		constexpr double coef3 = 3.0 / 640.0;
+#pragma omp parallel for collapse(3)
 		for (int k = ks; k <= ke; ++k)
 		{
-#pragma omp parallel for private(  res_tmp, riemann_para)
 			for (int j = js; j <= je; ++j)
 			{
 				for (int i = is; i <= ie; ++i)
 				{
 					int idx = idx_proxy(i, j, k);
+					double res_tmp[5] = { 0.0 };
 					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 					{
 						res_tmp[idx_eq] = data_manager->GetResidual(idx_eq, idx);
 					}
-					for (dimension_type dim = 0; dim < grid->GetDim(); dim++)
+					for (int dim = 0; dim < grid->GetDim(); ++dim)
 					{
-						for (int iTemp = 0; iTemp < 6; iTemp++)
+						const double* metrics = node_metrics->GetMetrics(dim, idx);
+						double nx = metrics[0];
+						double ny = metrics[1];
+						double nz = metrics[2];
+						double nt = metrics[3];
+
+						int di = (dim == 0);
+						int dj = (dim == 1);
+						int dk = (dim == 2);
+
+						RiemannSolverPara riemann_para[6];
+
+						for (int s = -3; s <= 2; ++s)
 						{
-							riemann_para[iTemp].gamma_left = riemann_para[iTemp].gamma_right = gas->GetGamma();
-							riemann_para[iTemp].norm(0) = node_metrics->GetMetrics(dim, idx)[0];
-							riemann_para[iTemp].norm(1) = node_metrics->GetMetrics(dim, idx)[1];
-							riemann_para[iTemp].norm(2) = node_metrics->GetMetrics(dim, idx)[2];
-							riemann_para[iTemp].nt = node_metrics->GetMetrics(dim, idx)[3];
-							int idx_temp = idx_proxy(
-								i + (iTemp - 3) * direction[dim][0],
-								j + (iTemp - 3) * direction[dim][1],
-								k + (iTemp - 3) * direction[dim][2]);
+							int offset = s + 3;
+							int idx_offset = idx_proxy(i + s * di, j + s * dj, k + s * dk);
+
+							auto& rp = riemann_para[offset];
+							rp.gamma_left = rp.gamma_right = gas->GetGamma();
+							rp.norm(0) = nx;
+							rp.norm(1) = ny;
+							rp.norm(2) = nz;
+							rp.nt = nt;
+
 							for (int iVal = 0; iVal < equ_num; ++iVal)
 							{
-								riemann_para[iTemp].prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, dim, idx_temp);
-								riemann_para[iTemp].prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, dim, idx_temp);
+								rp.prim_left(iVal) = data_manager->GetMidNodePrimLeft(iVal, dim, idx_offset);
+								rp.prim_right(iVal) = data_manager->GetMidNodePrimRight(iVal, dim, idx_offset);
 							}
-							m_riemann_solver->Solver(riemann_para[iTemp]);
+
+							m_riemann_solver->Solver(rp);
 						}
+
 						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 						{
 							res_tmp[idx_eq] -=
@@ -337,7 +349,7 @@ namespace zaran
 								coef2 * (riemann_para[4].flux[idx_eq] - riemann_para[1].flux[idx_eq]) +
 								coef3 * (riemann_para[5].flux[idx_eq] - riemann_para[0].flux[idx_eq]);
 						}
-					}
+					} 
 					data_manager->SetResidual(idx, res_tmp);
 				}
 			}

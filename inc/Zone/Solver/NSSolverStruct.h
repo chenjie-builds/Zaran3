@@ -224,7 +224,7 @@ namespace zaran
 		/// @brief 节点度量
 		unique_ptr<Metric> m_node_metrics;
 		/// @brief 索引代理，用于将结构节点索引转换为场数据索引
-		shared_ptr<IdProxyStruct>	 m_idx_proxy;
+		shared_ptr<IdProxyStruct> m_idx_proxy;
 		unique_ptr<Metric> m_metrics_mid_i; // 半点度量系数(i+1/2)
 		unique_ptr<Metric> m_metrics_mid_j; // 半点度量系数(j+1/2)
 		unique_ptr<Metric> m_metrics_mid_k; // 半点度量系数(k+1/2)

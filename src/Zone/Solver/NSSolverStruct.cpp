@@ -6736,7 +6736,7 @@ namespace zaran
 		auto velocity_y = data_manager->GetPrim(ID_VELOCITY_Y);
 		auto velocity_z = data_manager->GetPrim(ID_VELOCITY_Z);
 
-#pragma omp parallel for
+#pragma omp parallel for collapse(3)
 		for (int k = ks; k <= ke; ++k)
 		{
 			for (int j = js; j <= je; ++j)
@@ -6779,7 +6779,7 @@ namespace zaran
 		double cfl = para->GetCflNumber();
 		double gamma = GetGas()->GetGamma();
 		double min_dt = LARGE_NUMBER;
-#pragma omp parallel for reduction(min : min_dt)
+#pragma omp parallel for  collapse(3) reduction(min : min_dt)
 		for (int k = ks; k <= ke; ++k)
 		{
 			for (int j = js; j <= je; ++j)
@@ -6804,9 +6804,9 @@ namespace zaran
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
+#pragma omp parallel for collapse(3)
 		for (int k = 0; k < nk; ++k)
 		{
-#pragma omp parallel for
 			for (int j = 0; j < nj; ++j)
 			{
 				for (int i = 0; i < ni; ++i)
@@ -6826,9 +6826,9 @@ namespace zaran
 		int is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		int rk_step = para->GetRkStep();
+#pragma omp parallel for collapse(3)
 		for (int k = ks; k <= ke; ++k)
 		{
-#pragma omp parallel for
 			for (int j = js; j <= je; ++j)
 			{
 				for (int i = is; i <= ie; ++i)
@@ -6846,9 +6846,9 @@ namespace zaran
 			BoundaryCondition();
 			CalcResidual();
 			auto& rk_coef = para->GetRkCoef(iStep);
+#pragma omp parallel for collapse(3)
 			for (int k = ks; k <= ke; ++k)
 			{
-#pragma omp parallel for
 				for (int j = js; j <= je; ++j)
 				{
 					for (int i = is; i <= ie; ++i)
@@ -6879,9 +6879,9 @@ namespace zaran
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
 		double prim[5], cons[5];
+#pragma omp parallel for collapse(3) private(prim, cons)
 		for (int k = 0; k < nk; ++k)
 		{
-#pragma omp parallel for private(prim, cons)
 			for (int j = 0; j < nj; ++j)
 			{
 				for (int i = 0; i < ni; ++i)
@@ -6907,9 +6907,9 @@ namespace zaran
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
 		double prim[5], cons[5];
+#pragma omp parallel for collapse(3) private(prim, cons)
 		for (int k = 0; k < nk; ++k)
 		{
-#pragma omp parallel for private(prim, cons)
 			for (int j = 0; j < nj; ++j)
 			{
 				for (int i = 0; i < ni; ++i)
@@ -6934,9 +6934,9 @@ namespace zaran
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
 		double res[5] = { 0.0 };
+#pragma omp parallel for collapse(3)
 		for (int k = 0; k < nk; ++k)
 		{
-#pragma omp parallel for
 			for (int j = 0; j < nj; ++j)
 			{
 				for (int i = 0; i < ni; ++i)
@@ -7062,9 +7062,9 @@ namespace zaran
 		int direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
 		///@note
 		/// 从ks-1开始，到ke结束，因为对第一个计算点ks进行通量差分时，需要使用ks-1/2处的值
+#pragma omp parallel for collapse(3) private(value_temp, i_temp, j_temp, k_temp, left_value, right_value)
 		for (int k = ks; k <= ke; ++k)
 		{
-#pragma omp parallel for private(value_temp, i_temp, j_temp, k_temp, left_value, right_value)
 			for (int j = js; j <= je; ++j)
 			{
 				for (int i = is; i <= ie; ++i)
@@ -7173,9 +7173,9 @@ namespace zaran
 		grid->GetRange(is, ie, js, je, ks, ke);
 		int idx_temp[5];
 		double left_value, right_value;
+#pragma omp parallel for collapse(2) private(value, left_value, right_value, idx_temp)
 		for (int k = ks; k <= ke; ++k)
 		{
-#pragma omp parallel for private(value, left_value, right_value, idx_temp)
 			for (int j = js; j <= je; ++j)
 			{
 				// i=is-1处的值
@@ -7197,9 +7197,9 @@ namespace zaran
 				}
 			}
 		}
+#pragma omp parallel for collapse(2) private(value, left_value, right_value, idx_temp)
 		for (int k = ks; k <= ke; ++k)
 		{
-#pragma omp parallel for private(value, left_value, right_value, idx_temp)
 			for (int i = is; i <= ie; ++i)
 			{
 				// j=js-1处的值，(js-1/2)右值会用到，但(js-1/2)左值在计算中不会使用
@@ -7224,7 +7224,7 @@ namespace zaran
 
 		if (grid->GetDim() == THREE_DIM)
 		{
-#pragma omp parallel for private(value, left_value, right_value, idx_temp)
+#pragma omp parallel for  collapse(2) private(value, left_value, right_value, idx_temp)
 			for (int j = js; j <= je; ++j)
 			{
 				for (int i = is; i <= ie; ++i)
@@ -7386,9 +7386,9 @@ namespace zaran
 		double max_pressure = LARGE_NUMBER;
 		int direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
 		/// 从ks-1开始，到ke结束，因为对第一个计算点ks进行通量差分时，需要使用ks-1/2处的值
+#pragma omp parallel for collapse(3) private(idx_temp, value_temp, left_value, right_value)
 		for (int k = ks - 1; k <= ke + 1; ++k)
 		{
-#pragma omp parallel for private(idx_temp, value_temp, left_value, right_value)
 			for (int j = js - 1; j <= je + 1; ++j)
 			{
 				for (int i = is - 1; i <= ie + 1; ++i)
@@ -7454,7 +7454,7 @@ namespace zaran
 		int idx_temp_left[5], idx_temp_right[5];
 		double left_value, right_value;
 		int i, j, k;
-#pragma omp parallel for private(j, k, idx_temp_left, idx_temp_right, value_left, value_right, left_value,right_value)
+#pragma omp parallel for collapse(2) private(j, k, idx_temp_left, idx_temp_right, value_left, value_right, left_value,right_value)
 		for (k = ks; k <= ke; ++k)
 		{
 			for (j = js; j <= je; ++j)
@@ -7490,7 +7490,7 @@ namespace zaran
 				}
 			}
 		}
-#pragma omp parallel for private(i, k, idx_temp_left, idx_temp_right, value_left, value_right, left_value,right_value)
+#pragma omp parallel for collapse(2) private(i, k, idx_temp_left, idx_temp_right, value_left, value_right, left_value,right_value)
 		for (k = ks; k <= ke; ++k)
 		{
 			for (i = is; i <= ie; ++i)
@@ -7531,7 +7531,7 @@ namespace zaran
 
 		if (grid->GetDim() == THREE_DIM)
 		{
-#pragma omp parallel for private(i, j, idx_temp_left, idx_temp_right, value_left, value_right, left_value, right_value)
+#pragma omp parallel for collapse(2) private(i, j, idx_temp_left, idx_temp_right, value_left, value_right, left_value, right_value)
 			for (j = js; j <= je; ++j)
 			{
 				for (i = is; i <= ie; ++i)
@@ -7694,7 +7694,7 @@ namespace zaran
 		c_right[0] = 5.0 / 16.0;
 		c_right[1] = 10.0 / 16.0;
 		c_right[2] = 1.0 / 16.0;
-		double eps = 1e-6;
+		double eps = 1e-15;
 		double IS[3];
 		double beta_left[3], beta_right[3];
 		for (int i = 0; i < 3; ++i)

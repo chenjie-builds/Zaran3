@@ -482,9 +482,9 @@ namespace zaran
 		nj = grid->GetNj();
 		nk = grid->GetNk();
 		RiemannSolverPara riemann_para;
+#pragma omp parallel for  collapse(3) private(riemann_para)
 		for (int k = 0; k < nk - 1; ++k)
 		{
-#pragma omp parallel for private(riemann_para)
 			for (int j = 0; j < nj - 1; ++j)
 			{
 				for (int i = 0; i < ni - 1; ++i)
@@ -577,9 +577,9 @@ namespace zaran
 		// 残差的临时变量
 		double res_tmp[5];
 		double direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
+#pragma omp parallel for collapse(3) private( idx_temp, res_tmp)
 		for (int k = ks; k <= ke; ++k)
 		{
-#pragma omp parallel for private( idx_temp, res_tmp)
 			for (int j = js; j <= je; ++j)
 			{
 				for (int i = is; i <= ie; ++i)
@@ -627,9 +627,9 @@ namespace zaran
 		double coef2 = -25.0 / 384.0;
 		double coef3 = 3.0 / 640.0;
 		double direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
+#pragma omp parallel for collapse(3) private(  idx_temp, res_tmp)
 		for (int k = ks; k <= ke; ++k)
 		{
-#pragma omp parallel for private(  idx_temp, res_tmp)
 			for (int j = js; j <= je; ++j)
 			{
 				for (int i = is; i <= ie; ++i)

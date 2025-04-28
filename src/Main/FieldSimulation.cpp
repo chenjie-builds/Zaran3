@@ -84,9 +84,9 @@ void NSFieldSimulation::SaveFieldData()
 	SaveDataTecplot();
 	std::string back_dir = GlobalData::GetString("backupFieldFolder");
 	int currentIter = GlobalData::GetInt("currentIter");
-	back_dir += "/iter=" + std::to_string(currentIter);
+	back_dir += "\\iter=" + std::to_string(currentIter);
 	std::string work_dir = GlobalData::GetString("work_dir");
-	back_dir = work_dir + "/" + back_dir;
+	back_dir = work_dir + "\\" + back_dir;
 	CreateFolder(back_dir);
 	BackupFieldData(back_dir);
 	BackupResidual(back_dir);
