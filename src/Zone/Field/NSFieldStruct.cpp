@@ -28,22 +28,21 @@ namespace zaran
 		double norm_inf = -LARGE_NUMBER;
 		double norm_l2 = 0;
 		int norm_inf_node = -1;
-		double norm_inf_coord[3];
 		for (int iEqu = 0; iEqu < equ_num; iEqu++)
 		{
 			norm_inf = -LARGE_NUMBER;
 			norm_l2 = 0;
-			auto res = GetDataManager()->GetResidual(iEqu);
-#pragma omp parallel for reduction(max : norm_inf) reduction(+ : norm_l2)
+			auto res = data_manager->GetResidual(iEqu);
+#pragma omp parallel for collapse(3) reduction(max : norm_inf) reduction(+ : norm_l2)
 			for (int k = ks; k <= ke; k++)
 			{
 				for (int j = js; j <= je; j++)
 				{
 					for (int i = is; i <= ie; i++)
 					{
-						int idx =idx_proxy(i, j, k);
-						double res_val = abs(res[idx]);
-						auto coord = node->GetCoord(i, j, k);
+						int idx = idx_proxy(i, j, k);
+						double times_step = data_manager->GetTimeStep(idx);
+						double res_val = abs(res[idx]) / times_step;
 						//if (iEqu == 0)
 						//{
 						//	double gamma = 1.4;
@@ -65,13 +64,21 @@ namespace zaran
 						{
 							norm_inf = res_val;
 							norm_inf_node = idx;
-							for (dimension_type iDim = 0; iDim < grid->GetDim(); iDim++)
-							{
-								norm_inf_coord[iDim] = coord[iDim];
-							}
 						}
 						norm_l2 += res_val * res_val;
 					}
+				}
+			}
+			double norm_inf_coord[3] = { 0.0, 0.0, 0.0 };
+			if (norm_inf_node >= 0)
+			{
+				index_type i, j, k;
+				idx_proxy.GetIdxStruct(norm_inf_node, i, j, k);
+				auto coord = node->GetCoord(i, j, k);
+				dimension_type dim = grid->GetDim();
+				for (dimension_type iDim = 0; iDim < grid->GetDim(); iDim++)
+				{
+					norm_inf_coord[iDim] = coord[iDim];
 				}
 			}
 			norm_l2 = sqrt(norm_l2 / total_node_num);
