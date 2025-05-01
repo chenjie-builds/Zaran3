@@ -22,12 +22,14 @@ namespace zaran
 		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto gas = GetGas();
 		auto equ_num = para->GetEqNum();
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		RiemannSolverPara riemann_para[2];
 		double direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
 		double res_tmp[5];
+#ifdef USE_OMP
 #pragma omp parallel for collapse(3) private( res_tmp, riemann_para)
+#endif // USE_OMP
 		for (int k = ks; k <= ke; ++k)
 		{
 			for (int j = js; j <= je; ++j)
@@ -82,7 +84,7 @@ namespace zaran
 		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto gas = GetGas();
 		auto equ_num = para->GetEqNum();
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		RiemannSolverPara riemann_para[6];
 		for (int i = 0; i < 6; ++i)
@@ -99,8 +101,10 @@ namespace zaran
 		double mid_coord_left[3], mid_coord_right[3]; // i-1/2,i+1/2
 		double mid_coord[3];                          // i-1/2,i+1/2的中点
 		double move_vector[3];                        // mid_coord到i的向量用于移动mid_coord_left和mid_coord_right
-#pragma omp parallel for private(idx, idx_temp, value, res_tmp, mid_coord_left, mid_coord_right, mid_coord,            \
-                                     move_vector, riemann_para)
+#ifdef USE_OMP
+#pragma omp parallel for private(idx, idx_temp, value, res_tmp, mid_coord_left, mid_coord_right, mid_coord,move_vector, riemann_para)     
+#endif // USE_OMP
+                                     
 		for (index_type k = ks; k <= ke; ++k)
 		{
 			for (index_type j = js; j <= je; ++j)
@@ -226,7 +230,7 @@ namespace zaran
 		auto node_metrics = GetNodeMetrics();
 		auto gas = GetGas();
 		auto equ_num = para->GetEqNum();
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		RiemannSolverPara riemann_para[6];
 		// 差分模板的值
@@ -234,7 +238,9 @@ namespace zaran
 		double coef1 = 27.0 / 24.0;
 		double coef2 = -1.0 / 24.0;
 		double direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
+#ifdef USE_OMP
 #pragma omp parallel for collapse(3) private(res_tmp, riemann_para)
+#endif // USE_OMP
 		for (int k = ks; k <= ke; ++k)
 		{
 			for (int j = js; j <= je; ++j)
@@ -288,13 +294,15 @@ namespace zaran
 		auto gas = GetGas();
 		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto equ_num = para->GetEqNum();
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 
 		constexpr double coef1 = 75.0 / 64.0;
 		constexpr double coef2 = -25.0 / 384.0;
 		constexpr double coef3 = 3.0 / 640.0;
+#ifdef USE_OMP
 #pragma omp parallel for collapse(3)
+#endif // USE_OMP
 		for (int k = ks; k <= ke; ++k)
 		{
 			for (int j = js; j <= je; ++j)

@@ -482,7 +482,9 @@ namespace zaran
 		nj = grid->GetNj();
 		nk = grid->GetNk();
 		RiemannSolverPara riemann_para;
+#ifdef USE_OMP
 #pragma omp parallel for  collapse(3) private(riemann_para)
+#endif // USE_OMP
 		for (int k = 0; k < nk - 1; ++k)
 		{
 			for (int j = 0; j < nj - 1; ++j)
@@ -570,21 +572,23 @@ namespace zaran
 		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto gas = GetGas();
 		auto equ_num = para->GetEqNum();
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		// 差分模板的编号
-		int idx_temp[3];
+		index_type idx_temp[3];
 		// 残差的临时变量
 		double res_tmp[5];
 		double direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
+#ifdef USE_OMP
 #pragma omp parallel for collapse(3) private( idx_temp, res_tmp)
-		for (int k = ks; k <= ke; ++k)
+#endif // USE_OMP
+		for (index_type k = ks; k <= ke; ++k)
 		{
-			for (int j = js; j <= je; ++j)
+			for (index_type j = js; j <= je; ++j)
 			{
-				for (int i = is; i <= ie; ++i)
+				for (index_type i = is; i <= ie; ++i)
 				{
-					int idx = idx_proxy(i, j, k);
+					index_type idx = idx_proxy(i, j, k);
 					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 					{
 						res_tmp[idx_eq] = data_manager->GetResidual(idx_eq, idx);
@@ -618,24 +622,26 @@ namespace zaran
 		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto gas = GetGas();
 		auto equ_num = para->GetEqNum();
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		// 差分模板的编号
-		int idx_temp[6];
+		index_type idx_temp[6];
 		double res_tmp[5];
 		double coef1 = 75.0 / 64.0;
 		double coef2 = -25.0 / 384.0;
 		double coef3 = 3.0 / 640.0;
 		double direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
+#ifdef USE_OMP
 #pragma omp parallel for collapse(3) private(  idx_temp, res_tmp)
-		for (int k = ks; k <= ke; ++k)
+#endif // USE_OMP
+		for (index_type k = ks; k <= ke; ++k)
 		{
-			for (int j = js; j <= je; ++j)
+			for (index_type j = js; j <= je; ++j)
 			{
-				for (int i = is; i <= ie; ++i)
+				for (index_type i = is; i <= ie; ++i)
 				{
-					int idx = idx_proxy(i, j, k);
-					for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+					index_type idx = idx_proxy(i, j, k);
+					for (index_type idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 					{
 						res_tmp[idx_eq] = data_manager->GetResidual(idx_eq, idx);
 					}
@@ -648,7 +654,7 @@ namespace zaran
 								j + (iTemp - 3) * direction[dim][1],
 								k + (iTemp - 3) * direction[dim][2]);
 						}
-						for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+						for (index_type idx_eq = 0; idx_eq < equ_num; ++idx_eq)
 						{
 							res_tmp[idx_eq] -=
 								coef1 * (data_manager->GetMidNodeFlux(idx_eq, dim, idx_temp[3]) - data_manager->GetMidNodeFlux(idx_eq, dim, idx_temp[2])) +

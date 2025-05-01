@@ -6484,9 +6484,11 @@ namespace zaran
 		temp_i.resize(neighbor_num);
 		temp_j.resize(neighbor_num);
 		temp_k.resize(neighbor_num);
-
 		double delta_x, delta_y, delta_z, delta_val;
 		double weight;
+#ifdef USE_OMP
+#endif // USE_OMP
+
 		for (int k = 1; k < nk - 1; ++k)
 		{
 			for (int j = 1; j < nj - 1; ++j)
@@ -6725,7 +6727,7 @@ namespace zaran
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		IdProxyStruct& idx_proxy = GetIdxProxy();
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		auto para = GetPara();
 		double cfl = para->GetCflNumber();
@@ -6736,7 +6738,9 @@ namespace zaran
 		auto velocity_y = data_manager->GetPrim(ID_VELOCITY_Y);
 		auto velocity_z = data_manager->GetPrim(ID_VELOCITY_Z);
 
+#ifdef USE_OMP
 #pragma omp parallel for collapse(3)
+#endif // USE_OMP
 		for (int k = ks; k <= ke; ++k)
 		{
 			for (int j = js; j <= je; ++j)
@@ -6773,13 +6777,15 @@ namespace zaran
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		IdProxyStruct& idx_proxy = GetIdxProxy();
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		auto para = GetPara();
 		double cfl = para->GetCflNumber();
 		double gamma = GetGas()->GetGamma();
 		double min_dt = LARGE_NUMBER;
+#ifdef USE_OMP
 #pragma omp parallel for  collapse(3) reduction(min : min_dt)
+#endif // USE_OMP
 		for (int k = ks; k <= ke; ++k)
 		{
 			for (int j = js; j <= je; ++j)
@@ -6804,7 +6810,9 @@ namespace zaran
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
+#ifdef USE_OMP
 #pragma omp parallel for collapse(3)
+#endif // USE_OMP
 		for (int k = 0; k < nk; ++k)
 		{
 			for (int j = 0; j < nj; ++j)
@@ -6823,10 +6831,12 @@ namespace zaran
 		auto para = GetPara();
 		auto data_manager = GetDataManager();
 		IdProxyStruct& idx_proxy = GetIdxProxy();
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		int rk_step = para->GetRkStep();
+#ifdef USE_OMP
 #pragma omp parallel for collapse(3)
+#endif // USE_OMP
 		for (int k = ks; k <= ke; ++k)
 		{
 			for (int j = js; j <= je; ++j)
@@ -6846,7 +6856,9 @@ namespace zaran
 			BoundaryCondition();
 			CalcResidual();
 			auto& rk_coef = para->GetRkCoef(iStep);
+#ifdef USE_OMP
 #pragma omp parallel for collapse(3)
+#endif // USE_OMP
 			for (int k = ks; k <= ke; ++k)
 			{
 				for (int j = js; j <= je; ++j)
@@ -6879,7 +6891,9 @@ namespace zaran
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
 		double prim[5], cons[5];
+#ifdef USE_OMP
 #pragma omp parallel for collapse(3) private(prim, cons)
+#endif // USE_OMP
 		for (int k = 0; k < nk; ++k)
 		{
 			for (int j = 0; j < nj; ++j)
@@ -6907,7 +6921,9 @@ namespace zaran
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
 		double prim[5], cons[5];
+#ifdef USE_OMP
 #pragma omp parallel for collapse(3) private(prim, cons)
+#endif // USE_OMP
 		for (int k = 0; k < nk; ++k)
 		{
 			for (int j = 0; j < nj; ++j)
@@ -6934,7 +6950,9 @@ namespace zaran
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
 		double res[5] = { 0.0 };
+#ifdef USE_OMP
 #pragma omp parallel for collapse(3)
+#endif // USE_OMP
 		for (int k = 0; k < nk; ++k)
 		{
 			for (int j = 0; j < nj; ++j)
@@ -7056,13 +7074,15 @@ namespace zaran
 		// MUSCL整点变量(i-2,i-1,i,i+1,i+2)的值
 		double value_temp[5];
 		int i_temp[5], j_temp[5], k_temp[5];
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		double left_value, right_value;
 		int direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
 		///@note
 		/// 从ks-1开始，到ke结束，因为对第一个计算点ks进行通量差分时，需要使用ks-1/2处的值
+#ifdef USE_OMP
 #pragma omp parallel for collapse(3) private(value_temp, i_temp, j_temp, k_temp, left_value, right_value)
+#endif // USE_OMP
 		for (int k = ks; k <= ke; ++k)
 		{
 			for (int j = js; j <= je; ++j)
@@ -7112,7 +7132,7 @@ namespace zaran
 		// MUSCL整点变量(i-2,i-1,i,i+1,i+2)的值
 		double value_temp[5];
 		int idx_temp[5], i_temp[5], j_temp[5], k_temp[5];
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		double left_value, right_value;
 		int direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
@@ -7169,11 +7189,13 @@ namespace zaran
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
 		double value[5];
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
-		int idx_temp[5];
+		index_type idx_temp[5];
 		double left_value, right_value;
+#ifdef USE_OMP
 #pragma omp parallel for collapse(2) private(value, left_value, right_value, idx_temp)
+#endif // USE_OMP
 		for (int k = ks; k <= ke; ++k)
 		{
 			for (int j = js; j <= je; ++j)
@@ -7197,7 +7219,9 @@ namespace zaran
 				}
 			}
 		}
+#ifdef USE_OMP
 #pragma omp parallel for collapse(2) private(value, left_value, right_value, idx_temp)
+#endif // USE_OMP
 		for (int k = ks; k <= ke; ++k)
 		{
 			for (int i = is; i <= ie; ++i)
@@ -7224,7 +7248,9 @@ namespace zaran
 
 		if (grid->GetDim() == THREE_DIM)
 		{
+#ifdef USE_OMP
 #pragma omp parallel for  collapse(2) private(value, left_value, right_value, idx_temp)
+#endif // USE_OMP
 			for (int j = js; j <= je; ++j)
 			{
 				for (int i = is; i <= ie; ++i)
@@ -7263,7 +7289,7 @@ namespace zaran
 		auto nk = grid->GetNk();
 		double value_temp[5];
 		double value_left[5], value_right[5];
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		double** coord_temp = new double* [5];
 		for (int i = 0; i < 5; ++i)
@@ -7377,7 +7403,7 @@ namespace zaran
 		// WCNS整点变量(i-2,i-1,i,i+1,i+2)的值
 		double value_temp[5];
 		int idx_temp[5];
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		double left_value[5]{}, right_value[5]{};
 		double min_density = SMALL_NUMBER;
@@ -7386,7 +7412,9 @@ namespace zaran
 		double max_pressure = LARGE_NUMBER;
 		int direction[3][3] = { {1,0,0},{0,1,0},{0,0,1} };
 		/// 从ks-1开始，到ke结束，因为对第一个计算点ks进行通量差分时，需要使用ks-1/2处的值
+#ifdef USE_OMP
 #pragma omp parallel for collapse(3) private(idx_temp, value_temp, left_value, right_value)
+#endif // USE_OMP
 		for (int k = ks - 1; k <= ke + 1; ++k)
 		{
 			for (int j = js - 1; j <= je + 1; ++j)
@@ -7443,18 +7471,20 @@ namespace zaran
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		IdProxyStruct& idx_proxy = GetIdxProxy();
-		int equ_num = GetPara()->GetEqNum();
+		index_type equ_num = GetPara()->GetEqNum();
 		auto ni = grid->GetNi();
 		auto nj = grid->GetNj();
 		auto nk = grid->GetNk();
 		double value_left[5]{}, value_right[5]{};
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		// 左侧的模板点(0,1,2,3,4),右侧的模板点(N-5,N-4,N-3,N-2,N-1)
-		int idx_temp_left[5], idx_temp_right[5];
+		index_type idx_temp_left[5], idx_temp_right[5];
 		double left_value, right_value;
-		int i, j, k;
+		index_type i, j, k;
+#ifdef USE_OMP
 #pragma omp parallel for collapse(2) private(j, k, idx_temp_left, idx_temp_right, value_left, value_right, left_value,right_value)
+#endif // USE_OMP
 		for (k = ks; k <= ke; ++k)
 		{
 			for (j = js; j <= je; ++j)
@@ -7490,7 +7520,9 @@ namespace zaran
 				}
 			}
 		}
+#ifdef USE_OMP
 #pragma omp parallel for collapse(2) private(i, k, idx_temp_left, idx_temp_right, value_left, value_right, left_value,right_value)
+#endif // USE_OMP
 		for (k = ks; k <= ke; ++k)
 		{
 			for (i = is; i <= ie; ++i)
@@ -7531,7 +7563,9 @@ namespace zaran
 
 		if (grid->GetDim() == THREE_DIM)
 		{
+#ifdef USE_OMP
 #pragma omp parallel for collapse(2) private(i, j, idx_temp_left, idx_temp_right, value_left, value_right, left_value, right_value)
+#endif // USE_OMP
 			for (j = js; j <= je; ++j)
 			{
 				for (i = is; i <= ie; ++i)
@@ -7610,12 +7644,12 @@ namespace zaran
 		double delta_plus = value[3] - value[2];
 		double delta_minus = value[2] - value[1];
 		double delta = LimiterVanLeer(delta_plus, delta_minus);
-		value_left = value[2] + 0.125 * ((1.0 - k) * delta + (1.0 + k) * delta);
+		value_left = value[2] + 0.25 * ((1.0 - k) * delta + (1.0 + k) * delta);
 		//value_left = value[2] + 0.25 * ((1.0 - k) * delta_minus + (1.0 + k) * delta_plus);
 		delta_plus = value[4] - value[3];
 		delta_minus = value[3] - value[2];
 		delta = LimiterVanLeer(delta_plus, delta_minus);
-		value_right = value[3] - 0.125 * ((1.0 - k) * delta + (1.0 + k) * delta);
+		value_right = value[3] - 0.25 * ((1.0 - k) * delta + (1.0 + k) * delta);
 		//value_right = value[3] - 0.25 * ((1.0 - k) * delta_plus + (1.0 + k) * delta_minus);
 		if (std::isnan(value_left) || std::isnan(value_right))
 		{
@@ -7885,7 +7919,9 @@ namespace zaran
 		//double prim_far[5] = { 6.4,3.125,0,0,18.5 };
 		double cons_far[5];
 		GetGas()->Prim2Cons(prim_far, cons_far);
+#ifdef USE_OMP
 #pragma omp parallel for 
+#endif // USE_OMP
 		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
 			index_type i_bound, j_bound, k_bound;
@@ -7918,7 +7954,9 @@ namespace zaran
 		size_t ghost_size = grid->GetGhostLevel();
 		index_type eq_num = GetPara()->GetEqNum();
 		double prim_vals[5], cons_vals[5];
+#ifdef USE_OMP
 #pragma omp parallel for private( prim_vals, cons_vals)
+#endif // USE_OMP
 		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
 			index_type i_bound, j_bound, k_bound;
@@ -7950,8 +7988,10 @@ namespace zaran
 		auto node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		IdProxyStruct& idx_proxy = GetIdxProxy();
-		int ghost_size = grid->GetGhostLevel();
+		int ghost_level = grid->GetGhostLevel();
+#ifdef USE_OMP
 #pragma omp parallel for
+#endif // USE_OMP
 		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
 			index_type i_bound, j_bound, k_bound;
@@ -7961,28 +8001,29 @@ namespace zaran
 			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
 			index_type idx_bound = idx_proxy(i_bound, j_bound, k_bound);
 			auto bound_coord = node->GetCoord(i_bound, j_bound, k_bound);
-			for (size_t iGhost = 1; iGhost <= ghost_size; ++iGhost)
+			auto bound_direction = bound[iBound].GetDirectionSrc();
+			double prim_ghost[5]{};
+			double cons_ghost[5];
+			for (size_t iter_ghost_level = 1; iter_ghost_level <= ghost_level; ++iter_ghost_level)
 			{
-				i_ghost = i_bound + iGhost * bound[iBound].GetDirectionSrc()[0];
-				j_ghost = j_bound + iGhost * bound[iBound].GetDirectionSrc()[1];
-				k_ghost = k_bound + iGhost * bound[iBound].GetDirectionSrc()[2];
-				index_type idx_ghost = idx_proxy(i_ghost, j_ghost, k_ghost);
-				i_ref = i_bound - iGhost * bound[iBound].GetDirectionSrc()[0];
-				j_ref = j_bound - iGhost * bound[iBound].GetDirectionSrc()[1];
-				k_ref = k_bound - iGhost * bound[iBound].GetDirectionSrc()[2];
+				i_ref = i_bound - iter_ghost_level * bound_direction[0];
+				j_ref = j_bound - iter_ghost_level * bound_direction[1];
+				k_ref = k_bound - iter_ghost_level * bound_direction[2];
 				index_type idx_ref = idx_proxy(i_ref, j_ref, k_ref);
-				double prim_ghost[5];
-				for (int idx_eq = 0; idx_eq < data_manager->GetEqNum(); ++idx_eq)
-				{
-					prim_ghost[idx_eq] = data_manager->GetPrim(idx_eq, idx_ref);
-				}
-				double vel_ref[3] = { prim_ghost[1], prim_ghost[2], prim_ghost[3] };
+				double vel_ref[3] = { data_manager->GetPrim(1, idx_ref),
+									data_manager->GetPrim(2, idx_ref),
+									data_manager->GetPrim(3, idx_ref) };
 				double vn_ref = vel_ref[0] * norm_bnd[0] + vel_ref[1] * norm_bnd[1] + vel_ref[2] * norm_bnd[2];
+				prim_ghost[0] = data_manager->GetPrim(0, idx_ref);
 				prim_ghost[1] = vel_ref[0] - 2.0 * vn_ref * norm_bnd[0];
 				prim_ghost[2] = vel_ref[1] - 2.0 * vn_ref * norm_bnd[1];
 				prim_ghost[3] = vel_ref[2] - 2.0 * vn_ref * norm_bnd[2];
-				double cons_ghost[5];
+				prim_ghost[4] = data_manager->GetPrim(4, idx_ref);
 				GetGas()->Prim2Cons(prim_ghost, cons_ghost);
+				i_ghost = i_bound + iter_ghost_level * bound_direction[0];
+				j_ghost = j_bound + iter_ghost_level * bound_direction[1];
+				k_ghost = k_bound + iter_ghost_level * bound_direction[2];
+				index_type idx_ghost = idx_proxy(i_ghost, j_ghost, k_ghost);
 				data_manager->SetPrim(idx_ghost, prim_ghost);
 				data_manager->SetCons(idx_ghost, cons_ghost);
 			}
@@ -7993,7 +8034,22 @@ namespace zaran
 	{
 		auto data_manager = GetDataManager();
 		IdProxyStruct& idx_proxy = GetIdxProxy();
+		auto grid = GetGrid();
+		int ghost_size = grid->GetGhostLevel();
+		dynamic_array<double> prim_far(5);
+		auto para = GetPara();
+		prim_far[0] = para->GetInflowDensity();
+		prim_far[1] = para->GetInflowVelocityX();
+		prim_far[2] = para->GetInflowVelocityY();
+		prim_far[3] = para->GetInflowVelocityZ();
+		prim_far[4] = para->GetInflowPressure();
+		auto gas = GetGas();
+		double gamma = gas->GetGamma();
+		double c_far = sqrt(gamma * para->GetInflowPressure() / para->GetInflowDensity());
+		double vel_far[3] = { para->GetInflowVelocityX(), para->GetInflowVelocityY(), para->GetInflowVelocityZ() };
+#ifdef USE_OMP
 #pragma omp parallel for
+#endif // USE_OMP
 		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
 			index_type i_bound, j_bound, k_bound;
@@ -8013,18 +8069,11 @@ namespace zaran
 			double prim_bnd[5] = { data_manager->GetPrim(0, idx_bnd), data_manager->GetPrim(1, idx_bnd),
 								  data_manager->GetPrim(2, idx_bnd), data_manager->GetPrim(3, idx_bnd),
 								  data_manager->GetPrim(4, idx_bnd) };
-			auto para = GetPara();
-			auto gas = GetGas();
-			double gamma = gas->GetGamma();
-			double prim_far[5] = { para->GetInflowDensity(), para->GetInflowVelocityX(), para->GetInflowVelocityY(),
-								  para->GetInflowVelocityZ(), para->GetInflowPressure() };
 			double vel_in[3] = { prim_in[1], prim_in[2], prim_in[3] };
 			// 速度在边界法向上的投影
 			double vn_in = vel_in[0] * norm_bnd[0] + vel_in[1] * norm_bnd[1] + vel_in[2] * norm_bnd[2];
-			double vel_far[3] = { para->GetInflowVelocityX(), para->GetInflowVelocityY(), para->GetInflowVelocityZ() };
 			double vn_far = vel_far[0] * norm_bnd[0] + vel_far[1] * norm_bnd[1] + vel_far[2] * norm_bnd[2];
 			double c_in = sqrt(gamma * prim_in[4] / prim_in[0]);
-			double c_far = sqrt(gamma * para->GetInflowPressure() / para->GetInflowDensity());
 			double mach = sqrt(vel_in[0] * vel_in[0] + vel_in[1] * vel_in[1] + vel_in[2] * vel_in[2]) / c_in;
 			// 超声速出口
 			if (mach >= 1.0)
@@ -8072,8 +8121,6 @@ namespace zaran
 			}
 			double cons_bound[5];
 			GetGas()->Prim2Cons(prim_bnd, cons_bound);
-			auto grid = GetGrid();
-			int ghost_size = grid->GetGhostLevel();
 			for (size_t iGhost = 1; iGhost <= ghost_size; ++iGhost)
 			{
 				i_ghost = i_bound + iGhost * bound[iBound].GetDirectionSrc()[0];
@@ -8145,7 +8192,9 @@ namespace zaran
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		int ghost_size = grid->GetGhostLevel();
-#pragma omp for
+#ifdef USE_OMP
+#pragma omp parallel for
+#endif // USE_OMP
 		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
 			index_type i_bound, j_bound, k_bound;

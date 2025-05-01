@@ -41,7 +41,9 @@ namespace zaran
 			norm_L2 = 0;
 			norm_inf_node = -1;
 			auto res = GetDataManager()->GetResidual(iEqu);
+#ifdef USE_OMP
 #pragma omp parallel for reduction(max:norm_inf) reduction(+:norm_L2)
+#endif // USE_OMP
 			for (int idx = 0; idx < inner_node_num; idx++)
 			{
 				int iNode = inner_node[idx];

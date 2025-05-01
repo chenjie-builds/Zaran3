@@ -244,7 +244,7 @@ void Visual::WriteCGNS(shared_ptr<NSFieldZaran> field, cgsize_t index_file1, cgs
 	auto cell = grid->GetCell();
 	auto data_manager = field->GetDataManager();
 	IdProxyStruct& idx_proxy = grid->GetIdxProxy();
-	int is, ie, js, je, ks, ke;
+	index_type is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
 	int ni = ie - is + 1;
 	int nj = je - js + 1;
@@ -323,7 +323,7 @@ void Visual::WriteCGNS(shared_ptr<NSFieldStruct> field, cgsize_t index_file1, cg
 	auto cell = grid->GetCell();
 	auto data_manager = field->GetDataManager();
 	IdProxyStruct& idx_proxy = grid->GetIdxProxy();
-	int is, ie, js, je, ks, ke;
+	index_type is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
 	int ni = ie - is + 1;
 	int nj = je - js + 1;
@@ -430,12 +430,12 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldZaran> field, std::ostream& os)
 	auto data_manager = field->GetDataManager();
 	IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 
-	int is, ie, js, je, ks, ke;
+	index_type is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
-	int ni = ie - is + 1;
-	int nj = je - js + 1;
-	int nk = ke - ks + 1;
-	int node_num = ni * nj * nk;
+	index_type ni = ie - is + 1;
+	index_type nj = je - js + 1;
+	index_type nk = ke - ks + 1;
+	index_type node_num = ni * nj * nk;
 
 	// 写入 VTK 文件头
 	os << "# vtk DataFile Version 3.0\n";
@@ -446,11 +446,11 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldZaran> field, std::ostream& os)
 	os << "POINTS " << node_num << " double\n";
 
 	// 写入点坐标
-	for (int k = ks; k <= ke; ++k)
+	for (index_type k = ks; k <= ke; ++k)
 	{
-		for (int j = js; j <= je; ++j)
+		for (index_type j = js; j <= je; ++j)
 		{
-			for (int i = is; i <= ie; ++i)
+			for (index_type i = is; i <= ie; ++i)
 			{
 				auto coord = node->GetCoord(i, j, k);
 				os << coord[0] << " " << coord[1] << " " << coord[2] << "\n";
@@ -464,13 +464,13 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldZaran> field, std::ostream& os)
 	// 写入标量数据：密度
 	os << "SCALARS Density double 1\n";
 	os << "LOOKUP_TABLE default\n";
-	for (int k = ks; k <= ke; ++k)
+	for (index_type k = ks; k <= ke; ++k)
 	{
-		for (int j = js; j <= je; ++j)
+		for (index_type j = js; j <= je; ++j)
 		{
-			for (int i = is; i <= ie; ++i)
+			for (index_type i = is; i <= ie; ++i)
 			{
-				int idx = idx_proxy(i, j, k);
+				index_type idx = idx_proxy(i, j, k);
 				double density = data_manager->GetPrim(ID_DENSITY, idx);
 				os << density << "\n";
 			}
@@ -479,11 +479,11 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldZaran> field, std::ostream& os)
 
 	// 写入向量数据：速度
 	os << "\nVECTORS Velocity double\n";
-	for (int k = ks; k <= ke; ++k)
+	for (index_type k = ks; k <= ke; ++k)
 	{
-		for (int j = js; j <= je; ++j)
+		for (index_type j = js; j <= je; ++j)
 		{
-			for (int i = is; i <= ie; ++i)
+			for (index_type i = is; i <= ie; ++i)
 			{
 				int idx = idx_proxy(i, j, k);
 				double vx = data_manager->GetPrim(ID_VELOCITY_X, idx);
@@ -497,13 +497,13 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldZaran> field, std::ostream& os)
 	// 写入标量数据：压力
 	os << "\nSCALARS Pressure double 1\n";
 	os << "LOOKUP_TABLE default\n";
-	for (int k = ks; k <= ke; ++k)
+	for (index_type k = ks; k <= ke; ++k)
 	{
-		for (int j = js; j <= je; ++j)
+		for (index_type j = js; j <= je; ++j)
 		{
-			for (int i = is; i <= ie; ++i)
+			for (index_type i = is; i <= ie; ++i)
 			{
-				int idx = idx_proxy(i, j, k);
+				index_type idx = idx_proxy(i, j, k);
 				double pressure = data_manager->GetPrim(ID_PRESSURE, idx);
 				os << pressure << "\n";
 			}
@@ -580,7 +580,7 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldStruct> field, std::ostream& os)
 	auto data_manager = field->GetDataManager();
 	IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 
-	int is, ie, js, je, ks, ke;
+	index_type is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
 	int ni = ie - is + 1;
 	int nj = je - js + 1;
@@ -722,12 +722,12 @@ void Visual::WriteVtkBinary(shared_ptr<NSFieldStruct> field, std::ostream& os)
 	auto data_manager = field->GetDataManager();
 	IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 
-	int is, ie, js, je, ks, ke;
+	index_type is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
-	int ni = ie - is + 1;
-	int nj = je - js + 1;
-	int nk = ke - ks + 1;
-	int node_num = ni * nj * nk;
+	index_type ni = ie - is + 1;
+	index_type nj = je - js + 1;
+	index_type nk = ke - ks + 1;
+	index_type node_num = ni * nj * nk;
 
 	auto SwapEndian = [](double& value)
 		{
@@ -778,16 +778,16 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostr
 	auto data_manager = field->GetDataManager();
 	auto solver = field->GetSolver();
 	auto metrics = solver->GetNodeMetrics();
-	int grid_ni = grid->GetNi();
-	int grid_nj = grid->GetNj();
-	int grid_nk = grid->GetNk();
+	index_type grid_ni = grid->GetNi();
+	index_type grid_nj = grid->GetNj();
+	index_type grid_nk = grid->GetNk();
 	IdProxyStruct idx_proxy(grid_ni, grid_nj, grid_nk);
-	int is, ie, js, je, ks, ke;
+	index_type is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
-	int ni = ie - is + 1;
-	int nj = je - js + 1;
-	int nk = ke - ks + 1;
-	int node_num = ni * nj * nk;
+	index_type ni = ie - is + 1;
+	index_type nj = je - js + 1;
+	index_type nk = ke - ks + 1;
+	index_type node_num = ni * nj * nk;
 	const double* density = data_manager->GetPrim(ID_DENSITY);
 	const double* velocity_x = data_manager->GetPrim(ID_VELOCITY_X);
 	const double* velocity_y = data_manager->GetPrim(ID_VELOCITY_Y);
@@ -912,16 +912,16 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldZaran> field, std::ostre
 	auto node = grid->GetNode();
 	auto data_manager = field->GetDataManager();
 	auto solver = field->GetSolver();
-	int grid_ni = grid->GetNi();
-	int grid_nj = grid->GetNj();
-	int grid_nk = grid->GetNk();
+	index_type grid_ni = grid->GetNi();
+	index_type grid_nj = grid->GetNj();
+	index_type grid_nk = grid->GetNk();
 	IdProxyStruct& idx_proxy = grid->GetIdxProxy();
-	int is, ie, js, je, ks, ke;
+	index_type is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
-	int ni = ie - is + 1;
-	int nj = je - js + 1;
-	int nk = ke - ks + 1;
-	int node_num = ni * nj * nk;
+	index_type ni = ie - is + 1;
+	index_type nj = je - js + 1;
+	index_type nk = ke - ks + 1;
+	index_type node_num = ni * nj * nk;
 	const double* density = data_manager->GetPrim(ID_DENSITY);
 	const double* velocity_x = data_manager->GetPrim(ID_VELOCITY_X);
 	const double* velocity_y = data_manager->GetPrim(ID_VELOCITY_Y);
@@ -931,13 +931,13 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldZaran> field, std::ostre
 	os << "TITLE=\"Flow Field\"\n";
 	os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\",\"iBlank\"\n";
 	os << "ZONE T=\"block grid\", I=" << ni << ", J=" << nj << ", K=" << nk << ", F=POINT\n";
-	for (int k = ks; k <= ke; ++k)
+	for (index_type k = ks; k <= ke; ++k)
 	{
-		for (int j = js; j <= je; ++j)
+		for (index_type j = js; j <= je; ++j)
 		{
-			for (int i = is; i <= ie; ++i)
+			for (index_type i = is; i <= ie; ++i)
 			{
-				int idx = idx_proxy(i, j, k);
+				index_type idx = idx_proxy(i, j, k);
 				os << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1] << " " << node->GetCoord(i, j, k)[2] << " " << density[idx] << " "
 					<< velocity_x[idx] << " " << velocity_y[idx] << " " << velocity_z[idx] << " " << pressure[idx] << "  " << (int)grid->GetIBlank(i, j, k) << "\n";
 			}
@@ -949,14 +949,14 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldZaran> field)
 	auto data_manager = field->GetDataManager();
 	auto grid = field->GetGrid();
 	auto node = grid->GetNode();
-	int is, ie, js, je, ks, ke;
+	index_type is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
-	int ni = ie - is + 1;
-	int nj = je - js + 1;
-	int nk = ke - ks + 1;
-	int grid_ni = grid->GetNi();
-	int grid_nj = grid->GetNj();
-	int grid_nk = grid->GetNk();
+	INTEGER4 ni = ie - is + 1;
+	INTEGER4 nj = je - js + 1;
+	INTEGER4 nk = ke - ks + 1;
+	index_type grid_ni = grid->GetNi();
+	index_type grid_nj = grid->GetNj();
+	index_type grid_nk = grid->GetNk();
 	IdProxyStruct idx_proxy(ni, nj, nk);
 	INTEGER4 node_num = ni * nj * nk;
 	INTEGER4 cell_num = (ni - 1) * (nj - 1) * (nk - 1);
@@ -1035,31 +1035,31 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldStruct> field)
 	auto data_manager = field->GetDataManager();
 	auto grid = field->GetGrid();
 	auto node = grid->GetNode();
-	int is, ie, js, je, ks, ke;
+	index_type is, ie, js, je, ks, ke;
 	grid->GetRange(is, ie, js, je, ks, ke);
-	int ni = ie - is + 1;
-	int nj = je - js + 1;
-	int nk = ke - ks + 1;
-	int grid_ni = grid->GetNi();
-	int grid_nj = grid->GetNj();
-	int grid_nk = grid->GetNk();
+	INTEGER4 ni = ie - is + 1;
+	INTEGER4 nj = je - js + 1;
+	INTEGER4 nk = ke - ks + 1;
+	index_type grid_ni = grid->GetNi();
+	index_type grid_nj = grid->GetNj();
+	index_type grid_nk = grid->GetNk();
 	IdProxyStruct idx_proxy(grid_ni, grid_nj, grid_nk);
 	INTEGER4 node_num = ni * nj * nk;
 	INTEGER4 cell_num = (ni - 1) * (nj - 1) * (nk - 1);
 	dynamic_array<double> x(node_num), y(node_num), z(node_num), density(node_num),
 		velocity_x(node_num), velocity_y(node_num), velocity_z(node_num),
 		pressure(node_num), density_error(node_num);
-	for (int k = 0; k < nk; ++k)
+	for (index_type k = 0; k < nk; ++k)
 	{
-		for (int j = 0; j < nj; ++j)
+		for (index_type j = 0; j < nj; ++j)
 		{
-			for (int i = 0; i < ni; ++i)
+			for (index_type i = 0; i < ni; ++i)
 			{
-				int idx = i + ni * j + ni * nj * k;
+				index_type idx = i + ni * j + ni * nj * k;
 				x[idx] = node->GetCoord(i + is, j + js, k + ks)[0];
 				y[idx] = node->GetCoord(i + is, j + js, k + ks)[1];
 				z[idx] = node->GetCoord(i + is, j + js, k + ks)[2];
-				int idx0 = idx_proxy(i + is, j + js, k + ks);
+				index_type idx0 = idx_proxy(i + is, j + js, k + ks);
 				density[idx] = data_manager->GetPrim(ID_DENSITY, idx0);
 				velocity_x[idx] = data_manager->GetPrim(ID_VELOCITY_X, idx0);
 				velocity_y[idx] = data_manager->GetPrim(ID_VELOCITY_Y, idx0);

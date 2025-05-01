@@ -196,94 +196,109 @@ namespace zaran
 			A = B = C = D = 0;
 			return;
 		}
-		//检查是否所有点x坐标都相同
-		bool is_same_x = true;
-		for (int i = 1; i < point_num; i++)
-		{
-			if (abs(coord[i][0] - coord[0][0]) > EPSILON_NUMBER)
-			{
-				is_same_x = false;
-				break;
-			}
-		}
-		//检查是否所有点y坐标都相同
-		bool is_same_y = true;
-		for (int i = 1; i < point_num; i++)
-		{
-			if (abs(coord[i][1] - coord[0][1]) > EPSILON_NUMBER)
-			{
-				is_same_y = false;
-				break;
-			}
-		}
-		//检查是否所有点z坐标都相同
-		bool is_same_z = true;
-		for (int i = 1; i < point_num; i++)
-		{
-			if (abs(coord[i][2] - coord[0][2]) > EPSILON_NUMBER)
-			{
-				is_same_z = false;
-				break;
-			}
-		}
-		if (is_same_x)
-		{
-			A = 1;
-			B = C = 0;
-			D = -coord[0][0];
-			return;
-		}
-		if (is_same_y)
-		{
-			A = 0;
-			B = 1;
-			C = 0;
-			D = -coord[0][1]; // 使用y的平均值
-			return;
-		}
-		if (is_same_z)
-		{
-			A = B = 0;
-			C = 1;
-			D = -coord[0][2]; // 使用z的平均值
-			return;
-		}
-		double sum_x = 0.0, sum_y = 0.0, sum_z = 0.0;
-		double sum_xy = 0.0, sum_xz = 0.0, sum_yz = 0.0;
-		double sum_xx = 0.0, sum_yy = 0.0, sum_zz = 0.0;
+		////检查是否所有点x坐标都相同
+		//bool is_same_x = true;
+		//for (int i = 1; i < point_num; i++)
+		//{
+		//	if (abs(coord[i][0] - coord[0][0]) > EPSILON_NUMBER)
+		//	{
+		//		is_same_x = false;
+		//		break;
+		//	}
+		//}
+		////检查是否所有点y坐标都相同
+		//bool is_same_y = true;
+		//for (int i = 1; i < point_num; i++)
+		//{
+		//	if (abs(coord[i][1] - coord[0][1]) > EPSILON_NUMBER)
+		//	{
+		//		is_same_y = false;
+		//		break;
+		//	}
+		//}
+		////检查是否所有点z坐标都相同
+		//bool is_same_z = true;
+		//for (int i = 1; i < point_num; i++)
+		//{
+		//	if (abs(coord[i][2] - coord[0][2]) > EPSILON_NUMBER)
+		//	{
+		//		is_same_z = false;
+		//		break;
+		//	}
+		//}
+		//if (is_same_x)
+		//{
+		//	A = 1;
+		//	B = C = 0;
+		//	D = -coord[0][0];
+		//	return;
+		//}
+		//if (is_same_y)
+		//{
+		//	A = 0;
+		//	B = 1;
+		//	C = 0;
+		//	D = -coord[0][1]; // 使用y的平均值
+		//	return;
+		//}
+		//if (is_same_z)
+		//{
+		//	A = B = 0;
+		//	C = 1;
+		//	D = -coord[0][2]; // 使用z的平均值
+		//	return;
+		//}
+		//double sum_x = 0.0, sum_y = 0.0, sum_z = 0.0;
+		//double sum_xy = 0.0, sum_xz = 0.0, sum_yz = 0.0;
+		//double sum_xx = 0.0, sum_yy = 0.0, sum_zz = 0.0;
 
-		// 计算必要的求和
-		for (int i = 0; i < point_num; ++i)
-		{
-			double x = coord[i][0];
-			double y = coord[i][1];
-			double z = coord[i][2];
-			sum_x += x;
-			sum_y += y;
-			sum_z += z;
-			sum_xy += x * y;
-			sum_xz += x * z;
-			sum_yz += y * z;
-			sum_xx += x * x;
-			sum_yy += y * y;
-			sum_zz += z * z;
+		//// 计算必要的求和
+		//for (int i = 0; i < point_num; ++i)
+		//{
+		//	double x = coord[i][0];
+		//	double y = coord[i][1];
+		//	double z = coord[i][2];
+		//	sum_x += x;
+		//	sum_y += y;
+		//	sum_z += z;
+		//	sum_xy += x * y;
+		//	sum_xz += x * z;
+		//	sum_yz += y * z;
+		//	sum_xx += x * x;
+		//	sum_yy += y * y;
+		//	sum_zz += z * z;
+		//}
+
+		//// 构建矩阵 A
+		//Eigen::Matrix3d A_matrix;
+		//A_matrix << sum_xx, sum_xy, sum_xz,
+		//	sum_xy, sum_yy, sum_yz,
+		//	sum_xz, sum_yz, sum_zz;
+
+		//Eigen::Vector3d B_vector(sum_x, sum_y, sum_z);
+
+		//Eigen::Vector3d plane_params = A_matrix.colPivHouseholderQr().solve(B_vector);
+
+		//A = plane_params[0];
+		//B = plane_params[1];
+		//C = plane_params[2];
+
+		//// 计算常数项 D
+		//D = -1;
+		Eigen::MatrixXd Q(point_num, 4);
+		for (int i = 0; i < point_num; i++) {
+			Q(i, 0) = coord[i][0];
+			Q(i, 1) = coord[i][1];
+			Q(i, 2) = coord[i][2];
+			Q(i, 3) = 1.0;
 		}
+		Eigen::JacobiSVD<Eigen::MatrixXd> svd(Q, Eigen::ComputeFullV);
+		Eigen::MatrixXd V = svd.matrixV();
+		A = V(0, 3);
+		B = V(1, 3);
+		C = V(2, 3);
+		D = V(3, 3);
 
-		// 构建矩阵 A
-		Eigen::Matrix3d A_matrix;
-		A_matrix << sum_xx, sum_xy, sum_xz,
-			sum_xy, sum_yy, sum_yz,
-			sum_xz, sum_yz, sum_zz;
 
-		Eigen::Vector3d B_vector(sum_x, sum_y, sum_z);
-
-		Eigen::Vector3d plane_params = A_matrix.colPivHouseholderQr().solve(B_vector);
-
-		A = plane_params[0];
-		B = plane_params[1];
-		C = plane_params[2];
-
-		// 计算常数项 D
-		D = -1;
 	}
 } // namespace zaran

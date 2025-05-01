@@ -1,4 +1,4 @@
-#include "GridGeneratorStructGridgen.h"
+﻿#include "GridGeneratorStructGridgen.h"
 #include "Log.h"
 #include <fstream>
 #include "MathBasic.h"
@@ -615,7 +615,7 @@ namespace zaran
 		{
 			auto grid = std::static_pointer_cast<GridStruct>(grid_list[idx_block]);
 			auto node = grid->GetNode();
-			int is, ie, js, je, ks, ke;
+			index_type is, ie, js, je, ks, ke;
 			grid->GetRange(is, ie, js, je, ks, ke);
 			for (int idx_k = ks; idx_k <= ke; ++idx_k)
 			{
@@ -643,7 +643,7 @@ namespace zaran
 			int iter_bnd_s, iter_bnd_e;
 			const double* bnd_node_coord, * ref_node_coord;
 			double ghost_node_coord[3];
-			int is, ie, js, je, ks, ke;
+			index_type is, ie, js, je, ks, ke;
 			grid_src->GetRange(is, ie, js, je, ks, ke);
 			// step 1: set boundary ghost node coord
 			for (auto& bound_info : m_block[block_indx].bound_info)
@@ -1259,7 +1259,7 @@ namespace zaran
 			ni = grid->GetNi();
 			nj = grid->GetNj();
 			nk = grid->GetNk();
-			int is, ie, js, je, ks, ke;
+			index_type is, ie, js, je, ks, ke;
 			grid->GetRange(is, ie, js, je, ks, ke);
 			file << "TITLE=\"Flow Field\"\n";
 			file << "VARIABLES=\"X\",\"Y\",\"Z\",\"I\",\"J\",\"K\"\n";

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include"FieldData.h"
 #include "GridFNFDM.h"
 #include "FieldDataManager.h"

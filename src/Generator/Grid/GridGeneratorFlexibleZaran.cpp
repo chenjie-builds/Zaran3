@@ -249,7 +249,7 @@ namespace zaran {
 		auto IsValidCell = [&](int i, int j, int k) -> bool {
 			return i >= 0 && i < ni - 1 && j >= 0 && j < nj - 1 && k >= 0 && k < nk - 1;
 			};
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		m_node_type.resize(ni * nj * nk);
 		for (int idx = 0; idx < ni * nj * nk; idx++) {
@@ -591,7 +591,7 @@ namespace zaran {
 		auto grid = GetBlockGrid();
 		auto node = grid->GetNode();
 		IdProxyStruct& idx_proxy = *m_idx_proxy;
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		for (int k = ks; k <= ke; k++) {
 			for (int j = js; j <= je; j++) {
@@ -618,7 +618,7 @@ namespace zaran {
 		std::ofstream out("node_tag.dat");
 		auto grid = GetBlockGrid();
 		auto node = grid->GetNode();
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		out << "variables = x, y, z, type" << std::endl;
 		out << "Zone T=test\n I=" << ie - is + 1 << " J=" << je - js + 1
@@ -897,7 +897,7 @@ namespace zaran {
 		auto grid = GetBlockGrid();
 		auto node = grid->GetNode();
 		IdProxyStruct& idx_proxy = grid->GetIdxProxy();
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		std::set<index_type> ref_node_idx_set;
 		for (int k = ks; k <= ke; k++) {

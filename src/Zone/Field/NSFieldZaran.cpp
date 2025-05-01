@@ -83,7 +83,7 @@ namespace zaran
 		IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 		auto para = GetSolverPara();
 		int equ_num = para->GetEqNum();
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		int total_node_num = (ie - is + 1) * (je - js + 1) * (ke - ks + 1);
 		double norm_inf = -LARGE_NUMBER;

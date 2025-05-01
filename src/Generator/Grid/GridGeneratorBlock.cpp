@@ -1,4 +1,4 @@
-#include "GridGeneratorBlock.h"
+﻿#include "GridGeneratorBlock.h"
 namespace zaran
 {
 
@@ -55,7 +55,7 @@ namespace zaran
     {
         auto grid = GetGrid();
         auto bnd_manager = grid->GetBoundMap();
-        int is, ie, js, je, ks, ke;
+        index_type is, ie, js, je, ks, ke;
         grid->GetRange(is, ie, js, je, ks, ke);
         // i minus
         if (!bnd_manager->HasBound(m_grid_info.bound_type_i_minus))

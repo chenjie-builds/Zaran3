@@ -122,7 +122,9 @@ void GradWLSQ::CalcGradient(shared_ptr<GridFN>grid, const double* data, double* 
 	}
 	auto& node = grid->GetNode();
 	int node_num = node.GetCount();
+#ifdef USE_OMP
 #pragma omp parallel for
+#endif // USE_OMP
 	for (int iNode = 0; iNode < node_num; iNode++)
 	{
 		if (node.GetType(iNode) != NodeType::inner)

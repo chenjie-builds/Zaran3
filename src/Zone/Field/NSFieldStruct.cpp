@@ -22,9 +22,9 @@ namespace zaran
 		IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 		int equ_num = para->GetEqNum();
 		auto data_manager = GetDataManager();
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
-		int total_node_num = (ie - is + 1) * (je - js + 1) * (ke - ks + 1);
+		index_type total_node_num = (ie - is + 1) * (je - js + 1) * (ke - ks + 1);
 		double norm_inf = -LARGE_NUMBER;
 		double norm_l2 = 0;
 		int norm_inf_node = -1;
@@ -33,14 +33,16 @@ namespace zaran
 			norm_inf = -LARGE_NUMBER;
 			norm_l2 = 0;
 			auto res = data_manager->GetResidual(iEqu);
+#ifdef USE_OMP
 #pragma omp parallel for collapse(3) reduction(max : norm_inf) reduction(+ : norm_l2)
-			for (int k = ks; k <= ke; k++)
+#endif // USE_OMP
+			for (index_type k = ks; k <= ke; k++)
 			{
-				for (int j = js; j <= je; j++)
+				for (index_type j = js; j <= je; j++)
 				{
-					for (int i = is; i <= ie; i++)
+					for (index_type i = is; i <= ie; i++)
 					{
-						int idx = idx_proxy(i, j, k);
+						index_type idx = idx_proxy(i, j, k);
 						double times_step = data_manager->GetTimeStep(idx);
 						double res_val = abs(res[idx]) / times_step;
 						//if (iEqu == 0)

@@ -26,7 +26,7 @@ namespace zaran
 		IdProxyStruct& idx_proxy = GetIdxProxy();
 		auto gas = GetGas();
 		auto equ_num = para->GetEqNum();
-		int is, ie, js, je, ks, ke;
+		index_type is, ie, js, je, ks, ke;
 		grid->GetRange(is, ie, js, je, ks, ke);
 		RiemannSolverPara riemann_para[6];
 		for (int i = 0; i < 6; ++i)
@@ -34,16 +34,18 @@ namespace zaran
 			riemann_para[i].gamma_left = riemann_para[i].gamma_right = gas->GetGamma();
 		}
 		// 当前节点的编号
-		int idx;
+		index_type idx;
 		// 差分模板的编号
-		int idx_temp[5];
+		index_type idx_temp[5];
 		// 差分模板的值
 		double value[5];
 		double res_tmp[5];
 		double mid_coord_left[3], mid_coord_right[3]; // i-1/2,i+1/2
 		double mid_coord[3];                          // i-1/2,i+1/2的中点
 		double move_vector[3];                        // mid_coord到i的向量用于移动mid_coord_left和mid_coord_right
-		 #pragma omp parallel for private(idx, idx_temp, value, res_tmp, mid_coord_left, mid_coord_right, mid_coord, move_vector, riemann_para)
+#ifdef USE_OMP
+#pragma omp parallel for private(idx, idx_temp, value, res_tmp, mid_coord_left, mid_coord_right, mid_coord, move_vector, riemann_para)
+#endif // USE_OMP
 		for (index_type k = ks; k <= ke; ++k)
 		{
 			for (index_type j = js; j <= je; ++j)

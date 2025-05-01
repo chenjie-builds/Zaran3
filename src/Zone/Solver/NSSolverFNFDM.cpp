@@ -284,7 +284,9 @@ namespace zaran
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		int node_num = grid->GetTotalNodeNum();
+#ifdef USE_OMP
 #pragma omp parallel for
+#endif // USE_OMP
 		for (int iNode = 0; iNode < node_num; ++iNode)
 		{
 			double cons[5];
@@ -349,7 +351,9 @@ namespace zaran
 				continue;
 			if (bound_name == "riemann")
 			{
+#ifdef USE_OMP
 #pragma omp parallel for
+#endif // USE_OMP
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
 					BCFarfield(bound[iBound]);
@@ -357,7 +361,9 @@ namespace zaran
 			}
 			else if (bound_name == "inlet")
 			{
+#ifdef USE_OMP
 #pragma omp parallel for
+#endif // USE_OMP
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
 					BCInlow(bound[iBound]);
@@ -365,7 +371,9 @@ namespace zaran
 			}
 			else if (bound_name == "outlet")
 			{
+#ifdef USE_OMP
 #pragma omp parallel for
+#endif // USE_OMP
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
 					BCOutflow(bound[iBound]);
@@ -373,7 +381,9 @@ namespace zaran
 			}
 			else if (bound_name == "wall")
 			{
+#ifdef USE_OMP
 #pragma omp parallel for
+#endif // USE_OMP
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
 					BCWall(bound[iBound]);
@@ -555,7 +565,9 @@ namespace zaran
 			auto& bound = boundary.second;
 			if (boundName == "hole")
 				continue;
+#ifdef USE_OMP
 #pragma omp parallel for
+#endif // USE_OMP
 			for (int iVal = 0; iVal < equ_num; ++iVal)
 			{
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
@@ -633,7 +645,9 @@ namespace zaran
 		double venkatCoeff = 1e-5;
 		for (int iVal = 0; iVal < equ_num; ++iVal)
 		{
+#ifdef USE_OMP
 #pragma omp parallel for private(eps)
+#endif // USE_OMP
 			for (int iNode = 0; iNode < node_num; ++iNode)
 			{
 				// if (node->GetType(iNode) != NodeType::inner && node->GetType(iNode) != NodeType::hole)
@@ -701,7 +715,9 @@ namespace zaran
 		double maxVal, minVal;
 		for (int iVal = 0; iVal < equ_num; ++iVal)
 		{
+#ifdef USE_OMP
 #pragma omp parallel for private(maxVal, minVal)
+#endif // USE_OMP
 			for (int iNode = 0; iNode < node_num; ++iNode)
 			{
 				if (node.GetType(iNode) != NodeType::inner && node.GetType(iNode) != NodeType::hole)
@@ -755,7 +771,9 @@ namespace zaran
 		int node_num = grid->GetTotalNodeNum();
 		for (int iVal = 0; iVal < para->GetEqNum(); ++iVal)
 		{
+#ifdef USE_OMP
 #pragma omp parallel for
+#endif // USE_OMP
 			for (int iNode = 0; iNode < node_num; ++iNode)
 			{
 				if (node.GetType(iNode) != NodeType::inner && node.GetType(iNode) != NodeType::hole)
@@ -774,7 +792,9 @@ namespace zaran
 		int node_num = grid->GetTotalNodeNum();
 		for (int iVal = 0; iVal < para->GetEqNum(); ++iVal)
 		{
+#ifdef USE_OMP
 #pragma omp parallel for
+#endif // USE_OMP
 			for (int iNode = 0; iNode < node_num; ++iNode)
 			{
 				data_manager->SetLimiter(iVal, iNode, 0.0);
@@ -797,7 +817,9 @@ namespace zaran
 				continue;
 			for (int iVal = 0; iVal < equ_num; ++iVal)
 			{
+#ifdef USE_OMP
 #pragma omp parallel for
+#endif // USE_OMP
 				for (int iBound = 0; iBound < bound.size(); ++iBound)
 				{
 					auto& bound_index = bound[iBound].GetIdxBound();
@@ -818,7 +840,9 @@ namespace zaran
 		int nonphysical_node_num = 0;
 		auto density = data_manager->GetPrim(ID_DENSITY);
 		auto pressure = data_manager->GetPrim(ID_PRESSURE);
+#ifdef USE_OMP
 #pragma omp parallel for reduction(+ : nonphysical_node_num)
+#endif // USE_OMP
 		for (int iNode = 0; iNode < node_num; ++iNode)
 		{
 			bool exist_nonphysical = false;
@@ -898,7 +922,9 @@ namespace zaran
 		dynamic_array<double> weight, distance;
 		dynamic_array<int> physical_neighbor;
 		double sum = 0;
+#ifdef USE_OMP
 #pragma omp parallel for private(physical_neighbor, weight, distance, sum)
+#endif // USE_OMP
 		for (int iNode = 0; iNode < total_node_num; ++iNode)
 		{
 
@@ -995,7 +1021,9 @@ namespace zaran
 		auto velocity_x = data_manager->GetPrim(ID_VELOCITY_X);
 		auto velocity_y = data_manager->GetPrim(ID_VELOCITY_Y);
 		auto velocity_z = data_manager->GetPrim(ID_VELOCITY_Z);
+#ifdef USE_OMP
 #pragma omp parallel for 
+#endif // USE_OMP
 		for (int iNode = 0; iNode < inner_node_num; ++iNode)
 		{
 			int idx = inner_node[iNode];
@@ -1026,7 +1054,9 @@ namespace zaran
 		int inner_node_num = grid->GetInnerNodeNum();
 		int* inner_node = grid->GetInnerNode();
 		double min_dt = LARGE_NUMBER;
+#ifdef USE_OMP
 #pragma omp parallel for reduction(min : min_dt)
+#endif // USE_OMP
 		for (int iNode = 0; iNode < inner_node_num; ++iNode)
 		{
 			int idx = inner_node[iNode];
@@ -1043,7 +1073,9 @@ namespace zaran
 		auto grid = GetGrid();
 		auto para = GetPara();
 		auto data_manager = GetDataManager();
+#ifdef USE_OMP
 #pragma omp parallel for
+#endif // USE_OMP
 		for (int iNode = 0; iNode < grid->GetTotalNodeNum(); ++iNode)
 		{
 			data_manager->SetTimeStep(iNode, dt);
@@ -1059,7 +1091,9 @@ namespace zaran
 		int node_num = grid->GetTotalNodeNum();
 		for (int iVar = 0; iVar < equ_num; ++iVar)
 		{
+#ifdef USE_OMP
 #pragma omp parallel for
+#endif // USE_OMP
 			for (int iNode = 0; iNode < node_num; ++iNode)
 			{
 				data_manager->SetResidual(iVar, iNode, 0.0);
@@ -1076,7 +1110,9 @@ namespace zaran
 		int inner_node_num = grid->GetInnerNodeNum();
 		int* inner_node = grid->GetInnerNode();
 		RiemannSolverPara riemann_para[6];
+#ifdef USE_OMP
 #pragma omp parallel for private(riemann_para)
+#endif // USE_OMP
 		for (int iNode = 0; iNode < inner_node_num; ++iNode)
 		{
 			for (int i = 0; i < 6; ++i)

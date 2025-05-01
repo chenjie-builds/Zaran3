@@ -29,13 +29,13 @@ namespace zaran
 		/// @param nj j方向上的节点总数
 		/// @param nk k方向上的节点总数
 		/// @param ghost_level ghost节点层数
-		virtual void Allocate(index_type ni, index_type nj, index_type nk, index_type ghost_level);
+		virtual void Allocate(count_type ni, count_type nj, count_type nk, index_type ghost_level);
 
 	public:
-		int GetNi() const;
-		int GetNj() const;
-		int GetNk() const;
-		void GetNodeNum(index_type& ni, index_type& nj, index_type& nk) const;
+		count_type GetNi() const;
+		count_type GetNj() const;
+		count_type GetNk() const;
+		void GetNodeNum(count_type& ni, count_type& nj, count_type& nk) const;
 		int GetTotalNodeNum();
 		NodeStruct* GetNode() { return m_node.get(); }
 		FaceStruct* GetFace() { return m_face.get(); }
@@ -53,7 +53,7 @@ namespace zaran
 		/// @param jEnd j方向上的结束索引
 		/// @param kStart k方向上的起始索引
 		/// @param kEnd k方向上的结束索引
-		void GetRange(int& iStart, int& iEnd, int& jStart, int& jEnd, int& kStart, int& kEnd) const;
+		void GetRange(index_type& iStart, index_type& iEnd, index_type& jStart, index_type& jEnd, index_type& kStart, index_type& kEnd) const;
 
 	private:
 		/// @brief ghost节点层数
