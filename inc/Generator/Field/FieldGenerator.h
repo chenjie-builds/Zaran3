@@ -1,16 +1,15 @@
-//==============================================================================||
-//*	ZaRan	-	A Totally Automatic CFD Software
-//|| *	Copyright (C) ,Since 2020
-//||
-//*-----------------------------------------------------------------------------||
-//*	License
-//|| *	This file is part of ZaRan.
-//|| *
-//|| *	@file	SolverFactory.h
-//|| *	@brief	求解器工厂类, 生成求解器
-//|| *	@author	Chen Jie.
-//||
-//==============================================================================||
+﻿/**
+ * Zaran	-	A Totally Automatic CFD Software
+ * \file FieldGenerator.h
+ * \brief Field generator class, used to generate field manager.
+ * \author Chen Jie.
+ *
+ * \copyright Copyright (C) Since 2020, Chen Jie.
+ * This file is part of Zaran.
+ * All rights reserved. This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use is strictly prohibited.
+ */
+
 #pragma once
 #include "GlobalField.h"
 namespace zaran
@@ -28,7 +27,6 @@ namespace zaran
 		void CreateField();
 		void CreateSolver();
 		shared_ptr<FieldManager> CreateFieldZaran();
-		shared_ptr<FieldManager>CreateFieldExplosion();
 
 	private:
 		GridType m_grid_type;

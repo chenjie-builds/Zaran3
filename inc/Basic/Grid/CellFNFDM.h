@@ -1,14 +1,14 @@
-﻿//==============================================================================||
-//*	ZaRan	-	A Totally Automatic CFD Software								||
-//*	Copyright (C) ,Since 2020													||
-//*-----------------------------------------------------------------------------||
-//*	License																		||
-//*	This file is part of ZaRan.													||
-//*																				||
-//*	@file	CellTopoInfo.h														||
-//*	@brief	Cell Topology setting												||
-//*	@author	Chen Jie.															||
-//==============================================================================||
+﻿/**
+ * Zaran	-	A Totally Automatic CFD Software
+ * \file CellFN.h
+ * \brief Cell Topology Class for Flexible Node FDM
+ * \author Chen Jie.
+ *
+ * \copyright Copyright (C) Since 2020, Chen Jie.
+ * This file is part of Zaran.
+ * All rights reserved. This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use is strictly prohibited.
+ */
 #pragma once
 #include"BasicType.h"
 #include "CellBase.h"

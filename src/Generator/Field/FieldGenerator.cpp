@@ -7,7 +7,6 @@
 #include "Log.h"
 #include "NSFieldFN.h"
 #include "NSFieldStruct.h"
-#include "NSFieldBlockExplosion.h"
 #include "NSFieldZaran.h"
 #include "PolyData.h"
 #include "ReadSTL.h"
@@ -159,36 +158,6 @@ namespace zaran
 		// Create slave grid
 		zaran_field->CreateSlaveField(field_manager);
 		zaran_field->Allocate();
-
-		return field_manager;
-	}
-	shared_ptr<FieldManager> FieldGenerator::CreateFieldExplosion()
-	{
-		// Create master grid
-		GridBlockInfo grid_info;
-		grid_info.ni = 100;
-		grid_info.nj = 100;
-		grid_info.nk = 100;
-		grid_info.bound_box.x_min = -100;
-		grid_info.bound_box.x_max = 100;
-		grid_info.bound_box.y_min = -100;
-		grid_info.bound_box.y_max = 100;
-		grid_info.bound_box.z_min = -100;
-		grid_info.bound_box.z_max = 100;
-		grid_info.bound_type_i_minus = GlobalData::GetString("boundTypeIMinus");
-		grid_info.bound_type_i_plus = GlobalData::GetString("boundTypeIPlus");
-		grid_info.bound_type_j_minus = GlobalData::GetString("boundTypeJMinus");
-		grid_info.bound_type_j_plus = GlobalData::GetString("boundTypeJPlus");
-		grid_info.bound_type_k_minus = GlobalData::GetString("boundTypeKMinus");
-		grid_info.bound_type_k_plus = GlobalData::GetString("boundTypeKPlus");
-		GridGeneratorBlock* grid_factory = new GridGeneratorBlock();
-		shared_ptr<GridBlock> grid;
-		grid_factory->CreateGrid(grid, grid_info);
-		shared_ptr<FieldManager> field_manager = make_shared <FieldManager>();
-		shared_ptr<NSFieldBlockExplosion> field = make_shared <NSFieldBlockExplosion>(grid);
-		field_manager->AddField(field, nullptr);
-		// Create slave grid
-		field->Allocate();
 
 		return field_manager;
 	}

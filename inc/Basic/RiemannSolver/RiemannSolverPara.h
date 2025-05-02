@@ -1,14 +1,15 @@
-//==============================================================================||
-//*	ZaRan	-	A Totally Automatic CFD Software								||
-//*	Copyright (C) ,Since 2020													||
-//*-----------------------------------------------------------------------------||
-//*	License																		||
-//*	This file is part of ZaRan.													||
-//*																				||
-//*	@file	RiemannSolverPara.h													||
-//*	@brief	黎曼求解器参数, RiemannSolver计算所需参数, 用于防止每次新建临时变量			||
-//*	@author	Chen Jie.															||
-//==============================================================================||
+﻿/**
+ * Zaran	-	A Totally Automatic CFD Software
+ * \file RiemannSolverPara.h
+ * \brief Riemann solver parameters, including left and right variable values.
+ * \author Chen Jie.
+ *
+ * \copyright Copyright (C) Since 2020, Chen Jie.
+ * This file is part of Zaran.
+ * All rights reserved. This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use is strictly prohibited.
+ */
+
 #pragma once
 #include "Eigen/Dense"
 namespace zaran

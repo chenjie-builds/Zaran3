@@ -1,3 +1,14 @@
+﻿/**
+ * Zaran	-	A Totally Automatic CFD Software
+ * \file NSSolverStructCMM.h
+ * \brief NSSolverStruct class, used to solve the NS equations on structured grid, using CMM method.
+ * \author Chen Jie.
+ *
+ * \copyright Copyright (C) Since 2020, Chen Jie.
+ * This file is part of Zaran.
+ * All rights reserved. This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use is strictly prohibited.
+ */
 #pragma once
 #include "NSSolverStruct.h"
 #include "Metric.h"

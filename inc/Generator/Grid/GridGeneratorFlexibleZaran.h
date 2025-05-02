@@ -1,3 +1,14 @@
+﻿/**
+ * Zaran	-	A Totally Automatic CFD Software
+ * \file GridGeneratorFlexibleZaran.h
+ * \brief GridGeneratorFlexibleZaran class, used to generate flexible grid in Zaran.
+ * \author Chen Jie.
+ *
+ * \copyright Copyright (C) Since 2020, Chen Jie.
+ * This file is part of Zaran.
+ * All rights reserved. This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use is strictly prohibited.
+ */
 #pragma once
 #include "FaceFNFDM.h"
 #include "GridFNFDM.h"

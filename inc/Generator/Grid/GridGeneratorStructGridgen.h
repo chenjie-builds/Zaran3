@@ -1,3 +1,14 @@
+﻿/**
+ * Zaran	-	A Totally Automatic CFD Software
+ * \file GridGeneratorStructGridgen.h
+ * \brief GridGeneratorStructGridgen class, used to generate structured grid from Gridgen.
+ * \author Chen Jie.
+ *
+ * \copyright Copyright (C) Since 2020, Chen Jie.
+ * This file is part of Zaran.
+ * All rights reserved. This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use is strictly prohibited.
+ */
 #pragma once
 #include "GridGenerator.h"
 #include "GridStruct.h"

@@ -1,14 +1,14 @@
-//==============================================================================||
-//*	ZaRan	-	A Totally Automatic CFD Software								||
-//*	Copyright (C) ,Since 2020													||
-//*-----------------------------------------------------------------------------||
-//*	License																		||
-//*	This file is part of ZaRan.													||
-//*																				||
-//*	@file	Gas.h																||
-//*	@brief	气体基类																||
-//*	@author	Chen Jie.															||
-//==============================================================================||
+﻿/**
+ * Zaran	-	A Totally Automatic CFD Software
+ * \file Gas.h
+ * \brief Gas base class.
+ * \author Chen Jie.
+ *
+ * \copyright Copyright (C) Since 2020, Chen Jie.
+ * This file is part of Zaran.
+ * All rights reserved. This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use is strictly prohibited.
+ */
 #pragma once
 #include"CommonPara.h"
 #include"Dimensionless.h"

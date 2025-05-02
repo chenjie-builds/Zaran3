@@ -1,14 +1,14 @@
-//==============================================================================||
-//*	ZaRan	-	A Totally Automatic CFD Software								||
-//*	Copyright (C) ,Since 2020													||
-//*-----------------------------------------------------------------------------||
-//*	License																		||
-//*	This file is part of ZaRan.													||
-//*																				||
-//*	@file	Field.h																||
-//*	@brief	Control solver to modify field data in grid							||
-//*	@author	Chen Jie.															||
-//==============================================================================||
+﻿/**
+ * Zaran	-	A Totally Automatic CFD Software
+ * \file Field.h
+ * \brief Field class, used to control the simulation, including grid, solver, solver parameters, and field data.
+ * \author Chen Jie.
+ *
+ * \copyright Copyright (C) Since 2020, Chen Jie.
+ * This file is part of Zaran.
+ * All rights reserved. This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use is strictly prohibited.
+ */
 #pragma once
 #include "BasicType.h"
 #include "Solver.h"

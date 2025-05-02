@@ -4,7 +4,6 @@
 #include"GlobalField.h"
 #include "Log.h"
 #include "FieldGenerator.h"
-#include "FieldGeneratorBuildingExplosion.h"
 #include"ReadSTL.h"
 #include"PolyData.h"
 #include"File.h"
@@ -182,8 +181,6 @@ namespace zaran
 		gridConvert->SetFileName(grid_file_name);
 		gridConvert->ReadFile();
 		gridConvert->WriteFile();
-
-
 	}
 
 	void Application::ReadModel()

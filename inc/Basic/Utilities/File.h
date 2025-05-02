@@ -1,14 +1,15 @@
-//==============================================================================||
-//*	ZaRan	-	A Totally Automatic CFD Software								||
-//*	Copyright (C) ,Since 2020													||
-//*-----------------------------------------------------------------------------||
-//*	License																		||
-//*	This file is part of ZaRan.													||
-//*																				||
-//*	@file	File.h																||
-//*	@brief	文件相关操作															||
-//*	@author	Chen Jie.															||
-//==============================================================================||
+﻿/**
+ * Zaran	-	A Totally Automatic CFD Software
+ * \file File.h
+ * \brief File related operations.
+ * \author Chen Jie.
+ *
+ * \copyright Copyright (C) Since 2020, Chen Jie.
+ * This file is part of Zaran.
+ * All rights reserved. This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use is strictly prohibited.
+ */
+
 #include"BasicType.h"
 namespace zaran
 {

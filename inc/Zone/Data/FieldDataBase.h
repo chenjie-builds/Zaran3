@@ -1,4 +1,15 @@
-﻿#pragma once
+﻿/**
+ * Zaran	-	A Totally Automatic CFD Software
+ * \file FieldBase.h
+ * \brief FieldBase class, used to store field data.
+ * \author Chen Jie.
+ *
+ * \copyright Copyright (C) Since 2020, Chen Jie.
+ * This file is part of Zaran.
+ * All rights reserved. This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use is strictly prohibited.
+ */
+#pragma once
 #include <algorithm>
 #include <exception>
 #include <iostream>

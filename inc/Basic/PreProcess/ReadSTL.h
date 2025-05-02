@@ -1,5 +1,15 @@
+﻿/**
+ * Zaran	-	A Totally Automatic CFD Software
+ * \file STLReader.h
+ * \brief STLReader class, used to read STL file.
+ * \author Chen Jie.
+ *
+ * \copyright Copyright (C) Since 2020, Chen Jie.
+ * This file is part of Zaran.
+ * All rights reserved. This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use is strictly prohibited.
+ */
 #pragma once
-// read stl file by using vtk
 #include <vtkSTLReader.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>

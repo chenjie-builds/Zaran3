@@ -1,4 +1,15 @@
-﻿#pragma once
+﻿/**
+ * Zaran	-	A Totally Automatic CFD Software
+ * \file NSFieldStruct.h
+ * \brief NSFieldStruct class, used to manage the NS field data in a structured grid.
+ * \author Chen Jie.
+ *
+ * \copyright Copyright (C) Since 2020, Chen Jie.
+ * This file is part of Zaran.
+ * All rights reserved. This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use is strictly prohibited.
+ */
+#pragma once
 #include "NSField.h"
 #include "GridStruct.h"
 #include "NSSolverStruct.h"

@@ -1,15 +1,14 @@
-﻿//==============================================================================||
-//*	ZaRan	-	A Totally Automatic CFD Software								||
-//*	Copyright (C) ,Since 2020													||
-//*-----------------------------------------------------------------------------||
-//*	License																		||
-//*	This file is part of ZaRan.													||
-//*																				||
-//*	@file	NodeTopoInfo.h														||
-//*	@brief	节点的拓扑结构														||
-//*			包含节点类型，更新标记，邻居模板，坐标变换系数，面元单元连接信息			||
-//*	@author	Chen Jie.															||
-//==============================================================================||
+﻿/**
+ * Zaran	-	A Totally Automatic CFD Software
+ * \file NodeFN.h
+ * \brief Node information for FNFDM.
+ * \author Chen Jie.
+ *
+ * \copyright Copyright (C) Since 2020, Chen Jie.
+ * This file is part of Zaran.
+ * All rights reserved. This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use is strictly prohibited.
+ */
 #pragma once
 #include "BasicType.h"
 #include "NodeBase.h"

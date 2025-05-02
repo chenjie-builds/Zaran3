@@ -1,14 +1,14 @@
-﻿//==============================================================================||
-//*	ZaRan	-	A Totally Automatic CFD Software								||
-//*	Copyright (C) ,Since 2020													||
-//*-----------------------------------------------------------------------------||
-//*	License																		||
-//*	This file is part of ZaRan.													||
-//*																				||
-//*	@file	GridFNFDM.h															||
-//*	@brief	自由节点有限差分网格													||
-//*	@author	Chen Jie.															||
-//==============================================================================||
+﻿/**
+ * Zaran	-	A Totally Automatic CFD Software
+ * \file GridFN.h
+ * \brief Grid for Flexible Node FDM.
+ * \author Chen Jie.
+ *
+ * \copyright Copyright (C) Since 2020, Chen Jie.
+ * This file is part of Zaran.
+ * All rights reserved. This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use is strictly prohibited.
+ */
 #pragma once
 #include "GridBase.h"
 #include "NodeFNFDM.h"
@@ -41,10 +41,10 @@ namespace zaran
 	protected:
 		void InitNode();
 	private:
-		std::unique_ptr<NodeFN> m_node;
-		std::unique_ptr<FaceFN> m_face;
-		std::unique_ptr<CellFN> m_cell;
-		std::unique_ptr<BoundManagerFN> m_boundary_map;
+		unique_ptr<NodeFN> m_node;
+		unique_ptr<FaceFN> m_face;
+		unique_ptr<CellFN> m_cell;
+		unique_ptr<BoundManagerFN> m_boundary_map;
 		int m_inner_node_num;
 		int* m_inner_node_index;
 		int m_bound_node_num;

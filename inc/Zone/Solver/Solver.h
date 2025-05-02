@@ -1,23 +1,22 @@
-//==============================================================================||
-//*	ZaRan	-	A Totally Automatic CFD Software								||
-//*	Copyright (C) ,Since 2020													||
-//*-----------------------------------------------------------------------------||
-//*	License																		||
-//*	This file is part of ZaRan.													||
-//*																				||
-//*	@file	Solver.h															||
-//*	@brief	求解器基类,通过一些算法修改网格数据										||
-//*	@author	Chen Jie.															||
-//==============================================================================||
+﻿/**
+ * Zaran	-	A Totally Automatic CFD Software
+ * \file Solver.h
+ * \brief Solver class, used to control the simulation.
+ * \author Chen Jie.
+ *
+ * \copyright Copyright (C) Since 2020, Chen Jie.
+ * This file is part of Zaran.
+ * All rights reserved. This software is proprietary and confidential.
+ * Unauthorized copying, distribution, or use is strictly prohibited.
+ */
 #pragma once
 #include "SolverPara.h"
 #include "GlobalData.h"
-#include "GridList.h"
+#include "GridBase.h"
 #include <memory>
 namespace zaran
 {
 
-	//网格指针
 	class Solver
 	{
 	public:
