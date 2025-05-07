@@ -27,8 +27,8 @@ namespace zaran
 		int GetTotalNodeNum() const;
 		int GetInnerNodeNum() const;
 		int GetBoundNodeNum() const;
-		int* GetInnerNode();
-		int* GetBoundNode();
+		const dynamic_array<index_type>& GetInnerNode() const { return m_inner_node; }
+		const dynamic_array<index_type>& GetBoundNode() const { return m_bound_node_index; }
 		//get node
 		NodeFN& GetNode() ;
 		//get face
@@ -37,7 +37,6 @@ namespace zaran
 		CellFN& GetCell() ;
 		//get boundary map
 		BoundManagerFN& GetBoundaryMap() ;
-
 	protected:
 		void InitNode();
 	private:
@@ -45,10 +44,7 @@ namespace zaran
 		unique_ptr<FaceFN> m_face;
 		unique_ptr<CellFN> m_cell;
 		unique_ptr<BoundManagerFN> m_boundary_map;
-		int m_inner_node_num;
-		int* m_inner_node_index;
-		int m_bound_node_num;
-		int* m_bound_node_index;
-		int m_total_node_num;
+		dynamic_array<index_type> m_inner_node;
+		dynamic_array<index_type> m_bound_node_index;
 	};
 } // namespace zaran

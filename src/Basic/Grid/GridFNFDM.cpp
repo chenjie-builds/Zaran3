@@ -7,37 +7,24 @@ namespace zaran
         m_face = make_unique<FaceFN>(0);
 		m_cell = make_unique<CellFN>(0);
 		m_boundary_map = make_unique<BoundManagerFN>();
-        m_inner_node_num = 0;
-        m_inner_node_index = nullptr;
-        m_bound_node_num = 0;
-        m_bound_node_index = nullptr;
-        m_total_node_num = 0;
+		m_inner_node.resize(0);
+		m_bound_node_index.resize(0);
     }
     GridFN::~GridFN()
     {
 
-        if (m_inner_node_index)
-        {
-            delete[] m_inner_node_index;
-            m_inner_node_index = nullptr;
-        }
-        if (m_bound_node_index)
-        {
-            delete[] m_bound_node_index;
-            m_bound_node_index = nullptr;
-        }
     }
 	int GridFN::GetTotalNodeNum() const
     {
-        return m_total_node_num;
+		return m_node->GetCount();
     }
     int GridFN::GetInnerNodeNum() const
     {
-        return m_inner_node_num;
+		return m_inner_node.size();
     }
     int GridFN::GetBoundNodeNum() const
     {
-        return m_bound_node_num;
+        return m_bound_node_index.size();
     }
 
 	NodeFN& GridFN::GetNode() 
@@ -57,43 +44,35 @@ namespace zaran
     {
         return *m_boundary_map;
     }
-    int* GridFN::GetInnerNode()
-    {
-        return m_inner_node_index;
-    }
-    int* GridFN::GetBoundNode()
-    {
-        return m_bound_node_index;
-    }
     void GridFN::InitNode()
     {
-        m_total_node_num = m_node->GetCount();
-        for (int iNode = 0; iNode < m_total_node_num; iNode++)
+        count_type node_count = m_node->GetCount();
+		count_type inner_node_count = 0;
+		count_type bound_node_count = 0;
+        for (int iNode = 0; iNode < node_count; iNode++)
         {
             if (m_node->GetType(iNode) == NodeType::inner)
             {
-                m_inner_node_num++;
+                inner_node_count++;
             }
             else
             {
-                m_bound_node_num++;
+                bound_node_count++;
             }
         }
-        m_inner_node_index = new int[m_inner_node_num];
-        m_bound_node_index = new int[m_bound_node_num];
+		m_inner_node.resize(inner_node_count);
+		m_bound_node_index.resize(bound_node_count);
         int inner_index = 0;
         int bound_index = 0;
-        for (int iNode = 0; iNode < m_total_node_num; iNode++)
+        for (int iNode = 0; iNode < node_count; iNode++)
         {
             if (m_node->GetType(iNode) == NodeType::inner)
             {
-                m_inner_node_index[inner_index] = iNode;
-                inner_index++;
+                m_inner_node[inner_index++] = iNode;
             }
             else
             {
-                m_bound_node_index[bound_index] = iNode;
-                bound_index++;
+                m_bound_node_index[bound_index++] = iNode;
             }
         }
     }

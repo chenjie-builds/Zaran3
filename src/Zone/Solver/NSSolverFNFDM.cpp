@@ -555,7 +555,7 @@ namespace zaran
 	{
 		int equ_num = GetPara()->GetEqNum();
 		auto grid = GetGrid();
-		auto node = grid->GetNode();
+		auto& node = grid->GetNode();
 		auto data_manager = GetDataManager();
 		BoundManagerFN& bound_map = grid->GetBoundaryMap();
 		auto& boundaryMap = bound_map.GetBoundMap();
@@ -570,13 +570,13 @@ namespace zaran
 #endif // USE_OMP
 			for (int iVal = 0; iVal < equ_num; ++iVal)
 			{
-				for (int iBound = 0; iBound < bound.size(); ++iBound)
+				for (auto& iter_bound : bound)
 				{
-					auto& bound_index = bound[iBound].GetIdxBound();
-					auto& inner_index = bound[iBound].GetIdxRef();
-					for (int iDim = 0; iDim < 3; ++iDim)
+					auto& idx_bound = iter_bound.GetIdxBound();
+					auto& index_ref = iter_bound.GetIdxRef();
+					for (int iter_dim = 0; iter_dim < 3; ++iter_dim)
 					{
-						data_manager->SetPrimitiveGrad(iVal, iDim, bound_index, 0.0);
+						data_manager->SetPrimitiveGrad(iVal, iter_dim, idx_bound, 0.0);
 					}
 				}
 			}
@@ -1015,7 +1015,7 @@ namespace zaran
 		double gamma = para->GetGas()->GetGamma();
 		double cfl = para->GetCflNumber();
 		int inner_node_num = grid->GetInnerNodeNum();
-		int* inner_node = grid->GetInnerNode();
+		auto& inner_node = grid->GetInnerNode();
 		auto density = data_manager->GetPrim(ID_DENSITY);
 		auto pressure = data_manager->GetPrim(ID_PRESSURE);
 		auto velocity_x = data_manager->GetPrim(ID_VELOCITY_X);
@@ -1052,7 +1052,7 @@ namespace zaran
 		double gamma = para->GetGas()->GetGamma();
 		double cfl = para->GetCflNumber();
 		int inner_node_num = grid->GetInnerNodeNum();
-		int* inner_node = grid->GetInnerNode();
+		auto& inner_node = grid->GetInnerNode();
 		double min_dt = LARGE_NUMBER;
 #ifdef USE_OMP
 #pragma omp parallel for reduction(min : min_dt)
@@ -1108,7 +1108,7 @@ namespace zaran
 		auto data_manager = GetDataManager();
 		int equ_num = GetPara()->GetEqNum();
 		int inner_node_num = grid->GetInnerNodeNum();
-		int* inner_node = grid->GetInnerNode();
+		auto& inner_node = grid->GetInnerNode();
 		RiemannSolverPara riemann_para[6];
 #ifdef USE_OMP
 #pragma omp parallel for private(riemann_para)
@@ -1198,7 +1198,7 @@ namespace zaran
 		auto data_manager = GetDataManager();
 		int node_num = grid->GetTotalNodeNum();
 		int inner_node_num = grid->GetInnerNodeNum();
-		int* inner_node = grid->GetInnerNode();
+		auto& inner_node = grid->GetInnerNode();
 		auto para = GetPara();
 		double res_vis;
 		for (int iNode = 0; iNode < inner_node_num; ++iNode)

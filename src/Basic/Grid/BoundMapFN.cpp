@@ -1,4 +1,4 @@
-#include "BoundFNManager.h"
+﻿#include "BoundFNManager.h"
 #include "Log.h"
 using namespace zaran;
 void BoundManagerFN::AddBoundary(const std::string& name, BoundFN&& bound)
@@ -10,20 +10,20 @@ void BoundManagerFN::AddBoundary(const std::string& name, BoundFN&& bound)
 	}
 	else
 	{
-		auto& boundVec = it->second;
-		for (int iBound = 0; iBound < boundVec.size(); ++iBound)
+		auto& bound_vec = it->second;
+		for (index_type iter_bound = 0; iter_bound < bound_vec.size(); ++iter_bound)
 		{
-			if (boundVec[iBound].GetIdxBound() > bound.GetIdxBound())
+			if (bound_vec[iter_bound].GetIdxBound() > bound.GetIdxBound())
 			{
-				boundVec.insert(boundVec.begin() + iBound, bound);
+				bound_vec.insert(bound_vec.begin() + iter_bound, bound);
 				return;
 			}
-			if (boundVec[iBound] == bound)
+			if (bound_vec[iter_bound] == bound)
 			{
 				return;
 			}
 		}
-		boundVec.emplace_back(bound);
+		bound_vec.emplace_back(bound);
 	}
 }
 

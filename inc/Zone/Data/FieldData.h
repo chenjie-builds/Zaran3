@@ -31,7 +31,16 @@ namespace zaran
 		void GetData(const string &name, int *&data);
 		double& GetData(const std::string &name, int index);
 		void GetDataSize(const string &name, int &num);
-
+		template<typename T>
+		T* GetData(const string& name)
+		{
+			int id = m_name_id[name];
+			if (id < 0 || id >= m_data_num[id])
+			{
+				throw std::runtime_error("FieldData::GetData: invalid data index");
+			}
+			return reinterpret_cast<T*>(m_data[id].data());
+		}
 	private:
 		/// @brief 用于记录数据名称和数据的对应关系
 		map<string, int> m_name_id;
