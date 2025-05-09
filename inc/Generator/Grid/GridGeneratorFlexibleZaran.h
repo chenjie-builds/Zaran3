@@ -68,9 +68,9 @@ namespace zaran
     class GridFNFactoryZaran : public GridGenerator
     {
     public:
-        GridFNFactoryZaran() {}
-        void CreateGrid(shared_ptr<GridBlock> block, shared_ptr<GridFN> grid, shared_ptr<ModelManager> model_manager);
-        ~GridFNFactoryZaran() {}
+        GridFNFactoryZaran() = default;
+        void CreateGrid(const shared_ptr<GridBlock> &block, const shared_ptr<GridFN> &grid, const shared_ptr<ModelManager> &model_manager);
+        ~GridFNFactoryZaran() override = default;
 
     public:
         shared_ptr<GridBlock> GetBlockGrid() { return m_block_grid; }
@@ -87,7 +87,7 @@ namespace zaran
     private:
         void TagBlockGrid();
         void TagCells();
-        void ProcessCell(int start_i, int end_i, int start_j, int end_j, int start_k, int end_k);
+        void ProcessCell(index_type start_i, index_type end_i, index_type start_j, index_type end_j, index_type start_k, index_type end_k);
         void TagNodes();
         void ReTagBlockGrid();
         void ReTagCells();
@@ -142,6 +142,6 @@ namespace zaran
         std::set<ConnectInfo> m_trans_node;
         FNGridInfo m_fn_info;
 
-        int m_layer_num;
+        int m_layer_num{};
     };
 }

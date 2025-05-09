@@ -20,7 +20,7 @@ namespace zaran
 	class GridFN : public GridBase
 	{
 	public:
-		GridFN(const string& name, int index, dimension_type dim);
+		GridFN(const string& name, index_type index, dimension_type dim);
 		virtual ~GridFN();
 
 	public:

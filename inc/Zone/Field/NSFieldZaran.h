@@ -36,8 +36,8 @@ namespace zaran
 		void AllocateSolverPara() override;
 
 	public:
-		void SetModelManager(shared_ptr <ModelManager> model_manager);
-		shared_ptr<GridBlock>GetGrid();
+		void SetModelManager(const shared_ptr <ModelManager> &model_manager);
+		shared_ptr<GridBlock>GetGrid() const;
 		shared_ptr<FlowSolverParamStruct>GetSolverPara();
 		shared_ptr<DataManagerNSStruct>GetDataManager();
 		shared_ptr <ModelManager> GetModelManager() { return m_model_manager; }
@@ -45,8 +45,8 @@ namespace zaran
 		void CalcResidual() override;
 		//-----------------------------Master--------------------------------------
 	public:
-		void DeleteSlaveField(shared_ptr<FieldManager> field_manager);
-		void CreateSlaveField(shared_ptr<FieldManager> field_manager);
+		void DeleteSlaveField(const shared_ptr<FieldManager>& field_manager) const;
+		void CreateSlaveField(const shared_ptr<FieldManager>& field_manager);
 
 	protected:
 		/// @brief slave field is managed by master field

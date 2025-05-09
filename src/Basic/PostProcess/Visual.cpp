@@ -906,11 +906,11 @@ void Visual::WriteTecplotASCII(shared_ptr<NSFieldFNFDM> field, std::ostream& os)
 
 }
 
-void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldZaran> field, std::ostream& os)
+void zaran::Visual::WriteTecplotASCII(const shared_ptr<NSFieldZaran>& field, std::ostream& os)
 {
-	auto grid = field->GetGrid();
-	auto node = grid->GetNode();
-	auto data_manager = field->GetDataManager();
+	const auto grid = field->GetGrid();
+	const auto node = grid->GetNode();
+	const auto data_manager = field->GetDataManager();
 	auto solver = field->GetSolver();
 	index_type grid_ni = grid->GetNi();
 	index_type grid_nj = grid->GetNj();

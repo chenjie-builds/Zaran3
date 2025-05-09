@@ -5,7 +5,7 @@
 #include"File.h"
 int main(int argc, char** argv)
 {
-	std::string work_dir = "";
+	std::string work_dir;
 	std::string control_file = "zaran.ini";
 	if (argc == 1)
 	{
@@ -30,7 +30,7 @@ int main(int argc, char** argv)
 	}
 	using namespace zaran;
 	Logger::Start(work_dir);
-	shared_ptr<Application> app = make_shared<Application>(work_dir);
+	unique_ptr<Application> app = make_unique<Application>(work_dir);
 	app->Run();
 	for (int i = 10; i > 0; i--)
 	{

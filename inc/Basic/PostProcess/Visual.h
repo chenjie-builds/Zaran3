@@ -21,7 +21,7 @@ namespace zaran
 	public:
 		void WriteTecASCII(shared_ptr<FieldManager> field_manager);
 		void WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostream& os);
-		void WriteTecplotASCII(shared_ptr<NSFieldZaran> field, std::ostream& os);
+		static void WriteTecplotASCII(const shared_ptr<NSFieldZaran>& field, std::ostream& os);
 		void WriteTecplotASCII(shared_ptr<NSFieldFNFDM> field, std::ostream& os);
 
 		void WriteTecplotBinary(shared_ptr<FieldManager> field_manager);

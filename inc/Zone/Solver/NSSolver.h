@@ -81,7 +81,7 @@ namespace zaran
 	protected:
 		shared_ptr<Gas> m_gas;
 		// 通量求解器
-		std::unique_ptr<RiemannSolver> m_riemann_solver;
+		unique_ptr<RiemannSolver> m_riemann_solver;
 		shared_ptr<DataManagerNS> m_data_manager;
 	};
 }

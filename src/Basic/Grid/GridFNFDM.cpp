@@ -1,7 +1,7 @@
 ﻿#include "GridFNFDM.h"
 namespace zaran
 {
-    GridFN::GridFN(const string& name, int index, dimension_type dim) :GridBase(name, index, dim, GridType::Flexible)
+    GridFN::GridFN(const string& name, index_type index, dimension_type dim) :GridBase(name, index, dim, GridType::Flexible)
     {
 		m_node = make_unique<NodeFN>(0);
         m_face = make_unique<FaceFN>(0);

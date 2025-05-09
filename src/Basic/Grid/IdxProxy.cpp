@@ -1,4 +1,5 @@
 ﻿#include "IdxProxy.h"
+#include "Log.h"
 namespace zaran
 {
 	IdProxy::IdProxy(index_type max_idx)

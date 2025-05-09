@@ -4,15 +4,14 @@
 #include <omp.h>
 #include<cmath>
 namespace zaran {
-	void GridFNFactoryZaran::CreateGrid(shared_ptr<GridBlock> block, shared_ptr<GridFN> grid, shared_ptr<ModelManager> model_manager)
+	void GridFNFactoryZaran::CreateGrid(const shared_ptr<GridBlock> &block, const shared_ptr<GridFN> &grid, const shared_ptr<ModelManager> &model_manager)
 	{
 		m_model_manager = model_manager;
 		m_block_grid = block;
 		m_fn_grid = grid;
-		int ni, nj, nk;
-		ni = m_block_grid->GetNi();
-		nj = m_block_grid->GetNj();
-		nk = m_block_grid->GetNk();
+        count_type ni = m_block_grid->GetNi();
+		count_type nj = m_block_grid->GetNj();
+		count_type nk = m_block_grid->GetNk();
 		m_idx_proxy = make_shared <IdProxyStruct>(ni, nj, nk);
 		m_layer_num = GlobalData::GetInt("projection_layer");
 		TagBlockGrid();
@@ -55,22 +54,20 @@ namespace zaran {
 
 	void GridFNFactoryZaran::TagCells()
 	{
-		auto grid = GetBlockGrid();
-		int ni, nj, nk;
-		ni = grid->GetNi();
-		nj = grid->GetNj();
-		nk = grid->GetNk();
-		int ghost_size = grid->GetGhostLevel();
+		const auto grid = GetBlockGrid();
+        const count_type ni = grid->GetNi();
+		const count_type nj = grid->GetNj();
+		const count_type nk = grid->GetNk();
 		m_cell_type.resize(ni * nj * nk);
 		for (int iCell = 0; iCell < ni * nj * nk; iCell++) {
 			m_cell_type[iCell] = PhysicalType::Unset;
 		}
-		double dx = grid->GetDx();
-		double dy = grid->GetDy();
-		double dz = grid->GetDz();
-		double tol_factor = GlobalData::GetDouble("tol_factor");
+		const double dx = grid->GetDx();
+		const double dy = grid->GetDy();
+		const double dz = grid->GetDz();
+		const double tol_factor = GlobalData::GetDouble("tol_factor");
 		double tol = tol_factor * sqrt(dx * dx + dy * dy + dz * dz);
-		auto model_manager = GetModelManager();
+		const auto model_manager = GetModelManager();
 		auto& box = grid->GetBoundBox();
 		auto& model_box = model_manager->GetBox();
 		IdProxyStruct& idx_proxy = *m_idx_proxy;
@@ -376,32 +373,28 @@ namespace zaran {
 		TagNodes();
 	}
 
-	void GridFNFactoryZaran::ProcessCell(int start_i, int end_i, int start_j,
-		int end_j, int start_k, int end_k)
+	void GridFNFactoryZaran::ProcessCell(const index_type start_i, const index_type end_i, const index_type start_j,
+		const index_type end_j, const index_type start_k, const index_type end_k)
 	{
 		// Log::info("start_i={}, end_i={}, start_j={}, end_j={}, start_k={},
 		// end_k={}", start_i, end_i, start_j, end_j, start_k, end_k);
-		auto grid = GetBlockGrid();
+		const auto grid = GetBlockGrid();
 		IdProxyStruct& idx_proxy = grid->GetIdxProxy();
 		auto& grid_box = grid->GetBoundBox();
-		auto model_manager = GetModelManager();
-		auto& model_box = model_manager->GetBox();
-		int mid_i = (start_i + end_i) / 2;
-		int mid_j = (start_j + end_j) / 2;
-		int mid_k = (start_k + end_k) / 2;
-		double x_min, x_max, y_min, y_max, z_min, z_max;
-		x_min =
-			grid_box.x_min + (start_i - grid->GetGhostLevel() + 0.5) * grid->GetDx();
-		x_max = grid_box.x_min +
-			(end_i - 1 - grid->GetGhostLevel() + 0.5) * grid->GetDx();
-		y_min =
-			grid_box.y_min + (start_j - grid->GetGhostLevel() + 0.5) * grid->GetDy();
-		y_max = grid_box.y_min +
-			(end_j - 1 - grid->GetGhostLevel() + 0.5) * grid->GetDy();
-		z_min =
-			grid_box.z_min + (start_k - grid->GetGhostLevel() + 0.5) * grid->GetDz();
-		z_max = grid_box.z_min +
-			(end_k - 1 - grid->GetGhostLevel() + 0.5) * grid->GetDz();
+		const auto model_manager = GetModelManager();
+		const auto& model_box = model_manager->GetBox();
+		const index_type mid_i = (start_i + end_i) / 2;
+		const index_type mid_j = (start_j + end_j) / 2;
+		const index_type mid_k = (start_k + end_k) / 2;
+        double x_min = grid_box.x_min + (start_i - grid->GetGhostLevel() + 0.5) * grid->GetDx();
+		double x_max = grid_box.x_min +
+                       (end_i - 1 - grid->GetGhostLevel() + 0.5) * grid->GetDx();
+		double y_min = grid_box.y_min + (start_j - grid->GetGhostLevel() + 0.5) * grid->GetDy();
+		double y_max = grid_box.y_min +
+                       (end_j - 1 - grid->GetGhostLevel() + 0.5) * grid->GetDy();
+		double z_min = grid_box.z_min + (start_k - grid->GetGhostLevel() + 0.5) * grid->GetDz();
+		double z_max = grid_box.z_min +
+                       (end_k - 1 - grid->GetGhostLevel() + 0.5) * grid->GetDz();
 		double cell_center[3];
 		cell_center[0] = 0.5 * (x_min + x_max);
 		cell_center[1] = 0.5 * (y_min + y_max);

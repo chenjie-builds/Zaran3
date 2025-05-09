@@ -7,19 +7,16 @@
 #include "NSFieldFN.h"
 using namespace zaran;
 
-NSFieldSimulation::NSFieldSimulation(shared_ptr<FieldManager> field_manager)
+NSFieldSimulation::NSFieldSimulation(const shared_ptr<FieldManager> &field_manager)
 {
 	m_field_manager = field_manager;
 	m_res_flag = false;
 }
 
 NSFieldSimulation::~NSFieldSimulation()
-{
+= default;
 
-}
-
-void NSFieldSimulation::Initialize()
-{
+void NSFieldSimulation::Initialize() const {
 	if (!GlobalData::IsExist("currentIter"))
 	{
 		GlobalData::Update("currentIter", 0);
@@ -35,8 +32,7 @@ void NSFieldSimulation::Initialize()
 	}
 }
 
-void NSFieldSimulation::SaveDataTecplot()
-{
+void NSFieldSimulation::SaveDataTecplot() const {
 	//m_visual->WriteTecASCII(m_field_manager);
 	m_visual->WriteTecplotBinary(m_field_manager);
 	//m_visual->WriteVtkASCII(m_field_manager);

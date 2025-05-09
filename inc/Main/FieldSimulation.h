@@ -22,7 +22,7 @@ namespace zaran
     class NSFieldSimulation
     {
     public:
-        NSFieldSimulation(shared_ptr<FieldManager> field_manager);
+        explicit NSFieldSimulation(const shared_ptr<FieldManager> &field_manager);
         ~NSFieldSimulation();
 
     public:
@@ -40,7 +40,7 @@ namespace zaran
     protected:
 		void CalcTimeStep();
         // 初始化，包括求解器初始化和流场初始化
-        void Initialize();
+        void Initialize() const;
         // 计算残差
         void CalcResidual();
         // field数据通信
@@ -54,7 +54,7 @@ namespace zaran
         // 备份残差
         void SaveResidual() const;
         // 输出流场为Tecplot格式
-        void SaveDataTecplot();
+        void SaveDataTecplot() const;
         // 备份流场数据，用于续算
         void BackupFieldData(std::string &back_folder);
         // 备份残差文件
@@ -66,8 +66,8 @@ namespace zaran
     private:
         shared_ptr<FieldManager> m_field_manager;
         shared_ptr<Visual> m_visual;
-        double m_res_max;
-        double m_res_ave;
+        double m_res_max{};
+        double m_res_ave{};
         bool m_res_flag;
     };
 
