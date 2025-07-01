@@ -7728,7 +7728,7 @@ namespace zaran
 		c_right[0] = 5.0 / 16.0;
 		c_right[1] = 10.0 / 16.0;
 		c_right[2] = 1.0 / 16.0;
-		double eps = 1e-15;
+		double eps = 1e-6;
 		double IS[3];
 		double beta_left[3], beta_right[3];
 		for (int i = 0; i < 3; ++i)

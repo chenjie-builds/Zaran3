@@ -815,9 +815,76 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostr
 	//zeta_z_L2 /= node_num;
 	//zeta_z_L2 = std::sqrt(zeta_z_L2);
 
+
+	//double jacobi_Linf = -LARGE_NUMBER;
+	//double jacobi_L2 = 0.0;
+	//double jacobi_error;
+	//double jacobi_exact = 100;
+	//int N = ke - ks;
+	//double L = 5;
+	//double h = L / N;
+	//for (int k = ks+N/5 ; k <= ke- N / 5; ++k)
+	//{
+	//	for (int j = js + N / 5; j <= je -N / 5; ++j)
+	//	{
+	//		for (int i = is + N / 5; i <= ie- N / 5; ++i)
+	//		{
+	//			int idx = idx_proxy(i, j, k);
+	//			double Ci = cos(PI * h * i);
+	//			double Cj = cos(PI * h * j);
+	//			double Ck = cos(PI * h * k);
+	//			double Si = sin(PI * h * i);
+	//			double Sj = sin(PI * h * j);
+	//			double Sk = sin(PI * h * k);
+	//			double x_xi = 2 * h;
+	//			double x_eta = 2 * PI * h * h * Sk * Cj;
+	//			double x_zeta = 2 * PI * h * h * Sj * Ck;
+	//			double y_xi = 2 * PI * h * h * Si * Ck;
+	//			double y_eta = 2 * h;
+	//			double y_zeta = 2 * PI * h * h * Sk * Ci;
+	//			double z_xi = 0 * PI * h * h * Sj * Ci;
+	//			double z_eta = 0 * PI * h * h * Si * Cj;
+	//			double z_zeta = 2 * h;
+	//			double jacobi_exact = x_xi * (y_eta * z_zeta - z_eta * y_zeta)
+	//								- y_xi * (x_eta * z_zeta - z_eta * x_zeta)
+	//								+ z_xi * (x_eta * y_zeta - y_eta * x_zeta);
+	//			jacobi_error = 1.0 / metrics->GetJacobian(idx) - jacobi_exact;
+	//			jacobi_error /= jacobi_exact;
+	//			jacobi_error = std::abs(jacobi_error);
+	//			jacobi_Linf = std::max(jacobi_Linf, jacobi_error);
+	//			jacobi_L2 += jacobi_error * jacobi_error;
+	//		}
+	//	}
+	//}
+	//jacobi_L2 /= pow(N - 2*N / 5, 3);
+	//jacobi_L2 = std::sqrt(jacobi_L2);
+
+
+
+	//double pressure_inf = -LARGE_NUMBER;
+	//double pressure_L2 = 0.0;
+	//double pressure_error;
+	//double pressure_exact = 1.0 / 1.4;
+	//for (int k = ks; k <= ke; ++k)
+	//{
+	//	for (int j = js; j <= je; ++j)
+	//	{
+	//		for (int i = is; i <= ie; ++i)
+	//		{
+	//			int idx = idx_proxy(i, j, k);
+	//			pressure_error = pressure[idx] - pressure_exact;
+	//			pressure_error /= pressure_exact;
+	//			pressure_error = std::abs(pressure_error);
+	//			pressure_inf = std::max(pressure_inf, pressure_error);
+	//			pressure_L2 += pressure_error * pressure_error;
+	//		}
+	//	}
+	//}
+	//pressure_L2 /= node_num;
+	//pressure_L2 = std::sqrt(pressure_L2);
 	os << "TITLE=\"NSFieldStruct Field\"\n";
-	os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\"\n";
-	//os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure,\"zeta_z\n";
+	//os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\",\"x_zeta\",\"y_zeta\",\"z_xi\",\"ERR_J\"\n";
+	os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\"\n";//os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure,\"zeta_z\n";
 	os << "ZONE I=" << ni << ", J=" << nj << ", K=" << nk << ", F=POINT\n";
 	for (int k = ks; k <= ke; ++k)
 	{
@@ -825,18 +892,48 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostr
 		{
 			for (int i = is; i <= ie; ++i)
 			{
+
+
 				int idx = idx_proxy(i, j, k);
+
+				//double Ci = cos(PI * h * i);
+				//double Cj = cos(PI * h * j);
+				//double Ck = cos(PI * h * k);
+				//double Si = sin(PI * h * i);
+				//double Sj = sin(PI * h * j);
+				//double Sk = sin(PI * h * k);
+				//double x_xi = 2 * h;
+				//double x_eta = 2 * PI * h * h * Sk * Cj;
+				//double x_zeta = 2 * PI * h * h * Sj * Ck;
+				//double y_xi = 2 * PI * h * h * Si * Ck;
+				//double y_eta = 2 * h;
+				//double y_zeta = 2 * PI * h * h * Sk * Ci;
+				//double z_xi = 0 * PI * h * h * Sj * Ci;
+				//double z_eta = 0 * PI * h * h * Si * Cj;
+				//double z_zeta = 2 * h;
+				//double jacobi_exact = x_xi * (y_eta * z_zeta - z_eta * y_zeta)
+				//	- y_xi * (x_eta * z_zeta - z_eta * x_zeta)
+				//	+ z_xi * (x_eta * y_zeta - y_eta * x_zeta);
+
+				//jacobi_error = 1.0 / metrics->GetJacobian(idx) - jacobi_exact;
+				//jacobi_error /= jacobi_exact;
+
+
 				//double x = node->GetCoord(i, j, k)[0];
 				//double y = node->GetCoord(i, j, k)[1];
-				//double rho = 1.0 + 0.01 * y;
+				//double rho = 1.0 - 0.005 * x + 0.01 * y;
+				//pressure_error = pressure[idx] - pressure_exact;
 				os << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1] << " " << node->GetCoord(i, j, k)[2] << " "
 					<< density[idx] << " " << velocity_x[idx] << " " << velocity_y[idx] << " " << velocity_z[idx] << " "
 					//<< pressure[idx] << " " << (metrics->GetZeta(idx)[2] * metrics->GetJacobian(idx)-zeta_z_exac)/zeta_z_exact << "\n";
+					//<< pressure[idx] << " " << metrics->GetX(idx)[2] << " " << metrics->GetY(idx)[2] << " " << metrics->GetZ(idx)[0] << " " << jacobi_error << "\n";
 					<< pressure[idx] << "\n";
 			}
 		}
 	}
 	//Log::info("zeta_z L_inf norm:{:2E}, L_2 norm:{:2E}", zeta_z_Linf, zeta_z_L2);
+	//Log::info("presure L_inf norm:{:2E}, L_2 norm:{:2E}", pressure_inf, pressure_L2);
+	//Log::info("jacobi L_inf norm:{:2E}, L_2 norm:{:2E}", jacobi_Linf, jacobi_L2);
 }
 
 void Visual::WriteTecplotASCII(shared_ptr<NSFieldFNFDM> field, std::ostream& os)

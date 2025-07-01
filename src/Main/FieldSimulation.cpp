@@ -33,8 +33,8 @@ void NSFieldSimulation::Initialize() const {
 }
 
 void NSFieldSimulation::SaveDataTecplot() const {
-	//m_visual->WriteTecASCII(m_field_manager);
-	m_visual->WriteTecplotBinary(m_field_manager);
+	m_visual->WriteTecASCII(m_field_manager);
+	//m_visual->WriteTecplotBinary(m_field_manager);
 	//m_visual->WriteVtkASCII(m_field_manager);
 	//m_visual->WriteCGNS(m_field_manager);
 }
@@ -228,13 +228,13 @@ void NSFieldSimulation::PostSolve()
 	int currentIter = GlobalData::GetInt("currentIter");
 	int calResidualIter = GlobalData::GetInt("calResidualIter");
 	int writeFieldIter = GlobalData::GetInt("writeFieldIter");
-	if (currentIter % calResidualIter == 0 && ContinueSolve())
+	if (currentIter % calResidualIter == 0 )
 	{
 		CalcResidual();
 		Log::info("iter= {}, dt={:E}, res_max= {:E}, res_ave= {:E}", GlobalData::GetInt("currentIter"), GlobalData::GetDouble("dt"), m_res_max, m_res_ave);
 		SaveResidual();
 	}
-	if (currentIter % writeFieldIter == 0 && ContinueSolve())
+	if (currentIter % writeFieldIter == 0 )
 	{
 		Log::info("Backup field data...");
 		Log::info("physical time: {:E}", GlobalData::GetDouble("currentTime"));
