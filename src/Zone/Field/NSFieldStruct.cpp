@@ -45,17 +45,18 @@ namespace zaran
 						index_type idx = idx_proxy(i, j, k);
 						double times_step = data_manager->GetTimeStep(idx);
 						double res_val = abs(res[idx]) / times_step;
-						//if (iEqu == 0)
-						//{
-						//	double gamma = 1.4;
-						//	double beta = 5.0;
-						//	double xc = 5.0;
-						//	double yc = 5.0;
-						//	double r2 = (coord[0] - xc) * (coord[0] - xc) + (coord[1] - yc) * (coord[1] - yc);
-						//	double density_num = data_manager->GetPrim(ID_DENSITY, idx);
-						//	double density_exact = pow(1.0 - (gamma - 1.0) * beta * beta * exp(1.0 - r2) / (8.0 * gamma * PI * PI), 1.0 / (gamma - 1.0));
-						//	res_val = abs(density_num - density_exact) / density_exact;
-						//}
+						auto coord = node->GetCoord(i, j, k);
+						if (iEqu == 0)
+						{
+							double gamma = 1.4;
+							double beta = 5.0;
+							double xc = 5.0;
+							double yc = 5.0;
+							double r2 = (coord[0] - xc) * (coord[0] - xc) + (coord[1] - yc) * (coord[1] - yc);
+							double density_num = data_manager->GetPrim(ID_DENSITY, idx);
+							double density_exact = pow(1.0 - (gamma - 1.0) * beta * beta * exp(1.0 - r2) / (8.0 * gamma * PI * PI), 1.0 / (gamma - 1.0));
+							res_val = abs(density_num - density_exact) / density_exact;
+						}
 						//if (iEqu == 0)
 						//{
 						//	double density_num = data_manager->GetPrim(ID_DENSITY, idx);

@@ -60,8 +60,8 @@ namespace zaran
 	}
 	void NSSolverStruct::InitFieldFarfield()
 	{
-		// InitFieldVortex();
-		// return;
+		InitFieldVortex();
+		return;
 		auto grid = GetGrid();
 		auto data_manager = GetDataManager();
 		IdProxyStruct& idx_proxy = GetIdxProxy();
@@ -6766,7 +6766,7 @@ namespace zaran
 					}
 					lamda = lamda * jacobi;
 					data_manager->SetTimeStep(idx, cfl / lamda);
-					//data_manager->SetTimeStep(idx, 0.002);
+					data_manager->SetTimeStep(idx, 0.002);
 
 				}
 			}
@@ -7883,8 +7883,8 @@ namespace zaran
 			}
 			else if (bound_name == "inlet")
 			{
-				BCInflow(bound);
-				//BCVortex(bound);
+				//BCInflow(bound);
+				BCVortex(bound);
 			}
 			else if (bound_name == "outlet")
 			{
