@@ -75,6 +75,11 @@ namespace zaran
 		prim_far[2] = para->GetInflowVelocityY();
 		prim_far[3] = para->GetInflowVelocityZ();
 		prim_far[4] = para->GetInflowPressure();
+		prim_far[0] = 1.4;
+		prim_far[1] = 5.0;
+		prim_far[2] = 0.0;
+		prim_far[3] = 0.0;
+		prim_far[4] = 1;
 		// prim_far[1] = 3.0;
 		// prim_far[2] = 0.0;
 		// prim_far[3] = 0.0;
@@ -7911,23 +7916,53 @@ namespace zaran
 		double prim_far[5] = { GetPara()->GetInflowDensity(), GetPara()->GetInflowVelocityX(),
 							  GetPara()->GetInflowVelocityY(), GetPara()->GetInflowVelocityZ(),
 							  GetPara()->GetInflowPressure() };
-		//prim_far[1] = 3.0;
-		//prim_far[2] = 0;
-		//prim_far[3] = 0.0;
-		//prim_far[4] = 1.4;
+		double yb = 1.5;
+		double yc = 0.5;
+		prim_far[1] = 5.0;
+		prim_far[2] = 0;
+		prim_far[3] = 0.0;
+		prim_far[4] = 1.4;
 		//double prim_far[5] = { 8.0,8.25 * cos(30.0 / 180.0 * PI),-8.25 * sin(30.0 / 180.0 * PI),0.0,116.5 };
 		//double prim_far[5] = { 6.4,3.125,0,0,18.5 };
 		double cons_far[5];
 		GetGas()->Prim2Cons(prim_far, cons_far);
-#ifdef USE_OMP
-#pragma omp parallel for 
-#endif // USE_OMP
+//#ifdef USE_OMP
+//#pragma omp parallel for 
+//#endif // USE_OMP
 		for (size_t iBound = 0; iBound < bound.size(); ++iBound)
 		{
 			index_type i_bound, j_bound, k_bound;
+			GetGas()->Prim2Cons(prim_far, cons_far);
 			index_type i_ghost, j_ghost, k_ghost;
 			bound[iBound].GetIdx(i_bound, j_bound, k_bound);
 			auto bound_direction = bound[iBound].GetDirectionSrc();
+			auto coord_bound = node->GetCoord(idx_proxy(i_bound, j_bound, k_bound));
+			if (coord_bound[1] >= yb)
+			{
+				prim_far[0] = 6;
+				prim_far[1] = 3.083;
+				prim_far[2] = -1.917;
+				prim_far[3] = 0.0;
+				prim_far[4] = 14.417;
+			}
+			else if (coord_bound[1] <= yc)
+			{
+				prim_far[0] = 4.667;
+				prim_far[1] = 4.125;
+				prim_far[2] = 1.516;
+				prim_far[3] = 0.0;
+				prim_far[4] = 7.125;
+			}
+			else
+			{
+				prim_far[0] = 1.4;
+				prim_far[1] = 5.0;
+				prim_far[2] = 0.0;
+				prim_far[3] = 0.0;
+				prim_far[4] = 1;
+			}
+			data_manager->SetPrim(idx_proxy(i_bound, j_bound, k_bound), prim_far);
+			data_manager->SetCons(idx_proxy(i_bound, j_bound, k_bound), cons_far);
 			for (size_t iGhost = 1; iGhost <= ghost_size; ++iGhost)
 			{
 				i_ghost = i_bound + iGhost * bound_direction[0];
