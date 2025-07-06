@@ -23,6 +23,7 @@ namespace zaran
 		m_grid = grid;
 		m_data_manager = data_manager;
 		m_para = para;
+		InterpolateTest();
 	}
 	NSSolverStruct::~NSSolverStruct()
 	{
@@ -43,6 +44,151 @@ namespace zaran
 	{
 		return m_para.get();
 	}
+
+	void NSSolverStruct::InterpolateTest()
+	{
+		// 测试半点插值
+		//测试函数: f(x,y)=x^2 + y^2
+		auto exact_func = [](double x, double y,doub-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			-+
+			le z)
+			{
+				double x1 = x ;
+				//return exp(x1) * exp(x1);
+				return  pow(x1, 3);
+			};
+		auto grid = GetGrid();
+		auto node = grid->GetNode();
+		auto idx_proxy = GetIdxProxy();
+		count_type ni = grid->GetNi();
+		count_type nj = grid->GetNj();
+		count_type nk = grid->GetNk();
+		count_type is, ie, js, je, ks, ke;
+		grid->GetRange(is, ie, js, je, ks, ke);
+		count_type node_num = ni * nj * nk;
+		count_type inner_node_num = (ie - is + 1) * (je - js + 1) * (ke - ks + 1);
+		dynamic_array<double> exact(node_num);// 存储精确解
+		dynamic_array<double> inter_i(node_num);// 存储i+1/2半点插值
+		dynamic_array<double> inter_temp(5);
+		for(index_type k = ks; k <= ke; ++k)
+		{
+			for (index_type j = js; j <= je; ++j)
+			{
+				for (index_type i = is; i <= ie; ++i)
+				{
+					index_type idx = idx_proxy(i, j, k);
+					double max_inter = -LARGE_NUMBER;
+					for (int iTemp = 0; iTemp < 5; iTemp++)
+					{
+						auto coord = node->GetCoord(i + iTemp - 2, j, k);
+						inter_temp[iTemp] = exact_func(coord[0], coord[1], coord[2]);
+						max_inter = std::max(max_inter, inter_temp[iTemp]);
+					}
+					//for(int iTemp = 0; iTemp < 5; iTemp++)
+					//{
+					//	inter_temp[iTemp] /= max_inter;
+					//}
+					double left_value, right_value;
+					InterMidNodePrim_WCNS5(inter_temp.data(), left_value, right_value);
+					//inter_i[idx] = left_value * max_inter;
+					inter_i[idx] = left_value ;
+				}
+			}
+		}
+		dynamic_array<double> error_i(node_num);
+		double error_max = -LARGE_NUMBER;
+		double L2_error = 0;
+		for (index_type k = ks; k <= ke; ++k)
+		{
+			for (index_type j = js; j <= je; ++j)
+			{
+				for (index_type i = is; i <= ie; ++i)
+				{
+					index_type idx = idx_proxy(i, j, k);
+					auto coord1 = node->GetCoord(i, j, k);
+					auto coord2 = node->GetCoord(i + 1, j, k);
+					exact[idx] = exact_func(0.5 * (coord1[0] + coord2[0]), 0.5 * (coord1[1] + coord2[1]), 0.5 * (coord1[2] + coord2[2]));
+					error_i[idx] = (exact[idx] - inter_i[idx]) / exact[idx];
+					error_max = std::max(error_max, abs(error_i[idx]));
+					L2_error += abs(error_i[idx]) * abs(error_i[idx]);
+				}
+			}
+		}
+		L2_error = sqrt(L2_error / inner_node_num);
+		Log::info("InterpolateTest: i+1/2 error max = {}, L2 error = {}", error_max, L2_error);
+		exit(0);
+	}
+
 	void NSSolverStruct::InitField()
 	{
 		auto para = GetPara();

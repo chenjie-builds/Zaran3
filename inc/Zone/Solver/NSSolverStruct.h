@@ -29,6 +29,8 @@ namespace zaran
 		IdProxyStruct& GetIdxProxy();
 		FlowSolverParamStruct* GetPara();
 
+		void InterpolateTest();
+
 	protected:
 		void InitField() override;
 		void InitFieldFarfield() override;
