@@ -10,6 +10,7 @@
 #include "NSFieldZaran.h"
 #include "PolyData.h"
 #include "ReadSTL.h"
+#include "ReadPLY.h"
 
 namespace zaran
 {
@@ -89,7 +90,7 @@ namespace zaran
 						int recv_ni = recv_grid_struct->GetNi();
 						int recv_nj = recv_grid_struct->GetNj();
 						int recv_nk = recv_grid_struct->GetNk();
-						IdProxyStruct tgt_idx_proxy (recv_ni, recv_nj, recv_nk);
+						IdProxyStruct tgt_idx_proxy(recv_ni, recv_nj, recv_nk);
 						connect_bound[i].GetIdxTgt(idx_i, idx_j, idx_k);
 						recv_node_idx_global[i] = tgt_idx_proxy(idx_i, idx_j, idx_k);
 					}
@@ -119,16 +120,36 @@ namespace zaran
 	shared_ptr<FieldManager> FieldGenerator::CreateFieldZaran()
 	{
 		// Read model file
-		STLReader stl_reader;
 		string mode_file = GlobalData::GetString("modelFileName");
 		std::string work_dir = GlobalData::GetString("work_dir");
+		//识别其后缀
+		std::string suffix = mode_file.substr(mode_file.find_last_of(".") + 1);
 		mode_file = work_dir + "/" + mode_file;
-		stl_reader.ReadSTLFile(mode_file.c_str());
-		// Create model manager
-		shared_ptr < PolyDataModel > poly_data_model = make_shared <PolyDataModel>();
-		poly_data_model->SetPolyData(stl_reader.GetPolyData(), 1e-6);
 		shared_ptr < ModelManager > model_manager = make_shared <ModelManager>();
-		model_manager->AddModel(poly_data_model);
+		if (suffix == "stl" || suffix == "STL")
+		{
+			STLReader stl_reader;
+			stl_reader.ReadSTLFile(mode_file.c_str());
+			// Create model manager
+			shared_ptr < PolyDataModel > poly_data_model = make_shared <PolyDataModel>();
+			poly_data_model->SetPolyData(stl_reader.GetPolyData(), 1e-6);
+			model_manager->AddModel(poly_data_model);
+		}
+		else if (suffix == "ply" || suffix == "PLY")
+		{
+			// Create model manager
+			PlyReader ply_reader;
+			ply_reader.ReadPlyFile(mode_file.c_str());
+			shared_ptr < PointCloudModel> point_cloud_model= make_shared<PointCloudModel>(ply_reader.GetPoints());
+			model_manager->AddModel(point_cloud_model);
+		}
+		else
+		{
+			Log::error("Unsupported model file format: {}", suffix);
+			system("pause");
+		}
+
+
 		// Create field manager
 		shared_ptr<FieldManager> field_manager = make_shared<FieldManager>();
 		shared_ptr<NSFieldZaran> zaran_field = make_shared<NSFieldZaran>();

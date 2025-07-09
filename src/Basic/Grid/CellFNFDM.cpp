@@ -15,7 +15,7 @@ namespace zaran
 
 	void CellFN::SetCellNum(int cell_num)
 	{
-		if (cell_num <= 0)
+		if (cell_num < 0)
 		{
 			Log::error("CellTopo::SetCellNum: The number of cells is less than 0");
 			Log::error(" cell_num = {}", cell_num);

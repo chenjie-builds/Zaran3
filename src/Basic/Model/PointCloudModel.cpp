@@ -1,13 +1,10 @@
-#include "PointCloudModel.h"
+﻿#include "PointCloudModel.h"
 #include "CommonPara.h"
 #include "MathBasic.h"
 using namespace zaran;
 PointCloudModel::PointCloudModel(const dynamic_array<Eigen::Vector3d> &point_list)
 {
 	vtkNew<vtkPoints> points;
-	Eigen::Vector3d max, min;
-	max = Eigen::Vector3d(-LARGE_NUMBER, -LARGE_NUMBER, -LARGE_NUMBER);
-	min = Eigen::Vector3d(LARGE_NUMBER, LARGE_NUMBER, LARGE_NUMBER);
 	Box box;
 	for (size_t iPoint = 0; iPoint < point_list.size(); ++iPoint)
 	{
@@ -28,6 +25,37 @@ PointCloudModel::PointCloudModel(const dynamic_array<Eigen::Vector3d> &point_lis
 	m_point_cloud = vtkNew<vtkKdTreePointLocator>();
 	m_point_cloud->SetDataSet(polydata);
 	m_point_cloud->BuildLocator();
+}
+PointCloudModel::PointCloudModel(const dynamic_array<dynamic_array<double>>& point_list)
+{
+	vtkNew<vtkPoints> points;
+	Box box;
+	box.x_min = LARGE_NUMBER;
+	box.x_max = -LARGE_NUMBER;
+	box.y_min = LARGE_NUMBER;
+	box.y_max = -LARGE_NUMBER;
+	box.z_min = LARGE_NUMBER;
+	box.z_max = -LARGE_NUMBER;
+	for (size_t iPoint = 0; iPoint < point_list.size(); ++iPoint)
+	{
+		auto& x = point_list[iPoint][0];
+		auto& y = point_list[iPoint][1];
+		auto& z = point_list[iPoint][2];
+		points->InsertPoint(iPoint, x, y, z);
+		box.x_min = std::min(box.x_min, x);
+		box.x_max = std::max(box.x_max, x);
+		box.y_min = std::min(box.y_min, y);
+		box.y_max = std::max(box.y_max, y);
+		box.z_min = std::min(box.z_min, z);
+		box.z_max = std::max(box.z_max, z);
+	}
+	SetBox(box);
+	vtkNew<vtkPolyData> polydata;
+	polydata->SetPoints(points);
+	m_point_cloud = vtkNew<vtkKdTreePointLocator>();
+	m_point_cloud->SetDataSet(polydata);
+	m_point_cloud->BuildLocator();
+
 }
 
 bool PointCloudModel::InModel(const double *point_input) const

@@ -1,10 +1,10 @@
 ﻿#include "NSFieldZaran.h"
 #include "GlobalData.h"
+#include "GridGeneratorFlexibleZaran.h"
 #include "Log.h"
+#include "NSSolverBlock.h"
 #include <fstream>
 #include <omp.h>
-#include "GridGeneratorFlexibleZaran.h"
-#include "NSSolverBlock.h"
 
 namespace zaran
 {
@@ -71,7 +71,6 @@ void NSFieldZaran::AllocateSolverPara()
     GetSolverPara()->Init();
 }
 
-
 void NSFieldZaran::CalcResidual()
 {
     auto grid = GetGrid();
@@ -119,7 +118,7 @@ void NSFieldZaran::CalcResidual()
     }
 }
 
-void NSFieldZaran::DeleteSlaveField(const shared_ptr<FieldManager>& field_manager) const
+void NSFieldZaran::DeleteSlaveField(const shared_ptr<FieldManager> &field_manager) const
 {
     const auto slave_field_id = m_slave_field->GetIdx();
     field_manager->RemoveField(m_slave_field);
@@ -128,8 +127,8 @@ void NSFieldZaran::DeleteSlaveField(const shared_ptr<FieldManager>& field_manage
     const auto src_node_idx = data_comm->GetSrcDataIdx();
     const auto tgt_node_idx = data_comm->GetTgtNodeIdx();
     const auto tgt_field_idx = data_comm->GetTgtFieldIdx();
-    dynamic_array<index_type> new_src_node_idx(src_node_num), new_tgt_node_idx(src_node_num), new_tgt_field_idx(
-        src_node_num);
+    dynamic_array<index_type> new_src_node_idx(src_node_num), new_tgt_node_idx(src_node_num),
+        new_tgt_field_idx(src_node_num);
     count_type new_src_node_num = 0;
     for (int i = 0; i < src_node_num; i++)
     {
@@ -144,13 +143,13 @@ void NSFieldZaran::DeleteSlaveField(const shared_ptr<FieldManager>& field_manage
     new_src_node_idx.resize(new_src_node_num);
     new_tgt_field_idx.resize(new_src_node_num);
     new_tgt_node_idx.resize(new_src_node_num);
-    const auto new_data_comm = make_shared<FieldDataCommInfo>(
-        new_src_node_idx.size(), data_comm->GetRecvDataName(), new_src_node_idx.data(), new_tgt_field_idx.data(),
-        new_tgt_node_idx.data());
+    const auto new_data_comm =
+        make_shared<FieldDataCommInfo>(new_src_node_idx.size(), data_comm->GetRecvDataName(), new_src_node_idx.data(),
+                                       new_tgt_field_idx.data(), new_tgt_node_idx.data());
     field_manager->SetFieldDataCommInfo(this->GetIdx(), new_data_comm);
 }
 
-void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager>& field_manager)
+void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager> &field_manager)
 {
     index_type idx = field_manager->GetFieldNum();
     const auto grid_block = GetGrid();
@@ -158,13 +157,15 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager>& field_manage
     GridFNFactoryZaran grid_factory;
     shared_ptr<GridFN> grid = make_shared<GridFN>("ZaranSlaveGrid", idx, dim);
     grid_factory.CreateGrid(grid_block, grid, GetModelManager());
-    dynamic_array<std::string> fn_recv_data_name = {
-        "primitive_0", "primitive_1", "primitive_2", "primitive_3", "primitive_4"
-    };
-    dynamic_array<std::string> block_recv_data_name = {
-        "primitive_0", "primitive_1", "primitive_2", "primitive_3", "primitive_4"
-    };
-
+    dynamic_array<std::string> comm_data_name;
+    for (int idx_eq = 0; idx_eq < 5; idx_eq++)
+    {
+        comm_data_name.push_back("primitive_" + std::to_string(idx_eq));
+        for (int idx_dim = 0; idx_dim < 3; idx_dim++)
+        {
+            comm_data_name.push_back("prim_grad_" + std::to_string(idx_eq) + "_" + std::to_string(idx_dim));
+        }
+    }
     dynamic_array<index_type> fn_recv_node_idx_src, block_recv_node_idx_src;
     dynamic_array<index_type> fn_recv_field_idx_tgt, block_recv_field_idx_tgt;
     dynamic_array<index_type> fn_recv_node_idx_tgt, block_recv_node_idx_tgt;
@@ -197,12 +198,12 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager>& field_manage
         i++;
     }
 
-    shared_ptr<FieldDataCommInfo> fn_comm_info = make_shared<FieldDataCommInfo>(
-        fn_recv_num, fn_recv_data_name, fn_recv_node_idx_src.data(), fn_recv_field_idx_tgt.data(),
-        fn_recv_node_idx_tgt.data());
-    shared_ptr<FieldDataCommInfo> block_comm_info = make_shared<FieldDataCommInfo>(
-        block_recv_num, block_recv_data_name, block_recv_node_idx_src.data(), block_recv_field_idx_tgt.data(),
-        block_recv_node_idx_tgt.data());
+    shared_ptr<FieldDataCommInfo> fn_comm_info =
+        make_shared<FieldDataCommInfo>(fn_recv_num, comm_data_name, fn_recv_node_idx_src.data(),
+                                       fn_recv_field_idx_tgt.data(), fn_recv_node_idx_tgt.data());
+    shared_ptr<FieldDataCommInfo> block_comm_info =
+        make_shared<FieldDataCommInfo>(block_recv_num, comm_data_name, block_recv_node_idx_src.data(),
+                                       block_recv_field_idx_tgt.data(), block_recv_node_idx_tgt.data());
     field_manager->SetFieldDataCommInfo(this->GetIdx(), block_comm_info);
     m_slave_field = make_shared<NSFieldFNFDM>(grid);
     field_manager->AddField(m_slave_field, fn_comm_info);
@@ -380,7 +381,9 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager>& field_manage
 //             cell_center[0] = m_box.x_min + (i - ghost_size + 0.5) * m_dx;
 //             cell_center[1] = m_box.y_min + (j - ghost_size + 0.5) * m_dy;
 //             cell_center[2] = m_box.z_min + (k - ghost_size + 0.5) * m_dz;
-//             if (cell_center[0] < box.x_min - tol || cell_center[0] > box.x_max + tol || cell_center[1] < box.y_min - tol || cell_center[1] > box.y_max + tol || cell_center[2] < box.z_min - tol || cell_center[2] > box.z_max + tol)
+//             if (cell_center[0] < box.x_min - tol || cell_center[0] > box.x_max + tol || cell_center[1] < box.y_min -
+//             tol || cell_center[1] > box.y_max + tol || cell_center[2] < box.z_min - tol || cell_center[2] > box.z_max
+//             + tol)
 //             {
 //                 m_cell_type[iCell] = PhysicalType::Fluid;
 //             }
@@ -458,17 +461,20 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager>& field_manage
 //         //                 int idx = m_idx_proxy->GetIdx(i, j, k);
 //         //                 if (m_cell_type[idx] != PhysicalType::Fluid)
 //         //                     continue;
-//         //                 if (m_cell_type[m_idx_proxy->GetIdx(i + 1, j, k)] == PhysicalType::Solid && m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k)] == PhysicalType::Solid)
+//         //                 if (m_cell_type[m_idx_proxy->GetIdx(i + 1, j, k)] == PhysicalType::Solid &&
+//         m_cell_type[m_idx_proxy->GetIdx(i - 1, j, k)] == PhysicalType::Solid)
 //         //                 {
 //         //                     m_cell_type[idx] = PhysicalType::Solid;
 //         //                     new_solid_num++;
 //         //                 }
-//         //                 else if (m_cell_type[m_idx_proxy->GetIdx(i, j + 1, k)] == PhysicalType::Solid && m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k)] == PhysicalType::Solid)
+//         //                 else if (m_cell_type[m_idx_proxy->GetIdx(i, j + 1, k)] == PhysicalType::Solid &&
+//         m_cell_type[m_idx_proxy->GetIdx(i, j - 1, k)] == PhysicalType::Solid)
 //         //                 {
 //         //                     m_cell_type[idx] = PhysicalType::Solid;
 //         //                     new_solid_num++;
 //         //                 }
-//         //                 else if (m_cell_type[m_idx_proxy->GetIdx(i, j, k + 1)] == PhysicalType::Solid && m_cell_type[m_idx_proxy->GetIdx(i, j, k - 1)] == PhysicalType::Solid)
+//         //                 else if (m_cell_type[m_idx_proxy->GetIdx(i, j, k + 1)] == PhysicalType::Solid &&
+//         m_cell_type[m_idx_proxy->GetIdx(i, j, k - 1)] == PhysicalType::Solid)
 //         //                 {
 //         //                     m_cell_type[idx] = PhysicalType::Solid;
 //         //                     new_solid_num++;
@@ -556,9 +562,12 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager>& field_manage
 //                     if (IsValidCell(i - 1, j, k))
 //                     {
 //                         int idx_left = m_idx_proxy->GetIdx(i - 1, j, k);
-//                         if (m_cell_type[idx_left] == PhysicalType::FluidSolid && m_cell_type[idx] == PhysicalType::Fluid || m_cell_type[idx_left] == PhysicalType::Fluid && m_cell_type[idx] == PhysicalType::FluidSolid)
+//                         if (m_cell_type[idx_left] == PhysicalType::FluidSolid && m_cell_type[idx] ==
+//                         PhysicalType::Fluid || m_cell_type[idx_left] == PhysicalType::Fluid && m_cell_type[idx] ==
+//                         PhysicalType::FluidSolid)
 //                         {
-//                             trans_face_set.insert(TransFace{{m_idx_proxy->GetIdx(i, j, k), m_idx_proxy->GetIdx(i, j + 1, k), m_idx_proxy->GetIdx(i, j + 1, k + 1), m_idx_proxy->GetIdx(i, j, k + 1)}});
+//                             trans_face_set.insert(TransFace{{m_idx_proxy->GetIdx(i, j, k), m_idx_proxy->GetIdx(i, j +
+//                             1, k), m_idx_proxy->GetIdx(i, j + 1, k + 1), m_idx_proxy->GetIdx(i, j, k + 1)}});
 //                             m_node_type[idx] = PhysicalType::FluidSolid;
 //                             m_node_type[m_idx_proxy->GetIdx(i, j + 1, k)] = PhysicalType::FluidSolid;
 //                             m_node_type[m_idx_proxy->GetIdx(i, j, k + 1)] = PhysicalType::FluidSolid;
@@ -568,9 +577,12 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager>& field_manage
 //                     if (IsValidCell(i, j - 1, k))
 //                     {
 //                         int idx_down = m_idx_proxy->GetIdx(i, j - 1, k);
-//                         if (m_cell_type[idx_down] == PhysicalType::FluidSolid && m_cell_type[idx] == PhysicalType::Fluid || m_cell_type[idx_down] == PhysicalType::Fluid && m_cell_type[idx] == PhysicalType::FluidSolid)
+//                         if (m_cell_type[idx_down] == PhysicalType::FluidSolid && m_cell_type[idx] ==
+//                         PhysicalType::Fluid || m_cell_type[idx_down] == PhysicalType::Fluid && m_cell_type[idx] ==
+//                         PhysicalType::FluidSolid)
 //                         {
-//                             trans_face_set.insert(TransFace{{m_idx_proxy->GetIdx(i, j, k), m_idx_proxy->GetIdx(i + 1, j, k), m_idx_proxy->GetIdx(i + 1, j, k + 1), m_idx_proxy->GetIdx(i, j, k + 1)}});
+//                             trans_face_set.insert(TransFace{{m_idx_proxy->GetIdx(i, j, k), m_idx_proxy->GetIdx(i + 1,
+//                             j, k), m_idx_proxy->GetIdx(i + 1, j, k + 1), m_idx_proxy->GetIdx(i, j, k + 1)}});
 //                             m_node_type[idx] = PhysicalType::FluidSolid;
 //                             m_node_type[m_idx_proxy->GetIdx(i + 1, j, k)] = PhysicalType::FluidSolid;
 //                             m_node_type[m_idx_proxy->GetIdx(i, j, k + 1)] = PhysicalType::FluidSolid;
@@ -580,9 +592,12 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager>& field_manage
 //                     if (IsValidCell(i, j, k - 1))
 //                     {
 //                         int idx_back = m_idx_proxy->GetIdx(i, j, k - 1);
-//                         if (m_cell_type[idx_back] == PhysicalType::FluidSolid && m_cell_type[idx] == PhysicalType::Fluid || m_cell_type[idx_back] == PhysicalType::Fluid && m_cell_type[idx] == PhysicalType::FluidSolid)
+//                         if (m_cell_type[idx_back] == PhysicalType::FluidSolid && m_cell_type[idx] ==
+//                         PhysicalType::Fluid || m_cell_type[idx_back] == PhysicalType::Fluid && m_cell_type[idx] ==
+//                         PhysicalType::FluidSolid)
 //                         {
-//                             trans_face_set.insert(TransFace{{m_idx_proxy->GetIdx(i, j, k), m_idx_proxy->GetIdx(i + 1, j, k), m_idx_proxy->GetIdx(i + 1, j + 1, k), m_idx_proxy->GetIdx(i, j + 1, k)}});
+//                             trans_face_set.insert(TransFace{{m_idx_proxy->GetIdx(i, j, k), m_idx_proxy->GetIdx(i + 1,
+//                             j, k), m_idx_proxy->GetIdx(i + 1, j + 1, k), m_idx_proxy->GetIdx(i, j + 1, k)}});
 //                             m_node_type[idx] = PhysicalType::FluidSolid;
 //                             m_node_type[m_idx_proxy->GetIdx(i + 1, j, k)] = PhysicalType::FluidSolid;
 //                             m_node_type[m_idx_proxy->GetIdx(i, j + 1, k)] = PhysicalType::FluidSolid;
@@ -611,8 +626,8 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager>& field_manage
 //                 {
 //                     if (!IsValidNode(i, j, k))
 //                     {
-//                         Log::info("Invalid node: i={}, j={}, k={}, idx={}, ni={}, nj={}, nk={}", i, j, k, m_idx_proxy->GetIdx(i, j, k), ni, nj, nk);
-//                         exit(0);
+//                         Log::info("Invalid node: i={}, j={}, k={}, idx={}, ni={}, nj={}, nk={}", i, j, k,
+//                         m_idx_proxy->GetIdx(i, j, k), ni, nj, nk); exit(0);
 //                     }
 //                     int idx = m_idx_proxy->GetIdx(i, j, k);
 //                     if (m_node_type[idx] != PhysicalType::Fluid)
@@ -661,7 +676,8 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager>& field_manage
 //                 for (int i = is; i < ie; i++)
 //                 {
 //                     int idx = m_idx_proxy->GetIdx(i, j, k);
-//                     out << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1] << " " << node->GetCoord(i, j, k)[2] << " " << (int)m_node_type[idx] << std::endl;
+//                     out << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1] << " " <<
+//                     node->GetCoord(i, j, k)[2] << " " << (int)m_node_type[idx] << std::endl;
 //                 }
 //             }
 //         }
@@ -681,7 +697,8 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager>& field_manage
 //         // std::ofstream out("model_surface.dat");
 //         // out << "variables = x, y, z" << std::endl;
 //         // out << "Zone T=test" << std::endl;
-//         // out << " N=" << m_bound_patch.size() << " E=" << m_trans_face.size() << " ZONETYPE=FEQuadrilateral" << std::endl;
+//         // out << " N=" << m_bound_patch.size() << " E=" << m_trans_face.size() << " ZONETYPE=FEQuadrilateral" <<
+//         std::endl;
 //         // out << "DATAPACKING=POINT" << std::endl;
 //         // for (auto &patch : m_bound_patch)
 //         // {
@@ -717,7 +734,8 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager>& field_manage
 //             {
 //                 for (int i = 0; i < ni; i++)
 //                 {
-//                     out << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1] << " " << node->GetCoord(i, j, k)[2] << std::endl;
+//                     out << node->GetCoord(i, j, k)[0] << " " << node->GetCoord(i, j, k)[1] << " " <<
+//                     node->GetCoord(i, j, k)[2] << std::endl;
 //                 }
 //             }
 //         }
@@ -748,7 +766,8 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager>& field_manage
 //         {
 //             for (int iNode = 0; iNode < m_slave_grid.node[iLayer].size(); iNode++)
 //             {
-//                 out << m_slave_grid.node[iLayer][iNode].coord[0] << " " << m_slave_grid.node[iLayer][iNode].coord[1] << " " << m_slave_grid.node[iLayer][iNode].coord[2] << std::endl;
+//                 out << m_slave_grid.node[iLayer][iNode].coord[0] << " " << m_slave_grid.node[iLayer][iNode].coord[1]
+//                 << " " << m_slave_grid.node[iLayer][iNode].coord[2] << std::endl;
 //             }
 //         }
 //         for (int iFace = 0; iFace < m_trans_face.size(); iFace++)
@@ -906,10 +925,11 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager>& field_manage
 //             auto proj_coord = m_slave_grid.node[10][iNode].coord;
 //             for (int iLayer = 2; iLayer < 10; iLayer++)
 //             {
-//                 m_slave_grid.node[iLayer][iNode].coord[0] = (iLayer - 1) / 9.0 * (proj_coord[0] - trans_coord[0]) + trans_coord[0];
-//                 m_slave_grid.node[iLayer][iNode].coord[1] = (iLayer - 1) / 9.0 * (proj_coord[1] - trans_coord[1]) + trans_coord[1];
-//                 m_slave_grid.node[iLayer][iNode].coord[2] = (iLayer - 1) / 9.0 * (proj_coord[2] - trans_coord[2]) + trans_coord[2];
-//                 m_slave_grid.node[iLayer][iNode].idx = iNode + m_slave_grid.node[0].size() + m_slave_grid.node[1].size() * (iLayer - 1);
+//                 m_slave_grid.node[iLayer][iNode].coord[0] = (iLayer - 1) / 9.0 * (proj_coord[0] - trans_coord[0]) +
+//                 trans_coord[0]; m_slave_grid.node[iLayer][iNode].coord[1] = (iLayer - 1) / 9.0 * (proj_coord[1] -
+//                 trans_coord[1]) + trans_coord[1]; m_slave_grid.node[iLayer][iNode].coord[2] = (iLayer - 1) / 9.0 *
+//                 (proj_coord[2] - trans_coord[2]) + trans_coord[2]; m_slave_grid.node[iLayer][iNode].idx = iNode +
+//                 m_slave_grid.node[0].size() + m_slave_grid.node[1].size() * (iLayer - 1);
 //             }
 //         }
 //     }
@@ -1008,14 +1028,15 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager>& field_manage
 //             for (int iNeighbor = 0; iNeighbor < 6; iNeighbor++)
 //             {
 //                 int idx_master = m_slave_grid.node[1][iNode].neighbor_node[iNeighbor];
-//                 if (m_node_type[idx_master] == PhysicalType::FluidSolid || m_node_type[idx_master] == PhysicalType::Fluid)
+//                 if (m_node_type[idx_master] == PhysicalType::FluidSolid || m_node_type[idx_master] ==
+//                 PhysicalType::Fluid)
 //                 {
 //                     for (auto &nodes : m_slave_connect_to_master)
 //                     {
 //                         if (nodes.idx_master == idx_master)
 //                         {
-//                             m_slave_grid.node[1][iNode].neighbor_node[iNeighbor] = m_slave_grid.node[nodes.idx_slave_layer][nodes.idx_slave_proj].idx;
-//                             break;
+//                             m_slave_grid.node[1][iNode].neighbor_node[iNeighbor] =
+//                             m_slave_grid.node[nodes.idx_slave_layer][nodes.idx_slave_proj].idx; break;
 //                         }
 //                     }
 //                 }

@@ -29,6 +29,7 @@ namespace zaran
 	public:
 		PointCloudModel() {};
 		PointCloudModel(const dynamic_array<Eigen::Vector3d>& point_list);
+		PointCloudModel(const dynamic_array<dynamic_array<double>>& point_list);
 		bool InModel(const double* point_input)const  override;
 		void GetClosestPoint(const double*point_input,double*point_find)const override;
 		double GetClosestDistance(const double* point_input)const override;//求出pt离模型最近的点

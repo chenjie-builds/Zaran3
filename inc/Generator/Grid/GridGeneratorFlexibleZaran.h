@@ -28,6 +28,7 @@ namespace zaran
         SolidFluid = 4, // 固体单元，邻居单元有流体单元
         Unset = 5,      // 未知单元
     };
+    //过渡面元
     struct TransFace
     {
         dynamic_array<index_type> idx_block;
@@ -50,9 +51,9 @@ namespace zaran
     {
         // 在Block中的索引
         index_type idx_block;
-        // 在FN中的索引,第几层
+        // 在slave grid中的索引,第几层
         index_type idx_n_layers;
-        // 在FN中的索引,该层的第几个节点
+        // 在slave grid中的索引,该层的第几个节点
         index_type idx_local_layer;
         bool operator<(const ConnectInfo &rhs) const
         {
@@ -88,7 +89,11 @@ namespace zaran
         void TagBlockGrid();
         void TagCells();
         void ProcessCell(index_type start_i, index_type end_i, index_type start_j, index_type end_j, index_type start_k, index_type end_k);
-        void TagNodes();
+		//标记流体单元(i,j,k)对应的邻居节点
+		void TagFluidCells(int i, int j, int k);
+        void TagNodes3D();
+		void TagNodes();
+        void TagNodes2D();
         void ReTagBlockGrid();
         void ReTagCells();
         void SetNodeTag();
@@ -97,6 +102,7 @@ namespace zaran
         void WriteModelSurface();
         void WriteTransFace();
         void WriteSlaveGrid();
+        void WriteCellTag();
 
         void BuildFNGridInfo();
         void BuildFNNodeCoord();
@@ -113,20 +119,34 @@ namespace zaran
         void BuildTransNode();
         // 检查过渡节点,不能同时i+1和i-1都是固体节点
         bool CheckTransNode();
+        bool CheckTransNode2D();
+		bool CheckTransNode3D();
         void CheckTransFace();
         // 生成物面节点,即过渡节点计算需要的内部点,在SlaveGrid最后一层
         void BuildWallNode();
         // 生成中间节点,即过渡节点到物面节点之间的投影点
         void BuildProjectNode();
-
+        // 优化物面节点位置，对于凹坑等，对于物面节点的坐标进行优化
+        void OptimizeWallNode();
+        void OptimizeWallNode2D();
+        void OptimizeWallNode3D();
         void BuildNodeNeighbor();
         // 生成节点邻居信息,投影节点
         void BuildProjectNodeNeighbor();
+        void BuildProjectNodeNeighbor2D();
+        void BuildProjectNodeNeighbor3D();
         void ReorderProjectNodeNeighbor();
+
         void CheckProjectNodeNeighbor();
+        void CheckProjectNodeNeighbor2D();
+        void CheckProjectNodeNeighbor3D();
         // 生成节点邻居信息,过渡节点
         void BuildTransNodeNeighbor();
-        void BuildCell();
+        void BuildTransNodeNeighbor2D();
+        void BuildTransNodeNeighbor3D();
+        void BuildFNCell();
+        void BuildFNCell2D();
+        void BuildFNCell3D();
 
     private:
         shared_ptr<GridBlock> m_block_grid;

@@ -53,7 +53,7 @@ endif()
 set( EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE} )
 
 # OMP并行
-option( USE_OMP "ON to use OMP, OFF to serial" ON )
+option( USE_OMP "ON to use OMP, OFF to serial" OFF )
 message( STATUS "USE_OMP:" ${USE_OMP} )
 
 if( USE_OMP )
