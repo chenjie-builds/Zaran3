@@ -141,7 +141,7 @@ void GradWLSQ::CalcGradient(shared_ptr<GridFN>grid, const double* data, double* 
 		}
 		if (std::isnan(grad_x[iNode]) || std::isnan(grad_y[iNode]) || std::isnan(grad_z[iNode]))
 		{
-			// Log::warn("GradWLSQ::CalcGradient: grad is nan");
+			 //Log::warn("GradWLSQ::CalcGradient: grad is nan");
 			grad_x[iNode] = grad_y[iNode] = grad_z[iNode] = 0.0;
 		}
 	}

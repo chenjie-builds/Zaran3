@@ -161,6 +161,7 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager> &field_manage
     for (int idx_eq = 0; idx_eq < 5; idx_eq++)
     {
         comm_data_name.push_back("primitive_" + std::to_string(idx_eq));
+        comm_data_name.push_back("limiter_" + std::to_string(idx_eq));
         for (int idx_dim = 0; idx_dim < 3; idx_dim++)
         {
             comm_data_name.push_back("prim_grad_" + std::to_string(idx_eq) + "_" + std::to_string(idx_dim));
@@ -178,7 +179,7 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager> &field_manage
     int i = 0;
     for (auto &ref : ref_node)
     {
-        fn_recv_node_idx_src[i] = ref.idx_local_layer;
+        fn_recv_node_idx_src[i] = ref.idx_layer_local;
         fn_recv_field_idx_tgt[i] = this->GetIdx();
         fn_recv_node_idx_tgt[i] = ref.idx_block;
         i++;
@@ -194,7 +195,7 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager> &field_manage
     {
         block_recv_node_idx_src[i] = trans.idx_block;
         block_recv_field_idx_tgt[i] = idx;
-        block_recv_node_idx_tgt[i] = fn_grid_info.node[1][trans.idx_local_layer].idx;
+        block_recv_node_idx_tgt[i] = fn_grid_info.node[1][trans.idx_layer_local].idx;
         i++;
     }
 

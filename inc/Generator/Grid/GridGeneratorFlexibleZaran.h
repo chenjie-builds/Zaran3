@@ -31,12 +31,14 @@ namespace zaran
     //过渡面元
     struct TransFace
     {
-        dynamic_array<index_type> idx_block;
+        // 过渡面元包含的过渡节点在Block中的索引
+        dynamic_array<index_type> node_idx_block;
+        // 过渡面元包含的过渡节点在Slave Grid中的索引
+        dynamic_array<index_type> node_idx_slave;
         bool operator<(const TransFace &rhs) const
         {
-            return idx_block < rhs.idx_block;
+            return node_idx_block < rhs.node_idx_block;
         }
-        dynamic_array<index_type> idx_slave;
     };
     struct SlaveNode
     {
@@ -49,12 +51,12 @@ namespace zaran
     };
     struct ConnectInfo
     {
-        // 在Block中的索引
+        // 对应的过渡节点在Block中的索引
         index_type idx_block;
-        // 在slave grid中的索引,第几层
-        index_type idx_n_layers;
-        // 在slave grid中的索引,该层的第几个节点
-        index_type idx_local_layer;
+        // 在投影线段中的索引 0表示镜像节点，1表示过渡节点，m_layer_num表示物面节点
+        index_type idx_proj_layer;
+        // 在该投影层中的索引
+        index_type idx_layer_local;
         bool operator<(const ConnectInfo &rhs) const
         {
             return idx_block < rhs.idx_block;
@@ -88,12 +90,18 @@ namespace zaran
     private:
         void TagBlockGrid();
         void TagCells();
+        void TagBlockCells();
         void ProcessCell(index_type start_i, index_type end_i, index_type start_j, index_type end_j, index_type start_k, index_type end_k);
 		//标记流体单元(i,j,k)对应的邻居节点
 		void TagFluidCells(int i, int j, int k);
-        void TagNodes3D();
 		void TagNodes();
+        void TagNodes3D();
         void TagNodes2D();
+        void TagBlockNodes();
+        void TagBlockNodes2D();
+        void TagBlockNodes3D();
+        void ProcessNode(int start_i, int end_i, int start_j, int end_j, int start_k, int end_k);
+
         void ReTagBlockGrid();
         void ReTagCells();
         void SetNodeTag();
@@ -121,6 +129,9 @@ namespace zaran
         bool CheckTransNode();
         bool CheckTransNode2D();
 		bool CheckTransNode3D();
+        bool FindInvalidTransNode();
+        bool FindInvalidTransNode2D();
+        bool FindInvalidTransNode3D();
         void CheckTransFace();
         // 生成物面节点,即过渡节点计算需要的内部点,在SlaveGrid最后一层
         void BuildWallNode();

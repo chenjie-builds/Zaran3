@@ -222,12 +222,12 @@ void NSSolverFNFDM::RungeKutta()
     int rk_step = para->GetRkStep();
     auto &node = grid->GetNode();
     int n_node = grid->GetTotalNodeNum();
+    for (int iVal = 0; iVal < 5; ++iVal)
+    {
 #ifdef USE_OMP
 #pragma omp parallel for
 #endif // USE_OMP
-    for (int iNode = 0; iNode < n_node; ++iNode)
-    {
-        for (int iVal = 0; iVal < 5; ++iVal)
+        for (int iNode = 0; iNode < n_node; ++iNode)
         {
             data_manager->SetConsOld(iVal, iNode, data_manager->GetCons(iVal, iNode));
         }
@@ -237,17 +237,17 @@ void NSSolverFNFDM::RungeKutta()
         BoundaryCondition();
         CalcResidual();
         auto &rk_coef = para->GetRkCoef(iStep);
+        for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
+        {
 #ifdef USE_OMP
 #pragma omp parallel for
 #endif // USE_OMP
-        for (int iNode = 0; iNode < n_node; ++iNode)
-        {
-            if (node.GetType(iNode) != NodeType::inner)
-                continue;
-            double dt = data_manager->GetTimeStep(iNode);
-            double jacobi = m_node_metric->GetJacobian(iNode);
-            for (int idx_eq = 0; idx_eq < 5; ++idx_eq)
+            for (int iNode = 0; iNode < n_node; ++iNode)
             {
+                if (node.GetType(iNode) != NodeType::inner)
+                    continue;
+                double dt = data_manager->GetTimeStep(iNode);
+                double jacobi = m_node_metric->GetJacobian(iNode);
                 data_manager->SetCons(idx_eq, iNode,
                                       rk_coef[0] * data_manager->GetConsOld(idx_eq, iNode) +
                                           rk_coef[1] * data_manager->GetCons(idx_eq, iNode) +
@@ -263,23 +263,18 @@ void NSSolverFNFDM::Prim2Cons()
     auto gas = GetGas();
     auto data_manager = GetDataManager();
     int node_num = grid->GetTotalNodeNum();
+    double prim[5], cons[5];
 #ifdef USE_OMP
-#pragma omp parallel for
+#pragma omp parallel for private(prim, cons)
 #endif // USE_OMP
-
     for (int iNode = 0; iNode < node_num; ++iNode)
     {
-        double prim[5];
         for (int iVal = 0; iVal < 5; ++iVal)
         {
             prim[iVal] = data_manager->GetPrim(iVal, iNode);
         }
-        double cons[5];
         gas->Prim2Cons(prim, cons);
-        for (int iVal = 0; iVal < 5; ++iVal)
-        {
-            data_manager->SetCons(iVal, iNode, cons[iVal]);
-        }
+        data_manager->SetCons(iNode, cons);
     }
 }
 
@@ -288,22 +283,18 @@ void NSSolverFNFDM::Cons2Prim()
     auto grid = GetGrid();
     auto data_manager = GetDataManager();
     int node_num = grid->GetTotalNodeNum();
+    double prim[5], cons[5];
 #ifdef USE_OMP
-#pragma omp parallel for
+#pragma omp parallel for private(prim, cons)
 #endif // USE_OMP
     for (int iNode = 0; iNode < node_num; ++iNode)
     {
-        double cons[5];
-        double prim[5];
         for (int iVal = 0; iVal < 5; ++iVal)
         {
             cons[iVal] = data_manager->GetCons(iVal, iNode);
         }
         GetGas()->Cons2Prim(cons, prim);
-        for (int iVal = 0; iVal < 5; ++iVal)
-        {
-            data_manager->SetPrim(iVal, iNode, prim[iVal]);
-        }
+        data_manager->SetPrim(iNode, prim);
     }
 }
 
@@ -314,23 +305,36 @@ void NSSolverFNFDM::MidPointReconstruct2ndOrder(int index_left, int index_right,
     auto grid = GetGrid();
     NodeFN &node = grid->GetNode();
     auto data_manager = GetDataManager();
-    double vec_node2neighbor[3];
-    vec_node2neighbor[0] = node.GetCoord(index_right)[0] - node.GetCoord(index_left)[0];
-    vec_node2neighbor[1] = node.GetCoord(index_right)[1] - node.GetCoord(index_left)[1];
-    vec_node2neighbor[2] = node.GetCoord(index_right)[2] - node.GetCoord(index_left)[2];
+    auto coord_left = node.GetCoord(index_left);
+    auto coord_right = node.GetCoord(index_right);
     for (int iVal = 0; iVal < equ_num; ++iVal)
     {
         value_rec_left[iVal] = data_manager->GetPrim(iVal, index_left) +
                                0.5 * data_manager->GetLimiter(iVal, index_left) *
-                                   (vec_node2neighbor[0] * data_manager->GetPrimGrad(iVal, 0, index_left) +
-                                    vec_node2neighbor[1] * data_manager->GetPrimGrad(iVal, 1, index_left) +
-                                    vec_node2neighbor[2] * data_manager->GetPrimGrad(iVal, 2, index_left));
-        value_rec_right[iVal] = data_manager->GetPrim(iVal, index_right) -
-                                0.5 * data_manager->GetLimiter(iVal, index_right) *
-                                    (vec_node2neighbor[0] * data_manager->GetPrimGrad(iVal, 0, index_right) +
-                                     vec_node2neighbor[1] * data_manager->GetPrimGrad(iVal, 1, index_right) +
-                                     vec_node2neighbor[2] * data_manager->GetPrimGrad(iVal, 2, index_right));
+                                   ((coord_right[0] - coord_left[0]) * data_manager->GetPrimGrad(iVal, 0, index_left) +
+                                    (coord_right[1] - coord_left[1]) * data_manager->GetPrimGrad(iVal, 1, index_left) +
+                                    (coord_right[2] - coord_left[2]) * data_manager->GetPrimGrad(iVal, 2, index_left));
+        value_rec_right[iVal] =
+            data_manager->GetPrim(iVal, index_right) -
+            0.5 * data_manager->GetLimiter(iVal, index_right) *
+                ((coord_right[0] - coord_left[0]) * data_manager->GetPrimGrad(iVal, 0, index_right) +
+                 (coord_right[1] - coord_left[1]) * data_manager->GetPrimGrad(iVal, 1, index_right) +
+                 (coord_right[2] - coord_left[2]) * data_manager->GetPrimGrad(iVal, 2, index_right));
     }
+    //if (value_rec_left[0] < 0 || value_rec_left[4] < 0)
+    //{
+    //    for (int iVal = 0; iVal < equ_num; ++iVal)
+    //    {
+    //        value_rec_left[iVal] = data_manager->GetPrim(iVal, index_left);
+    //    }
+    //}
+    //if (value_rec_right[0] < 0 || value_rec_right[4] < 0)
+    //{
+    //    for (int iVal = 0; iVal < equ_num; ++iVal)
+    //    {
+    //        value_rec_right[iVal] = data_manager->GetPrim(iVal, index_right);
+    //    }
+    //}
 }
 
 void NSSolverFNFDM::MidPointReconstruct1stOrder(int index_left, int index_right, double *value_rec_left,
@@ -439,15 +443,30 @@ void NSSolverFNFDM::BCOutflow(BoundFN &bound)
 
 void NSSolverFNFDM::BCWall(BoundFN &bound)
 {
+    auto grid = GetGrid();
+    auto node = grid->GetNode();
     auto data_manager = GetDataManager();
     int idx_ref = bound.GetIdxRef();
     int idx_bnd = bound.GetIdxBound();
     auto norm_bnd = bound.GetNormBound();
+    auto coord_bnd = node.GetCoord(idx_bnd);
+    auto coord_ref = node.GetCoord(idx_ref);
     double prim_bnd[5];
     for (int iVal = 0; iVal < 5; ++iVal)
     {
         prim_bnd[iVal] = data_manager->GetPrim(iVal, idx_ref);
+        // for (int idx_dim = 0; idx_dim < 3; idx_dim++)
+        //{
+        //     prim_bnd[iVal] += (coord_bnd[idx_dim] - coord_ref[idx_dim]) *
+        //                       data_manager->GetPrimGrad(iVal, idx_dim, idx_ref) *
+        //                       data_manager->GetLimiter(iVal, idx_ref);
+        // }
     }
+    // if (prim_bnd[0] < 0)
+    //     prim_bnd[0] = data_manager->GetPrim(0, idx_ref);
+    // if (prim_bnd[4] < 0)
+    //     prim_bnd[4] = data_manager->GetPrim(4, idx_ref);
+
     double vel_bnd[3] = {prim_bnd[1], prim_bnd[2], prim_bnd[3]};
     double vn = vel_bnd[0] * norm_bnd[0] + vel_bnd[1] * norm_bnd[1] + vel_bnd[2] * norm_bnd[2];
     prim_bnd[1] = prim_bnd[1] - 1.0 * vn * norm_bnd[0];
@@ -645,6 +664,8 @@ void NSSolverFNFDM::CalcLimiter()
 
 void NSSolverFNFDM::CalcLimiterVK()
 {
+    //CalcLimiterFirstOrder();
+    //return;
     auto grid = GetGrid();
     NodeFN &node = grid->GetNode();
     auto para = GetPara();
@@ -653,7 +674,8 @@ void NSSolverFNFDM::CalcLimiterVK()
     int equ_num = GetPara()->GetEqNum();
     double max_limit = para->GetMaxLimit();
     double eps = 1e-6;
-    double venkatCoeff = 1e-5;
+    double vk_coef = 10;
+    double min_dis;
     for (int iVal = 0; iVal < equ_num; ++iVal)
     {
 #ifdef USE_OMP
@@ -661,18 +683,22 @@ void NSSolverFNFDM::CalcLimiterVK()
 #endif // USE_OMP
         for (int iNode = 0; iNode < node_num; ++iNode)
         {
-            // if (node->GetType(iNode) != NodeType::inner && node->GetType(iNode) != NodeType::hole)
-            // 	continue;
+            if (node.GetType(iNode) != NodeType::inner && node.GetType(iNode) != NodeType::hole)
+                continue;
             auto currentNodeCoord = node.GetCoord(iNode);
             auto neighborNode = node.GetNeighborNode(iNode);
             int nNeighbor = node.GetNeighborNodeNum(iNode);
             double current_val = data_manager->GetPrim(iVal, iNode);
             double maxVal = current_val;
             double minVal = current_val;
+            min_dis = LARGE_NUMBER;
             for (int iNeighbor = 0; iNeighbor < nNeighbor; ++iNeighbor)
             {
                 maxVal = Max(maxVal, data_manager->GetPrim(iVal, neighborNode[iNeighbor]));
                 minVal = Min(minVal, data_manager->GetPrim(iVal, neighborNode[iNeighbor]));
+
+                min_dis = Min(min_dis, DistanceOfTwoPoints(node.GetCoord(iNode).data(),
+                                                           node.GetCoord(neighborNode[iNeighbor]).data()));
             }
             // if (node->GetType(iNode) == NodeType::inner)
             // {
@@ -681,13 +707,14 @@ void NSSolverFNFDM::CalcLimiterVK()
             // }
             // else
             // {
-            eps = venkatCoeff * (maxVal - minVal) + SMALL_NUMBER;
-            eps = eps * eps;
+            // eps = venkatCoeff * (maxVal - minVal) + SMALL_NUMBER;
+            // eps = eps * eps;
+            eps = pow(vk_coef * min_dis, 3);
+
             // }
             double delta_max = maxVal - current_val;
             double delta_min = minVal - current_val;
             double limite_coef = LARGE_NUMBER;
-            data_manager->SetLimiter(iVal, iNode, LARGE_NUMBER);
             for (int iNeighbor = 0; iNeighbor < nNeighbor; ++iNeighbor)
             {
                 auto neighborNodeCoord = node.GetCoord(neighborNode[iNeighbor]);
@@ -709,8 +736,8 @@ void NSSolverFNFDM::CalcLimiterVK()
                     limite_coef = 1.0;
                 }
                 limite_coef = Min(limite_coef, max_limit);
-                data_manager->SetLimiter(iVal, iNode, Min(data_manager->GetLimiter(iVal, iNode), limite_coef));
             }
+            data_manager->SetLimiter(iVal, iNode, limite_coef);
         }
     }
 }
@@ -845,6 +872,7 @@ void NSSolverFNFDM::CalcLimiterBound()
 
 void NSSolverFNFDM::CheckPrimtive()
 {
+    return;
     auto grid = GetGrid();
     NodeFN &node = grid->GetNode();
     auto data_manager = GetDataManager();
@@ -941,6 +969,7 @@ void NSSolverFNFDM::CheckResidual()
 
 void NSSolverFNFDM::FixPrimtive()
 {
+    return;
     auto grid = GetGrid();
     NodeFN &node = grid->GetNode();
     auto data_manager = GetDataManager();
@@ -1123,15 +1152,13 @@ void NSSolverFNFDM::ZeroResidual()
     auto node = grid->GetNode();
     auto data_manager = GetDataManager();
     int node_num = grid->GetTotalNodeNum();
-    for (int iVar = 0; iVar < equ_num; ++iVar)
-    {
+    double zero_residual[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
 #ifdef USE_OMP
 #pragma omp parallel for
 #endif // USE_OMP
-        for (int iNode = 0; iNode < node_num; ++iNode)
-        {
-            data_manager->SetResidual(iVar, iNode, 0.0);
-        }
+    for (int iNode = 0; iNode < node_num; ++iNode)
+    {
+        data_manager->SetResidual(iNode, zero_residual);
     }
 }
 
@@ -1143,74 +1170,50 @@ void NSSolverFNFDM::CalcConvectionResidual()
     int equ_num = GetPara()->GetEqNum();
     int inner_node_num = grid->GetInnerNodeNum();
     auto &inner_node = grid->GetInnerNode();
-    RiemannSolverPara riemann_para[6];
-    // #ifdef USE_OMP
-    // #pragma omp parallel for private(riemann_para)
-    // #endif // USE_OMP
+    RiemannSolverPara riemann_para[2];
+    double res_tmp[5];
+#ifdef USE_OMP
+#pragma omp parallel for private(riemann_para, res_tmp)
+#endif // USE_OMP
     for (int iNode = 0; iNode < inner_node_num; ++iNode)
     {
-        for (int i = 0; i < 6; ++i)
+        for (int i = 0; i < 2; ++i)
         {
-            riemann_para[i].gamma_left = riemann_para[i].gamma_right = 1.4;
+            riemann_para[i].gamma_left = riemann_para[i].gamma_right = GetGas()->GetGamma();
         }
+
         bool exist_negative = false;
         int idx = inner_node[iNode];
         auto coord = node.GetCoord(idx);
-        //if (abs(coord[0]+0.0609) < 1e-4 && abs(coord[1] + 1.0659) < 1e-4)
-        //{
-        //    Log::info("Node: {}, coord: {:6E}, {:6E}, {:6E}", idx, coord[0], coord[1], coord[2]);
-        //}
+        for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+        {
+            res_tmp[idx_eq] = data_manager->GetResidual(idx_eq, idx);
+        }
         double jacobi = m_node_metric->GetJacobian(idx);
         auto neighbor = node.GetNeighborNode(idx);
-        // i direction
-        riemann_para[0].norm(0) = m_node_metric->GetXi(idx)[0];
-        riemann_para[0].norm(1) = m_node_metric->GetXi(idx)[1];
-        riemann_para[0].norm(2) = m_node_metric->GetXi(idx)[2];
-        riemann_para[0].nt = m_node_metric->GetXi(idx)[3];
-        riemann_para[1].norm(0) = m_node_metric->GetXi(idx)[0];
-        riemann_para[1].norm(1) = m_node_metric->GetXi(idx)[1];
-        riemann_para[1].norm(2) = m_node_metric->GetXi(idx)[2];
-        riemann_para[1].nt = m_node_metric->GetXi(idx)[3];
-        MidPointReconstruct2ndOrder(idx, neighbor[1], riemann_para[0].prim_left.data(),
-                                    riemann_para[0].prim_right.data());
-        MidPointReconstruct2ndOrder(neighbor[0], idx, riemann_para[1].prim_left.data(),
-                                    riemann_para[1].prim_right.data());
-        m_riemann_solver->Solver(riemann_para[0]);
-        m_riemann_solver->Solver(riemann_para[1]);
-        // j direction
-        riemann_para[2].norm(0) = m_node_metric->GetEta(idx)[0];
-        riemann_para[2].norm(1) = m_node_metric->GetEta(idx)[1];
-        riemann_para[2].norm(2) = m_node_metric->GetEta(idx)[2];
-        riemann_para[2].nt = m_node_metric->GetEta(idx)[3];
-        riemann_para[3].norm(0) = m_node_metric->GetEta(idx)[0];
-        riemann_para[3].norm(1) = m_node_metric->GetEta(idx)[1];
-        riemann_para[3].norm(2) = m_node_metric->GetEta(idx)[2];
-        riemann_para[3].nt = m_node_metric->GetEta(idx)[3];
-        MidPointReconstruct2ndOrder(idx, neighbor[3], riemann_para[2].prim_left.data(),
-                                    riemann_para[2].prim_right.data());
-        MidPointReconstruct2ndOrder(neighbor[2], idx, riemann_para[3].prim_left.data(),
-                                    riemann_para[3].prim_right.data());
-        m_riemann_solver->Solver(riemann_para[2]);
-        m_riemann_solver->Solver(riemann_para[3]);
-        if (grid->GetDim() == 3)
+        for (dimension_type dim = 0; dim < grid->GetDim(); dim++)
         {
-
-            // k direction
-            riemann_para[4].norm(0) = m_node_metric->GetZeta(idx)[0];
-            riemann_para[4].norm(1) = m_node_metric->GetZeta(idx)[1];
-            riemann_para[4].norm(2) = m_node_metric->GetZeta(idx)[2];
-            riemann_para[4].nt = m_node_metric->GetZeta(idx)[3];
-            riemann_para[5].norm(0) = m_node_metric->GetZeta(idx)[0];
-            riemann_para[5].norm(1) = m_node_metric->GetZeta(idx)[1];
-            riemann_para[5].norm(2) = m_node_metric->GetZeta(idx)[2];
-            riemann_para[5].nt = m_node_metric->GetZeta(idx)[3];
-            MidPointReconstruct2ndOrder(idx, neighbor[5], riemann_para[4].prim_left.data(),
-                                        riemann_para[4].prim_right.data());
-            MidPointReconstruct2ndOrder(neighbor[4], idx, riemann_para[5].prim_left.data(),
-                                        riemann_para[5].prim_right.data());
-            m_riemann_solver->Solver(riemann_para[4]);
-            m_riemann_solver->Solver(riemann_para[5]);
+            riemann_para[0].norm(0) = m_node_metric->GetMetrics(dim, idx)[0];
+            riemann_para[0].norm(1) = m_node_metric->GetMetrics(dim, idx)[1];
+            riemann_para[0].norm(2) = m_node_metric->GetMetrics(dim, idx)[2];
+            riemann_para[0].nt = m_node_metric->GetMetrics(dim, idx)[3];
+            riemann_para[1].norm(0) = m_node_metric->GetMetrics(dim, idx)[0];
+            riemann_para[1].norm(1) = m_node_metric->GetMetrics(dim, idx)[1];
+            riemann_para[1].norm(2) = m_node_metric->GetMetrics(dim, idx)[2];
+            riemann_para[1].nt = m_node_metric->GetMetrics(dim, idx)[3];
+            MidPointReconstruct2ndOrder(idx, neighbor[2 * dim + 1], riemann_para[0].prim_left.data(),
+                                        riemann_para[0].prim_right.data());
+            MidPointReconstruct2ndOrder(neighbor[2 * dim], idx, riemann_para[1].prim_left.data(),
+                                        riemann_para[1].prim_right.data());
+            m_riemann_solver->Solver(riemann_para[0]);
+            m_riemann_solver->Solver(riemann_para[1]);
+            for (int idx_eq = 0; idx_eq < equ_num; ++idx_eq)
+            {
+                res_tmp[idx_eq] -= riemann_para[0].flux[idx_eq] - riemann_para[1].flux[idx_eq];
+            }
         }
+        data_manager->SetResidual(idx, res_tmp);
+
         // check negative density and pressure
         // for (int i = 0; i < 6; ++i)
         //{
@@ -1236,17 +1239,6 @@ void NSSolverFNFDM::CalcConvectionResidual()
         //    MidPointReconstruct1stOrder(neighbor[4], idx, riemann_para[5].prim_left.data(),
         //                                riemann_para[5].prim_right.data());
         //}
-
-        for (int iVar = 0; iVar < equ_num; ++iVar)
-        {
-            double flux = riemann_para[0].flux[iVar] - riemann_para[1].flux[iVar] + riemann_para[2].flux[iVar] -
-                          riemann_para[3].flux[iVar];
-            if (grid->GetDim() == 3)
-            {
-                flux += riemann_para[4].flux[iVar] - riemann_para[5].flux[iVar];
-            }
-            data_manager->SetResidual(iVar, idx, data_manager->GetResidual(iVar, idx) - flux);
-        }
     }
 }
 
@@ -1338,6 +1330,7 @@ void NSSolverFNFDM::CalcViscousFlux()
 }
 void NSSolverFNFDM::CalcViscousFluxGrad()
 {
+    return;
     int equ_num = GetPara()->GetEqNum();
     auto grid = GetGrid();
     auto data_manager = GetDataManager();
