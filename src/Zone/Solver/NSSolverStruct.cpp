@@ -212,7 +212,7 @@ void NSSolverStruct::InitFieldExplosion()
     prim_far[1] = 0.0;
     prim_far[2] = 0.0;
     prim_far[3] = 0.0;
-    prim_far[4] = 1.0;
+    prim_far[4] = para->GetInflowPressure();
     double explosion_pressure = GlobalData::GetDouble("explosion_pressure");
     double prim_explosion[5];
     prim_explosion[0] = 1.0;
@@ -220,6 +220,7 @@ void NSSolverStruct::InitFieldExplosion()
     prim_explosion[2] = 0.0;
     prim_explosion[3] = 0.0;
     prim_explosion[4] = explosion_pressure * prim_far[4];
+    Log::info("Explosion pressure: {}", explosion_pressure);
     double explosion_center[3];
     explosion_center[0] = GlobalData::GetDouble("explosion_center_x");
     explosion_center[1] = GlobalData::GetDouble("explosion_center_y");
@@ -6405,16 +6406,15 @@ void NSSolverStruct::CalcPrimGradWLS2D()
     Matrix2d A, A_inv;
     Eigen::Vector2d b, grad;
     int neighbor_num = 8;
-    dynamic_array<int> temp_i, temp_j, temp_k;
-    temp_i.resize(neighbor_num);
-    temp_j.resize(neighbor_num);
-    temp_k.resize(neighbor_num);
+    index_type temp_i[8], temp_j[8], temp_k[8];
+     //int neighbor_num = 4;
+     //index_type temp_i[4], temp_j[4], temp_k[4];
 
-    for (int k = 2; k < nk - 2; ++k)
-    {
 #ifdef USE_OMP
 #pragma omp parallel for collapse(3) private(A, A_inv, b, grad, temp_i, temp_j, temp_k)
 #endif // USE_OMP
+    for (int k = 2; k < nk - 2; ++k)
+    {
         for (int j = 2; j < nj - 2; ++j)
         {
             for (int i = 2; i < ni - 2; ++i)
@@ -6431,12 +6431,18 @@ void NSSolverStruct::CalcPrimGradWLS2D()
                 temp_i[6] = i, temp_j[6] = j + 1, temp_k[6] = k;
                 temp_i[7] = i, temp_j[7] = j + 2, temp_k[7] = k;
 
+                 //temp_i[0] = i - 1, temp_j[0] = j, temp_k[0] = k;
+                 //temp_i[1] = i + 1, temp_j[1] = j, temp_k[1] = k;
+                 //temp_i[2] = i, temp_j[2] = j - 1, temp_k[2] = k;
+                 //temp_i[3] = i, temp_j[3] = j + 1, temp_k[3] = k;
+
                 for (int iNeigh = 0; iNeigh < neighbor_num; ++iNeigh)
                 {
                     auto coord_neigh = node->GetCoord(temp_i[iNeigh], temp_j[iNeigh], temp_k[iNeigh]);
                     double delta_x = coord_neigh[0] - coord[0];
                     double delta_y = coord_neigh[1] - coord[1];
                     double weight = 1.0 / sqrt(delta_x * delta_x + delta_y * delta_y);
+                    weight = weight * weight;
                     A(0, 0) += weight * delta_x * delta_x;
                     A(0, 1) += weight * delta_x * delta_y;
                     A(1, 0) += weight * delta_y * delta_x;
@@ -6455,6 +6461,7 @@ void NSSolverStruct::CalcPrimGradWLS2D()
                         double delta_x = coord_neigh[0] - coord[0];
                         double delta_y = coord_neigh[1] - coord[1];
                         double weight = 1.0 / sqrt(delta_x * delta_x + delta_y * delta_y);
+                        weight = weight * weight;
                         b[0] += weight * delta_x * delta_val;
                         b[1] += weight * delta_y * delta_val;
                     }
@@ -6581,20 +6588,21 @@ void NSSolverStruct::CalcLimiter()
 
 void NSSolverStruct::CalcLimiterVK()
 {
+    // Log::info("Compute NS 3D Limiter Coefficients");
     auto grid = GetGrid();
     auto node = grid->GetNode();
     auto data_manager = GetDataManager();
     IdProxyStruct &idx_proxy = GetIdxProxy();
-    double vk_coef = 10;
+    double vk_coef = 0.1;
     auto ni = grid->GetNi();
     auto nj = grid->GetNj();
     auto nk = grid->GetNk();
-    int neighbor_num = 6;
+    int neighbor_num = 2 * grid->GetDim();
     index_type temp_i[6], temp_j[6], temp_k[6];
     for (int idx_eq = 0; idx_eq < 5; idx_eq++)
     {
 #ifdef USE_OMP
-#pragma omp parallel for collapse(3) private( temp_i, temp_j, temp_k)
+#pragma omp parallel for collapse(3) private(temp_i, temp_j, temp_k)
 #endif // USE_OMP
         for (int k = 1; k < nk - 1; ++k)
         {
@@ -6604,20 +6612,20 @@ void NSSolverStruct::CalcLimiterVK()
                 {
                     int idx = idx_proxy(i, j, k);
                     auto coord = node->GetCoord(i, j, k);
-                    //temp_i[0] = i - 2, temp_j[0] = j, temp_k[0] = k;
+                    // temp_i[0] = i - 2, temp_j[0] = j, temp_k[0] = k;
                     temp_i[0] = i - 1, temp_j[0] = j, temp_k[0] = k;
                     temp_i[1] = i + 1, temp_j[1] = j, temp_k[1] = k;
-                    //temp_i[3] = i + 2, temp_j[3] = j, temp_k[3] = k;
-                    //temp_i[4] = i, temp_j[4] = j - 2, temp_k[4] = k;
+                    // temp_i[3] = i + 2, temp_j[3] = j, temp_k[3] = k;
+                    // temp_i[4] = i, temp_j[4] = j - 2, temp_k[4] = k;
                     temp_i[2] = i, temp_j[2] = j - 1, temp_k[2] = k;
                     temp_i[3] = i, temp_j[3] = j + 1, temp_k[3] = k;
-                    //temp_i[7] = i, temp_j[7] = j + 2, temp_k[7] = k;
+                    // temp_i[7] = i, temp_j[7] = j + 2, temp_k[7] = k;
                     if (grid->GetDim() == THREE_DIM)
                     {
                         temp_i[4] = i, temp_j[4] = j, temp_k[4] = k - 1;
-                        //temp_i[9] = i, temp_[9] = j, temp_k[9] = k - 1;
+                        // temp_i[9] = i, temp_[9] = j, temp_k[9] = k - 1;
                         temp_i[5] = i, temp_j[5] = j, temp_k[5] = k + 1;
-                        //temp_i[11] = i, temp_j[11] = j, temp_k[11] = k + 1;
+                        // temp_i[11] = i, temp_j[11] = j, temp_k[11] = k + 1;
                     }
                     double max_val = data_manager->GetPrim(idx_eq, idx);
                     double min_val = data_manager->GetPrim(idx_eq, idx);
@@ -6647,13 +6655,11 @@ void NSSolverStruct::CalcLimiterVK()
                         delta2 *= 0.5;
                         if (delta2 > 0.0)
                         {
-                            temp_coef =
-                                Min(temp_coef, LimiterVK(max_val - data_manager->GetPrim(idx_eq, idx), delta2, eps));
+                            temp_coef = Min(temp_coef, LimiterVK(delta_max, delta2, eps));
                         }
                         else if (delta2 < 0.0)
                         {
-                            temp_coef =
-                                Min(temp_coef, LimiterVK(min_val - data_manager->GetPrim(idx_eq, idx), delta2, eps));
+                            temp_coef = Min(temp_coef, LimiterVK(delta_min, delta2, eps));
                         }
                         else
                         {
@@ -6666,6 +6672,7 @@ void NSSolverStruct::CalcLimiterVK()
             }
         }
     }
+    // Log::info("Compute NS 3D Limiter Coefficients Completed");
 }
 
 void NSSolverStruct::CalcLimiterNone()
@@ -6678,6 +6685,9 @@ void NSSolverStruct::CalcLimiterNone()
     auto nk = grid->GetNk();
     for (int idx_eq = 0; idx_eq < 5; idx_eq++)
     {
+#ifdef USE_OMP
+#pragma omp parallel for collapse(3)
+#endif // USE_OMP
         for (int k = 1; k < nk - 1; ++k)
         {
             for (int j = 1; j < nj - 1; ++j)
@@ -7663,14 +7673,14 @@ void NSSolverStruct::InterMidNodePrim_MUSCL(const double *value, double &value_l
     double k = -1.0;
     double delta_plus = value[3] - value[2];
     double delta_minus = value[2] - value[1];
-    double delta = LimiterVanLeer(delta_plus, delta_minus);
-    value_left = value[2] + 0.25 * ((1.0 - k) * delta + (1.0 + k) * delta);
-    // value_left = value[2] + 0.25 * ((1.0 - k) * delta_minus + (1.0 + k) * delta_plus);
+     double delta = LimiterVanLeer(delta_plus, delta_minus);
+     value_left = value[2] + 0.25 * ((1.0 - k) * delta + (1.0 + k) * delta);
+    //value_left = value[2] + 0.25 * ((1.0 - k) * delta_minus + (1.0 + k) * delta_plus);
     delta_plus = value[4] - value[3];
     delta_minus = value[3] - value[2];
-    delta = LimiterVanLeer(delta_plus, delta_minus);
-    value_right = value[3] - 0.25 * ((1.0 - k) * delta + (1.0 + k) * delta);
-    // value_right = value[3] - 0.25 * ((1.0 - k) * delta_plus + (1.0 + k) * delta_minus);
+     delta = LimiterVanLeer(delta_plus, delta_minus);
+     value_right = value[3] - 0.25 * ((1.0 - k) * delta + (1.0 + k) * delta);
+    //value_right = value[3] - 0.25 * ((1.0 - k) * delta_plus + (1.0 + k) * delta_minus);
     if (std::isnan(value_left) || std::isnan(value_right))
     {
         Log::error("MUSCL interpolation failed!");
@@ -8127,7 +8137,8 @@ void NSSolverStruct::BCFarfield(dynamic_array<BoundStruct> &bound)
                 prim_bnd[1] = prim_far[1] + norm_bnd[0] * (vn_bound - vn_far);
                 prim_bnd[2] = prim_far[2] + norm_bnd[1] * (vn_bound - vn_far);
                 prim_bnd[3] = prim_far[3] + norm_bnd[2] * (vn_bound - vn_far);
-                prim_bnd[4] = c_bound * c_bound * prim_bnd[0] / gamma;
+                // prim_bnd[4] = c_bound * c_bound * prim_bnd[0] / gamma;
+                prim_bnd[4] = entropy * pow(prim_bnd[0], gamma);
             }
             else // 亚声速出口
             {
@@ -8136,7 +8147,8 @@ void NSSolverStruct::BCFarfield(dynamic_array<BoundStruct> &bound)
                 prim_bnd[1] = prim_in[1] + norm_bnd[0] * (vn_bound - vn_in);
                 prim_bnd[2] = prim_in[2] + norm_bnd[1] * (vn_bound - vn_in);
                 prim_bnd[3] = prim_in[3] + norm_bnd[2] * (vn_bound - vn_in);
-                prim_bnd[4] = c_bound * c_bound * prim_bnd[0] / gamma;
+                // prim_bnd[4] = c_bound * c_bound * prim_bnd[0] / gamma;
+                prim_bnd[4] = entropy * pow(prim_bnd[0], gamma);
             }
         }
         double cons_bound[5];

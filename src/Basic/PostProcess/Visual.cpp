@@ -906,6 +906,9 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostr
                                                                                                                  // <<
                                                                                                                  // "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure,\"zeta_z\n";
     os << "ZONE I=" << ni << ", J=" << nj << ", K=" << nk << ", F=POINT\n";
+    double solution_time = GlobalData::GetDouble("currentTime");
+    os << "SOLUTIONTIME=" << solution_time << "\n";
+
     for (int k = ks; k <= ke; ++k)
     {
         for (int j = js; j <= je; ++j)
@@ -981,6 +984,8 @@ void Visual::WriteTecplotASCII(shared_ptr<NSFieldFNFDM> field, std::ostream &os)
     else
         os << "ZONE T=\"NSFieldFNFDM Field\", N=" << node_num << ", E=" << cell.GetCellNum()
            << ", F=FEPOINT, ET=BRICK\n";
+    double solution_time = GlobalData::GetDouble("currentTime");
+    os << "SOLUTIONTIME=" << solution_time << "\n";
     for (int iNode = 0; iNode < node_num; ++iNode)
     {
         auto coord = node.GetCoord(iNode);
@@ -1103,6 +1108,8 @@ void zaran::Visual::WriteTecplotASCII(const shared_ptr<NSFieldZaran> &field, std
     os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\","
           "\"iBlank\"\n";
     os << "ZONE T=\"block grid\", I=" << ni << ", J=" << nj << ", K=" << nk << ", F=POINT\n";
+    double solution_time = GlobalData::GetDouble("currentTime");
+    os << "SOLUTIONTIME=" << solution_time << "\n";
     for (index_type k = ks; k <= ke; ++k)
     {
         for (index_type j = js; j <= je; ++j)
@@ -1265,8 +1272,6 @@ void Visual::WriteTecASCII(shared_ptr<FieldManager> field_manager)
     // out << "TITLE=\"Flow Field\"\n";
     // out <<
     // "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\",\"iBlank\"\n";
-    double solution_time = GlobalData::GetDouble("currentTime");
-    out << "SOLUTIONTIME=" << solution_time << "\n";
     for (size_t iter_field = 0; iter_field < field_manager->GetFieldNum(); iter_field++)
     {
         auto field = field_manager->GetField(iter_field);

@@ -1483,7 +1483,7 @@ void GridFNFactoryZaran::SetFNGridCell()
 void GridFNFactoryZaran::SetFNGridBoundary()
 {
     auto grid = GetFNGrid();
-    auto& node = grid->GetNode();
+    auto &node = grid->GetNode();
     auto &bound = grid->GetBoundaryMap();
     bound.AllocateBound("wall");
     auto &wall = bound.GetBound("wall");
@@ -1491,18 +1491,22 @@ void GridFNFactoryZaran::SetFNGridBoundary()
     wall.resize(node_num);
     for (index_type iNode = 0; iNode < node_num; iNode++)
     {
-        index_type bound_idx = m_fn_info.node[m_layer_num][iNode].idx;
-        index_type ref_idx = m_fn_info.node[m_layer_num - 1][iNode].idx;
+        index_type idx_bound = m_fn_info.node[m_layer_num][iNode].idx;
+        index_type idx_ref = m_fn_info.node[m_layer_num - 1][iNode].idx;
         double normal[3];
         auto bound_coord = m_fn_info.node[m_layer_num][iNode].coord;
         auto ref_coord = m_fn_info.node[m_layer_num - 1][iNode].coord;
-        auto neighbor_node = m_fn_info.node[m_layer_num][iNode].neighbor_node;  
+        auto neighbor_node = m_fn_info.node[m_layer_num][iNode].neighbor_node;
         // 根据相邻物面节点的坐标拟合平面(二维为直线)，求其法向量作为边界法向量
-        dynamic_array<const double*> neighbor_node_coord;
-        neighbor_node_coord.resize(neighbor_node.size());
+        dynamic_array<const double *> neighbor_node_coord;
+        neighbor_node_coord.reserve(neighbor_node.size() + 1);
         for (size_t j = 0; j < neighbor_node.size(); j++)
         {
-            neighbor_node_coord[j] = node.GetCoord(neighbor_node[j]).data();
+            if (neighbor_node[j] < 0 || neighbor_node[j] >= node.GetCount())
+                continue;
+            if (node.GetType(neighbor_node[j]) != NodeType::wall)
+                continue;
+            neighbor_node_coord.push_back(node.GetCoord(neighbor_node[j]).data());
         }
         neighbor_node_coord.push_back(bound_coord);
         if (neighbor_node.size() < 2)
@@ -1527,37 +1531,48 @@ void GridFNFactoryZaran::SetFNGridBoundary()
             normal[2] = c;
         }
 
-
         // 归一化法向量
-            
 
-        //normal[0] = bound_coord[0] - ref_coord[0];
-        //normal[1] = bound_coord[1] - ref_coord[1];
-        //normal[2] = bound_coord[2] - ref_coord[2];
-        //double center_down[3] = {3, 8, 0};
-        //double center_up[3] = {3, 12, 0};
-        //double r = DistanceOfTwoPoints(bound_coord, center_down);
-        //if (abs(r - 0.5) < 1e-5)
+        // normal[0] = bound_coord[0] - ref_coord[0];
+        // normal[1] = bound_coord[1] - ref_coord[1];
+        // normal[2] = bound_coord[2] - ref_coord[2];
+        // double center_down[3] = {3, 8, 0};
+        // double center_up[3] = {3, 12, 0};
+        // double r = DistanceOfTwoPoints(bound_coord, center_down);
+        // if (abs(r - 0.5) < 1e-5)
         //{
-        //    normal[0] = center_down[0] - bound_coord[0];
-        //    normal[1] = center_down[1] - bound_coord[1];
-        //    normal[2] = center_down[2] - bound_coord[2];
-        //}
-        //else
+        //     normal[0] = center_down[0] - bound_coord[0];
+        //     normal[1] = center_down[1] - bound_coord[1];
+        //     normal[2] = center_down[2] - bound_coord[2];
+        // }
+        // else
         //{
-        //    normal[0] = center_up[0] - bound_coord[0];
-        //    normal[1] = center_up[1] - bound_coord[1];
-        //    normal[2] = center_up[2] - bound_coord[2];
+        //     normal[0] = center_up[0] - bound_coord[0];
+        //     normal[1] = center_up[1] - bound_coord[1];
+        //     normal[2] = center_up[2] - bound_coord[2];
+        // }
+        //normal[0] = -bound_coord[0];
+        //normal[1] = -bound_coord[1];
+        //normal[2] = -bound_coord[2];
+        // if (bound_coord[0] < 0)
+        //{
+        //     normal[0] = -bound_coord[0];
+        //     normal[1] = -bound_coord[1];
+        //     normal[2] = -bound_coord[2];
         //}
-         //normal[0] = -bound_coord[0];
-         //normal[1] = -bound_coord[1];
-         //normal[2] = -bound_coord[2];
+        // else if (bound_coord[0] < 0.5)
+        //{
+        //    normal[0] = 0;
+        //    normal[1] = -bound_coord[1];
+        //    normal[2] = -bound_coord[2];
+        //}
+
         double len = sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
         normal[0] /= len;
         normal[1] /= len;
         normal[2] /= len;
-        wall[iNode].SetIdxBound(bound_idx);
-        wall[iNode].SetIdxRef(ref_idx);
+        wall[iNode].SetIdxBound(idx_bound);
+        wall[iNode].SetIdxRef(idx_ref);
         wall[iNode].SetNorm(normal);
     }
 }
@@ -2121,7 +2136,7 @@ void GridFNFactoryZaran::OptimizeWallNode2D()
     const double dz = grid->GetDz();
     const double tol_factor = GlobalData::GetDouble("tol_factor");
     double tol = tol_factor * sqrt(dx * dx + dy * dy) * 0.25;
-    //tol = 0.007;
+    // tol = 0.007;
     Log::info("tol: {}", tol);
     // 优化次数
     int optimize_time = 0;
@@ -2198,8 +2213,8 @@ void GridFNFactoryZaran::BuildNodeNeighbor()
     BuildProjectNodeNeighbor();
     Log::info("BuildTransNodeNeighbor");
     BuildTransNodeNeighbor();
-     //Log::info("ReorderProjectNodeNeighbor");
-     //ReorderProjectNodeNeighbor();
+    // Log::info("ReorderProjectNodeNeighbor");
+    // ReorderProjectNodeNeighbor();
     Log::info("CheckProjectNodeNeighbor");
     CheckProjectNodeNeighbor();
 }
@@ -2270,7 +2285,7 @@ void GridFNFactoryZaran::BuildProjectNodeNeighbor2D()
         }
         m_fn_info.node[m_layer_num][iNode].neighbor_node.resize(node_neighbor_extend[iNode].size() + 1);
         m_fn_info.node[m_layer_num][iNode].neighbor_node[0] = m_fn_info.node[m_layer_num - 1][iNode].idx;
-        //m_fn_info.node[m_layer_num][iNode].neighbor_node[1] = -1;
+        // m_fn_info.node[m_layer_num][iNode].neighbor_node[1] = -1;
         int id = 1;
         for (auto &neighbor : node_neighbor_extend[iNode])
         {
@@ -2281,7 +2296,7 @@ void GridFNFactoryZaran::BuildProjectNodeNeighbor2D()
 
 void GridFNFactoryZaran::BuildProjectNodeNeighbor3D()
 {
-    // direct neighbor
+    // 根据过渡面元构建直接相连的节点
     dynamic_array<std::set<int>> node_neighbor_origin;
     node_neighbor_origin.resize(m_fn_info.node[1].size());
     for (int iFace = 0; iFace < m_trans_face.size(); iFace++)
@@ -2345,10 +2360,10 @@ void GridFNFactoryZaran::BuildProjectNodeNeighbor3D()
                 m_fn_info.node[iLayer][iNode].neighbor_node[id++] = m_fn_info.node[iLayer][neighbor].idx;
             }
         }
-        m_fn_info.node[m_layer_num][iNode].neighbor_node.resize(node_neighbor_extend[iNode].size() + 2);
+        m_fn_info.node[m_layer_num][iNode].neighbor_node.resize(node_neighbor_extend[iNode].size() + 1);
         m_fn_info.node[m_layer_num][iNode].neighbor_node[0] = m_fn_info.node[m_layer_num - 1][iNode].idx;
-        m_fn_info.node[m_layer_num][iNode].neighbor_node[1] = -1;
-        int id = 2;
+        // m_fn_info.node[m_layer_num][iNode].neighbor_node[1] = -1;
+        int id = 1;
         for (auto &neighbor : node_neighbor_extend[iNode])
         {
             m_fn_info.node[m_layer_num][iNode].neighbor_node[id++] = m_fn_info.node[m_layer_num][neighbor].idx;
@@ -2752,19 +2767,25 @@ void GridFNFactoryZaran::BuildTransNodeNeighbor2D()
     {
         index_type i, j, k;
         idx_proxy.GetIdxStruct(nodes.idx_block, i, j, k);
+        // 首先预存其在主网格中的邻居节点，随后再将其替换为slave网格的邻居节点
         m_fn_info.node[1][nodes.idx_layer_local].neighbor_node[0] = idx_proxy(i - 1, j, k);
         m_fn_info.node[1][nodes.idx_layer_local].neighbor_node[1] = idx_proxy(i + 1, j, k);
         m_fn_info.node[1][nodes.idx_layer_local].neighbor_node[2] = idx_proxy(i, j - 1, k);
         m_fn_info.node[1][nodes.idx_layer_local].neighbor_node[3] = idx_proxy(i, j + 1, k);
     }
+
     for (int iNode = 0; iNode < m_fn_info.node[1].size(); iNode++)
     {
         int next_layer_node = m_fn_info.node[2][iNode].idx;
+        int solid_num = 0;
+        int is_solid[4] = {0, 0, 0, 0}; // 记录每个方向是否是固体节点
+        dynamic_array<index_type> neighbor_copy(4);
         for (int iNeighbor = 0; iNeighbor < 4; iNeighbor++)
         {
             bool find = false;
-            int solid_num = 0;
             int idx_master = m_fn_info.node[1][iNode].neighbor_node[iNeighbor];
+            neighbor_copy[iNeighbor] = idx_master; // 先保存原始的邻居节点索引，如果出现异常，则使用这个索引
+            // 如果是过渡节点，直接取对应的过渡节点
             if (m_node_type[idx_master] == PhysicalType::FluidSolid)
             {
                 for (auto &nodes : m_trans_node)
@@ -2778,6 +2799,7 @@ void GridFNFactoryZaran::BuildTransNodeNeighbor2D()
                     }
                 }
             }
+            //
             else if (m_node_type[idx_master] == PhysicalType::Fluid)
             {
                 for (auto &nodes : m_ref_node)
@@ -2794,6 +2816,7 @@ void GridFNFactoryZaran::BuildTransNodeNeighbor2D()
             else if (m_node_type[idx_master] == PhysicalType::Solid)
             {
                 m_fn_info.node[1][iNode].neighbor_node[iNeighbor] = next_layer_node;
+                is_solid[iNeighbor] = 1; // 标记该方向是固体节点
                 find = true;
                 solid_num++;
             }
@@ -2803,10 +2826,269 @@ void GridFNFactoryZaran::BuildTransNodeNeighbor2D()
                 idx_proxy.GetIdxStruct(idx_master, i, j, k);
                 Log::error("Invalid node:{}, {},{},{}, type:{}", idx_master, i, j, k, int(m_node_type[idx_master]));
             }
-            if (solid_num > 3)
+        }
+        //两个固体节点
+        if (solid_num == 2)
+        {
+            auto &neighbor = m_fn_info.node[1][iNode].neighbor_node;
+            dynamic_array<index_type> neighbor_idx_i(4), neighbor_idx_j(4), neighbor_idx_k(4);
+            for (int i = 0; i < 4; i++)
             {
-                Log::error("Invalid node:{}, type:{}", idx_master, int(m_node_type[idx_master]));
+                idx_proxy.GetIdxStruct(neighbor_copy[i], neighbor_idx_i[i], neighbor_idx_j[i], neighbor_idx_k[i]);
             }
+            // 对角线作为邻居节点
+            if (is_solid[0] && is_solid[2]) //(i-1,j)(i,j-1)为固体节点，将(i+1,j+1)作为邻居节点
+            {
+                neighbor[0] = neighbor[0];
+                neighbor[2] = neighbor[1];
+                neighbor[3] = neighbor[3];
+
+                index_type idx_i = neighbor_idx_i[0] + 2;
+                index_type idx_j = neighbor_idx_j[2] + 2;
+                index_type idx_k = neighbor_idx_k[0];
+                index_type idx_master = idx_proxy(idx_i, idx_j, idx_k);
+                if (m_node_type[idx_master] == PhysicalType::Fluid)
+                {
+                    for (auto &nodes : m_ref_node)
+                    {
+                        if (nodes.idx_block == idx_master)
+                        {
+                            neighbor[1] = m_fn_info.node[0][nodes.idx_layer_local].idx;
+                            break;
+                        }
+                    }
+                }
+                else if (m_node_type[idx_master] == PhysicalType::FluidSolid)
+                {
+                    for (auto &nodes : m_trans_node)
+                    {
+                        if (nodes.idx_block == idx_master)
+                        {
+                            neighbor[1] = m_fn_info.node[1][nodes.idx_layer_local].idx;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    Log::error("Invalid node:{}, {},{},{}, type:{}", idx_master, idx_i, idx_j, idx_k,
+                               int(m_node_type[idx_master]));
+                }
+            }
+            else if (is_solid[1] && is_solid[3]) // (i+1,j)(i,j+1)为固体节点，将(i-1,j-1)作为邻居节点
+            {
+                neighbor[0] = neighbor[0];
+                neighbor[1] = neighbor[2];
+                neighbor[3] = neighbor[3];
+                index_type idx_i = neighbor_idx_i[1] - 2;
+                index_type idx_j = neighbor_idx_j[3] - 2;
+                index_type idx_k = neighbor_idx_k[1];
+                index_type idx_master = idx_proxy(idx_i, idx_j, idx_k);
+                if (m_node_type[idx_master] == PhysicalType::Fluid)
+                {
+                    for (auto &nodes : m_ref_node)
+                    {
+                        if (nodes.idx_block == idx_master)
+                        {
+                            neighbor[2] = m_fn_info.node[0][nodes.idx_layer_local].idx;
+                            break;
+                        }
+                    }
+                }
+                else if (m_node_type[idx_master] == PhysicalType::FluidSolid)
+                {
+                    for (auto &nodes : m_trans_node)
+                    {
+                        if (nodes.idx_block == idx_master)
+                        {
+                            neighbor[2] = m_fn_info.node[1][nodes.idx_layer_local].idx;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    Log::error("Invalid node:{}, {},{},{}, type:{}", idx_master, idx_i, idx_j, idx_k,
+                               int(m_node_type[idx_master]));
+                }
+            }
+            else if (is_solid[0] && is_solid[3]) // (i-1,j)(i,j+1)为固体节点，将(i+1,j-1)作为邻居节点
+            {
+                neighbor[0] = neighbor[2];
+                neighbor[1] = neighbor[1];
+                neighbor[3] = neighbor[0];
+                index_type idx_i = neighbor_idx_i[0] + 2;
+                index_type idx_j = neighbor_idx_j[3] - 2;
+                index_type idx_k = neighbor_idx_k[0];
+                index_type idx_master = idx_proxy(idx_i, idx_j, idx_k);
+                if (m_node_type[idx_master] == PhysicalType::Fluid)
+                {
+                    for (auto &nodes : m_ref_node)
+                    {
+                        if (nodes.idx_block == idx_master)
+                        {
+                            neighbor[2] = m_fn_info.node[0][nodes.idx_layer_local].idx;
+                            break;
+                        }
+                    }
+                }
+                else if (m_node_type[idx_master] == PhysicalType::FluidSolid)
+                {
+                    for (auto &nodes : m_trans_node)
+                    {
+                        if (nodes.idx_block == idx_master)
+                        {
+                            neighbor[2] = m_fn_info.node[1][nodes.idx_layer_local].idx;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    Log::error("Invalid node:{}, {},{},{}, type:{}", idx_master, idx_i, idx_j, idx_k,
+                               int(m_node_type[idx_master]));
+                }
+            }
+            else if (is_solid[1] && is_solid[2]) // (i+1,j)(i,j-1)为固体节点，将(i-1,j+1)作为邻居节点
+            {
+                neighbor[0] = neighbor[0];
+                neighbor[1] = neighbor[3];
+                neighbor[2] = neighbor[2];
+                index_type idx_i = neighbor_idx_i[1] - 2;
+                index_type idx_j = neighbor_idx_j[2] + 2;
+                index_type idx_k = neighbor_idx_k[1];
+                index_type idx_master = idx_proxy(idx_i, idx_j, idx_k);
+                if (m_node_type[idx_master] == PhysicalType::Fluid)
+                {
+                    for (auto &nodes : m_ref_node)
+                    {
+                        if (nodes.idx_block == idx_master)
+                        {
+                            neighbor[3] = m_fn_info.node[0][nodes.idx_layer_local].idx;
+                            break;
+                        }
+                    }
+                }
+                else if (m_node_type[idx_master] == PhysicalType::FluidSolid)
+                {
+                    for (auto &nodes : m_trans_node)
+                    {
+                        if (nodes.idx_block == idx_master)
+                        {
+                            neighbor[3] = m_fn_info.node[1][nodes.idx_layer_local].idx;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    Log::error("Invalid node:{}, {},{},{}, type:{}", idx_master, idx_i, idx_j, idx_k,
+                               int(m_node_type[idx_master]));
+                }
+            }
+            else
+            {
+                Log::error("Invalid solid node number: {}", solid_num);
+            }
+        }
+        else if (solid_num == 0)//没有固体节点，需要将固体节点加进去，
+        {
+            auto slave_grid = GetFNGrid();
+            auto &node = slave_grid->GetNode();
+            auto coord = m_fn_info.node[1][iNode].coord;
+            // 计算当地节点与四个邻居节点连线与当地节点与下一个层级节点连线的夹角
+            auto &neighbor = m_fn_info.node[1][iNode].neighbor_node;
+            
+            dynamic_array<dynamic_array<double>> vec(4);
+            for (int i = 0; i < 4; i++)
+            {
+                vec[i].resize(3);
+                for (int j = 0; j < 3; j++)
+                {
+                    vec[i][j] = node.GetCoord(neighbor[i])[j] - coord[j];
+                }
+            }
+            dynamic_array<double> vec2next(3);
+            for (int j = 0; j < 3; j++)
+            {
+                vec2next[j] = node.GetCoord(m_fn_info.node[2][iNode].idx)[j] - coord[j];
+            }
+            // 计算夹角
+            double angle0 = AngleOfTwoArray3D(vec[0].data(), vec2next.data());
+            double angle1 = AngleOfTwoArray3D(vec[1].data(), vec2next.data());
+            double angle2 = AngleOfTwoArray3D(vec[2].data(), vec2next.data());
+            double angle3 = AngleOfTwoArray3D(vec[3].data(), vec2next.data());
+            // 夹角最小的方向作为邻居节点
+            int min_angle_index = 0;
+            double min_angle = angle0;
+            if (angle1 < min_angle)
+            {
+                min_angle = angle1;
+                min_angle_index = 1;
+            }
+            if (angle2 < min_angle)
+            {
+                min_angle = angle2;
+                min_angle_index = 2;
+            }
+            if (angle3 < min_angle)
+            {
+                min_angle = angle3;
+                min_angle_index = 3;
+            }
+            if (min_angle_index == 0)
+            {
+                if (angle3 < PI / 2)
+                {
+                    neighbor[2] = neighbor[0];
+                    neighbor[0] = next_layer_node;
+                }
+                else
+                {
+                    neighbor[3] = next_layer_node;
+                    neighbor[0] = neighbor[3];
+                }
+            }
+            else if (min_angle_index == 1)
+            {
+                if (angle3 < PI / 2)
+                {
+                    neighbor[2] = neighbor[1];
+                    neighbor[1] = next_layer_node;
+                }
+                else
+                {
+                    neighbor[3] = neighbor[1];
+                    neighbor[1] = next_layer_node;
+                }
+            }
+            else if (min_angle_index == 2)
+            {
+                if (angle0 < PI / 2)
+                {
+                    neighbor[3] = neighbor[0];
+                    neighbor[0] = next_layer_node;
+                }
+                else
+                {
+                    neighbor[0] = neighbor[2];
+                    neighbor[2] = next_layer_node;
+                }
+            }
+            else if (min_angle_index == 3)
+            {
+                if (angle2 < PI / 2)
+                {
+                    neighbor[1] = neighbor[3];
+                    neighbor[3] = next_layer_node;
+                }
+                else
+                {
+                    neighbor[0] = neighbor[3];
+                    neighbor[3] = next_layer_node;
+                }
+            }
+
         }
     }
 }

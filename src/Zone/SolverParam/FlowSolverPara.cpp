@@ -1,4 +1,4 @@
-#include "FlowSolverPara.h"
+﻿#include "FlowSolverPara.h"
 #include "GlobalData.h"
 #include "PerfectGas.h"
 #include "Log.h"
@@ -64,6 +64,7 @@ void FlowSolverParam::Init()
 	}
 	else
 	{
+        Log::warn("Unsupported Init Field Type: {}, Please Check Control File!", inflow_type);
 		m_init_field_type = InitFieldType::FarFlow;
 	}
 	m_is_viscous = GlobalData::GetInt("isViscous");

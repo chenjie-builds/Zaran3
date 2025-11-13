@@ -161,7 +161,8 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager> &field_manage
     for (int idx_eq = 0; idx_eq < 5; idx_eq++)
     {
         comm_data_name.push_back("primitive_" + std::to_string(idx_eq));
-        comm_data_name.push_back("limiter_" + std::to_string(idx_eq));
+        comm_data_name.push_back("conservative_" + std::to_string(idx_eq));
+         comm_data_name.push_back("limiter_" + std::to_string(idx_eq));
         for (int idx_dim = 0; idx_dim < 3; idx_dim++)
         {
             comm_data_name.push_back("prim_grad_" + std::to_string(idx_eq) + "_" + std::to_string(idx_dim));

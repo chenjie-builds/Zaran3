@@ -321,20 +321,20 @@ void NSSolverFNFDM::MidPointReconstruct2ndOrder(int index_left, int index_right,
                  (coord_right[1] - coord_left[1]) * data_manager->GetPrimGrad(iVal, 1, index_right) +
                  (coord_right[2] - coord_left[2]) * data_manager->GetPrimGrad(iVal, 2, index_right));
     }
-    //if (value_rec_left[0] < 0 || value_rec_left[4] < 0)
+    // if (value_rec_left[0] < 0 || value_rec_left[4] < 0)
     //{
-    //    for (int iVal = 0; iVal < equ_num; ++iVal)
-    //    {
-    //        value_rec_left[iVal] = data_manager->GetPrim(iVal, index_left);
-    //    }
-    //}
-    //if (value_rec_right[0] < 0 || value_rec_right[4] < 0)
+    //     for (int iVal = 0; iVal < equ_num; ++iVal)
+    //     {
+    //         value_rec_left[iVal] = data_manager->GetPrim(iVal, index_left);
+    //     }
+    // }
+    // if (value_rec_right[0] < 0 || value_rec_right[4] < 0)
     //{
-    //    for (int iVal = 0; iVal < equ_num; ++iVal)
-    //    {
-    //        value_rec_right[iVal] = data_manager->GetPrim(iVal, index_right);
-    //    }
-    //}
+    //     for (int iVal = 0; iVal < equ_num; ++iVal)
+    //     {
+    //         value_rec_right[iVal] = data_manager->GetPrim(iVal, index_right);
+    //     }
+    // }
 }
 
 void NSSolverFNFDM::MidPointReconstruct1stOrder(int index_left, int index_right, double *value_rec_left,
@@ -363,43 +363,19 @@ void NSSolverFNFDM::BoundaryCondition()
             continue;
         if (bound_name == "riemann")
         {
-#ifdef USE_OMP
-#pragma omp parallel for
-#endif // USE_OMP
-            for (int iBound = 0; iBound < bound.size(); ++iBound)
-            {
-                BCFarfield(bound[iBound]);
-            }
+            BCFarfield(bound);
         }
         else if (bound_name == "inlet")
         {
-#ifdef USE_OMP
-#pragma omp parallel for
-#endif // USE_OMP
-            for (int iBound = 0; iBound < bound.size(); ++iBound)
-            {
-                BCInlow(bound[iBound]);
-            }
+            BCInflow(bound);
         }
         else if (bound_name == "outlet")
         {
-#ifdef USE_OMP
-#pragma omp parallel for
-#endif // USE_OMP
-            for (int iBound = 0; iBound < bound.size(); ++iBound)
-            {
-                BCOutflow(bound[iBound]);
-            }
+            BCOutflow(bound);
         }
         else if (bound_name == "wall")
         {
-#ifdef USE_OMP
-#pragma omp parallel for
-#endif // USE_OMP
-            for (int iBound = 0; iBound < bound.size(); ++iBound)
-            {
-                BCWall(bound[iBound]);
-            }
+            BCWall(bound);
         }
     }
 }
@@ -422,7 +398,28 @@ void NSSolverFNFDM::BCInlow(BoundFN &bound)
         data_manager->SetCons(iVal, bound_index, cons_far[iVal]);
     }
 }
-
+void NSSolverFNFDM::BCInflow(dynamic_array<BoundFN> &bound_list)
+{
+    auto para = GetPara();
+    auto data_manager = GetDataManager();
+    double prim_far[5];
+    prim_far[0] = para->GetInflowDensity();
+    prim_far[1] = para->GetInflowVelocityX();
+    prim_far[2] = para->GetInflowVelocityY();
+    prim_far[3] = para->GetInflowVelocityZ();
+    prim_far[4] = para->GetInflowPressure();
+    double cons_far[5];
+    GetGas()->Prim2Cons(prim_far, cons_far);
+    for (auto &bound : bound_list)
+    {
+        int bound_index = bound.GetIdxBound();
+        for (int iVal = 0; iVal < 5; ++iVal)
+        {
+            data_manager->SetPrim(iVal, bound_index, prim_far[iVal]);
+            data_manager->SetCons(iVal, bound_index, cons_far[iVal]);
+        }
+    }
+}
 void NSSolverFNFDM::BCOutflow(BoundFN &bound)
 {
     auto data_manager = GetDataManager();
@@ -438,6 +435,27 @@ void NSSolverFNFDM::BCOutflow(BoundFN &bound)
     {
         data_manager->SetPrim(iVal, idx_bnd, prim[iVal]);
         data_manager->SetCons(iVal, idx_bnd, cons[iVal]);
+    }
+}
+
+void NSSolverFNFDM::BCOutflow(dynamic_array<BoundFN> &bound_list)
+{
+    auto data_manager = GetDataManager();
+    for (auto &bound : bound_list)
+    {
+        int idx_bnd = bound.GetIdxBound();
+        int inner_index = bound.GetIdxRef();
+        double prim[5], cons[5];
+        for (int iVal = 0; iVal < 5; ++iVal)
+        {
+            prim[iVal] = data_manager->GetPrim(iVal, inner_index);
+        }
+        GetGas()->Prim2Cons(prim, cons);
+        for (int iVal = 0; iVal < 5; ++iVal)
+        {
+            data_manager->SetPrim(iVal, idx_bnd, prim[iVal]);
+            data_manager->SetCons(iVal, idx_bnd, cons[iVal]);
+        }
     }
 }
 
@@ -478,6 +496,32 @@ void NSSolverFNFDM::BCWall(BoundFN &bound)
     {
         data_manager->SetPrim(iVal, idx_bnd, prim_bnd[iVal]);
         data_manager->SetCons(iVal, idx_bnd, cons_bnd[iVal]);
+    }
+}
+void NSSolverFNFDM::BCWall(dynamic_array<BoundFN> &bound_list)
+{
+    auto grid = GetGrid();
+    auto data_manager = GetDataManager();
+    for (size_t iBound = 0; iBound < bound_list.size(); ++iBound)
+    {
+        auto &bound = bound_list[iBound];
+        int idx_ref = bound.GetIdxRef();
+        int idx_bnd = bound.GetIdxBound();
+        auto norm_bnd = bound.GetNormBound();
+        double prim_bnd[5];
+        for (int iVal = 0; iVal < 5; ++iVal)
+        {
+            prim_bnd[iVal] = data_manager->GetPrim(iVal, idx_ref);
+        }
+        double vel_bnd[3] = {prim_bnd[1], prim_bnd[2], prim_bnd[3]};
+        double vn = vel_bnd[0] * norm_bnd[0] + vel_bnd[1] * norm_bnd[1] + vel_bnd[2] * norm_bnd[2];
+        prim_bnd[1] = prim_bnd[1] - 1.0 * vn * norm_bnd[0];
+        prim_bnd[2] = prim_bnd[2] - 1.0 * vn * norm_bnd[1];
+        prim_bnd[3] = prim_bnd[3] - 1.0 * vn * norm_bnd[2];
+        double cons_bnd[5];
+        GetGas()->Prim2Cons(prim_bnd, cons_bnd);
+        data_manager->SetPrim(idx_bnd, prim_bnd);
+        data_manager->SetCons(idx_bnd, cons_bnd);
     }
 }
 
@@ -560,6 +604,89 @@ void NSSolverFNFDM::BCFarfield(BoundFN &bound)
         data_manager->SetCons(iVal, idx_bnd, cons_bound[iVal]);
     }
 }
+void NSSolverFNFDM::BCFarfield(dynamic_array<BoundFN> &bound_list)
+{
+    auto data_manager = GetDataManager();
+    auto para = GetPara();
+    auto gas = GetGas();
+    double gamma = gas->GetGamma();
+    double prim_far[5] = {para->GetInflowDensity(), para->GetInflowVelocityX(), para->GetInflowVelocityY(),
+                          para->GetInflowVelocityZ(), para->GetInflowPressure()};
+    for (auto &bound : bound_list)
+    {
+        int idx_ref = bound.GetIdxRef();
+        int idx_bnd = bound.GetIdxBound();
+        auto norm_bnd = bound.GetNormBound();
+        double prim_in[5] = {data_manager->GetPrim(0, idx_ref), data_manager->GetPrim(1, idx_ref),
+                             data_manager->GetPrim(2, idx_ref), data_manager->GetPrim(3, idx_ref),
+                             data_manager->GetPrim(4, idx_ref)};
+        double prim_bnd[5] = {data_manager->GetPrim(0, idx_bnd), data_manager->GetPrim(1, idx_bnd),
+                              data_manager->GetPrim(2, idx_bnd), data_manager->GetPrim(3, idx_bnd),
+                              data_manager->GetPrim(4, idx_bnd)};
+        double vel_in[3] = {prim_in[1], prim_in[2], prim_in[3]};
+        // 速度在边界法向上的投影
+        double vn_in = vel_in[0] * norm_bnd[0] + vel_in[1] * norm_bnd[1] + vel_in[2] * norm_bnd[2];
+        double vel_far[3] = {para->GetInflowVelocityX(), para->GetInflowVelocityY(), para->GetInflowVelocityZ()};
+        double vn_far = vel_far[0] * norm_bnd[0] + vel_far[1] * norm_bnd[1] + vel_far[2] * norm_bnd[2];
+        double c_in = sqrt(gamma * prim_in[4] / prim_in[0]);
+        double c_far = sqrt(gamma * para->GetInflowPressure() / para->GetInflowDensity());
+        double mach = sqrt(vel_in[0] * vel_in[0] + vel_in[1] * vel_in[1] + vel_in[2] * vel_in[2]) / c_in;
+        // 超声速出口
+        if (mach >= 1.0)
+        {
+            if (vn_in >= 0) // 超声速出口
+            {
+                for (int iVal = 0; iVal < 5; ++iVal)
+                {
+                    data_manager->SetPrim(iVal, idx_bnd, prim_in[iVal]);
+                }
+            }
+            else // 超声速入口
+            {
+                data_manager->SetPrim(0, idx_bnd, para->GetInflowDensity());
+                data_manager->SetPrim(1, idx_bnd, para->GetInflowVelocityX());
+                data_manager->SetPrim(2, idx_bnd, para->GetInflowVelocityY());
+                data_manager->SetPrim(3, idx_bnd, para->GetInflowVelocityZ());
+                data_manager->SetPrim(4, idx_bnd, para->GetInflowPressure());
+            }
+        }
+        else
+        {
+            double gamma1 = gamma - 1.0;
+            double r_p = vn_in + 2.0 * c_in / gamma1;
+            double r_m = vn_far - 2.0 * c_far / gamma1;
+            double vn_bound = 0.5 * (r_p + r_m);
+            double c_bound = 0.25 * gamma1 * (r_p - r_m);
+            if (vn_bound <= 0) // 亚声速入口
+            {
+                double entropy = (prim_far[4] / pow(prim_far[0], gamma));
+                data_manager->SetPrim(0, idx_bnd, pow(c_bound * c_bound / (entropy * gamma), 1.0 / gamma1));
+                data_manager->SetPrim(1, idx_bnd, prim_far[1] + norm_bnd[0] * (vn_bound - vn_far));
+                data_manager->SetPrim(2, idx_bnd, prim_far[2] + norm_bnd[1] * (vn_bound - vn_far));
+                data_manager->SetPrim(3, idx_bnd, prim_far[3] + norm_bnd[2] * (vn_bound - vn_far));
+                data_manager->SetPrim(4, idx_bnd, c_bound * c_bound * data_manager->GetPrim(0, idx_bnd) / gamma);
+            }
+            else // 亚声速出口
+            {
+                double entropy = prim_in[4] / pow(prim_in[0], gamma);
+                data_manager->SetPrim(0, idx_bnd, pow(c_bound * c_bound / (entropy * gamma), 1.0 / gamma1));
+                data_manager->SetPrim(1, idx_bnd, prim_in[1] + norm_bnd[0] * (vn_bound - vn_in));
+                data_manager->SetPrim(2, idx_bnd, prim_in[2] + norm_bnd[1] * (vn_bound - vn_in));
+                data_manager->SetPrim(3, idx_bnd, prim_in[3] + norm_bnd[2] * (vn_bound - vn_in));
+                data_manager->SetPrim(4, idx_bnd, c_bound * c_bound * data_manager->GetPrim(0, idx_bnd) / gamma);
+            }
+        }
+        for (int iVal = 0; iVal < 5; ++iVal)
+            prim_bnd[iVal] = data_manager->GetPrim(iVal, idx_bnd);
+        double cons_bound[5];
+        GetGas()->Prim2Cons(prim_bnd, cons_bound);
+        for (int iVal = 0; iVal < 5; ++iVal)
+        {
+            data_manager->SetCons(iVal, idx_bnd, cons_bound[iVal]);
+        }
+    }
+}
+
 void NSSolverFNFDM::CalcPrimGrad()
 {
     auto para = GetPara();
@@ -816,8 +943,8 @@ void NSSolverFNFDM::CalcLimiterNone()
 #endif // USE_OMP
         for (int iNode = 0; iNode < node_num; ++iNode)
         {
-            if (node.GetType(iNode) != NodeType::inner && node.GetType(iNode) != NodeType::hole)
-                continue;
+            //if (node.GetType(iNode) != NodeType::inner && node.GetType(iNode) != NodeType::hole)
+            //    continue;
             data_manager->SetLimiter(iVal, iNode, 1.0);
         }
     }
@@ -1172,9 +1299,9 @@ void NSSolverFNFDM::CalcConvectionResidual()
     auto &inner_node = grid->GetInnerNode();
     RiemannSolverPara riemann_para[2];
     double res_tmp[5];
-#ifdef USE_OMP
-#pragma omp parallel for private(riemann_para, res_tmp)
-#endif // USE_OMP
+//#ifdef USE_OMP
+//#pragma omp parallel for private(riemann_para, res_tmp)
+//#endif // USE_OMP
     for (int iNode = 0; iNode < inner_node_num; ++iNode)
     {
         for (int i = 0; i < 2; ++i)
