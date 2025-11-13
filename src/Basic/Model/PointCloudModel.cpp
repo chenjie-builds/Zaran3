@@ -29,13 +29,7 @@ PointCloudModel::PointCloudModel(const dynamic_array<Eigen::Vector3d> &point_lis
 PointCloudModel::PointCloudModel(const dynamic_array<dynamic_array<double>>& point_list)
 {
 	vtkNew<vtkPoints> points;
-	Box box;
-	box.x_min = LARGE_NUMBER;
-	box.x_max = -LARGE_NUMBER;
-	box.y_min = LARGE_NUMBER;
-	box.y_max = -LARGE_NUMBER;
-	box.z_min = LARGE_NUMBER;
-	box.z_max = -LARGE_NUMBER;
+    Box box{LARGE_NUMBER, -LARGE_NUMBER, LARGE_NUMBER, -LARGE_NUMBER, LARGE_NUMBER, -LARGE_NUMBER};
 	for (size_t iPoint = 0; iPoint < point_list.size(); ++iPoint)
 	{
 		auto& x = point_list[iPoint][0];
