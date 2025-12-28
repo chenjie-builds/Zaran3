@@ -2,6 +2,7 @@
 #include "Log.h"
 #include <fstream>
 #include "MathBasic.h"
+#include"Rand.h"
 namespace zaran
 {
 	GridBuilderStructGridgen::GridBuilderStructGridgen()
@@ -42,6 +43,10 @@ namespace zaran
 	void GridBuilderStructGridgen::ReadNodeFile()
 	{
 		std::ifstream node_file(m_node_file_name);
+        //std::ofstream rand_node_file("rand_node.dat");
+        //double rand_factor = 0.001;
+		//随机数
+
 		if (!node_file.is_open())
 		{
 			Log::error("Can't open node file:{}, Please Check!", m_node_file_name);
@@ -49,6 +54,7 @@ namespace zaran
 		}
 		int block_num;
 		node_file >> block_num;
+        //rand_node_file << block_num << std::endl;
 		m_block.resize(block_num);
 		for (size_t iBlock = 0; iBlock < block_num; ++iBlock)
 		{
@@ -56,6 +62,7 @@ namespace zaran
 			auto& nj = m_block[iBlock].nj;
 			auto& nk = m_block[iBlock].nk;
 			node_file >> ni >> nj >> nk;
+            //rand_node_file << ni << " " << nj << " " << nk << " " << std::endl;
 			auto& coord = m_block[iBlock].node_coord;
 			coord.resize(ni);
 			for (int idx_i = 0; idx_i < ni; ++idx_i)
@@ -73,6 +80,19 @@ namespace zaran
 					for (int idx_i = 0; idx_i < ni; ++idx_i)
 					{
 						node_file >> coord[idx_i][idx_j][idx_k].coord[0];
+      //                  if (idx_i == 0 || idx_j == 0||idx_k==0)
+						//{
+      //                      rand_node_file << coord[idx_i][idx_j][idx_k].coord[0] << std::endl;
+						//}
+      //                  else if (idx_i == ni - 1 || idx_j == nj - 1 || idx_k == nk - 1)
+						//{
+						//	rand_node_file << coord[idx_i][idx_j][idx_k].coord[0] << std::endl;
+						//}
+						//else
+						//{
+      //                      double rand_x = RandDouble(-rand_factor, rand_factor);
+						//	rand_node_file << coord[idx_i][idx_j][idx_k].coord[0]+rand_x << std::endl;
+						//}
 					}
 				}
 			}
@@ -83,6 +103,19 @@ namespace zaran
 					for (int idx_i = 0; idx_i < ni; ++idx_i)
 					{
 						node_file >> coord[idx_i][idx_j][idx_k].coord[1];
+                        //if (idx_i == 0 || idx_j == 0 || idx_k == 0)
+                        //{
+                        //    rand_node_file << coord[idx_i][idx_j][idx_k].coord[1] << std::endl;
+                        //}
+                        //else if (idx_i == ni - 1 || idx_j == nj - 1 || idx_k == nk - 1)
+                        //{
+                        //    rand_node_file << coord[idx_i][idx_j][idx_k].coord[1] << std::endl;
+                        //}
+                        //else
+                        //{
+                        //    double rand_y = RandDouble(-rand_factor, rand_factor);
+                        //    rand_node_file << coord[idx_i][idx_j][idx_k].coord[1] + rand_y << std::endl;
+                        //}
 					}
 				}
 			}
@@ -93,6 +126,19 @@ namespace zaran
 					for (int idx_i = 0; idx_i < ni; ++idx_i)
 					{
 						node_file >> coord[idx_i][idx_j][idx_k].coord[2];
+						//if (idx_i == 0 || idx_j == 0 || idx_k == 0)
+						//{
+						//	rand_node_file << coord[idx_i][idx_j][idx_k].coord[2] << std::endl;
+						//}
+						//else if (idx_i == ni - 1 || idx_j == nj - 1 || idx_k == nk - 1)
+						//{
+						//	rand_node_file << coord[idx_i][idx_j][idx_k].coord[2] << std::endl;
+						//}
+      //                  else
+      //                  {
+      //                      double rand_z = RandDouble(-rand_factor, rand_factor);
+      //                      rand_node_file << coord[idx_i][idx_j][idx_k].coord[2] + rand_z << std::endl;
+      //                  }
 					}
 				}
 			}
@@ -108,6 +154,8 @@ namespace zaran
 		}
 		node_file.close();
 		Log::info("Read Node File Success!");
+        //rand_node_file.close();
+        //exit(0);
 	}
 	void GridBuilderStructGridgen::ReadBoundFile()
 	{

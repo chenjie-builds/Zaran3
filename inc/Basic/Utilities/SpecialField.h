@@ -11,9 +11,10 @@
  */
 
 #pragma once
-#include"BasicType.h"
+#include "BasicType.h"
 namespace zaran
 {
-	void CalcSupersonicVortex(const double& x, const double& y, const double& x0, const double y0, const double& ci, const double& Mi, const double& rhoi, Eigen::VectorXd& primitive);
-	void CalcIsentropicVortex(const double& x, const double& y, const double& beta, Eigen::VectorXd& primitive);
-}
+void CalcSupersonicVortex(const double &x, const double &y, const double &x0, const double y0, const double &ci,
+                          const double &Mi, const double &rhoi, Eigen::VectorXd &primitive);
+void CalcIsentropicVortex(const double &x, const double &y, const double &beta, Eigen::VectorXd &primitive);
+} // namespace zaran

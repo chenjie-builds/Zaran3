@@ -34,8 +34,8 @@ void NSFieldSimulation::Initialize() const
 
 void NSFieldSimulation::SaveDataTecplot() const
 {
-     m_visual->WriteTecASCII(m_field_manager);
-    //m_visual->WriteTecplotBinary(m_field_manager);
+     //m_visual->WriteTecASCII(m_field_manager);
+    m_visual->WriteTecplotBinary(m_field_manager);
     // m_visual->WriteVtkASCII(m_field_manager);
     // m_visual->WriteCGNS(m_field_manager);
 }

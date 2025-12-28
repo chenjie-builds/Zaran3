@@ -893,6 +893,47 @@ void NSSolverStruct::CalcJacobian()
         Log::warn("Jacobian Scheme is not defined, use standard format as default");
         CalcJacobianV1();
     }
+    double max_jacobian = -LARGE_NUMBER;
+    double min_jacobian = LARGE_NUMBER;
+    int max_jacobian_node_i, max_jacobian_node_j, max_jacobian_node_k;
+    int min_jacobian_node_i, min_jacobian_node_j, min_jacobian_node_k;
+    max_jacobian_node_i = max_jacobian_node_j = max_jacobian_node_k = -1;
+    min_jacobian_node_i = min_jacobian_node_j = min_jacobian_node_k = -1;
+    auto node_metrics = GetNodeMetrics();
+    IdProxyStruct &idx_proxy = GetIdxProxy();
+    auto grid = GetGrid();
+    int ni = grid->GetNi();
+    int nj = grid->GetNj();
+    int nk = grid->GetNk();
+    for (int k = 2; k < nk - 2; ++k)
+    {
+        for (int j = 2; j < nj - 2; ++j)
+        {
+            for (int i = 2; i < ni - 2; ++i)
+            {
+                auto idx = idx_proxy(i, j, k);
+                auto jacobian = node_metrics->GetJacobian(idx);
+                if (jacobian > max_jacobian)
+                {
+                    max_jacobian = jacobian;
+                    max_jacobian_node_i = i;
+                    max_jacobian_node_j = j;
+                    max_jacobian_node_k = k;
+                }
+                if (jacobian < min_jacobian)
+                {
+                    min_jacobian = jacobian;
+                    min_jacobian_node_i = i;
+                    min_jacobian_node_j = j;
+                    min_jacobian_node_k = k;
+                }
+            }
+        }
+    }
+    Log::info("Max Jacobian: {} at node ({}, {}, {})", max_jacobian, max_jacobian_node_i, max_jacobian_node_j,
+              max_jacobian_node_k);
+    Log::info("Min Jacobian: {} at node ({}, {}, {})", min_jacobian, min_jacobian_node_i, min_jacobian_node_j,
+              min_jacobian_node_k);
 }
 void NSSolverStruct::CalcJacobianV1()
 {
@@ -958,12 +999,12 @@ void NSSolverStruct::CalcJacobianV2()
 void NSSolverStruct::CalcJacobianV3()
 {
     auto para = GetPara();
-    auto flux_diff_scheme = para->GetFluxDifferenceScheme();
-    if (flux_diff_scheme == FluxDifferenceScheme::SecondOrder)
+    auto metric_diff_scheme = para->GetMetricDifferenceScheme();
+    if (metric_diff_scheme == MetricDifferenceScheme::SecondOrder)
     {
         CalcJacobianV3_2nd();
     }
-    else if (flux_diff_scheme == FluxDifferenceScheme::SixthOrder)
+    else if (metric_diff_scheme == MetricDifferenceScheme::SixthOrder)
     {
         CalcJacobianV3_6th();
     }
@@ -1027,10 +1068,10 @@ void NSSolverStruct::CalcJacobianV3_2nd()
     {
         for (int j = 1; j < nj - 1; ++j)
         {
-            int idx0 = Idx(1, j, k);
-            int idx1 = Idx(2, j, k);
-            auto coord0 = node->GetCoord(1, j, k);
-            auto coord1 = node->GetCoord(2, j, k);
+            int idx0 = Idx(0, j, k);
+            int idx1 = Idx(1, j, k);
+            auto coord0 = node->GetCoord(0, j, k);
+            auto coord1 = node->GetCoord(1, j, k);
             inter_temp[0] =
                 coord0[0] * coef->GetXi(idx0)[0] + coord0[1] * coef->GetXi(idx0)[1] + coord0[2] * coef->GetXi(idx0)[2];
             inter_temp[1] =
@@ -1052,10 +1093,10 @@ void NSSolverStruct::CalcJacobianV3_2nd()
     {
         for (int i = 1; i < ni - 1; ++i)
         {
-            int idx0 = Idx(i, 1, k);
-            int idx1 = Idx(i, 2, k);
-            auto coord0 = node->GetCoord(i, 1, k);
-            auto coord1 = node->GetCoord(i, 2, k);
+            int idx0 = Idx(i, 0, k);
+            int idx1 = Idx(i, 1, k);
+            auto coord0 = node->GetCoord(i, 0, k);
+            auto coord1 = node->GetCoord(i, 1, k);
             inter_temp[0] = coord0[0] * coef->GetEta(idx0)[0] + coord0[1] * coef->GetEta(idx0)[1] +
                             coord0[2] * coef->GetEta(idx0)[2];
             inter_temp[1] = coord1[0] * coef->GetEta(idx1)[0] + coord1[1] * coef->GetEta(idx1)[1] +
@@ -1077,10 +1118,10 @@ void NSSolverStruct::CalcJacobianV3_2nd()
     {
         for (int i = 1; i < ni - 1; ++i)
         {
-            int idx0 = Idx(i, j, 1);
-            int idx1 = Idx(i, j, 2);
-            auto coord0 = node->GetCoord(i, j, 1);
-            auto coord1 = node->GetCoord(i, j, 2);
+            int idx0 = Idx(i, j, 0);
+            int idx1 = Idx(i, j, 1);
+            auto coord0 = node->GetCoord(i, j, 0);
+            auto coord1 = node->GetCoord(i, j, 1);
             inter_temp[0] = coord0[0] * coef->GetZeta(idx0)[0] + coord0[1] * coef->GetZeta(idx0)[1] +
                             coord0[2] * coef->GetZeta(idx0)[2];
             inter_temp[1] = coord1[0] * coef->GetZeta(idx1)[0] + coord1[1] * coef->GetZeta(idx1)[1] +
@@ -1334,7 +1375,7 @@ void NSSolverStruct::CalcJacobianV3_6th()
                 diff_temp[iTemp] = temp_i[Idx(ni - 2 - iTemp, j, k)];
             }
             coef->GetJacobian(Idx(ni - 2, j, k)) += NodeDifferece4thLeft(diff_temp);
-            coef->GetJacobian(Idx(ni - 3, j, k)) += -NodeDifferece4th(diff_temp);
+            coef->GetJacobian(Idx(ni - 3, j, k)) += NodeDifferece4th(diff_temp);
         }
     }
     // j=1,2,nj-3,nj-2
@@ -1353,7 +1394,7 @@ void NSSolverStruct::CalcJacobianV3_6th()
                 diff_temp[iTemp] = temp_j[Idx(i, nj - 2 - iTemp, k)];
             }
             coef->GetJacobian(Idx(i, nj - 2, k)) += NodeDifferece4thLeft(diff_temp);
-            coef->GetJacobian(Idx(i, nj - 3, k)) += -NodeDifferece4th(diff_temp);
+            coef->GetJacobian(Idx(i, nj - 3, k)) += NodeDifferece4th(diff_temp);
         }
     }
     // k=1,2,nk-3,nk-2
@@ -1372,7 +1413,7 @@ void NSSolverStruct::CalcJacobianV3_6th()
                 diff_temp[iTemp] = temp_k[Idx(i, j, nk - 2 - iTemp)];
             }
             coef->GetJacobian(Idx(i, j, nk - 2)) += NodeDifferece4thLeft(diff_temp);
-            coef->GetJacobian(Idx(i, j, nk - 3)) += -NodeDifferece4th(diff_temp);
+            coef->GetJacobian(Idx(i, j, nk - 3)) += NodeDifferece4th(diff_temp);
         }
     }
     for (int k = 1; k < nk - 1; ++k)
@@ -1555,11 +1596,11 @@ void NSSolverStruct::CalcMetricsS1_2nd()
             temp_xi[idx].x_zeta_y = 0.5 * (3.0 * coef->GetX(Idx(ni - 2, j, k))[2] * node->GetCoord(ni - 2, j, k)[1] -
                                            1.0 * coef->GetX(Idx(ni - 3, j, k))[2] * node->GetCoord(ni - 3, j, k)[1]);
             temp_xi[idx].y_eta_z = 0.5 * (3.0 * coef->GetY(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[2] -
-                                          1.0 * coef->GetY(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[2]);
+                                          1.0 * coef->GetY(Idx(ni - 3, j, k))[1] * node->GetCoord(ni - 3, j, k)[2]);
             temp_xi[idx].z_eta_x = 0.5 * (3.0 * coef->GetZ(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[0] -
-                                          1.0 * coef->GetZ(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[0]);
+                                          1.0 * coef->GetZ(Idx(ni - 3, j, k))[1] * node->GetCoord(ni - 3, j, k)[0]);
             temp_xi[idx].x_eta_y = 0.5 * (3.0 * coef->GetX(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[1] -
-                                          1.0 * coef->GetX(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[1]);
+                                          1.0 * coef->GetX(Idx(ni - 3, j, k))[1] * node->GetCoord(ni - 3, j, k)[1]);
         }
     }
     // 求出eta方向的临时变量：逆变换度量系数乘以坐标
@@ -1617,11 +1658,11 @@ void NSSolverStruct::CalcMetricsS1_2nd()
             temp_eta[idx].x_zeta_y = 0.5 * (3.0 * coef->GetX(Idx(i, nj - 2, k))[2] * node->GetCoord(i, nj - 2, k)[1] -
                                             1.0 * coef->GetX(Idx(i, nj - 3, k))[2] * node->GetCoord(i, nj - 3, k)[1]);
             temp_eta[idx].y_xi_z = 0.5 * (3.0 * coef->GetY(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[2] -
-                                          1.0 * coef->GetY(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[2]);
+                                          1.0 * coef->GetY(Idx(i, nj - 3, k))[0] * node->GetCoord(i, nj - 3, k)[2]);
             temp_eta[idx].z_xi_x = 0.5 * (3.0 * coef->GetZ(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[0] -
-                                          1.0 * coef->GetZ(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[0]);
+                                          1.0 * coef->GetZ(Idx(i, nj - 3, k))[0] * node->GetCoord(i, nj - 3, k)[0]);
             temp_eta[idx].x_xi_y = 0.5 * (3.0 * coef->GetX(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[1] -
-                                          1.0 * coef->GetX(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[1]);
+                                          1.0 * coef->GetX(Idx(i, nj - 3, k))[0] * node->GetCoord(i, nj - 3, k)[1]);
         }
     }
 
@@ -1680,11 +1721,11 @@ void NSSolverStruct::CalcMetricsS1_2nd()
             temp_zeta[idx].x_eta_y = 0.5 * (3.0 * coef->GetX(Idx(i, j, nk - 2))[1] * node->GetCoord(i, j, nk - 2)[1] -
                                             1.0 * coef->GetX(Idx(i, j, nk - 3))[1] * node->GetCoord(i, j, nk - 3)[1]);
             temp_zeta[idx].y_xi_z = 0.5 * (3.0 * coef->GetY(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[2] -
-                                           1.0 * coef->GetY(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[2]);
+                                           1.0 * coef->GetY(Idx(i, j, nk - 3))[0] * node->GetCoord(i, j, nk - 3)[2]);
             temp_zeta[idx].z_xi_x = 0.5 * (3.0 * coef->GetZ(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[0] -
-                                           1.0 * coef->GetZ(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[0]);
+                                           1.0 * coef->GetZ(Idx(i, j, nk - 3))[0] * node->GetCoord(i, j, nk - 3)[0]);
             temp_zeta[idx].x_xi_y = 0.5 * (3.0 * coef->GetX(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[1] -
-                                           1.0 * coef->GetX(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[1]);
+                                           1.0 * coef->GetX(Idx(i, j, nk - 3))[0] * node->GetCoord(i, j, nk - 3)[1]);
         }
     }
 
@@ -2993,6 +3034,8 @@ void NSSolverStruct::CalcMetricsS2_2nd()
             }
         }
     }
+    // 第三步：计算半点处逆变换度量系数和坐标乘积
+    //  求出xi方向的临时变量：逆变换度量系数乘以坐标
     struct TempXi
     {
         double z_zeta_y, x_zeta_z, y_zeta_x, z_eta_y, x_eta_z, y_eta_x;
@@ -3026,36 +3069,32 @@ void NSSolverStruct::CalcMetricsS2_2nd()
     {
         for (int j = 1; j < nj - 1; ++j)
         {
-            temp_xi[Idx(0, j, k)].z_zeta_y = 0.5 * (3.0 * coef->GetZ(Idx(1, j, k))[2] * node->GetCoord(1, j, k)[1] -
-                                                    1.0 * coef->GetZ(Idx(2, j, k))[2] * node->GetCoord(2, j, k)[1]);
-            temp_xi[Idx(0, j, k)].x_zeta_z = 0.5 * (3.0 * coef->GetX(Idx(1, j, k))[2] * node->GetCoord(1, j, k)[2] -
-                                                    1.0 * coef->GetX(Idx(2, j, k))[2] * node->GetCoord(2, j, k)[2]);
-            temp_xi[Idx(0, j, k)].y_zeta_x = 0.5 * (3.0 * coef->GetY(Idx(1, j, k))[2] * node->GetCoord(1, j, k)[0] -
-                                                    1.0 * coef->GetY(Idx(2, j, k))[2] * node->GetCoord(2, j, k)[0]);
-            temp_xi[Idx(0, j, k)].z_eta_y = 0.5 * (3.0 * coef->GetZ(Idx(1, j, k))[1] * node->GetCoord(1, j, k)[1] -
-                                                   1.0 * coef->GetZ(Idx(2, j, k))[1] * node->GetCoord(2, j, k)[1]);
-            temp_xi[Idx(0, j, k)].x_eta_z = 0.5 * (3.0 * coef->GetX(Idx(1, j, k))[1] * node->GetCoord(1, j, k)[2] -
-                                                   1.0 * coef->GetX(Idx(2, j, k))[1] * node->GetCoord(2, j, k)[2]);
-            temp_xi[Idx(0, j, k)].y_eta_x = 0.5 * (3.0 * coef->GetY(Idx(1, j, k))[1] * node->GetCoord(1, j, k)[0] -
-                                                   1.0 * coef->GetY(Idx(2, j, k))[1] * node->GetCoord(2, j, k)[0]);
-            temp_xi[Idx(ni - 2, j, k)].z_zeta_y =
-                0.5 * (3.0 * coef->GetZ(Idx(ni - 2, j, k))[2] * node->GetCoord(ni - 2, j, k)[1] -
-                       1.0 * coef->GetZ(Idx(ni - 3, j, k))[2] * node->GetCoord(ni - 3, j, k)[1]);
-            temp_xi[Idx(ni - 2, j, k)].x_zeta_z =
-                0.5 * (3.0 * coef->GetX(Idx(ni - 2, j, k))[2] * node->GetCoord(ni - 2, j, k)[2] -
-                       1.0 * coef->GetX(Idx(ni - 3, j, k))[2] * node->GetCoord(ni - 3, j, k)[2]);
-            temp_xi[Idx(ni - 2, j, k)].y_zeta_x =
-                0.5 * (3.0 * coef->GetY(Idx(ni - 2, j, k))[2] * node->GetCoord(ni - 2, j, k)[0] -
-                       1.0 * coef->GetY(Idx(ni - 3, j, k))[2] * node->GetCoord(ni - 3, j, k)[0]);
-            temp_xi[Idx(ni - 2, j, k)].z_eta_y =
-                0.5 * (3.0 * coef->GetZ(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[1] -
-                       1.0 * coef->GetZ(Idx(ni - 3, j, k))[1] * node->GetCoord(ni - 3, j, k)[1]);
-            temp_xi[Idx(ni - 2, j, k)].x_eta_z =
-                0.5 * (3.0 * coef->GetX(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[2] -
-                       1.0 * coef->GetX(Idx(ni - 3, j, k))[1] * node->GetCoord(ni - 3, j, k)[2]);
-            temp_xi[Idx(ni - 2, j, k)].y_eta_x =
-                0.5 * (3.0 * coef->GetY(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[0] -
-                       1.0 * coef->GetY(Idx(ni - 3, j, k))[1] * node->GetCoord(ni - 3, j, k)[0]);
+            int idx = Idx(0, j, k);
+            temp_xi[idx].z_zeta_y = 0.5 * (3.0 * coef->GetZ(Idx(1, j, k))[2] * node->GetCoord(1, j, k)[1] -
+                                           1.0 * coef->GetZ(Idx(2, j, k))[2] * node->GetCoord(2, j, k)[1]);
+            temp_xi[idx].x_zeta_z = 0.5 * (3.0 * coef->GetX(Idx(1, j, k))[2] * node->GetCoord(1, j, k)[2] -
+                                           1.0 * coef->GetX(Idx(2, j, k))[2] * node->GetCoord(2, j, k)[2]);
+            temp_xi[idx].y_zeta_x = 0.5 * (3.0 * coef->GetY(Idx(1, j, k))[2] * node->GetCoord(1, j, k)[0] -
+                                           1.0 * coef->GetY(Idx(2, j, k))[2] * node->GetCoord(2, j, k)[0]);
+            temp_xi[idx].z_eta_y = 0.5 * (3.0 * coef->GetZ(Idx(1, j, k))[1] * node->GetCoord(1, j, k)[1] -
+                                          1.0 * coef->GetZ(Idx(2, j, k))[1] * node->GetCoord(2, j, k)[1]);
+            temp_xi[idx].x_eta_z = 0.5 * (3.0 * coef->GetX(Idx(1, j, k))[1] * node->GetCoord(1, j, k)[2] -
+                                          1.0 * coef->GetX(Idx(2, j, k))[1] * node->GetCoord(2, j, k)[2]);
+            temp_xi[idx].y_eta_x = 0.5 * (3.0 * coef->GetY(Idx(1, j, k))[1] * node->GetCoord(1, j, k)[0] -
+                                          1.0 * coef->GetY(Idx(2, j, k))[1] * node->GetCoord(2, j, k)[0]);
+            idx = Idx(ni - 2, j, k);
+            temp_xi[idx].z_zeta_y = 0.5 * (3.0 * coef->GetZ(Idx(ni - 2, j, k))[2] * node->GetCoord(ni - 2, j, k)[1] -
+                                           1.0 * coef->GetZ(Idx(ni - 3, j, k))[2] * node->GetCoord(ni - 3, j, k)[1]);
+            temp_xi[idx].x_zeta_z = 0.5 * (3.0 * coef->GetX(Idx(ni - 2, j, k))[2] * node->GetCoord(ni - 2, j, k)[2] -
+                                           1.0 * coef->GetX(Idx(ni - 3, j, k))[2] * node->GetCoord(ni - 3, j, k)[2]);
+            temp_xi[idx].y_zeta_x = 0.5 * (3.0 * coef->GetY(Idx(ni - 2, j, k))[2] * node->GetCoord(ni - 2, j, k)[0] -
+                                           1.0 * coef->GetY(Idx(ni - 3, j, k))[2] * node->GetCoord(ni - 3, j, k)[0]);
+            temp_xi[idx].z_eta_y = 0.5 * (3.0 * coef->GetZ(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[1] -
+                                          1.0 * coef->GetZ(Idx(ni - 3, j, k))[1] * node->GetCoord(ni - 3, j, k)[1]);
+            temp_xi[idx].x_eta_z = 0.5 * (3.0 * coef->GetX(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[2] -
+                                          1.0 * coef->GetX(Idx(ni - 3, j, k))[1] * node->GetCoord(ni - 3, j, k)[2]);
+            temp_xi[idx].y_eta_x = 0.5 * (3.0 * coef->GetY(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[0] -
+                                          1.0 * coef->GetY(Idx(ni - 3, j, k))[1] * node->GetCoord(ni - 3, j, k)[0]);
         }
     }
     // 求出eta方向的临时变量：逆变换度量系数乘以坐标
@@ -3092,36 +3131,32 @@ void NSSolverStruct::CalcMetricsS2_2nd()
     {
         for (int i = 1; i < ni - 1; ++i)
         {
-            temp_eta[Idx(i, 0, k)].z_zeta_y = 0.5 * (3.0 * coef->GetZ(Idx(i, 1, k))[2] * node->GetCoord(i, 1, k)[1] -
-                                                     1.0 * coef->GetZ(Idx(i, 2, k))[2] * node->GetCoord(i, 2, k)[1]);
-            temp_eta[Idx(i, 0, k)].x_zeta_z = 0.5 * (3.0 * coef->GetX(Idx(i, 1, k))[2] * node->GetCoord(i, 1, k)[2] -
-                                                     1.0 * coef->GetX(Idx(i, 2, k))[2] * node->GetCoord(i, 2, k)[2]);
-            temp_eta[Idx(i, 0, k)].y_zeta_x = 0.5 * (3.0 * coef->GetY(Idx(i, 1, k))[2] * node->GetCoord(i, 1, k)[0] -
-                                                     1.0 * coef->GetY(Idx(i, 2, k))[2] * node->GetCoord(i, 2, k)[0]);
-            temp_eta[Idx(i, 0, k)].z_xi_y = 0.5 * (3.0 * coef->GetZ(Idx(i, 1, k))[0] * node->GetCoord(i, 1, k)[1] -
-                                                   1.0 * coef->GetZ(Idx(i, 2, k))[0] * node->GetCoord(i, 2, k)[1]);
-            temp_eta[Idx(i, 0, k)].x_xi_z = 0.5 * (3.0 * coef->GetX(Idx(i, 1, k))[0] * node->GetCoord(i, 1, k)[2] -
-                                                   1.0 * coef->GetX(Idx(i, 2, k))[0] * node->GetCoord(i, 2, k)[2]);
-            temp_eta[Idx(i, 0, k)].y_xi_x = 0.5 * (3.0 * coef->GetY(Idx(i, 1, k))[0] * node->GetCoord(i, 1, k)[0] -
-                                                   1.0 * coef->GetY(Idx(i, 2, k))[0] * node->GetCoord(i, 2, k)[0]);
-            temp_eta[Idx(i, nj - 2, k)].z_zeta_y =
-                0.5 * (3.0 * coef->GetZ(Idx(i, nj - 2, k))[2] * node->GetCoord(i, nj - 2, k)[1] -
-                       1.0 * coef->GetZ(Idx(i, nj - 3, k))[2] * node->GetCoord(i, nj - 3, k)[1]);
-            temp_eta[Idx(i, nj - 2, k)].x_zeta_z =
-                0.5 * (3.0 * coef->GetX(Idx(i, nj - 2, k))[2] * node->GetCoord(i, nj - 2, k)[2] -
-                       1.0 * coef->GetX(Idx(i, nj - 3, k))[2] * node->GetCoord(i, nj - 3, k)[2]);
-            temp_eta[Idx(i, nj - 2, k)].y_zeta_x =
-                0.5 * (3.0 * coef->GetY(Idx(i, nj - 2, k))[2] * node->GetCoord(i, nj - 2, k)[0] -
-                       1.0 * coef->GetY(Idx(i, nj - 3, k))[2] * node->GetCoord(i, nj - 3, k)[0]);
-            temp_eta[Idx(i, nj - 2, k)].z_xi_y =
-                0.5 * (3.0 * coef->GetZ(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[1] -
-                       1.0 * coef->GetZ(Idx(i, nj - 3, k))[0] * node->GetCoord(i, nj - 3, k)[1]);
-            temp_eta[Idx(i, nj - 2, k)].x_xi_z =
-                0.5 * (3.0 * coef->GetX(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[2] -
-                       1.0 * coef->GetX(Idx(i, nj - 3, k))[0] * node->GetCoord(i, nj - 3, k)[2]);
-            temp_eta[Idx(i, nj - 2, k)].y_xi_x =
-                0.5 * (3.0 * coef->GetY(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[0] -
-                       1.0 * coef->GetY(Idx(i, nj - 3, k))[0] * node->GetCoord(i, nj - 3, k)[0]);
+            int idx = Idx(i, 0, k);
+            temp_eta[idx].z_zeta_y = 0.5 * (3.0 * coef->GetZ(Idx(i, 1, k))[2] * node->GetCoord(i, 1, k)[1] -
+                                            1.0 * coef->GetZ(Idx(i, 2, k))[2] * node->GetCoord(i, 2, k)[1]);
+            temp_eta[idx].x_zeta_z = 0.5 * (3.0 * coef->GetX(Idx(i, 1, k))[2] * node->GetCoord(i, 1, k)[2] -
+                                            1.0 * coef->GetX(Idx(i, 2, k))[2] * node->GetCoord(i, 2, k)[2]);
+            temp_eta[idx].y_zeta_x = 0.5 * (3.0 * coef->GetY(Idx(i, 1, k))[2] * node->GetCoord(i, 1, k)[0] -
+                                            1.0 * coef->GetY(Idx(i, 2, k))[2] * node->GetCoord(i, 2, k)[0]);
+            temp_eta[idx].z_xi_y = 0.5 * (3.0 * coef->GetZ(Idx(i, 1, k))[0] * node->GetCoord(i, 1, k)[1] -
+                                          1.0 * coef->GetZ(Idx(i, 2, k))[0] * node->GetCoord(i, 2, k)[1]);
+            temp_eta[idx].x_xi_z = 0.5 * (3.0 * coef->GetX(Idx(i, 1, k))[0] * node->GetCoord(i, 1, k)[2] -
+                                          1.0 * coef->GetX(Idx(i, 2, k))[0] * node->GetCoord(i, 2, k)[2]);
+            temp_eta[idx].y_xi_x = 0.5 * (3.0 * coef->GetY(Idx(i, 1, k))[0] * node->GetCoord(i, 1, k)[0] -
+                                          1.0 * coef->GetY(Idx(i, 2, k))[0] * node->GetCoord(i, 2, k)[0]);
+            idx = Idx(i, nj - 2, k);
+            temp_eta[idx].z_zeta_y = 0.5 * (3.0 * coef->GetZ(Idx(i, nj - 2, k))[2] * node->GetCoord(i, nj - 2, k)[1] -
+                                            1.0 * coef->GetZ(Idx(i, nj - 3, k))[2] * node->GetCoord(i, nj - 3, k)[1]);
+            temp_eta[idx].x_zeta_z = 0.5 * (3.0 * coef->GetX(Idx(i, nj - 2, k))[2] * node->GetCoord(i, nj - 2, k)[2] -
+                                            1.0 * coef->GetX(Idx(i, nj - 3, k))[2] * node->GetCoord(i, nj - 3, k)[2]);
+            temp_eta[idx].y_zeta_x = 0.5 * (3.0 * coef->GetY(Idx(i, nj - 2, k))[2] * node->GetCoord(i, nj - 2, k)[0] -
+                                            1.0 * coef->GetY(Idx(i, nj - 3, k))[2] * node->GetCoord(i, nj - 3, k)[0]);
+            temp_eta[idx].z_xi_y = 0.5 * (3.0 * coef->GetZ(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[1] -
+                                          1.0 * coef->GetZ(Idx(i, nj - 3, k))[0] * node->GetCoord(i, nj - 3, k)[1]);
+            temp_eta[idx].x_xi_z = 0.5 * (3.0 * coef->GetX(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[2] -
+                                          1.0 * coef->GetX(Idx(i, nj - 3, k))[0] * node->GetCoord(i, nj - 3, k)[2]);
+            temp_eta[idx].y_xi_x = 0.5 * (3.0 * coef->GetY(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[0] -
+                                          1.0 * coef->GetY(Idx(i, nj - 3, k))[0] * node->GetCoord(i, nj - 3, k)[0]);
         }
     }
     // 求出zeta方向的临时变量：逆变换度量系数乘以坐标
@@ -3158,41 +3193,36 @@ void NSSolverStruct::CalcMetricsS2_2nd()
     {
         for (int i = 1; i < ni - 1; ++i)
         {
-            temp_zeta[Idx(i, j, 0)].z_eta_y = 0.5 * (3.0 * coef->GetZ(Idx(i, j, 1))[1] * node->GetCoord(i, j, 1)[1] -
-                                                     1.0 * coef->GetZ(Idx(i, j, 2))[1] * node->GetCoord(i, j, 2)[1]);
-            temp_zeta[Idx(i, j, 0)].x_eta_z = 0.5 * (3.0 * coef->GetX(Idx(i, j, 1))[1] * node->GetCoord(i, j, 1)[2] -
-                                                     1.0 * coef->GetX(Idx(i, j, 2))[1] * node->GetCoord(i, j, 2)[2]);
-            temp_zeta[Idx(i, j, 0)].y_eta_x = 0.5 * (3.0 * coef->GetY(Idx(i, j, 1))[1] * node->GetCoord(i, j, 1)[0] -
-                                                     1.0 * coef->GetY(Idx(i, j, 2))[1] * node->GetCoord(i, j, 2)[0]);
-            temp_zeta[Idx(i, j, 0)].z_xi_y = 0.5 * (3.0 * coef->GetZ(Idx(i, j, 1))[0] * node->GetCoord(i, j, 1)[1] -
-                                                    1.0 * coef->GetZ(Idx(i, j, 2))[0] * node->GetCoord(i, j, 2)[1]);
-            temp_zeta[Idx(i, j, 0)].x_xi_z = 0.5 * (3.0 * coef->GetX(Idx(i, j, 1))[0] * node->GetCoord(i, j, 1)[2] -
-                                                    1.0 * coef->GetX(Idx(i, j, 2))[0] * node->GetCoord(i, j, 2)[2]);
-            temp_zeta[Idx(i, j, 0)].y_xi_x = 0.5 * (3.0 * coef->GetY(Idx(i, j, 1))[0] * node->GetCoord(i, j, 1)[0] -
-                                                    1.0 * coef->GetY(Idx(i, j, 2))[0] * node->GetCoord(i, j, 2)[0]);
-            temp_zeta[Idx(i, j, nk - 2)].z_eta_y =
-                0.5 * (3.0 * coef->GetZ(Idx(i, j, nk - 2))[1] * node->GetCoord(i, j, nk - 2)[1] -
-                       1.0 * coef->GetZ(Idx(i, j, nk - 3))[1] * node->GetCoord(i, j, nk - 3)[1]);
-            temp_zeta[Idx(i, j, nk - 2)].x_eta_z =
-                0.5 * (3.0 * coef->GetX(Idx(i, j, nk - 2))[1] * node->GetCoord(i, j, nk - 2)[2] -
-                       1.0 * coef->GetX(Idx(i, j, nk - 3))[1] * node->GetCoord(i, j, nk - 3)[2]);
-            temp_zeta[Idx(i, j, nk - 2)].y_eta_x =
-                0.5 * (3.0 * coef->GetY(Idx(i, j, nk - 2))[1] * node->GetCoord(i, j, nk - 2)[0] -
-                       1.0 * coef->GetY(Idx(i, j, nk - 3))[1] * node->GetCoord(i, j, nk - 3)[0]);
-            temp_zeta[Idx(i, j, nk - 2)].z_xi_y =
-                0.5 * (3.0 * coef->GetZ(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[1] -
-                       1.0 * coef->GetZ(Idx(i, j, nk - 3))[0] * node->GetCoord(i, j, nk - 3)[1]);
-            temp_zeta[Idx(i, j, nk - 2)].x_xi_z =
-                0.5 * (3.0 * coef->GetX(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[2] -
-                       1.0 * coef->GetX(Idx(i, j, nk - 3))[0] * node->GetCoord(i, j, nk - 3)[2]);
-            temp_zeta[Idx(i, j, nk - 2)].y_xi_x =
-                0.5 * (3.0 * coef->GetY(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[0] -
-                       1.0 * coef->GetY(Idx(i, j, nk - 3))[0] * node->GetCoord(i, j, nk - 3)[0]);
+            int idx = Idx(i, j, 0);
+            temp_zeta[idx].z_eta_y = 0.5 * (3.0 * coef->GetZ(Idx(i, j, 1))[1] * node->GetCoord(i, j, 1)[1] -
+                                            1.0 * coef->GetZ(Idx(i, j, 2))[1] * node->GetCoord(i, j, 2)[1]);
+            temp_zeta[idx].x_eta_z = 0.5 * (3.0 * coef->GetX(Idx(i, j, 1))[1] * node->GetCoord(i, j, 1)[2] -
+                                            1.0 * coef->GetX(Idx(i, j, 2))[1] * node->GetCoord(i, j, 2)[2]);
+            temp_zeta[idx].y_eta_x = 0.5 * (3.0 * coef->GetY(Idx(i, j, 1))[1] * node->GetCoord(i, j, 1)[0] -
+                                            1.0 * coef->GetY(Idx(i, j, 2))[1] * node->GetCoord(i, j, 2)[0]);
+            temp_zeta[idx].z_xi_y = 0.5 * (3.0 * coef->GetZ(Idx(i, j, 1))[0] * node->GetCoord(i, j, 1)[1] -
+                                           1.0 * coef->GetZ(Idx(i, j, 2))[0] * node->GetCoord(i, j, 2)[1]);
+            temp_zeta[idx].x_xi_z = 0.5 * (3.0 * coef->GetX(Idx(i, j, 1))[0] * node->GetCoord(i, j, 1)[2] -
+                                           1.0 * coef->GetX(Idx(i, j, 2))[0] * node->GetCoord(i, j, 2)[2]);
+            temp_zeta[idx].y_xi_x = 0.5 * (3.0 * coef->GetY(Idx(i, j, 1))[0] * node->GetCoord(i, j, 1)[0] -
+                                           1.0 * coef->GetY(Idx(i, j, 2))[0] * node->GetCoord(i, j, 2)[0]);
+            idx = Idx(i, j, nk - 2);
+            temp_zeta[idx].z_eta_y = 0.5 * (3.0 * coef->GetZ(Idx(i, j, nk - 2))[1] * node->GetCoord(i, j, nk - 2)[1] -
+                                            1.0 * coef->GetZ(Idx(i, j, nk - 3))[1] * node->GetCoord(i, j, nk - 3)[1]);
+            temp_zeta[idx].x_eta_z = 0.5 * (3.0 * coef->GetX(Idx(i, j, nk - 2))[1] * node->GetCoord(i, j, nk - 2)[2] -
+                                            1.0 * coef->GetX(Idx(i, j, nk - 3))[1] * node->GetCoord(i, j, nk - 3)[2]);
+            temp_zeta[idx].y_eta_x = 0.5 * (3.0 * coef->GetY(Idx(i, j, nk - 2))[1] * node->GetCoord(i, j, nk - 2)[0] -
+                                            1.0 * coef->GetY(Idx(i, j, nk - 3))[1] * node->GetCoord(i, j, nk - 3)[0]);
+            temp_zeta[idx].z_xi_y = 0.5 * (3.0 * coef->GetZ(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[1] -
+                                           1.0 * coef->GetZ(Idx(i, j, nk - 3))[0] * node->GetCoord(i, j, nk - 3)[1]);
+            temp_zeta[idx].x_xi_z = 0.5 * (3.0 * coef->GetX(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[2] -
+                                           1.0 * coef->GetX(Idx(i, j, nk - 3))[0] * node->GetCoord(i, j, nk - 3)[2]);
+            temp_zeta[idx].y_xi_x = 0.5 * (3.0 * coef->GetY(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[0] -
+                                           1.0 * coef->GetY(Idx(i, j, nk - 3))[0] * node->GetCoord(i, j, nk - 3)[0]);
         }
     }
     // 第五步：根据半点坐标和半点逆变换度量系数使用守恒形式计算整点度量系数（CMM2)
     double temp[6][2];
-    // 获取下标的lamda函数
     for (int k = 1; k < nk - 1; ++k)
     {
         for (int j = 1; j < nj - 1; ++j)
@@ -4576,11 +4606,11 @@ void NSSolverStruct::CalcMetricsS3_2nd()
             temp_xi[idx].x_zeta_y = 0.5 * (3.0 * coef->GetX(Idx(ni - 2, j, k))[2] * node->GetCoord(ni - 2, j, k)[1] -
                                            1.0 * coef->GetX(Idx(ni - 3, j, k))[2] * node->GetCoord(ni - 3, j, k)[1]);
             temp_xi[idx].y_eta_z = 0.5 * (3.0 * coef->GetY(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[2] -
-                                          1.0 * coef->GetY(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[2]);
+                                          1.0 * coef->GetY(Idx(ni - 3, j, k))[1] * node->GetCoord(ni - 3, j, k)[2]);
             temp_xi[idx].z_eta_x = 0.5 * (3.0 * coef->GetZ(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[0] -
-                                          1.0 * coef->GetZ(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[0]);
+                                          1.0 * coef->GetZ(Idx(ni - 3, j, k))[1] * node->GetCoord(ni - 3, j, k)[0]);
             temp_xi[idx].x_eta_y = 0.5 * (3.0 * coef->GetX(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[1] -
-                                          1.0 * coef->GetX(Idx(ni - 2, j, k))[1] * node->GetCoord(ni - 2, j, k)[1]);
+                                          1.0 * coef->GetX(Idx(ni - 3, j, k))[1] * node->GetCoord(ni - 3, j, k)[1]);
             temp_xi[Idx(ni - 2, j, k)].z_zeta_y =
                 0.5 * (3.0 * coef->GetZ(Idx(ni - 2, j, k))[2] * node->GetCoord(ni - 2, j, k)[1] -
                        1.0 * coef->GetZ(Idx(ni - 3, j, k))[2] * node->GetCoord(ni - 3, j, k)[1]);
@@ -4682,11 +4712,11 @@ void NSSolverStruct::CalcMetricsS3_2nd()
             temp_eta[idx].x_zeta_y = 0.5 * (3.0 * coef->GetX(Idx(i, nj - 2, k))[2] * node->GetCoord(i, nj - 2, k)[1] -
                                             1.0 * coef->GetX(Idx(i, nj - 3, k))[2] * node->GetCoord(i, nj - 3, k)[1]);
             temp_eta[idx].y_xi_z = 0.5 * (3.0 * coef->GetY(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[2] -
-                                          1.0 * coef->GetY(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[2]);
+                                          1.0 * coef->GetY(Idx(i, nj - 3, k))[0] * node->GetCoord(i, nj - 3, k)[2]);
             temp_eta[idx].z_xi_x = 0.5 * (3.0 * coef->GetZ(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[0] -
-                                          1.0 * coef->GetZ(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[0]);
+                                          1.0 * coef->GetZ(Idx(i, nj - 3, k))[0] * node->GetCoord(i, nj - 3, k)[0]);
             temp_eta[idx].x_xi_y = 0.5 * (3.0 * coef->GetX(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[1] -
-                                          1.0 * coef->GetX(Idx(i, nj - 2, k))[0] * node->GetCoord(i, nj - 2, k)[1]);
+                                          1.0 * coef->GetX(Idx(i, nj - 3, k))[0] * node->GetCoord(i, nj - 3, k)[1]);
             temp_eta[Idx(i, nj - 2, k)].z_zeta_y =
                 0.5 * (3.0 * coef->GetZ(Idx(i, nj - 2, k))[2] * node->GetCoord(i, nj - 2, k)[1] -
                        1.0 * coef->GetZ(Idx(i, nj - 3, k))[2] * node->GetCoord(i, nj - 3, k)[1]);
@@ -4787,11 +4817,11 @@ void NSSolverStruct::CalcMetricsS3_2nd()
             temp_zeta[idx].x_eta_y = 0.5 * (3.0 * coef->GetX(Idx(i, j, nk - 2))[1] * node->GetCoord(i, j, nk - 2)[1] -
                                             1.0 * coef->GetX(Idx(i, j, nk - 3))[1] * node->GetCoord(i, j, nk - 3)[1]);
             temp_zeta[idx].y_xi_z = 0.5 * (3.0 * coef->GetY(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[2] -
-                                           1.0 * coef->GetY(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[2]);
+                                           1.0 * coef->GetY(Idx(i, j, nk - 3))[0] * node->GetCoord(i, j, nk - 3)[2]);
             temp_zeta[idx].z_xi_x = 0.5 * (3.0 * coef->GetZ(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[0] -
-                                           1.0 * coef->GetZ(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[0]);
+                                           1.0 * coef->GetZ(Idx(i, j, nk - 3))[0] * node->GetCoord(i, j, nk - 3)[0]);
             temp_zeta[idx].x_xi_y = 0.5 * (3.0 * coef->GetX(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[1] -
-                                           1.0 * coef->GetX(Idx(i, j, nk - 2))[0] * node->GetCoord(i, j, nk - 2)[1]);
+                                           1.0 * coef->GetX(Idx(i, j, nk - 3))[0] * node->GetCoord(i, j, nk - 3)[1]);
             temp_zeta[Idx(i, j, nk - 2)].z_eta_y =
                 0.5 * (3.0 * coef->GetZ(Idx(i, j, nk - 2))[1] * node->GetCoord(i, j, nk - 2)[1] -
                        1.0 * coef->GetZ(Idx(i, j, nk - 3))[1] * node->GetCoord(i, j, nk - 3)[1]);
@@ -6407,8 +6437,8 @@ void NSSolverStruct::CalcPrimGradWLS2D()
     Eigen::Vector2d b, grad;
     int neighbor_num = 8;
     index_type temp_i[8], temp_j[8], temp_k[8];
-     //int neighbor_num = 4;
-     //index_type temp_i[4], temp_j[4], temp_k[4];
+    // int neighbor_num = 4;
+    // index_type temp_i[4], temp_j[4], temp_k[4];
 
 #ifdef USE_OMP
 #pragma omp parallel for collapse(3) private(A, A_inv, b, grad, temp_i, temp_j, temp_k)
@@ -6431,10 +6461,10 @@ void NSSolverStruct::CalcPrimGradWLS2D()
                 temp_i[6] = i, temp_j[6] = j + 1, temp_k[6] = k;
                 temp_i[7] = i, temp_j[7] = j + 2, temp_k[7] = k;
 
-                 //temp_i[0] = i - 1, temp_j[0] = j, temp_k[0] = k;
-                 //temp_i[1] = i + 1, temp_j[1] = j, temp_k[1] = k;
-                 //temp_i[2] = i, temp_j[2] = j - 1, temp_k[2] = k;
-                 //temp_i[3] = i, temp_j[3] = j + 1, temp_k[3] = k;
+                // temp_i[0] = i - 1, temp_j[0] = j, temp_k[0] = k;
+                // temp_i[1] = i + 1, temp_j[1] = j, temp_k[1] = k;
+                // temp_i[2] = i, temp_j[2] = j - 1, temp_k[2] = k;
+                // temp_i[3] = i, temp_j[3] = j + 1, temp_k[3] = k;
 
                 for (int iNeigh = 0; iNeigh < neighbor_num; ++iNeigh)
                 {
@@ -7673,20 +7703,23 @@ void NSSolverStruct::InterMidNodePrim_MUSCL(const double *value, double &value_l
     double k = -1.0;
     double delta_plus = value[3] - value[2];
     double delta_minus = value[2] - value[1];
-     double delta = LimiterVanLeer(delta_plus, delta_minus);
-     value_left = value[2] + 0.25 * ((1.0 - k) * delta + (1.0 + k) * delta);
-    //value_left = value[2] + 0.25 * ((1.0 - k) * delta_minus + (1.0 + k) * delta_plus);
+    double delta = LimiterVanLeer(delta_plus, delta_minus);
+    value_left = value[2] + 0.25 * ((1.0 - k) * delta + (1.0 + k) * delta);
+    // value_left = value[2] + 0.25 * ((1.0 - k) * delta_minus + (1.0 + k) * delta_plus);
     delta_plus = value[4] - value[3];
     delta_minus = value[3] - value[2];
-     delta = LimiterVanLeer(delta_plus, delta_minus);
-     value_right = value[3] - 0.25 * ((1.0 - k) * delta + (1.0 + k) * delta);
-    //value_right = value[3] - 0.25 * ((1.0 - k) * delta_plus + (1.0 + k) * delta_minus);
+    delta = LimiterVanLeer(delta_plus, delta_minus);
+    value_right = value[3] - 0.25 * ((1.0 - k) * delta + (1.0 + k) * delta);
+    // value_right = value[3] - 0.25 * ((1.0 - k) * delta_plus + (1.0 + k) * delta_minus);
     if (std::isnan(value_left) || std::isnan(value_right))
     {
         Log::error("MUSCL interpolation failed!");
         Log::error("value[0] = {}, value[1] = {}, value[2] = {}, value[3] = {}, "
                    "value[4] = {}",
                    value[0], value[1], value[2], value[3], value[4]);
+        // Log::warn("Use 1st order interpolation instead.");
+        // value_left = value[2];
+        // value_right = value[3];
         exit(0);
     }
 }
@@ -7842,7 +7875,7 @@ void NSSolverStruct::CalcConvectionResidual()
 void NSSolverStruct::CalcConvectionRes_1st()
 {
     InterMidNodePrim_1st();
-    InterGhostMidNodePrim_WCNS5();
+    InterGhostMidNode_MUSCL();
     FluxDifference2nd();
 }
 void NSSolverStruct::CalcConvectionRes_Grad()
