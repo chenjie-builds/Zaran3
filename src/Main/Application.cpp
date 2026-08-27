@@ -54,56 +54,14 @@ namespace zaran
 
 	void Application::ReadGlobalData()
 	{
-		if (!IsFileExist(m_control_file))
-		{
-			Log::warn("Control File:{}, is NOT exist! Please Check!", m_control_file);
-			throw ZaranError("Control file not found: " + m_control_file);
-		}
-		std::ifstream fin(m_control_file);
-		std::string line;
-		std::string dataType;
-		std::string dataName;
-		std::string dataValue;
-
-		while (std::getline(fin, line))
-		{
-			std::string separator = " =\r\n\t#$,;\"";
-			if (line.empty())
-				continue;
-			//comments
-			if (line[0] == '!' || line[0] == '#' || line[0] == '/')
-				continue;
-			//delete space
-			size_t id = line.find_first_not_of(' ');
-			line.erase(line.begin(), line.begin() + id);
-			id = line.find_first_of(separator);
-			dataType = line.substr(0, id);
-			line.erase(0, id);
-			line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
-			if (line.empty())
-				continue;
-			id = line.find_first_of("=");
-			if (id == std::string::npos)
-				continue;
-			dataName = line.substr(0, id);
-			dataValue = line.substr(id + 1);
-			if (dataType == "string")
-				GlobalData::Update(dataName, dataValue);
-			else if (dataType == "double")
-				GlobalData::Update(dataName, stod(dataValue));
-			else if (dataType == "int")
-				GlobalData::Update(dataName, stoi(dataValue));
-			else
-			{
-				Log::warn("Unsupported Data Type:{}, Name:{}, Value:{}", dataType, dataName, dataValue);
-			}
-		}
+		GlobalData::Load(m_control_file);
+		GlobalData::Update("work_dir", m_work_dir); // 运行时键，加载后重新写入
 	}
 
 
 	void Application::InitTask()
 	{
-		std::string simuTask = GlobalData::GetString("simulationTask");
+		std::string simuTask = GlobalData::GetString("task.simulation");
 		if (simuTask == "SOLVE_FIELD")
 		{
 			m_task = TaskType::SOLVE_FIELD;
@@ -133,7 +91,7 @@ namespace zaran
 			Log::warn(">>>>>>>>The minus version Control File is:{}<<<<<<<<", m_min_ctrol_file_version);
 			throw ZaranError("Control file version is too old");
 		}
-		Log::info(">>>>>>>>Simulation Task: {}<<<<<<<<", GlobalData::GetString("simulationTask"));
+		Log::info(">>>>>>>>Simulation Task: {}<<<<<<<<", GlobalData::GetString("task.simulation"));
 	}
 
 	bool Application::IsVersionTooOld(const std::string& version) const
@@ -153,18 +111,18 @@ namespace zaran
 
 	void Application::SolveField() const
 	{
-		std::string reslut_folder = GlobalData::GetString("resultFolder");
-		std::string backup_folder = GlobalData::GetString("backupFieldFolder");
+		std::string reslut_folder = GlobalData::GetString("output.result_folder");
+		std::string backup_folder = GlobalData::GetString("init.backup_folder");
 		CreateFolder(m_work_dir + "/" + reslut_folder);
 		CreateFolder(m_work_dir + "/" + backup_folder);
-		string grid_type_name = GlobalData::GetString("gridType");
-		string solver_type_name = GlobalData::GetString("solverType");
+		string grid_type_name = GlobalData::GetString("task.grid_type");
+		string solver_type_name = GlobalData::GetString("task.solver");
 		GridType grid_type;
 		FieldSolverType solver_type;
 		Dimension dim;
-		if (GlobalData::GetInt("Dimension") == 2)
+		if (GlobalData::GetInt("task.dimension") == 2)
 			dim = Dimension::two;
-		else if (GlobalData::GetInt("Dimension") == 3)
+		else if (GlobalData::GetInt("task.dimension") == 3)
 			dim = Dimension::three;
 		else
 		{
@@ -218,7 +176,7 @@ namespace zaran
 
 	void Application::ReadModel()
 	{
-		string modelFileName = GlobalData::GetString("modelFileName");
+		string modelFileName = GlobalData::GetString("zaran.model_file");
 		STLReader reader;
 		reader.ReadSTLFile(modelFileName.c_str());
 		PolyDataModel model;

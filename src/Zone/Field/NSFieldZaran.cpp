@@ -254,12 +254,12 @@ void NSFieldZaran::CreateSlaveField(const shared_ptr<FieldManager> &field_manage
 //     }
 //     void NSFieldZaran::SetNodeCoord()
 //     {
-//         m_box.x_min = GlobalData::GetDouble("xMin");
-//         m_box.x_max = GlobalData::GetDouble("xMax");
-//         m_box.y_min = GlobalData::GetDouble("yMin");
-//         m_box.y_max = GlobalData::GetDouble("yMax");
-//         m_box.z_min = GlobalData::GetDouble("zMin");
-//         m_box.z_max = GlobalData::GetDouble("zMax");
+//         m_box.x_min = GlobalData::GetDouble("zaran.box.x_min");
+//         m_box.x_max = GlobalData::GetDouble("zaran.box.x_max");
+//         m_box.y_min = GlobalData::GetDouble("zaran.box.y_min");
+//         m_box.y_max = GlobalData::GetDouble("zaran.box.y_max");
+//         m_box.z_min = GlobalData::GetDouble("zaran.box.z_min");
+//         m_box.z_max = GlobalData::GetDouble("zaran.box.z_max");
 //         int nx = GlobalData::GetInt("nx");
 //         int ny = GlobalData::GetInt("ny");
 //         int nz = GlobalData::GetInt("nz");

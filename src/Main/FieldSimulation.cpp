@@ -1,4 +1,4 @@
-﻿#include "FieldSimulation.h"
+#include "FieldSimulation.h"
 #include "File.h"
 #include "FlowSolver.h"
 #include "Log.h"
@@ -17,14 +17,14 @@ NSFieldSimulation::~NSFieldSimulation() = default;
 
 void NSFieldSimulation::Initialize() const
 {
-    if (!GlobalData::IsExist("currentIter"))
+    if (!GlobalData::IsExist("iteration.current_iter"))
     {
-        GlobalData::Update("currentIter", 0);
+        GlobalData::Update("iteration.current_iter", 0);
     }
-    if (!GlobalData::IsExist("currentTime"))
+    if (!GlobalData::IsExist("iteration.current_time"))
     {
-        double startTime = GlobalData::GetDouble("startTime");
-        GlobalData::Update("currentTime", startTime);
+        double startTime = GlobalData::GetDouble("iteration.start_time");
+        GlobalData::Update("iteration.current_time", startTime);
     }
     for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
     {
@@ -51,8 +51,8 @@ void NSFieldSimulation::SolveField()
     SaveResidual();
     while (ContinueSolve())
     {
-        int currentIter = GlobalData::GetInt("currentIter");
-        GlobalData::Update("currentIter", ++currentIter);
+        int currentIter = GlobalData::GetInt("iteration.current_iter");
+        GlobalData::Update("iteration.current_iter", ++currentIter);
         PreSolve();
         SolveOneStep();
         PostSolve();
@@ -79,8 +79,8 @@ void NSFieldSimulation::CalcResidual()
 void NSFieldSimulation::SaveFieldData()
 {
     SaveDataTecplot();
-    std::string back_dir = GlobalData::GetString("backupFieldFolder");
-    int currentIter = GlobalData::GetInt("currentIter");
+    std::string back_dir = GlobalData::GetString("init.backup_folder");
+    int currentIter = GlobalData::GetInt("iteration.current_iter");
     back_dir += "/iter=" + std::to_string(currentIter);
     std::string work_dir = GlobalData::GetString("work_dir");
     back_dir = work_dir + "/" + back_dir;
@@ -102,7 +102,7 @@ void NSFieldSimulation::BackupFieldData(std::string &back_folder)
 
 void NSFieldSimulation::BackupResidual(std::string &back_folder)
 {
-    std::string residual_file = GlobalData::GetString("residualFileName");
+    std::string residual_file = GlobalData::GetString("output.residual_file");
     std::string residual_file_back = back_folder + "/" + residual_file;
     if (IsFileExist(residual_file_back) == false)
     {
@@ -149,12 +149,12 @@ void NSFieldSimulation::BackupGlobalData(std::string &back_folder)
 
 bool NSFieldSimulation::ContinueSolve()
 {
-    double end_time = GlobalData::GetDouble("endTime");
-    int current_iter = GlobalData::GetInt("currentIter");
-    int cal_res_iter = GlobalData::GetInt("calResidualIter");
-    int max_iter = GlobalData::GetInt("maxIter");
-    int min_res = GlobalData::GetInt("minResidual");
-    double currentTime = GlobalData::GetDouble("currentTime");
+    double end_time = GlobalData::GetDouble("iteration.end_time");
+    int current_iter = GlobalData::GetInt("iteration.current_iter");
+    int cal_res_iter = GlobalData::GetInt("iteration.residual_interval");
+    int max_iter = GlobalData::GetInt("iteration.max_iter");
+    int min_res = GlobalData::GetInt("iteration.min_residual_order");
+    double currentTime = GlobalData::GetDouble("iteration.current_time");
     if (m_res_flag == true)
     {
         if (log10(m_res_max) < -min_res && current_iter > cal_res_iter)
@@ -177,8 +177,8 @@ bool NSFieldSimulation::ContinueSolve()
 }
 void NSFieldSimulation::SaveResidual() const
 {
-    int current_iter = GlobalData::GetInt("currentIter");
-    string residual_file = GlobalData::GetString("residualFileName");
+    int current_iter = GlobalData::GetInt("iteration.current_iter");
+    string residual_file = GlobalData::GetString("output.residual_file");
     string work_dir = GlobalData::GetString("work_dir");
     residual_file = work_dir + "/" + residual_file;
 
@@ -191,7 +191,7 @@ void NSFieldSimulation::SaveResidual() const
     else
     {
         std::ofstream fout(residual_file, std::ios::app);
-        fout << current_iter << "\t\t" << GlobalData::GetDouble("currentTime") << "\t\t" << m_res_max << "\t\t"
+        fout << current_iter << "\t\t" << GlobalData::GetDouble("iteration.current_time") << "\t\t" << m_res_max << "\t\t"
              << m_res_ave << std::endl;
         fout.close();
     }
@@ -208,8 +208,8 @@ void NSFieldSimulation::SolveOneStep()
 
 void NSFieldSimulation::PreSolve()
 {
-    int currentIter = GlobalData::GetInt("currentIter");
-    GlobalData::Update("currentIter", ++currentIter);
+    int currentIter = GlobalData::GetInt("iteration.current_iter");
+    GlobalData::Update("iteration.current_iter", ++currentIter);
     double min_dt_global = LARGE_NUMBER;
     for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)
     {
@@ -227,20 +227,20 @@ void NSFieldSimulation::PostSolve()
         solver->Postprocess();
     }
     CommFieldData();
-    int currentIter = GlobalData::GetInt("currentIter");
-    int calResidualIter = GlobalData::GetInt("calResidualIter");
-    int writeFieldIter = GlobalData::GetInt("writeFieldIter");
+    int currentIter = GlobalData::GetInt("iteration.current_iter");
+    int calResidualIter = GlobalData::GetInt("iteration.residual_interval");
+    int writeFieldIter = GlobalData::GetInt("iteration.write_interval");
     if (currentIter % calResidualIter == 0)
     {
         CalcResidual();
-        Log::info("iter= {}, dt={:E}, res_max= {:E}, res_ave= {:E}", GlobalData::GetInt("currentIter"),
-                  GlobalData::GetDouble("dt"), m_res_max, m_res_ave);
+        Log::info("iter= {}, dt={:E}, res_max= {:E}, res_ave= {:E}", GlobalData::GetInt("iteration.current_iter"),
+                  GlobalData::GetDouble("iteration.dt"), m_res_max, m_res_ave);
         SaveResidual();
     }
     if (currentIter % writeFieldIter == 0)
     {
         Log::info("Backup field data...");
-        Log::info("physical time: {:E}", GlobalData::GetDouble("currentTime"));
+        Log::info("physical time: {:E}", GlobalData::GetDouble("iteration.current_time"));
         SaveFieldData();
     }
 }
@@ -314,9 +314,9 @@ void NSFieldSimulation::CalcTimeStep()
         ns_solver->CalcMinTimeStep(min_dt_local);
         min_dt_global = Min(min_dt_global, min_dt_local);
     }
-    GlobalData::Update("dt", min_dt_global);
-    double current_time = GlobalData::GetDouble("currentTime");
-    double end_time = GlobalData::GetDouble("endTime");
+    GlobalData::Update("iteration.dt", min_dt_global);
+    double current_time = GlobalData::GetDouble("iteration.current_time");
+    double end_time = GlobalData::GetDouble("iteration.end_time");
     if (current_time + min_dt_global > end_time)
     {
         min_dt_global = end_time - current_time;
@@ -326,8 +326,8 @@ void NSFieldSimulation::CalcTimeStep()
     {
         current_time += min_dt_global;
     }
-    GlobalData::Update("currentTime", current_time);
-    int isSteady = GlobalData::GetInt("isSteady");
+    GlobalData::Update("iteration.current_time", current_time);
+    int isSteady = GlobalData::GetBool("task.is_steady") ? 1 : 0;
     if (isSteady == 0)
     {
         for (size_t iter_field = 0; iter_field < m_field_manager->GetFieldNum(); iter_field++)

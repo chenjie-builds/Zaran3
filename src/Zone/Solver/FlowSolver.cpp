@@ -28,7 +28,7 @@ void FlowFieldSolver::Postprocess()
 
 double FlowFieldSolver::ComputeCFL()
 {
-	return GlobalData::GetDouble("cfl");
+	return GlobalData::GetDouble("cfl.max");
 }
 
 FlowSolverParam* FlowFieldSolver::GetPara()

@@ -1,4 +1,4 @@
-﻿#include "NSSolverStructCMM.h"
+#include "NSSolverStructCMM.h"
 #include "Log.h"
 #include "NSSolverStruct.h"
 #include "Metric.h"
@@ -445,8 +445,8 @@ namespace zaran
 
 	void NSSolverStructCMM::CalcConvectionRes_WCNS5()
 	{
-		int firstOrderSteps = GlobalData::GetInt("firstOrderSteps");
-		int currentIter = GlobalData::GetInt("currentIter");
+		int firstOrderSteps = GlobalData::GetInt("space.first_order_steps");
+		int currentIter = GlobalData::GetInt("iteration.current_iter");
 		if (currentIter < firstOrderSteps)
 		{
 			CalcConvectionRes_1st();

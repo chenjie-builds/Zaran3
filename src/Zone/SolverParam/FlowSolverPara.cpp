@@ -26,15 +26,15 @@ FlowSolverParam::~FlowSolverParam()
 void FlowSolverParam::Init()
 {
 	m_equ_num = 5;
-	double inflow_Ma = GlobalData::GetDouble("inflowMachNumber");
-	double inflow_gamma = GlobalData::GetDouble("inflowGamma");
-	double inflow_density = GlobalData::GetDouble("inflowDensity");
-	double inflow_temperature = GlobalData::GetDouble("inflowTemperature");
-	double inflow_Mw = GlobalData::GetDouble("inflowMw");
-	double ref_length = GlobalData::GetDouble("refLength");
+	double inflow_Ma = GlobalData::GetDouble("freestream.mach_number");
+	double inflow_gamma = GlobalData::GetDouble("freestream.gamma");
+	double inflow_density = GlobalData::GetDouble("freestream.density");
+	double inflow_temperature = GlobalData::GetDouble("freestream.temperature");
+	double inflow_Mw = GlobalData::GetDouble("freestream.mw");
+	double ref_length = GlobalData::GetDouble("freestream.ref_length");
 	m_dimensionless.SetRefValue(inflow_density, inflow_gamma, inflow_Mw, ref_length, inflow_temperature);
-	double inflow_attack_angle = GlobalData::GetDouble("inflowAttackAngle");
-	double inflow_slide_angle = GlobalData::GetDouble("inflowSlideAngle");
+	double inflow_attack_angle = GlobalData::GetDouble("freestream.attack_angle");
+	double inflow_slide_angle = GlobalData::GetDouble("freestream.slide_angle");
 	m_gas = new PerfectGas(inflow_Mw, inflow_gamma, m_dimensionless);
 	double inflow_sonic_speed = m_gas->CalcSoundSpeed(m_dimensionless.GetTempDL(inflow_temperature));
 	m_inflow_velocity_x = inflow_Ma * inflow_sonic_speed * cos(inflow_attack_angle) * cos(inflow_slide_angle);
@@ -42,7 +42,7 @@ void FlowSolverParam::Init()
 	m_inflow_velocity_z = inflow_Ma * inflow_sonic_speed * sin(inflow_slide_angle);
 	m_inflow_density = m_dimensionless.GetDensityDL(inflow_density);
 	m_inflow_pressure = m_gas->CalcPressure(m_inflow_density, m_dimensionless.GetTempDL(inflow_temperature));
-	string inflow_type = GlobalData::GetString("initFieldType");
+	string inflow_type = GlobalData::GetString("init.field_type");
 	if (inflow_type == "FarFlow")
 	{
 		m_init_field_type = InitFieldType::FarFlow;
@@ -68,9 +68,9 @@ void FlowSolverParam::Init()
         Log::warn("Unsupported Init Field Type: {}, Please Check Control File!", inflow_type);
 		m_init_field_type = InitFieldType::FarFlow;
 	}
-	m_is_viscous = GlobalData::GetInt("isViscous");
+	m_is_viscous = GlobalData::GetBool("task.is_viscous") ? 1 : 0;
 	Log::info("Inflow Parameters: Density: {}, Velocity: ({},{},{}), Pressure: {}", m_inflow_density, m_inflow_velocity_x, m_inflow_velocity_y, m_inflow_velocity_z, m_inflow_pressure);
-	int rkStage = GlobalData::GetInt("rkStage");
+	int rkStage = GlobalData::GetInt("task.rk_stage");
 	if (rkStage == 1)
 	{
 		m_rk_coef.resize(1);
@@ -94,7 +94,7 @@ void FlowSolverParam::Init()
 		Log::warn("Wrong Runge-Kutta Stage: {}, Please Check Control File!", rkStage);
 		throw ZaranError("Wrong Runge-Kutta Stage");
 	}
-	int gradScheme = GlobalData::GetInt("gradScheme");
+	int gradScheme = GlobalData::GetInt("task.grad_scheme");
 	if (gradScheme == 0)
 	{
 		m_grad_scheme = GradScheme::WLS;
@@ -113,8 +113,8 @@ void FlowSolverParam::Init()
 		throw ZaranError("Unsupported Gradient Scheme");
 	}
 
-	m_backup_field_file_name = GlobalData::GetString("backupFieldFileName");
-	std::string riemann_solver_type = GlobalData::GetString("riemannSolver");
+	m_backup_field_file_name = GlobalData::GetString("init.backup_file");
+	std::string riemann_solver_type = GlobalData::GetString("flow.riemann_solver");
 	if (riemann_solver_type == "HLLC")
 	{
 		m_riemann_solver_type = RiemannSolverType::HLLC;
@@ -146,18 +146,18 @@ void FlowSolverParam::Init()
 
 void zaran::FlowSolverParam::InitCflNumber()
 {
-	double cfl_min = GlobalData::GetDouble("cfl_min");
-	double cfl_max = GlobalData::GetDouble("cfl_max");
-	int start_step = GlobalData::GetInt("currentIter");
-	int grow_step = GlobalData::GetInt("cfl_grow_step");
-	double reduce_factor = GlobalData::GetDouble("cfl_reduce_factor");
+	double cfl_min = GlobalData::GetDouble("cfl.min");
+	double cfl_max = GlobalData::GetDouble("cfl.max");
+	int start_step = GlobalData::GetInt("iteration.current_iter");
+	int grow_step = GlobalData::GetInt("cfl.grow_step");
+	double reduce_factor = GlobalData::GetDouble("cfl.reduce_factor");
 	m_cfl = new CFL(cfl_min, cfl_max, start_step, grow_step, reduce_factor);
 }
 
 void zaran::FlowSolverParam::InitLimiter()
 {
 
-	std::string limiter_type = GlobalData::GetString("limiterType");
+	std::string limiter_type = GlobalData::GetString("space.limiter");
 	if (limiter_type == "noLimiter")
 	{
 		n_limiter_type = LimiterType::none;
@@ -179,7 +179,7 @@ void zaran::FlowSolverParam::InitLimiter()
 		Log::warn("Unsupportted Limiter: {}, Please Check Control File!", limiter_type);
 		throw ZaranError("Unsupported Limiter");
 	}
-	m_max_limit = GlobalData::GetDouble("maxLimiterSlope");
+	m_max_limit = GlobalData::GetDouble("space.max_limiter_slope");
 	if (m_max_limit < 0.0 || m_max_limit > 1.0)
 	{
 		Log::warn("Wrong Max Limiter Slope: {}, Please Check Control File!", m_max_limit);

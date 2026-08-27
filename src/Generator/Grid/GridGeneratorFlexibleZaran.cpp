@@ -1,4 +1,4 @@
-﻿#include "GridGeneratorFlexibleZaran.h"
+#include "GridGeneratorFlexibleZaran.h"
 #include "Log.h"
 #include "MathBasic.h"
 #include <cmath>
@@ -15,7 +15,7 @@ void GridFNFactoryZaran::CreateGrid(const shared_ptr<GridBlock> &block, const sh
     count_type nj = m_block_grid->GetNj();
     count_type nk = m_block_grid->GetNk();
     m_idx_proxy = make_shared<IdProxyStruct>(ni, nj, nk);
-    m_layer_num = GlobalData::GetInt("projection_layer");
+    m_layer_num = GlobalData::GetInt("zaran.layer.projection");
     // TagBlockNodes();
     // TagBlockCells();
     TagCells();
@@ -75,7 +75,7 @@ void GridFNFactoryZaran::TagCells()
     const double dx = grid->GetDx();
     const double dy = grid->GetDy();
     const double dz = grid->GetDz();
-    const double tol_factor = GlobalData::GetDouble("tol_factor");
+    const double tol_factor = GlobalData::GetDouble("zaran.layer.tol_factor");
     double tol = tol_factor * sqrt(dx * dx + dy * dy + dz * dz);
     const auto model_manager = GetModelManager();
     auto &box = grid->GetBoundBox();
@@ -528,7 +528,7 @@ void GridFNFactoryZaran::ProcessNode(int start_i, int end_i, int start_j, int en
     double tol_x = x_max - x_min;
     double tol_y = y_max - y_min;
     double tol_z = z_max - z_min;
-    double tol_factor = GlobalData::GetDouble("tol_factor");
+    double tol_factor = GlobalData::GetDouble("zaran.layer.tol_factor");
     double tol = tol_factor * sqrt(tol_x * tol_x + tol_y * tol_y + tol_z * tol_z);
     double tol1 = tol_factor *
                   sqrt(grid->GetDx() * grid->GetDx() + grid->GetDy() * grid->GetDy() + grid->GetDz() * grid->GetDz());
@@ -959,7 +959,7 @@ void GridFNFactoryZaran::ProcessCell(const index_type start_i, const index_type 
     cell_center[2] = 0.5 * (z_min + z_max);
     double tol_x = x_max - x_min;
     double tol_y = y_max - y_min;
-    double tol_factor = GlobalData::GetDouble("tol_factor");
+    double tol_factor = GlobalData::GetDouble("zaran.layer.tol_factor");
     double tol, tol1;
     if (grid->GetDim() == 2)
     {
@@ -1870,7 +1870,7 @@ bool GridFNFactoryZaran::CheckTransNode3D()
     //         double wall_coord[3];
     //         m_model_manager->GetClosestPoint(coord, wall_coord);
     //         dist = DistanceOfTwoPoints(coord, wall_coord);
-    //         double tol_factor = GlobalData::GetDouble("tol_factor");
+    //         double tol_factor = GlobalData::GetDouble("zaran.layer.tol_factor");
     //         double tol = tol_factor * sqrt(grid->GetDx() * grid->GetDx() + grid->GetDy() * grid->GetDy() +
     //                                        grid->GetDz() * grid->GetDz());
     //         if (dist < tol)
@@ -2134,7 +2134,7 @@ void GridFNFactoryZaran::OptimizeWallNode2D()
     const double dx = grid->GetDx();
     const double dy = grid->GetDy();
     const double dz = grid->GetDz();
-    const double tol_factor = GlobalData::GetDouble("tol_factor");
+    const double tol_factor = GlobalData::GetDouble("zaran.layer.tol_factor");
     double tol = tol_factor * sqrt(dx * dx + dy * dy) * 0.25;
     // tol = 0.007;
     Log::info("tol: {}", tol);

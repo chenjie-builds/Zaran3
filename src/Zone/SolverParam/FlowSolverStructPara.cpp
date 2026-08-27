@@ -27,7 +27,7 @@ namespace zaran
 
     void FlowSolverParamStruct::InitMidMetricsScheme()
     {
-        string mid_metric_method = GlobalData::GetString("mid_metric_method");
+        string mid_metric_method = GlobalData::GetString("structure.mid_metric_method");
         if (mid_metric_method == "DEER")
         {
             m_mid_metrics_scheme = MidMetricsScheme::DEER;
@@ -45,7 +45,7 @@ namespace zaran
 
     void FlowSolverParamStruct::InitMetricsType()
     {
-        string metrics_scheme = GlobalData::GetString("metrics_scheme");
+        string metrics_scheme = GlobalData::GetString("structure.metrics_scheme");
         if (metrics_scheme == "S0")
         {
             m_metric_type = MetricType::S0;
@@ -71,7 +71,7 @@ namespace zaran
 
     void FlowSolverParamStruct::InitFluxDifferenceScheme()
     {
-        int difference_scheme = GlobalData::GetInt("flux_difference_scheme");
+        int difference_scheme = GlobalData::GetInt("structure.flux_difference_scheme");
         if (difference_scheme == 2)
         {
             m_flux_difference_scheme = FluxDifferenceScheme::SecondOrder;
@@ -93,7 +93,7 @@ namespace zaran
 
     void FlowSolverParamStruct::InitMetricDifferenceScheme()
     {
-        int metric_difference_scheme = GlobalData::GetInt("metric_difference_scheme");
+        int metric_difference_scheme = GlobalData::GetInt("structure.metric_difference_scheme");
         if (metric_difference_scheme == 2)
         {
             m_metric_difference_scheme = MetricDifferenceScheme::SecondOrder;
@@ -111,7 +111,7 @@ namespace zaran
 
     void FlowSolverParamStruct::InitInterScheme()
     {
-        string inter_schme = GlobalData::GetString("inter_scheme");
+        string inter_schme = GlobalData::GetString("structure.inter_scheme");
         if (inter_schme == "FirstOrder")
         {
             m_inter_schme = InterpolationScheme::FirstOrder;
@@ -141,7 +141,7 @@ namespace zaran
 
     void FlowSolverParamStruct::InitJacobianType()
     {
-        string jacobian_scheme = GlobalData::GetString("jacobian_scheme");
+        string jacobian_scheme = GlobalData::GetString("structure.jacobian_scheme");
         if (jacobian_scheme == "V1")
         {
             m_jacobian_type = JacobianType::V1;

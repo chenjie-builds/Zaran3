@@ -32,8 +32,8 @@ namespace zaran
     public:
         Application(std::string work_dir) :
 			m_work_dir(work_dir),
-			m_control_file(work_dir + "/zaran.ini"),
-            m_min_ctrol_file_version("V3.3.7"),
+			m_control_file(work_dir + "/zaran.toml"),
+            m_min_ctrol_file_version("V4.0.0"),
             m_grid_builder(nullptr),
             m_task(TaskType::SOLVE_FIELD) // Ensure m_task is initialized
         {

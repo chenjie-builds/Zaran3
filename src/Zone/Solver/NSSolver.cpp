@@ -47,7 +47,7 @@ namespace zaran
 		else
 		{
 			Log::warn("Initialize Failed!");
-			Log::warn("Wrong Flow field init parameter:{}", GlobalData::GetString("initFieldType"));
+			Log::warn("Wrong Flow field init parameter:{}", GlobalData::GetString("init.field_type"));
 			throw ZaranError("Wrong Flow field init parameter");
 		}
 		Prim2Cons();

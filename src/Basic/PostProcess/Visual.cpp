@@ -1,4 +1,4 @@
-﻿#include "Visual.h"
+#include "Visual.h"
 #include "GlobalData.h"
 #include "Log.h"
 #include "NSFieldFN.h"
@@ -39,7 +39,7 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldFNFDM> field)
     INTEGER4 iCellMax = 0;
     INTEGER4 jCellMax = 0;
     INTEGER4 kCellMax = 0;
-    double solution_time = GlobalData::GetDouble("currentTime");
+    double solution_time = GlobalData::GetDouble("iteration.current_time");
     INTEGER4 strandID = 2;
     INTEGER4 parentZn = 0;
     INTEGER4 isBlock = 1;
@@ -131,7 +131,7 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldFNFDM> field)
 void Visual::WriteCGNS(shared_ptr<NSFieldFNFDM> field, cgsize_t index_file1, cgsize_t index_base1)
 {
     std::string work_dir = GlobalData::GetString("work_dir");
-    std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + "_bound" + ".cgns";
+    std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("iteration.current_iter")) + "_bound" + ".cgns";
     file_name = work_dir + "\\" + file_name;
     int index_file;
     cg_open(file_name.c_str(), CG_MODE_WRITE, &index_file);
@@ -198,7 +198,7 @@ void Visual::WriteCGNS(shared_ptr<NSFieldFNFDM> field, cgsize_t index_file1, cgs
                    &index_field);
     // 输出边界面
     int index_file2, index_base2;
-    file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + "_bound_face" + ".cgns";
+    file_name = "result\\" + std::to_string(GlobalData::GetInt("iteration.current_iter")) + "_bound_face" + ".cgns";
     file_name = work_dir + "\\" + file_name;
     cg_open(file_name.c_str(), CG_MODE_WRITE, &index_file2);
     cg_base_write(index_file2, "Base", cell_dim, phys_dim, &index_base2);
@@ -246,7 +246,7 @@ void Visual::WriteCGNS(shared_ptr<NSFieldFNFDM> field, cgsize_t index_file1, cgs
 void Visual::WriteCGNS(shared_ptr<NSFieldZaran> field, cgsize_t index_file1, cgsize_t index_base1)
 {
     std::string work_dir = GlobalData::GetString("work_dir");
-    std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + "_back" + ".cgns";
+    std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("iteration.current_iter")) + "_back" + ".cgns";
     file_name = work_dir + "\\" + file_name;
     int index_file;
     cg_open(file_name.c_str(), CG_MODE_WRITE, &index_file);
@@ -328,7 +328,7 @@ void Visual::WriteCGNS(shared_ptr<NSFieldZaran> field, cgsize_t index_file1, cgs
 void Visual::WriteCGNS(shared_ptr<NSFieldStruct> field, cgsize_t index_file1, cgsize_t index_base1)
 {
     std::string work_dir = GlobalData::GetString("work_dir");
-    std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + "_back" + ".cgns";
+    std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("iteration.current_iter")) + "_back" + ".cgns";
     file_name = work_dir + "\\" + file_name;
     int index_file;
     cg_open(file_name.c_str(), CG_MODE_WRITE, &index_file);
@@ -409,7 +409,7 @@ void Visual::WriteCGNS(shared_ptr<NSFieldStruct> field, cgsize_t index_file1, cg
 void Visual::WriteCGNS(shared_ptr<FieldManager> field_manager)
 {
     // std::string work_dir = GlobalData::GetString("work_dir");
-    // std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + ".cgns";
+    // std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("iteration.current_iter")) + ".cgns";
     // file_name = work_dir + "\\" + file_name;
     int index_file;
     // cg_open(file_name.c_str(), CG_MODE_WRITE, &index_file);
@@ -684,7 +684,7 @@ void Visual::WriteVtkASCII(shared_ptr<NSFieldStruct> field, std::ostream &os)
 void Visual::WriteVtkASCII(shared_ptr<FieldManager> field_manager)
 {
     std::string work_dir = GlobalData::GetString("work_dir");
-    std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + ".vtu";
+    std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("iteration.current_iter")) + ".vtu";
     file_name = work_dir + "\\" + file_name;
     std::ofstream out(file_name);
     for (size_t iter_field = 0; iter_field < field_manager->GetFieldNum(); iter_field++)
@@ -716,7 +716,7 @@ void Visual::WriteVtkASCII(shared_ptr<FieldManager> field_manager)
 void Visual::WriteVtkBinary(shared_ptr<FieldManager> field_manager)
 {
     std::string work_dir = GlobalData::GetString("work_dir");
-    std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + ".vtk";
+    std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("iteration.current_iter")) + ".vtk";
     file_name = work_dir + "\\" + file_name;
     std::ofstream out(file_name);
     for (size_t iter_field = 0; iter_field < field_manager->GetFieldNum(); iter_field++)
@@ -906,7 +906,7 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostr
                                                                                                                  // <<
                                                                                                                  // "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure,\"zeta_z\n";
     os << "ZONE I=" << ni << ", J=" << nj << ", K=" << nk << ", F=POINT\n";
-    double solution_time = GlobalData::GetDouble("currentTime");
+    double solution_time = GlobalData::GetDouble("iteration.current_time");
     os << "SOLUTIONTIME=" << solution_time << "\n";
 
     for (int k = ks; k <= ke; ++k)
@@ -984,7 +984,7 @@ void Visual::WriteTecplotASCII(shared_ptr<NSFieldFNFDM> field, std::ostream &os)
     else
         os << "ZONE T=\"NSFieldFNFDM Field\", N=" << node_num << ", E=" << cell.GetCellNum()
            << ", F=FEPOINT, ET=BRICK\n";
-    double solution_time = GlobalData::GetDouble("currentTime");
+    double solution_time = GlobalData::GetDouble("iteration.current_time");
     os << "SOLUTIONTIME=" << solution_time << "\n";
     for (int iNode = 0; iNode < node_num; ++iNode)
     {
@@ -1108,7 +1108,7 @@ void zaran::Visual::WriteTecplotASCII(const shared_ptr<NSFieldZaran> &field, std
     os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\","
           "\"iBlank\"\n";
     os << "ZONE T=\"block grid\", I=" << ni << ", J=" << nj << ", K=" << nk << ", F=POINT\n";
-    double solution_time = GlobalData::GetDouble("currentTime");
+    double solution_time = GlobalData::GetDouble("iteration.current_time");
     os << "SOLUTIONTIME=" << solution_time << "\n";
     for (index_type k = ks; k <= ke; ++k)
     {
@@ -1170,7 +1170,7 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldZaran> field)
     INTEGER4 iCellMax = 0;
     INTEGER4 jCellMax = 0;
     INTEGER4 kCellMax = 0;
-    double solution_time = GlobalData::GetDouble("currentTime");
+    double solution_time = GlobalData::GetDouble("iteration.current_time");
     INTEGER4 strandID = 1;
     INTEGER4 parentZn = 0;
     INTEGER4 isBlock = 1;
@@ -1239,7 +1239,7 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldStruct> field)
     INTEGER4 iCellMax = 0;
     INTEGER4 jCellMax = 0;
     INTEGER4 kCellMax = 0;
-    double solution_time = GlobalData::GetDouble("currentTime");
+    double solution_time = GlobalData::GetDouble("iteration.current_time");
     INTEGER4 strandID = 1;
     INTEGER4 parentZn = 0;
     INTEGER4 isBlock = 1;
@@ -1266,7 +1266,7 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldStruct> field)
 void Visual::WriteTecASCII(shared_ptr<FieldManager> field_manager)
 {
     std::string work_dir = GlobalData::GetString("work_dir");
-    std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("currentIter")) + ".dat";
+    std::string file_name = "result\\" + std::to_string(GlobalData::GetInt("iteration.current_iter")) + ".dat";
     file_name = work_dir + "\\" + file_name;
     std::ofstream out(file_name);
     // out << "TITLE=\"Flow Field\"\n";
@@ -1308,8 +1308,8 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<FieldManager> field_manager)
     string grid_name = "grid";
     string var_name = "x, y, z, density, velocity_x, velocity_y, velocity_z, pressure, iBlank";
     std::string work_dir = GlobalData::GetString("work_dir");
-    std::string file_name = std::to_string(GlobalData::GetInt("currentIter")) + ".plt";
-    std::string temp_file_name = std::to_string(GlobalData::GetInt("currentIter")) + ".tmp";
+    std::string file_name = std::to_string(GlobalData::GetInt("iteration.current_iter")) + ".plt";
+    std::string temp_file_name = std::to_string(GlobalData::GetInt("iteration.current_iter")) + ".tmp";
     std::string result_dir = work_dir + "/result";
     int ierr = TECINI142(grid_name.c_str(), var_name.c_str(), temp_file_name.c_str(), (char *)".", &file_format,
                          &fileType, &debug, &vIsDouble);

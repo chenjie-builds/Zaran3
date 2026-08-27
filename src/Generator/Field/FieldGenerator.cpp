@@ -121,7 +121,7 @@ namespace zaran
 	shared_ptr<FieldManager> FieldGenerator::CreateFieldZaran()
 	{
 		// Read model file
-		string mode_file = GlobalData::GetString("modelFileName");
+		string mode_file = GlobalData::GetString("zaran.model_file");
 		std::string work_dir = GlobalData::GetString("work_dir");
 		//识别其后缀
 		std::string suffix = mode_file.substr(mode_file.find_last_of(".") + 1);
@@ -157,21 +157,21 @@ namespace zaran
 		zaran_field->SetModelManager(model_manager);
 		// Create master grid
 		GridBlockInfo grid_info;
-		grid_info.ni = GlobalData::GetInt("nx");
-		grid_info.nj = GlobalData::GetInt("ny");
-		grid_info.nk = GlobalData::GetInt("nz");
-		grid_info.bound_box.x_min = GlobalData::GetDouble("xMin");
-		grid_info.bound_box.x_max = GlobalData::GetDouble("xMax");
-		grid_info.bound_box.y_min = GlobalData::GetDouble("yMin");
-		grid_info.bound_box.y_max = GlobalData::GetDouble("yMax");
-		grid_info.bound_box.z_min = GlobalData::GetDouble("zMin");
-		grid_info.bound_box.z_max = GlobalData::GetDouble("zMax");
-		grid_info.bound_type_i_minus = GlobalData::GetString("boundTypeIMinus");
-		grid_info.bound_type_i_plus = GlobalData::GetString("boundTypeIPlus");
-		grid_info.bound_type_j_minus = GlobalData::GetString("boundTypeJMinus");
-		grid_info.bound_type_j_plus = GlobalData::GetString("boundTypeJPlus");
-		grid_info.bound_type_k_minus = GlobalData::GetString("boundTypeKMinus");
-		grid_info.bound_type_k_plus = GlobalData::GetString("boundTypeKPlus");
+		grid_info.ni = GlobalData::GetInt("zaran.grid.nx");
+		grid_info.nj = GlobalData::GetInt("zaran.grid.ny");
+		grid_info.nk = GlobalData::GetInt("zaran.grid.nz");
+		grid_info.bound_box.x_min = GlobalData::GetDouble("zaran.box.x_min");
+		grid_info.bound_box.x_max = GlobalData::GetDouble("zaran.box.x_max");
+		grid_info.bound_box.y_min = GlobalData::GetDouble("zaran.box.y_min");
+		grid_info.bound_box.y_max = GlobalData::GetDouble("zaran.box.y_max");
+		grid_info.bound_box.z_min = GlobalData::GetDouble("zaran.box.z_min");
+		grid_info.bound_box.z_max = GlobalData::GetDouble("zaran.box.z_max");
+		grid_info.bound_type_i_minus = GlobalData::GetString("zaran.boundary.i_minus");
+		grid_info.bound_type_i_plus = GlobalData::GetString("zaran.boundary.i_plus");
+		grid_info.bound_type_j_minus = GlobalData::GetString("zaran.boundary.j_minus");
+		grid_info.bound_type_j_plus = GlobalData::GetString("zaran.boundary.j_plus");
+		grid_info.bound_type_k_minus = GlobalData::GetString("zaran.boundary.k_minus");
+		grid_info.bound_type_k_plus = GlobalData::GetString("zaran.boundary.k_plus");
 		GridGeneratorBlock* grid_factory = new GridGeneratorBlock();
 		shared_ptr<GridBlock> grid;
 		grid_factory->CreateGrid(grid, grid_info);

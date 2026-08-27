@@ -87,7 +87,7 @@ void NSSolverFNFDM::InitFieldExplosion()
     prim_far[2] = 0.0;
     prim_far[3] = 0.0;
     prim_far[4] = para->GetInflowPressure();
-    double explosion_pressure = GlobalData::GetDouble("explosion_pressure");
+    double explosion_pressure = GlobalData::GetDouble("init.explosion.pressure");
     double prim_explosion[5];
     prim_explosion[0] = prim_far[0];
     prim_explosion[1] = 0.0;
@@ -95,10 +95,10 @@ void NSSolverFNFDM::InitFieldExplosion()
     prim_explosion[3] = 0.0;
     prim_explosion[4] = explosion_pressure * prim_far[4];
     double explosion_center[3];
-    explosion_center[0] = GlobalData::GetDouble("explosion_center_x");
-    explosion_center[1] = GlobalData::GetDouble("explosion_center_y");
-    explosion_center[2] = GlobalData::GetDouble("explosion_center_z");
-    double explosion_radius = GlobalData::GetDouble("explosion_radius");
+    explosion_center[0] = GlobalData::GetDouble("init.explosion.center_x");
+    explosion_center[1] = GlobalData::GetDouble("init.explosion.center_y");
+    explosion_center[2] = GlobalData::GetDouble("init.explosion.center_z");
+    double explosion_radius = GlobalData::GetDouble("init.explosion.radius");
     double x, y, z;
     int n_node = grid->GetTotalNodeNum();
     for (int iNode = 0; iNode < n_node; ++iNode)
@@ -769,8 +769,8 @@ void NSSolverFNFDM::CalcLimiter()
     LimiterType limiter_type = GetPara()->GetLimiterType();
     if (limiter_type != LimiterType::first_order)
     {
-        int firstOrderSteps = GlobalData::GetInt("firstOrderSteps");
-        int currentIter = GlobalData::GetInt("currentIter");
+        int firstOrderSteps = GlobalData::GetInt("space.first_order_steps");
+        int currentIter = GlobalData::GetInt("iteration.current_iter");
         if (currentIter < firstOrderSteps)
         {
             Log::info("First {}/{} iteration steps use 1st-order scheme", currentIter, firstOrderSteps);
@@ -1037,7 +1037,7 @@ void NSSolverFNFDM::CheckPrimtive()
         {
             data_manager->SetNonPhysical(iNode, 1);
             nonphysical_node_num++;
-            Log::info("Step: {}, Non-physical Node: {}", GlobalData::GetInt("currentIter"), iNode);
+            Log::info("Step: {}, Non-physical Node: {}", GlobalData::GetInt("iteration.current_iter"), iNode);
             Log::warn("Non-physical Node: {}, neighbor num: {}, prim: {:6E},{:6E},{:6E},{:6E},{:6E}", iNode,
                       node.GetNeighborNodeNum(iNode), data_manager->GetPrim(0, iNode), data_manager->GetPrim(1, iNode),
                       data_manager->GetPrim(2, iNode), data_manager->GetPrim(3, iNode),

@@ -13,7 +13,7 @@ int main(int argc, char** argv)
     try
     {
         std::string work_dir;
-        std::string control_file = "zaran.ini";
+        std::string control_file = "zaran.toml";
         if (argc == 1)
         {
             work_dir = zaran::GetCurPath();
@@ -26,7 +26,7 @@ int main(int argc, char** argv)
             {
                 Log::error("Default control file are not exist!");
                 Log::warn("Use \"Zaran.exe path_to_work_dir\"");
-                throw zaran::ZaranError("Default control file zaran.ini not found");
+                throw zaran::ZaranError("Default control file zaran.toml not found");
             }
         }
         else

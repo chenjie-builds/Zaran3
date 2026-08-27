@@ -214,7 +214,7 @@ void NSSolverStruct::InitFieldExplosion()
     prim_far[2] = 0.0;
     prim_far[3] = 0.0;
     prim_far[4] = para->GetInflowPressure();
-    double explosion_pressure = GlobalData::GetDouble("explosion_pressure");
+    double explosion_pressure = GlobalData::GetDouble("init.explosion.pressure");
     double prim_explosion[5];
     prim_explosion[0] = 1.0;
     prim_explosion[1] = 0.0;
@@ -223,10 +223,10 @@ void NSSolverStruct::InitFieldExplosion()
     prim_explosion[4] = explosion_pressure * prim_far[4];
     Log::info("Explosion pressure: {}", explosion_pressure);
     double explosion_center[3];
-    explosion_center[0] = GlobalData::GetDouble("explosion_center_x");
-    explosion_center[1] = GlobalData::GetDouble("explosion_center_y");
-    explosion_center[2] = GlobalData::GetDouble("explosion_center_z");
-    double explosion_radius = GlobalData::GetDouble("explosion_radius");
+    explosion_center[0] = GlobalData::GetDouble("init.explosion.center_x");
+    explosion_center[1] = GlobalData::GetDouble("init.explosion.center_y");
+    explosion_center[2] = GlobalData::GetDouble("init.explosion.center_z");
+    double explosion_radius = GlobalData::GetDouble("init.explosion.radius");
     double x, y, z;
     for (index_type k = 0; k < nk; ++k)
     {
@@ -6597,8 +6597,8 @@ void NSSolverStruct::CalcLimiter()
     LimiterType limiter_type = GetPara()->GetLimiterType();
     if (limiter_type != LimiterType::first_order)
     {
-        int firstOrderSteps = GlobalData::GetInt("firstOrderSteps");
-        int currentIter = GlobalData::GetInt("currentIter");
+        int firstOrderSteps = GlobalData::GetInt("space.first_order_steps");
+        int currentIter = GlobalData::GetInt("iteration.current_iter");
         if (currentIter < firstOrderSteps)
         {
             Log::info("First {}/{} iteration steps use 1st-order scheme", currentIter, firstOrderSteps);
@@ -7898,8 +7898,8 @@ void NSSolverStruct::CalcConvectionRes_MUSCLSV()
 }
 void NSSolverStruct::CalcConvectionRes_WCNS5()
 {
-    int firstOrderSteps = GlobalData::GetInt("firstOrderSteps");
-    int currentIter = GlobalData::GetInt("currentIter");
+    int firstOrderSteps = GlobalData::GetInt("space.first_order_steps");
+    int currentIter = GlobalData::GetInt("iteration.current_iter");
     if (currentIter < firstOrderSteps)
     {
         CalcConvectionRes_1st();
@@ -8247,7 +8247,7 @@ void NSSolverStruct::BCVortex(dynamic_array<BoundStruct> &bound)
 void NSSolverStruct::BCDoubleMach(dynamic_array<BoundStruct> &bound)
 {
     IdProxyStruct &idx_proxy = GetIdxProxy();
-    double current_time = GlobalData::GetDouble("currentTime");
+    double current_time = GlobalData::GetDouble("iteration.current_time");
     double shock_velocity = 10.0 / sin(PI / 3.0);
     double shock_x = 1.0 / 6.0 + 1.0 / tan(PI / 3.0) + shock_velocity * current_time;
     double prim_left[5] = {8.0, 8.25 * cos(30.0 / 180.0 * PI), -8.25 * sin(30.0 / 180.0 * PI), 0.0, 116.5};

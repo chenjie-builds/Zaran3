@@ -1,4 +1,4 @@
-﻿# CMakeList.txt: 顶层 CMake 项目文件，在此处执行全局配置
+# CMakeList.txt: 顶层 CMake 项目文件，在此处执行全局配置
 # 并包含子项目。
 #
 cmake_minimum_required( VERSION 3.21 )
@@ -124,6 +124,12 @@ set( SpanLite_DIR  ${PROJECT_SOURCE_DIR}/3rdparty/span-lite )
 set( SpanLite_INC_DIR ${SpanLite_DIR}/include/nonstd )
 message(STATUS "SpanLite_INC_DIR: ${SpanLite_INC_DIR}")
 target_include_directories( ${EXECUTABLE_NAME} PRIVATE ${SpanLite_INC_DIR})
+
+#toml++库（单头文件，置于 3rdparty/tomlplusplus/toml.hpp）
+set( TomlPlusPlus_DIR  ${PROJECT_SOURCE_DIR}/3rdparty/tomlplusplus )
+set( TomlPlusPlus_INC_DIR ${TomlPlusPlus_DIR} )
+message(STATUS "TomlPlusPlus_INC_DIR: ${TomlPlusPlus_INC_DIR}")
+target_include_directories( ${EXECUTABLE_NAME} PRIVATE ${TomlPlusPlus_INC_DIR} )
 
 set( CMAKE_NINJA_FORCE_RESPONSE_FILE "ON" CACHE BOOL "Force Ninja to use response files." )
 message( STATUS "CXX_COMPILER_ID:" ${CMAKE_CXX_COMPILER_ID} )
