@@ -2,6 +2,7 @@
 #include "File.h"
 #include <fstream>
 #include "Log.h"
+#include "ZaranError.h"
 #include "PerfectGas.h"
 #include "RiemannSolverFactory.h"
 namespace zaran
@@ -47,7 +48,7 @@ namespace zaran
 		{
 			Log::warn("Initialize Failed!");
 			Log::warn("Wrong Flow field init parameter:{}", GlobalData::GetString("initFieldType"));
-			exit(0);
+			throw ZaranError("Wrong Flow field init parameter");
 		}
 		Prim2Cons();
 		Log::info("Flow Field Initialize Finished!");

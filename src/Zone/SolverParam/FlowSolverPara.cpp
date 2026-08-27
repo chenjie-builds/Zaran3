@@ -1,7 +1,8 @@
-﻿#include "FlowSolverPara.h"
+#include "FlowSolverPara.h"
 #include "GlobalData.h"
 #include "PerfectGas.h"
 #include "Log.h"
+#include "ZaranError.h"
 #include <iostream>
 using namespace zaran;
 FlowSolverParam::FlowSolverParam()
@@ -91,7 +92,7 @@ void FlowSolverParam::Init()
 	else
 	{
 		Log::warn("Wrong Runge-Kutta Stage: {}, Please Check Control File!", rkStage);
-		system("pause");
+		throw ZaranError("Wrong Runge-Kutta Stage");
 	}
 	int gradScheme = GlobalData::GetInt("gradScheme");
 	if (gradScheme == 0)
@@ -109,7 +110,7 @@ void FlowSolverParam::Init()
 	else
 	{
 		Log::warn("Unsupported Gradient Scheme parameter: {}, Please Check Control File!", gradScheme);
-		system("pause");
+		throw ZaranError("Unsupported Gradient Scheme");
 	}
 
 	m_backup_field_file_name = GlobalData::GetString("backupFieldFileName");
@@ -137,7 +138,7 @@ void FlowSolverParam::Init()
 	else
 	{
 		Log::warn("Unsupported Riemann Solver Type: {}, Please Check Control File!", riemann_solver_type);
-		system("pause");
+		throw ZaranError("Unsupported Riemann Solver Type");
 	}
 	InitCflNumber();
 	InitLimiter();
@@ -176,14 +177,13 @@ void zaran::FlowSolverParam::InitLimiter()
 	else
 	{
 		Log::warn("Unsupportted Limiter: {}, Please Check Control File!", limiter_type);
-		system("pause");
+		throw ZaranError("Unsupported Limiter");
 	}
 	m_max_limit = GlobalData::GetDouble("maxLimiterSlope");
 	if (m_max_limit < 0.0 || m_max_limit > 1.0)
 	{
 		Log::warn("Wrong Max Limiter Slope: {}, Please Check Control File!", m_max_limit);
-		std::cin.get();
-		exit(1);
+		throw ZaranError("Wrong Max Limiter Slope");
 	}
 }
 

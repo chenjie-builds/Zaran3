@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Zaran	-	A Totally Automatic CFD Software
  * \file FlowSolverPara.h
  * \brief FlowSolverParam class, used to control the flow solver parameters.
@@ -76,7 +76,7 @@ namespace zaran
 		const double GetMaxLimit()const;
 	private:
 		int m_equ_num;
-		Gas* m_gas;
+		Gas* m_gas = nullptr;
 		// 无量纲参数
 		Dimensionless m_dimensionless;
 		double m_inflow_density;
@@ -91,7 +91,7 @@ namespace zaran
 		int m_current_step;
 		// 是否为粘性
 		int m_is_viscous;
-		CFL* m_cfl;
+		CFL* m_cfl = nullptr;
 		// RK步数
 		dynamic_array<dynamic_array<double>> m_rk_coef;
 		// 梯度方法

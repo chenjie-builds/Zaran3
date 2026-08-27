@@ -1,5 +1,6 @@
-﻿#include "GlobalData.h"
+#include "GlobalData.h"
 #include "Log.h"
+#include "ZaranError.h"
 #include <fstream>
 using namespace zaran;
 GlobalData& GlobalData::Init()
@@ -26,7 +27,7 @@ const dataVariant& GlobalData::Get(const string& dataName)
 	{
 		Log::warn("Not Found:{},in Global Data!", dataName);
 		Log::warn("Exit Now!");
-		exit(0);
+		throw ZaranError("GlobalData key not found: " + dataName);
 	}
 }
 

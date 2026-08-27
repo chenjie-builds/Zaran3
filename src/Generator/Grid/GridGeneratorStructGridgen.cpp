@@ -1,5 +1,6 @@
-﻿#include "GridGeneratorStructGridgen.h"
+#include "GridGeneratorStructGridgen.h"
 #include "Log.h"
+#include "ZaranError.h"
 #include <fstream>
 #include "MathBasic.h"
 #include"Rand.h"
@@ -50,7 +51,7 @@ namespace zaran
 		if (!node_file.is_open())
 		{
 			Log::error("Can't open node file:{}, Please Check!", m_node_file_name);
-			system("pause");
+			throw ZaranError("Can't open node file: " + m_node_file_name);
 		}
 		int block_num;
 		node_file >> block_num;
@@ -164,7 +165,7 @@ namespace zaran
 		if (!bnd_file.is_open())
 		{
 			Log::error("Can't open bound file:{}, Please Check!", m_bnd_file_name);
-			system("pause");
+			throw ZaranError("Can't open bound file: " + m_bnd_file_name);
 		}
 		int block_idx;
 		bnd_file >> block_idx;

@@ -1,6 +1,7 @@
-﻿#include "NSSolverStruct.h"
+#include "NSSolverStruct.h"
 #include "FlowSolverStructPara.h"
 #include "Log.h"
+#include "ZaranError.h"
 #include "MathBasic.h"
 #include "Metric.h"
 #include <omp.h>
@@ -7720,7 +7721,7 @@ void NSSolverStruct::InterMidNodePrim_MUSCL(const double *value, double &value_l
         // Log::warn("Use 1st order interpolation instead.");
         // value_left = value[2];
         // value_right = value[3];
-        exit(0);
+        throw ZaranError("MUSCL interpolation failed (NaN)");
     }
 }
 
@@ -7758,7 +7759,7 @@ void NSSolverStruct::InterMidNodePrim_MUSCLSV(const double *value, double **coor
         Log::error("value[0] = {}, value[1] = {}, value[2] = {}, value[3] = {}, "
                    "value[4] = {}",
                    value[0], value[1], value[2], value[3], value[4]);
-        exit(0);
+        throw ZaranError("MUSCL interpolation failed (NaN)");
     }
 }
 
@@ -7960,7 +7961,7 @@ void NSSolverStruct::BoundaryCondition()
         else
         {
             Log::error("Unsupport boundary: {}", bound_name);
-            exit(0);
+            throw ZaranError("Unsupported boundary: " + bound_name);
         }
     }
 }

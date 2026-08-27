@@ -88,12 +88,6 @@ void Roe::Solver(RiemannSolverPara &para)
     para.flux[2] *= 0.5 * deltaNorm;
     para.flux[3] *= 0.5 * deltaNorm;
     para.flux[4] *= 0.5 * deltaNorm;
-    if (abs(rhoL - 1.0) < 1e-8 && abs(rhoR - 0.125) < 1e-8)
-    {
-        Log::info("Roe: prim_left: {},{},{},{},{},{} prim_right: {},{},{},{},{},{} flux: {},{},{},{},{}", para.prim_left(0), para.prim_left(1), para.prim_left(2), para.prim_left(3), para.prim_left(4), para.prim_left(5), para.prim_right(0), para.prim_right(1), para.prim_right(2), para.prim_right(3), para.prim_right(4), para.prim_right(5), para.flux(0), para.flux(1), para.flux(2), para.flux(3), para.flux(4));
-        exit(0);
-    }
-
 }
 
 void zaran::Roe::Harten(double &lamda, double delta)

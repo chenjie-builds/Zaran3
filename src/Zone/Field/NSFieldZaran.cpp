@@ -1,4 +1,4 @@
-﻿#include "NSFieldZaran.h"
+#include "NSFieldZaran.h"
 #include "GlobalData.h"
 #include "GridGeneratorFlexibleZaran.h"
 #include "Log.h"
@@ -127,9 +127,10 @@ void NSFieldZaran::DeleteSlaveField(const shared_ptr<FieldManager> &field_manage
     const auto src_node_idx = data_comm->GetSrcDataIdx();
     const auto tgt_node_idx = data_comm->GetTgtNodeIdx();
     const auto tgt_field_idx = data_comm->GetTgtFieldIdx();
-    dynamic_array<index_type> new_src_node_idx(src_node_num), new_tgt_node_idx(src_node_num),
-        new_tgt_field_idx(src_node_num);
-    count_type new_src_node_num = 0;
+    dynamic_array<index_type> new_src_node_idx, new_tgt_node_idx, new_tgt_field_idx;
+    new_src_node_idx.reserve(src_node_num);
+    new_tgt_node_idx.reserve(src_node_num);
+    new_tgt_field_idx.reserve(src_node_num);
     for (int i = 0; i < src_node_num; i++)
     {
         if (tgt_field_idx[i] != slave_field_id)
@@ -137,12 +138,8 @@ void NSFieldZaran::DeleteSlaveField(const shared_ptr<FieldManager> &field_manage
             new_src_node_idx.push_back(src_node_idx[i]);
             new_tgt_node_idx.push_back(tgt_node_idx[i]);
             new_tgt_field_idx.push_back(tgt_field_idx[i]);
-            new_src_node_num++;
         }
     }
-    new_src_node_idx.resize(new_src_node_num);
-    new_tgt_field_idx.resize(new_src_node_num);
-    new_tgt_node_idx.resize(new_src_node_num);
     const auto new_data_comm =
         make_shared<FieldDataCommInfo>(new_src_node_idx.size(), data_comm->GetRecvDataName(), new_src_node_idx.data(),
                                        new_tgt_field_idx.data(), new_tgt_node_idx.data());

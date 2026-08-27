@@ -1,6 +1,7 @@
-﻿#include "NSSolverFNFDM.h"
+#include "NSSolverFNFDM.h"
 #include "File.h"
 #include "Log.h"
+#include "ZaranError.h"
 #include "MathBasic.h"
 #include <fstream>
 namespace zaran
@@ -61,7 +62,7 @@ void NSSolverFNFDM::InitFieldBackup()
     if (!fin.is_open())
     {
         Log::warn("Backup file not found!");
-        exit(0);
+        throw ZaranError("Backup field file not found: " + restart_file_name);
     }
     int node_num = grid->GetTotalNodeNum();
     double value;

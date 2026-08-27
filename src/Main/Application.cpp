@@ -1,4 +1,4 @@
-﻿#include<fstream>
+#include<fstream>
 #include"Application.h"
 #include "GlobalData.h"
 #include"GlobalField.h"
@@ -8,6 +8,24 @@
 #include"PolyData.h"
 #include"File.h"
 #include "GridConvert.h"
+#include "ZaranError.h"
+#include <sstream>
+
+namespace
+{
+	// 解析 "V主.次.修订" 或 "主.次.修订" 为数值三元组
+	bool ParseVersion(const std::string& version, int& major, int& minor, int& patch)
+	{
+		if (version.empty())
+			return false;
+		size_t start = (version[0] == 'V' || version[0] == 'v') ? 1 : 0;
+		char dot1 = 0, dot2 = 0;
+		std::stringstream ss(version.substr(start));
+		ss >> major >> dot1 >> minor >> dot2 >> patch;
+		return !ss.fail() && dot1 == '.' && dot2 == '.';
+	}
+}
+
 namespace zaran
 {
 	void Application::Run()
@@ -30,16 +48,16 @@ namespace zaran
 		else
 		{
 			Log::warn("Unsupported Simulation Task! Please Check!");
-			system("pause");
+			throw ZaranError("Unsupported Simulation Task");
 		}
 	}
 
 	void Application::ReadGlobalData()
 	{
-		while (!IsFileExist(m_control_file))
+		if (!IsFileExist(m_control_file))
 		{
 			Log::warn("Control File:{}, is NOT exist! Please Check!", m_control_file);
-			exit(0);
+			throw ZaranError("Control file not found: " + m_control_file);
 		}
 		std::ifstream fin(m_control_file);
 		std::string line;
@@ -101,7 +119,7 @@ namespace zaran
 		else
 		{
 			Log::warn("Unsupported Simulation Task:{}! Please Check!", simuTask);
-			system("pause");
+			throw ZaranError("Unsupported Simulation Task: " + simuTask);
 		}
 	}
 
@@ -109,13 +127,28 @@ namespace zaran
 	{
 		Log::info("********Zaran: A Totally Automatic CFD Software!********");
 		Log::info(">>>>>>>>Control File Version: {}<<<<<<<<", GlobalData::GetString("version"));
-		if (m_min_ctrol_file_version > GlobalData::GetString("version"))
+		if (IsVersionTooOld(GlobalData::GetString("version")))
 		{
 			Log::warn(">>>>>>>>Control File is too old, please use new Control File!<<<<<<<<");
 			Log::warn(">>>>>>>>The minus version Control File is:{}<<<<<<<<", m_min_ctrol_file_version);
-			system("pause");
+			throw ZaranError("Control file version is too old");
 		}
 		Log::info(">>>>>>>>Simulation Task: {}<<<<<<<<", GlobalData::GetString("simulationTask"));
+	}
+
+	bool Application::IsVersionTooOld(const std::string& version) const
+	{
+		int v_major = 0, v_minor = 0, v_patch = 0;
+		int m_major = 0, m_minor = 0, m_patch = 0;
+		if (!ParseVersion(version, v_major, v_minor, v_patch) ||
+			!ParseVersion(m_min_ctrol_file_version, m_major, m_minor, m_patch))
+		{
+			// 解析失败时回退到字典序比较
+			return m_min_ctrol_file_version > version;
+		}
+		if (v_major != m_major) return v_major < m_major;
+		if (v_minor != m_minor) return v_minor < m_minor;
+		return v_patch < m_patch;
 	}
 
 	void Application::SolveField() const
@@ -136,7 +169,7 @@ namespace zaran
 		else
 		{
 			Log::warn("Unsupported Dimension! Please Check!");
-			system("pause");
+			throw ZaranError("Unsupported Dimension");
 		}
 		if (solver_type_name == "NS")
 		{
@@ -158,13 +191,13 @@ namespace zaran
 			else
 			{
 				Log::warn("Unsupported Grid Type! Please Check!");
-				system("pause");
+				throw ZaranError("Unsupported Grid Type");
 			}
 		}
 		else
 		{
 			Log::warn("Unsupported Solver Type! Please Check!");
-			system("pause");
+			throw ZaranError("Unsupported Solver Type");
 		}
 		shared_ptr<FieldGenerator> fieldFactory = make_shared<FieldGenerator>(grid_type, solver_type, dim);
 		//FieldGeneratorBuildingExplosion* fieldFactory = new FieldGeneratorBuildingExplosion(grid_type, solver_type, dim);

@@ -1,5 +1,6 @@
-﻿#include "HLLC.h"
+#include "HLLC.h"
 #include "Log.h"
+#include "ZaranError.h"
 #include "MathBasic.h"
 using namespace zaran;
 // HLLC
@@ -64,7 +65,7 @@ void HLLC::Solver(RiemannSolverPara &para)
         Log::error("HLLC: s_left = {}, s_right = {}, s_middle = {}", s_left, s_right, s_middle);
         Log::error("HLLC: rhoL = {}, rhoR = {}, uL = {}, uR = {}, vL = {}, vR = {}, wL = {}, wR = {}, pL = {}, pR = {}",
                    rhoL, rhoR, uL, uR, vL, vR, wL, wR, pL, pR);
-        exit(0);
+        throw ZaranError("HLLC: p_star and p_star_R mismatch");
     }
     double cons_star_L[5];
     double par1 = (s_left - para.vn_left);

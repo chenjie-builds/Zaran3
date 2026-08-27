@@ -1,5 +1,6 @@
-﻿#include "CellFNFDM.h"
+#include "CellFNFDM.h"
 #include "Log.h"
+#include "ZaranError.h"
 namespace zaran
 {
 
@@ -19,7 +20,7 @@ namespace zaran
 		{
 			Log::error("CellTopo::SetCellNum: The number of cells is less than 0");
 			Log::error(" cell_num = {}", cell_num);
-			exit(0);
+			throw ZaranError("CellFN::SetCellNum: cell_num < 0");
 		}
 		CellBase::SetCellNum(cell_num);
 		m_node_num.resize(cell_num);
@@ -35,7 +36,7 @@ namespace zaran
 		{
 			Log::error("CellTopo::SetNode: The number of cells is not equal to the number of nodes");
 			Log::error(" cell_num = {}, node_index.size() = {}", GetCellNum(), node_index.size());
-			exit(0);
+			throw ZaranError("CellFN::SetNode: cell/node size mismatch");
 		}
 		int node_sum = 0;
 		for (int i = 0; i < GetCellNum(); i++)
@@ -59,7 +60,7 @@ namespace zaran
 		{
 			Log::error("CellTopo::SetFace: The number of cells is not equal to the number of faces");
 			Log::error(" cell_num = {}, face_index.size() = {}", GetCellNum(), face_index.size());
-			exit(0);
+			throw ZaranError("CellFN::SetFace: cell/face size mismatch");
 		}
 		int face_sum = 0;
 		for (size_t i = 0; i < GetCellNum(); i++)
@@ -83,7 +84,7 @@ namespace zaran
 		{
 			Log::error("CellTopo::SetCenter: The cell index is out of range");
 			Log::error(" iCell = {}, m_cell_num = {}", iCell, GetCellNum());
-			exit(0);
+			throw ZaranError("CellFN::SetCenterCoord: cell index out of range");
 		}
 		for (size_t i = 0; i < 3; i++)
 		{

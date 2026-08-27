@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Zaran	-	A Totally Automatic CFD Software
  * \file Application.h
  * \brief Application class, used to control the simulation.
@@ -47,6 +47,7 @@ namespace zaran
         void ReadGlobalData();
         void InitTask();
         void ShowInfo();
+        bool IsVersionTooOld(const std::string& version) const;
         void SolveField() const;
         void ConvertGrid();
         void ReadModel();

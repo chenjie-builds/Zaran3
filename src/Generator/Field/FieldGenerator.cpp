@@ -1,10 +1,11 @@
-﻿#include "FieldGenerator.h"
+#include "FieldGenerator.h"
 #include "GridGeneratorFlexibleSYSU.h"
 #include "GridGeneratorFlexible.h"
 #include "GridGeneratorBlock.h"
 #include "GridGenerator.h"
 #include "GridGeneratorStructGridgen.h"
 #include "Log.h"
+#include "ZaranError.h"
 #include "NSFieldFN.h"
 #include "NSFieldStruct.h"
 #include "NSFieldZaran.h"
@@ -41,7 +42,7 @@ namespace zaran
 		else
 		{
 			Log::warn("Unsupported Dimension! Please Check!");
-			system("pause");
+			throw ZaranError("Unsupported Grid Type");
 		}
 		dynamic_array<shared_ptr<GridBase>> grid_list;
 		grid_factory->CreateGrid(grid_list);
@@ -99,7 +100,7 @@ namespace zaran
 			else
 			{
 				Log::warn("Unsupported Solver Type! Please Check!");
-				system("pause");
+				throw ZaranError("Unsupported Solver Type");
 			}
 			field_list[iField]->Allocate();
 			field_data_comm_info[iField] = make_shared<FieldDataCommInfo>(
@@ -146,7 +147,7 @@ namespace zaran
 		else
 		{
 			Log::error("Unsupported model file format: {}", suffix);
-			system("pause");
+			throw ZaranError("Unsupported model file format");
 		}
 
 

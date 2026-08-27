@@ -1,5 +1,6 @@
-﻿#include "NodeFNFDM.h"
+#include "NodeFNFDM.h"
 #include "Log.h"
+#include "ZaranError.h"
 namespace zaran
 {
 	NodeFN::NodeFN(index_type node_num)
@@ -72,7 +73,7 @@ namespace zaran
 		{
 			Log::error("NodeFN::SetCoord: coord.size() != m_coordinate.size()");
 			Log::error("coord.size() = {}, m_coordinate.size() = {}", coord.size(), m_coordinate.size());
-			exit(0);
+			throw ZaranError("NodeFN::SetCoord: coordinate size mismatch");
 		}
 #endif
 		for (index_type i = 0; i < coord.size(); i++)
@@ -96,7 +97,7 @@ namespace zaran
 		{
 			Log::error("NodeFN::SetType: type.size() != m_type.size()");
 			Log::error("type.size() = {}, m_type.size() = {}", type.size(), m_type.size());
-			exit(0);
+			throw ZaranError("NodeFN::SetType: type size mismatch");
 		}
 #endif
 		m_type = type;
@@ -159,7 +160,7 @@ namespace zaran
 		{
 			Log::error("NodeFN::SetNeighborNode: node_num != GetCount()");
 			Log::error("node_num = {}, GetCount() = {}", node_num, GetCount());
-			exit(0);
+			throw ZaranError("NodeFN::SetNeighborNode: node count mismatch");
 		}
 #endif
 		index_type sum_node = 0;
@@ -195,7 +196,7 @@ namespace zaran
 		{
 			Log::error("NodeFN::SetNeighborFace: node_num != GetCount()");
 			Log::error("node_num = {}, GetCount() = {}", node_num, GetCount());
-			exit(0);
+			throw ZaranError("NodeFN::SetNeighborFace: node count mismatch");
 		}
 #endif
 		index_type sum_face = 0;
@@ -232,7 +233,7 @@ namespace zaran
 		{
 			Log::error("NodeFN::SetNeighborCell: node_num != GetCount()");
 			Log::error("node_num = {}, GetCount() = {}", node_num, GetCount());
-			exit(0);
+			throw ZaranError("NodeFN::SetNeighborCell: node count mismatch");
 		}
 #endif
 		index_type sum_cell = 0;

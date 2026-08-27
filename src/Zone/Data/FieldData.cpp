@@ -1,4 +1,5 @@
 #include "FieldData.h"
+#include "ZaranError.h"
 #include <utility>
 #include <iostream>
 namespace zaran
@@ -40,7 +41,7 @@ namespace zaran
 		if (HasData(name))
 		{
 			std::cout << "FieldData::AddData: " << name << " is already exist" << std::endl;
-			exit(0);
+			throw ZaranError("FieldData::AddData: " + name + " is already exist");
 		}
 #endif // DEBUG_MODE
 		m_name_id[name] = m_data_type.size();
@@ -73,12 +74,12 @@ namespace zaran
 		if (HasData(name) == false)
 		{
 			std::cout << "FieldData::GetData: " << name << " is not exist" << std::endl;
-			exit(0);
+			throw ZaranError("FieldData::GetData: " + name + " is not exist");
 		}
 		if (m_data_type[id] != FieldDataType::real)
 		{
 			std::cout << "FieldData::GetData: " << name << " is not real type" << std::endl;
-			exit(0);
+			throw ZaranError("FieldData::GetData: " + name + " is not real type");
 		}
 #endif // DEBUG_MODE
 		data = reinterpret_cast<double*>(m_data[id].data());
@@ -90,12 +91,12 @@ namespace zaran
 		if (HasData(name) == false)
 		{
 			std::cout << "FieldData::GetData: " << name << " is not exist" << std::endl;
-			exit(0);
+			throw ZaranError("FieldData::GetData: " + name + " is not exist");
 		}
 		if (m_data_type[id] != FieldDataType::integer)
 		{
 			std::cout << "FieldData::GetData: " << name << " is not integer type" << std::endl;
-			exit(0);
+			throw ZaranError("FieldData::GetData: " + name + " is not integer type");
 		}
 #endif // DEBUG_MODE
 		data = reinterpret_cast<int*>(m_data[id].data());
@@ -107,7 +108,7 @@ namespace zaran
 		if (HasData(name) == false)
 		{
 			std::cout << "FieldData::GetData: " << name << " is not exist" << std::endl;
-			exit(0);
+			throw ZaranError("FieldData::GetData: " + name + " is not exist");
 		}
 #endif // DEBUG_MODE
 		num = m_data_num[id];

@@ -1,5 +1,6 @@
 #include "CFL.h"
 #include "Log.h"
+#include "ZaranError.h"
 #include <iostream>
 namespace zaran
 {
@@ -17,22 +18,19 @@ namespace zaran
         {
             Log::error("CFL number must be positive, please check the input parameters");
             Log::error("cfl_min = {}, cfl_max = {}, start_step = {}, grow_step = {}, reduce_factor = {}", cfl_min, cfl_max, start_step, grow_step, reduce_factor);
-            std::cin.get();
-            exit(1);
+            throw ZaranError("CFL parameters must be positive");
         }
         if(cfl_min > cfl_max)
         {
             Log::error("cfl_min must be less than cfl_max, please check the input parameters");
             Log::error("cfl_min = {}, cfl_max = {}", cfl_min, cfl_max);
-            std::cin.get();
-            exit(1);
+            throw ZaranError("cfl_min must be less than cfl_max");
         }
         if(reduce_factor > 1)
         {
             Log::error("reduce_factor must be less than 1, please check the input parameters");
             Log::error("reduce_factor = {}", reduce_factor);
-            std::cin.get();
-            exit(1);
+            throw ZaranError("reduce_factor must be less than 1");
         }
         m_cfl_min = cfl_min;
         m_cfl_max = cfl_max;
