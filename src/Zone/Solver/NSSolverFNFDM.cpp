@@ -499,6 +499,43 @@ void NSSolverFNFDM::BCWall(BoundFN &bound)
         data_manager->SetCons(iVal, idx_bnd, cons_bnd[iVal]);
     }
 }
+void NSSolverFNFDM::BCWallViscous(BoundFN& bound)
+{
+    int idx_ref = bound.GetIdxRef();
+    int idx_bnd = bound.GetIdxBound();
+    int idx_ghost = bound.GetIdxGhost();
+    auto data_manager = GetDataManager();
+
+    double prim_ref[5];
+    for (int iVal = 0; iVal < 5; ++iVal)
+        prim_ref[iVal] = data_manager->GetPrim(iVal, idx_ref);
+
+    // 镜像点原变量：速度反向（无滑移），ρ/p 相等（零法向梯度 → 绝热）
+    double prim_ghost[5];
+    prim_ghost[0] = prim_ref[0];      // ρ
+    prim_ghost[1] = -prim_ref[1];      // u
+    prim_ghost[2] = -prim_ref[2];      // v
+    prim_ghost[3] = -prim_ref[3];      // w
+    prim_ghost[4] = prim_ref[4];      // p
+
+    // 边界节点本身：速度=0，ρ/p 取内点
+    double prim_bnd[5];
+    prim_bnd[0] = prim_ref[0];
+    prim_bnd[1] = 0.0;
+    prim_bnd[2] = 0.0;
+    prim_bnd[3] = 0.0;
+    prim_bnd[4] = prim_ref[4];
+
+    data_manager->SetPrim(idx_ghost, prim_ghost);
+    data_manager->SetPrim(idx_bnd, prim_bnd);
+
+    // 同步守恒变量（可选，按需要）
+    double cons_ghost[5], cons_bnd[5];
+    GetGas()->Prim2Cons(prim_ghost, cons_ghost);
+    GetGas()->Prim2Cons(prim_bnd, cons_bnd);
+    data_manager->SetCons(idx_ghost, cons_ghost);
+    data_manager->SetCons(idx_bnd, cons_bnd);
+}
 void NSSolverFNFDM::BCWall(dynamic_array<BoundFN> &bound_list)
 {
     auto grid = GetGrid();
@@ -1406,7 +1443,7 @@ void NSSolverFNFDM::CalcViscousFlux()
     int node_num = grid->GetTotalNodeNum();
     double *viscous_flux_x, *viscous_flux_y, *viscous_flux_z;
     double tau_xx, tau_yy, tau_zz, tau_xy, tau_xz, tau_yz;
-    double grad_rho[3], grad_u[3], grad_v[3], grad_w[3], grad_p[3];
+    double grad_rho[3], grad_u[3], grad_v[3], grad_w[3], grad_p[3], grad_T[3];
     double vel[3];
     double tempeture;
     double vis_coef;
@@ -1417,6 +1454,9 @@ void NSSolverFNFDM::CalcViscousFlux()
         vel[0] = data_manager->GetPrim(1, iNode);
         vel[1] = data_manager->GetPrim(2, iNode);
         vel[2] = data_manager->GetPrim(3, iNode);
+        const auto& density = data_manager->GetPrim(ID_DENSITY, iNode);
+        const auto& pressure = data_manager->GetPrim(ID_PRESSURE, iNode);
+        auto gamma = gas->GetGamma();
         for (int iDim = 0; iDim < 3; ++iDim)
         {
             grad_rho[iDim] = data_manager->GetPrimGrad(0, iDim, iNode);
@@ -1424,9 +1464,10 @@ void NSSolverFNFDM::CalcViscousFlux()
             grad_v[iDim] = data_manager->GetPrimGrad(2, iDim, iNode);
             grad_w[iDim] = data_manager->GetPrimGrad(3, iDim, iNode);
             grad_p[iDim] = data_manager->GetPrimGrad(4, iDim, iNode);
+            grad_T[iDim] = gamma * (grad_p[iDim] / density - pressure * grad_rho[iDim] / (density * density));
         }
         tempeture =
-            gas->CalcTemperature(data_manager->GetPrim(ID_DENSITY, iNode), data_manager->GetPrim(ID_PRESSURE, iNode));
+            gas->CalcTemperature(density, pressure);
         vis_coef = gas->CalcMu(tempeture);
         lamda = 2.0 / 3.0 * vis_coef;
         therm_coef = gas->CalcK(tempeture);
@@ -1441,19 +1482,19 @@ void NSSolverFNFDM::CalcViscousFlux()
         data_manager->SetViscousFlux(2, 0, iNode, tau_xy);
         data_manager->SetViscousFlux(3, 0, iNode, tau_xz);
         data_manager->SetViscousFlux(4, 0, iNode,
-                                     vel[0] * tau_xx + vel[1] * tau_xy + vel[2] * tau_xz + therm_coef * grad_rho[0]);
+            vel[0] * tau_xx + vel[1] * tau_xy + vel[2] * tau_xz + therm_coef * grad_T[0]);
         data_manager->SetViscousFlux(0, 1, iNode, 0);
         data_manager->SetViscousFlux(1, 1, iNode, tau_xy);
         data_manager->SetViscousFlux(2, 1, iNode, tau_yy);
         data_manager->SetViscousFlux(3, 1, iNode, tau_yz);
         data_manager->SetViscousFlux(4, 1, iNode,
-                                     vel[0] * tau_xy + vel[1] * tau_yy + vel[2] * tau_yz + therm_coef * grad_rho[1]);
+            vel[0] * tau_xy + vel[1] * tau_yy + vel[2] * tau_yz + therm_coef * grad_T[1]);
         data_manager->SetViscousFlux(0, 2, iNode, 0);
         data_manager->SetViscousFlux(1, 2, iNode, tau_xz);
         data_manager->SetViscousFlux(2, 2, iNode, tau_yz);
         data_manager->SetViscousFlux(3, 2, iNode, tau_zz);
         data_manager->SetViscousFlux(4, 2, iNode,
-                                     vel[0] * tau_xz + vel[1] * tau_yz + vel[2] * tau_zz + therm_coef * grad_rho[2]);
+            vel[0] * tau_xz + vel[1] * tau_yz + vel[2] * tau_zz + therm_coef * grad_T[2]);
     }
 }
 void NSSolverFNFDM::CalcViscousFluxGrad()

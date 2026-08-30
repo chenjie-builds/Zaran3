@@ -89,6 +89,7 @@ class NSSolverFNFDM : public NSSolver
     // 壁面边界条件
     virtual void BCWall(BoundFN &bound);
     void BCWall(dynamic_array<BoundFN> &bound_list);
+    void BCWallViscous(BoundFN &bound);
     // 黎曼边界条件
     virtual void BCFarfield(BoundFN &bound);
     void BCFarfield(dynamic_array<BoundFN> &bound_list);
