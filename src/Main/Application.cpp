@@ -9,6 +9,8 @@
 #include"File.h"
 #include "GridConvert.h"
 #include "ZaranError.h"
+#include "DEMFieldGenerator.h"
+#include "DEMFieldSimulation.h"
 #include <sstream>
 
 namespace
@@ -111,15 +113,31 @@ namespace zaran
 
 	void Application::SolveField() const
 	{
+		string solver_type_name = GlobalData::GetString("task.solver");
+
+		// DEM 分支：不需要网格类型和空间维数
+		if (solver_type_name == "DEM")
+		{
+			if (GlobalData::IsExist("output.result_folder"))
+				CreateFolder(m_work_dir + "/" + GlobalData::GetString("output.result_folder"));
+			if (GlobalData::IsExist("init.backup_folder"))
+				CreateFolder(m_work_dir + "/" + GlobalData::GetString("init.backup_folder"));
+			shared_ptr<DEMFieldGenerator> dem_factory = make_shared<DEMFieldGenerator>();
+			shared_ptr<FieldManager> global_field = dem_factory->Create();
+			shared_ptr<DEMFieldSimulation> controller = make_shared<DEMFieldSimulation>(global_field);
+			controller->SolveField();
+			return;
+		}
+
 		std::string reslut_folder = GlobalData::GetString("output.result_folder");
 		std::string backup_folder = GlobalData::GetString("init.backup_folder");
 		CreateFolder(m_work_dir + "/" + reslut_folder);
 		CreateFolder(m_work_dir + "/" + backup_folder);
-		string grid_type_name = GlobalData::GetString("task.grid_type");
-		string solver_type_name = GlobalData::GetString("task.solver");
-		GridType grid_type;
-		FieldSolverType solver_type;
-		Dimension dim;
+
+		string grid_type_name = GlobalData::IsExist("task.grid_type") ? GlobalData::GetString("task.grid_type") : "";
+		GridType grid_type = GridType::Unkown;
+		FieldSolverType solver_type = FieldSolverType::NS_Struct;
+		Dimension dim = Dimension::three;
 		if (GlobalData::GetInt("task.dimension") == 2)
 			dim = Dimension::two;
 		else if (GlobalData::GetInt("task.dimension") == 3)

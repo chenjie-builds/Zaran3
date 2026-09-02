@@ -19,8 +19,10 @@ set( inc_dir
     ${PROJECT_SOURCE_DIR}/inc/Zone/Field
     ${PROJECT_SOURCE_DIR}/inc/Zone/Solver
     ${PROJECT_SOURCE_DIR}/inc/Zone/SolverParam
+    ${PROJECT_SOURCE_DIR}/inc/Zone/DEM
     ${PROJECT_SOURCE_DIR}/inc/Generator/Field
     ${PROJECT_SOURCE_DIR}/inc/Generator/Grid
+    ${PROJECT_SOURCE_DIR}/inc/Generator/DEM
     ${PROJECT_SOURCE_DIR}/inc/Basic/Common
     ${PROJECT_SOURCE_DIR}/inc/Basic/Data
     ${PROJECT_SOURCE_DIR}/inc/Basic/Math
@@ -31,6 +33,8 @@ set( inc_dir
     ${PROJECT_SOURCE_DIR}/inc/Basic/RiemannSolver
     ${PROJECT_SOURCE_DIR}/inc/Basic/Physics
     ${PROJECT_SOURCE_DIR}/inc/Basic/Utilities
+    ${PROJECT_SOURCE_DIR}/inc/Basic/DEM
+    ${PROJECT_SOURCE_DIR}/inc/Basic/DEM/ContactModel
     ${PROJECT_SOURCE_DIR}/inc/Main
 )
 add_executable( ${EXECUTABLE_NAME} )

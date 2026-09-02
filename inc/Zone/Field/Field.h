@@ -26,6 +26,7 @@ namespace zaran
 		NS_FlexibleNode,
 		NS_Structured,
 		NS_Zaran,
+		DEM,
 		Unset,
 	};
 	// 场类，包含网格，求解器，求解器参数，场数据
