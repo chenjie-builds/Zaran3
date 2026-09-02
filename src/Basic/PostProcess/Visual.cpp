@@ -1358,3 +1358,113 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<FieldManager> field_manager)
         Log::info("File name: {}", file_path.string());
     }
 }
+
+// ===== DEM particle VTP output =====
+#include "DEMField.h"
+
+namespace zaran
+{
+
+void Visual::WriteParticleVTP(shared_ptr<FieldManager> field_manager, int iter)
+{
+    // 找到第一个 DEMField
+    for (size_t i = 0; i < field_manager->GetFieldNum(); ++i)
+    {
+        auto f = std::dynamic_pointer_cast<DEMField>(field_manager->GetField(i));
+        if (!f) continue;
+
+        std::string work_dir    = GlobalData::GetString("work_dir");
+        std::string result_folder = GlobalData::IsExist("output.result_folder")
+                                        ? GlobalData::GetString("output.result_folder")
+                                        : "result";
+        std::string dir = work_dir + "/" + result_folder;
+        std::string filename = dir + "/particles_" + std::to_string(iter) + ".vtp";
+        WriteParticleVTP(*f->GetDEMData(), filename);
+        return;
+    }
+    Log::warn("Visual::WriteParticleVTP: no DEMField found in FieldManager");
+}
+
+void Visual::WriteParticleVTP(const DEMFieldData& dem_data, const std::string& filename)
+{
+    std::ofstream fout(filename);
+    if (!fout.is_open())
+    {
+        Log::warn("Visual::WriteParticleVTP: cannot open '{}'", filename);
+        return;
+    }
+
+    const auto& particles = dem_data.GetParticles();
+    const index_type N = particles.size();
+
+    fout << "<?xml version=\"1.0\"?>\n";
+    fout << "<VTKFile type=\"PolyData\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
+    fout << "  <PolyData>\n";
+    fout << "    <Piece NumberOfPoints=\"" << N << "\" NumberOfVerts=\"" << N << "\""
+         << " NumberOfLines=\"0\" NumberOfStrips=\"0\" NumberOfPolys=\"0\">\n";
+
+    // --- 点坐标 ---
+    fout << "      <Points>\n";
+    fout << "        <DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\"ascii\">\n";
+    for (const auto& p : particles)
+        fout << "          " << p.pos.x() << " " << p.pos.y() << " " << p.pos.z() << "\n";
+    fout << "        </DataArray>\n";
+    fout << "      </Points>\n";
+
+    // --- Verts (每个点作为一个 Vertex cell) ---
+    fout << "      <Verts>\n";
+    fout << "        <DataArray type=\"Int64\" Name=\"connectivity\" format=\"ascii\">\n";
+    fout << "          ";
+    for (index_type i = 0; i < N; ++i) fout << i << " ";
+    fout << "\n        </DataArray>\n";
+    fout << "        <DataArray type=\"Int64\" Name=\"offsets\" format=\"ascii\">\n";
+    fout << "          ";
+    for (index_type i = 1; i <= N; ++i) fout << i << " ";
+    fout << "\n        </DataArray>\n";
+    fout << "      </Verts>\n";
+
+    // --- 点数据 ---
+    fout << "      <PointData>\n";
+
+    // 半径
+    fout << "        <DataArray type=\"Float64\" Name=\"radius\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.radius << "\n";
+    fout << "        </DataArray>\n";
+
+    // 速度
+    fout << "        <DataArray type=\"Float64\" Name=\"velocity\" NumberOfComponents=\"3\" format=\"ascii\">\n";
+    for (const auto& p : particles)
+        fout << "          " << p.vel.x() << " " << p.vel.y() << " " << p.vel.z() << "\n";
+    fout << "        </DataArray>\n";
+
+    // 角速度
+    fout << "        <DataArray type=\"Float64\" Name=\"omega\" NumberOfComponents=\"3\" format=\"ascii\">\n";
+    for (const auto& p : particles)
+        fout << "          " << p.omega.x() << " " << p.omega.y() << " " << p.omega.z() << "\n";
+    fout << "        </DataArray>\n";
+
+    // 合力
+    fout << "        <DataArray type=\"Float64\" Name=\"force\" NumberOfComponents=\"3\" format=\"ascii\">\n";
+    for (const auto& p : particles)
+        fout << "          " << p.force.x() << " " << p.force.y() << " " << p.force.z() << "\n";
+    fout << "        </DataArray>\n";
+
+    // id
+    fout << "        <DataArray type=\"Int64\" Name=\"id\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.id << "\n";
+    fout << "        </DataArray>\n";
+
+    // group
+    fout << "        <DataArray type=\"Int32\" Name=\"group\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.group << "\n";
+    fout << "        </DataArray>\n";
+
+    fout << "      </PointData>\n";
+    fout << "    </Piece>\n";
+    fout << "  </PolyData>\n";
+    fout << "</VTKFile>\n";
+
+    Log::info("Visual::WriteParticleVTP: {} particles written to '{}'", N, filename);
+}
+
+} // namespace zaran
