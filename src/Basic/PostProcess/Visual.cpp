@@ -2,6 +2,7 @@
 #include "GlobalData.h"
 #include "Log.h"
 #include "NSFieldFN.h"
+#include "DEMField.h"
 #include <TECIO.h>
 #include <cgnslib.h>
 #include <filesystem>
@@ -1358,9 +1359,6 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<FieldManager> field_manager)
         Log::info("File name: {}", file_path.string());
     }
 }
-
-// ===== DEM particle VTP output =====
-#include "DEMField.h"
 
 namespace zaran
 {

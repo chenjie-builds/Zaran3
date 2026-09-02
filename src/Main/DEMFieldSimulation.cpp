@@ -108,9 +108,12 @@ void DEMFieldSimulation::SolveField()
         }
     }
 
-    // 最终输出
+    // 最终输出（若最后一步恰为输出步则跳过，避免重复）
     int final_iter = GlobalData::GetInt("dem.current_iter");
-    SaveFieldData(final_iter);
+    if (final_iter % output_iter != 0)
+    {
+        SaveFieldData(final_iter);
+    }
     Log::info("DEM simulation finished. Total iter={}", final_iter);
 }
 

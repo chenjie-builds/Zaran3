@@ -42,5 +42,6 @@ namespace zaran
         double restitution_coeff = 0.9;    ///< 法向恢复系数
 
         bool active = true; ///< 粒子是否参与计算（可用于标记固定边界粒子）
+        bool material_from_file = false; ///< 材料参数是否从文件显式指定（true 时 InitField 不覆盖）
     };
 } // namespace zaran

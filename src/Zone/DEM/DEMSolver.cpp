@@ -67,10 +67,14 @@ void DEMSolver::InitField()
             p.mass    = (4.0 / 3.0) * PI * std::pow(p.radius, 3) * rho;
             p.inertia = 0.4; // I = 2/5 m r²
         }
-        p.young_modulus     = para->GetYoungModulus();
-        p.poisson_ratio     = para->GetPoissonRatio();
-        p.friction_coeff    = para->GetFrictionCoeff();
-        p.restitution_coeff = para->GetRestitutionCoeff();
+        // 仅在粒子未从文件显式设置材料参数时，才使用全局参数覆盖
+        if (!p.material_from_file)
+        {
+            p.young_modulus     = para->GetYoungModulus();
+            p.poisson_ratio     = para->GetPoissonRatio();
+            p.friction_coeff    = para->GetFrictionCoeff();
+            p.restitution_coeff = para->GetRestitutionCoeff();
+        }
     }
     Log::info("DEMSolver InitField: {} particles", m_dem_data->GetParticleNum());
 }
@@ -87,8 +91,6 @@ void DEMSolver::Postprocess()
 
 void DEMSolver::Solve()
 {
-    double dt = GetDEMParam()->GetTimeStep();
-
     ZeroForce();
     ContactDetection();
     CalcContactForce();
@@ -198,8 +200,9 @@ void DEMSolver::CalcWallForce()
 
     for (auto& wall : walls)
     {
-        for (auto& pa : particles)
+        for (index_type pi = 0; pi < particles.size(); ++pi)
         {
+            DEMParticle& pa = particles[pi];
             if (!pa.active) continue;
             double d = wall.SignedDist(pa.pos);
             double overlap = pa.radius - d;
@@ -220,7 +223,7 @@ void DEMSolver::CalcWallForce()
 
             DEMContact c;
             c.type      = ContactType::ParticleWall;
-            c.idx_a     = 0;
+            c.idx_a     = pi;
             c.idx_b     = wall.id;
             c.overlap_n = overlap;
             c.normal    = wall.normal; // 法向从 A 指向墙

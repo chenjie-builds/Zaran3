@@ -9,6 +9,15 @@
 namespace zaran
 {
 
+std::string DEMFieldGenerator::GetParticleFilePath() const
+{
+    std::string work_dir  = GlobalData::GetString("work_dir");
+    std::string para_file = GlobalData::IsExist("dem.particle_file")
+                              ? GlobalData::GetString("dem.particle_file")
+                              : "particles.csv";
+    return work_dir + "/" + para_file;
+}
+
 shared_ptr<FieldManager> DEMFieldGenerator::Create()
 {
     shared_ptr<FieldManager> field_manager = make_shared<FieldManager>();
@@ -16,11 +25,7 @@ shared_ptr<FieldManager> DEMFieldGenerator::Create()
     dem_field->SetIdx(0);
     dem_field->Allocate();
 
-    std::string work_dir    = GlobalData::GetString("work_dir");
-    std::string para_file   = GlobalData::IsExist("dem.particle_file")
-                                ? GlobalData::GetString("dem.particle_file")
-                                : "particles.csv";
-    std::string full_path = work_dir + "/" + para_file;
+    std::string full_path = GetParticleFilePath();
 
     if (IsFileExist(full_path))
     {
@@ -43,11 +48,7 @@ shared_ptr<FieldManager> DEMFieldGenerator::Create()
 
 void DEMFieldGenerator::LoadParticlesFromFile(const shared_ptr<DEMField>& field) const
 {
-    std::string work_dir  = GlobalData::GetString("work_dir");
-    std::string para_file = GlobalData::IsExist("dem.particle_file")
-                              ? GlobalData::GetString("dem.particle_file")
-                              : "particles.csv";
-    std::string full_path = work_dir + "/" + para_file;
+    std::string full_path = GetParticleFilePath();
 
     ReadDEMParticle reader;
     std::vector<DEMParticle> particles;

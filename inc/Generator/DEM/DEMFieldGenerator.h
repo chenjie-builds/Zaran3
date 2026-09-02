@@ -25,6 +25,8 @@ namespace zaran
         shared_ptr<FieldManager> Create();
 
     private:
+        /// @brief 获取粒子文件的完整路径
+        std::string GetParticleFilePath() const;
         /// @brief 从 CSV 文件加载粒子
         void LoadParticlesFromFile(const shared_ptr<DEMField>& field) const;
         /// @brief 从包围盒范围随机生成粒子（CSV 文件不存在时使用）
