@@ -1,0 +1,46 @@
+version = "V1.0.0"
+
+[task]
+simulation = "SOLVE_FIELD"
+solver     = "DEM"
+
+[output]
+result_folder = "result"
+
+[init]
+backup_folder = "backup"
+
+# ─── DEM 参数 ─────────────────────────────────────────────────────────────────
+# 测试算例：单个小球在重力作用下自由下落，碰到底面后反弹。
+# 接触模型：线弹簧-阻尼（LinearSpringDashpot）
+# 时间步长与终止时间：
+#   - dt = 1e-5 s（足够小，保证刚度稳定性  dt < 2√(m/kn) ≈ 4.4e-4 s）
+#   - t_end = 0.30 s（覆盖初次落地并第一次弹起的完整过程）
+# ─────────────────────────────────────────────────────────────────────────────
+[dem]
+time_step        = 1e-5
+end_time         = 0.30
+max_iter         = 30000
+output_iter      = 1000
+contact_model    = "LinearSpringDashpot"
+particle_file    = "particles.csv"
+
+# 粒子材料参数（全局默认，粒子文件未显式指定时生效）
+young_modulus    = 1e7    # Pa
+poisson_ratio    = 0.30
+friction_coeff   = 0.40
+restitution_coeff= 0.90
+
+# 重力（仅 y 分量非零）
+gravity_x = 0.0
+gravity_y = -9.81
+gravity_z = 0.0
+
+# 计算域包围盒（生成墙面用）
+[dem.box]
+x_min = -0.05
+x_max =  0.05
+y_min =  0.00   # 底面（地板）
+y_max =  0.50
+z_min = -0.05
+z_max =  0.05
