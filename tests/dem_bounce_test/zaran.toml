@@ -18,9 +18,9 @@ backup_folder = "backup"
 #   - t_end = 0.30 s（覆盖初次落地并第一次弹起的完整过程）
 # ─────────────────────────────────────────────────────────────────────────────
 [dem]
-time_step        = 1e-6
-end_time         = 0.30
-max_iter         = 30000
+time_step        = 1e-5
+end_time         = 0.40
+max_iter         = 40000
 output_iter      = 1000
 contact_model    = "LinearSpringDashpot"
 particle_file    = "particles.csv"
@@ -30,6 +30,7 @@ young_modulus    = 1e7    # Pa
 poisson_ratio    = 0.30
 friction_coeff   = 0.40
 restitution_coeff= 0.90
+density          = 2500.0 # kg/m^3，mass=0 时用于计算球体质量
 
 # 重力（仅 y 分量非零）
 gravity_x = 0.0

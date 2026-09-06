@@ -1394,12 +1394,14 @@ void Visual::WriteParticleVTP(const DEMFieldData& dem_data, const std::string& f
 
     const auto& particles = dem_data.GetParticles();
     const index_type N = particles.size();
+    const auto& bonds = dem_data.GetBonds();
+    const index_type B = bonds.size();
 
     fout << "<?xml version=\"1.0\"?>\n";
     fout << "<VTKFile type=\"PolyData\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
     fout << "  <PolyData>\n";
     fout << "    <Piece NumberOfPoints=\"" << N << "\" NumberOfVerts=\"" << N << "\""
-         << " NumberOfLines=\"0\" NumberOfStrips=\"0\" NumberOfPolys=\"0\">\n";
+         << " NumberOfLines=\"" << B << "\" NumberOfStrips=\"0\" NumberOfPolys=\"0\">\n";
 
     // --- 点坐标 ---
     fout << "      <Points>\n";
@@ -1421,6 +1423,17 @@ void Visual::WriteParticleVTP(const DEMFieldData& dem_data, const std::string& f
     fout << "\n        </DataArray>\n";
     fout << "      </Verts>\n";
 
+    // 永久弹性键合以线单元输出。
+    fout << "      <Lines>\n";
+    fout << "        <DataArray type=\"Int64\" Name=\"connectivity\" format=\"ascii\">\n";
+    for (const auto& bond : bonds)
+        fout << "          " << bond.idx_a << " " << bond.idx_b << "\n";
+    fout << "        </DataArray>\n";
+    fout << "        <DataArray type=\"Int64\" Name=\"offsets\" format=\"ascii\">\n";
+    for (index_type i = 1; i <= B; ++i) fout << "          " << 2 * i << "\n";
+    fout << "        </DataArray>\n";
+    fout << "      </Lines>\n";
+
     // --- 点数据 ---
     fout << "      <PointData>\n";
 
@@ -1433,6 +1446,12 @@ void Visual::WriteParticleVTP(const DEMFieldData& dem_data, const std::string& f
     fout << "        <DataArray type=\"Float64\" Name=\"velocity\" NumberOfComponents=\"3\" format=\"ascii\">\n";
     for (const auto& p : particles)
         fout << "          " << p.vel.x() << " " << p.vel.y() << " " << p.vel.z() << "\n";
+    fout << "        </DataArray>\n";
+
+    // 累计转角
+    fout << "        <DataArray type=\"Float64\" Name=\"rotation\" NumberOfComponents=\"3\" format=\"ascii\">\n";
+    for (const auto& p : particles)
+        fout << "          " << p.rotation.x() << " " << p.rotation.y() << " " << p.rotation.z() << "\n";
     fout << "        </DataArray>\n";
 
     // 角速度
@@ -1458,6 +1477,22 @@ void Visual::WriteParticleVTP(const DEMFieldData& dem_data, const std::string& f
     fout << "        </DataArray>\n";
 
     fout << "      </PointData>\n";
+
+    fout << "      <CellData>\n";
+    fout << "        <DataArray type=\"Int64\" Name=\"bond_id\" format=\"ascii\">\n";
+    for (index_type i = 0; i < N; ++i) fout << "          -1\n";
+    for (const auto& bond : bonds) fout << "          " << bond.id << "\n";
+    fout << "        </DataArray>\n";
+    fout << "        <DataArray type=\"Float64\" Name=\"bond_extension\" format=\"ascii\">\n";
+    for (index_type i = 0; i < N; ++i) fout << "          0\n";
+    for (const auto& bond : bonds) fout << "          " << bond.extension << "\n";
+    fout << "        </DataArray>\n";
+    fout << "        <DataArray type=\"Float64\" Name=\"bond_force_a\" NumberOfComponents=\"3\" format=\"ascii\">\n";
+    for (index_type i = 0; i < N; ++i) fout << "          0 0 0\n";
+    for (const auto& bond : bonds)
+        fout << "          " << bond.force_a.x() << " " << bond.force_a.y() << " " << bond.force_a.z() << "\n";
+    fout << "        </DataArray>\n";
+    fout << "      </CellData>\n";
     fout << "    </Piece>\n";
     fout << "  </PolyData>\n";
     fout << "</VTKFile>\n";

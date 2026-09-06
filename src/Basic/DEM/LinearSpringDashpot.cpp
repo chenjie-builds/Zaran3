@@ -9,9 +9,9 @@ void LinearSpringDashpot::CalcNormalStiffness(const DEMParticle& pa, const DEMPa
                                                double& k_n, double& c_n) const
 {
     // 等效杨氏模量：1/E* = (1-νa²)/Ea + (1-νb²)/Eb
-    double E_a = pa.young_modulus * (1.0 - pa.poisson_ratio * pa.poisson_ratio);
-    double E_b = pb.young_modulus * (1.0 - pb.poisson_ratio * pb.poisson_ratio);
-    double E_star = 1.0 / (1.0 / E_a + 1.0 / E_b);
+    double inv_E = (1.0 - pa.poisson_ratio * pa.poisson_ratio) / pa.young_modulus
+                 + (1.0 - pb.poisson_ratio * pb.poisson_ratio) / pb.young_modulus;
+    double E_star = 1.0 / inv_E;
 
     // 等效半径
     double R_star = (pa.radius * pb.radius) / (pa.radius + pb.radius);
@@ -20,7 +20,13 @@ void LinearSpringDashpot::CalcNormalStiffness(const DEMParticle& pa, const DEMPa
     k_n = 2.0 * E_star * R_star;
 
     // 等效质量
-    double m_eff = (pa.mass * pb.mass) / (pa.mass + pb.mass);
+    double m_eff = 0.0;
+    if (!pa.IsDynamic())
+        m_eff = pb.mass;
+    else if (!pb.IsDynamic())
+        m_eff = pa.mass;
+    else
+        m_eff = (pa.mass * pb.mass) / (pa.mass + pb.mass);
 
     // 阻尼系数 c = 2 * beta * sqrt(m_eff * k_n)，使用恢复系数换算 beta
     // beta = -ln(e) / sqrt(pi² + ln²(e))

@@ -48,8 +48,7 @@ void DEMSolver::InitSolver()
     }
     else
     {
-        Log::warn("DEMSolver: unknown contact model '{}', fallback to HertzMindlin", model_name);
-        m_contact_model = make_unique<HertzMindlin>();
+        throw ZaranError("Unknown DEM contact model: " + model_name);
     }
 }
 
@@ -59,14 +58,17 @@ void DEMSolver::InitField()
     // 将默认材料参数应用到每个粒子（若粒子未显式指定则用全局值）
     for (auto& p : m_dem_data->GetParticles())
     {
+        if (p.radius <= 0.0 || p.inertia <= 0.0)
+            throw ZaranError("DEM particle radius and inertia factor must be positive");
         if (p.mass <= 0.0)
         {
-            // 默认球体：m = 4/3 π r³ ρ，这里 ρ 由 young_modulus 量级代替（仅占位）
-            // 实际密度应由粒子文件给出；这里只是防御性补零
-            double rho = 2500.0; // kg/m³
+            // 默认球体：m = 4/3 π r³ ρ
+            double rho = para->GetDensity();
             p.mass    = (4.0 / 3.0) * PI * std::pow(p.radius, 3) * rho;
             p.inertia = 0.4; // I = 2/5 m r²
         }
+        if (!p.pos.allFinite() || !p.vel.allFinite() || !p.omega.allFinite())
+            throw ZaranError("DEM particle state contains a non-finite value");
         // 仅在粒子未从文件显式设置材料参数时，才使用全局参数覆盖
         if (!p.material_from_file)
         {
@@ -76,7 +78,17 @@ void DEMSolver::InitField()
             p.restitution_coeff = para->GetRestitutionCoeff();
         }
     }
-    Log::info("DEMSolver InitField: {} particles", m_dem_data->GetParticleNum());
+    for (const auto& bond : m_dem_data->GetBonds())
+    {
+        if (bond.idx_a >= m_dem_data->GetParticleNum()
+            || bond.idx_b >= m_dem_data->GetParticleNum()
+            || bond.idx_a == bond.idx_b || bond.rest_length <= 0.0
+            || bond.normal_stiffness < 0.0 || bond.tangential_stiffness < 0.0
+            || bond.normal_damping < 0.0 || bond.tangential_damping < 0.0)
+            throw ZaranError("DEM bond data are invalid");
+    }
+    Log::info("DEMSolver InitField: {} particles, {} bonds",
+              m_dem_data->GetParticleNum(), m_dem_data->GetBondNum());
 }
 
 void DEMSolver::Preprocess()
@@ -91,12 +103,84 @@ void DEMSolver::Postprocess()
 
 void DEMSolver::Solve()
 {
+    m_contacts_this_step.clear();
     ZeroForce();
+    CalcBondForce();
     ContactDetection();
     CalcContactForce();
     CalcWallForce();
+    PruneContactHistory();
     CalcGravity();
     Integrate();
+}
+
+void DEMSolver::CalcBondForce()
+{
+    auto& particles = m_dem_data->GetParticles();
+    const double dt = GetDEMParam()->GetTimeStep();
+    for (auto& bond : m_dem_data->GetBonds())
+    {
+        if (!bond.active) continue;
+        DEMParticle& pa = particles[bond.idx_a];
+        DEMParticle& pb = particles[bond.idx_b];
+        const Eigen::Vector3d separation = pb.pos - pa.pos;
+        const double length = separation.norm();
+        if (length <= 1.0e-15)
+            throw ZaranError("A DEM bond has coincident endpoints");
+
+        const Eigen::Vector3d normal = separation / length;
+        const Eigen::Vector3d arm_a = 0.5 * length * normal;
+        const Eigen::Vector3d arm_b = -arm_a;
+        Eigen::Vector3d relative_velocity = pa.vel + pa.omega.cross(arm_a)
+                                          - pb.vel - pb.omega.cross(arm_b);
+        const double velocity_n = relative_velocity.dot(normal);
+        const Eigen::Vector3d velocity_t = relative_velocity - velocity_n * normal;
+
+        bond.delta_t += velocity_t * dt;
+        bond.delta_t -= bond.delta_t.dot(normal) * normal;
+        bond.extension = length - bond.rest_length;
+
+        const Eigen::Vector3d force_n = (bond.normal_stiffness * bond.extension
+                                          - bond.normal_damping * velocity_n) * normal;
+        const Eigen::Vector3d force_t = -bond.tangential_stiffness * bond.delta_t
+                                        - bond.tangential_damping * velocity_t;
+        bond.force_a = force_n + force_t;
+
+        pa.force += bond.force_a;
+        pa.torque += arm_a.cross(force_t);
+        pb.force -= bond.force_a;
+        pb.torque += arm_b.cross(-force_t);
+    }
+}
+
+DEMSolver::ContactKey DEMSolver::MakeContactKey(const DEMContact& contact) const
+{
+    return std::make_tuple(static_cast<int>(contact.type), contact.idx_a, contact.idx_b);
+}
+
+void DEMSolver::RestoreContactHistory(DEMContact& contact) const
+{
+    const auto it = m_tangential_history.find(MakeContactKey(contact));
+    if (it != m_tangential_history.end())
+        contact.delta_t = it->second;
+}
+
+void DEMSolver::SaveContactHistory(const DEMContact& contact)
+{
+    const ContactKey key = MakeContactKey(contact);
+    m_tangential_history[key] = contact.delta_t;
+    m_contacts_this_step.insert(key);
+}
+
+void DEMSolver::PruneContactHistory()
+{
+    for (auto it = m_tangential_history.begin(); it != m_tangential_history.end();)
+    {
+        if (m_contacts_this_step.find(it->first) == m_contacts_this_step.end())
+            it = m_tangential_history.erase(it);
+        else
+            ++it;
+    }
 }
 
 void DEMSolver::ZeroForce()
@@ -117,30 +201,25 @@ void DEMSolver::ContactDetection()
 
     if (N == 0) return;
 
-    // 构建 KDTree（仅含 active 粒子）
+    // 固定粒子也进入邻域搜索；它们不积分，但仍可向活动粒子施加接触力。
     point_vec pts;
-    index_vec active_indices;
     pts.reserve(N);
-    active_indices.reserve(N);
     for (index_type i = 0; i < N; ++i)
     {
-        if (!particles[i].active) continue;
         pts.push_back({ particles[i].pos.x(), particles[i].pos.y(), particles[i].pos.z() });
-        active_indices.push_back(i);
     }
 
-    if (active_indices.size() < 2) return;
+    if (N < 2) return;
 
     KDTree kd(pts);
 
     // 对每个粒子 i，查询半径 = r_i + r_max_neighbor 内的邻居
     double r_max = 0.0;
-    for (auto i : active_indices)
-        r_max = std::max(r_max, particles[i].radius);
+    for (const auto& particle : particles)
+        r_max = std::max(r_max, particle.radius);
 
-    for (index_type ki = 0; ki < active_indices.size(); ++ki)
+    for (index_type i = 0; i < N; ++i)
     {
-        index_type i = active_indices[ki];
         const DEMParticle& pa = particles[i];
         coord_vec pt_i = { pa.pos.x(), pa.pos.y(), pa.pos.z() };
 
@@ -149,10 +228,11 @@ void DEMSolver::ContactDetection()
 
         for (index_type kj : neighbors)
         {
-            index_type j = active_indices[kj];
+            index_type j = kj;
             if (j <= i) continue; // 每对只算一次
 
             const DEMParticle& pb = particles[j];
+            if (!pa.IsDynamic() && !pb.IsDynamic()) continue;
             Eigen::Vector3d d = pb.pos - pa.pos;
             double dist = d.norm();
             double sum_r = pa.radius + pb.radius;
@@ -165,6 +245,7 @@ void DEMSolver::ContactDetection()
             c.overlap_n = sum_r - dist;
             c.normal    = d / dist; // n 从 A 指向 B
             c.contact_point = pa.pos + (pa.radius - 0.5 * c.overlap_n) * c.normal;
+            RestoreContactHistory(c);
             m_dem_data->AddContact(c);
         }
     }
@@ -183,12 +264,15 @@ void DEMSolver::CalcContactForce()
 
         m_contact_model->CalcNormalForce(pa, pb, c, dt);
         m_contact_model->CalcTangentialForce(pa, pb, c, dt);
+        SaveContactHistory(c);
 
         Eigen::Vector3d F = c.force_n + c.force_t;
 
         // 作用-反作用
-        if (pa.active) { pa.force += F; pa.torque += c.contact_point.cross(c.force_t) - pa.pos.cross(c.force_t); }
-        if (pb.active) { pb.force -= F; pb.torque -= c.contact_point.cross(c.force_t) - pb.pos.cross(c.force_t); }
+        pa.force += F;
+        pa.torque += c.contact_point.cross(c.force_t) - pa.pos.cross(c.force_t);
+        pb.force -= F;
+        pb.torque -= c.contact_point.cross(c.force_t) - pb.pos.cross(c.force_t);
     }
 }
 
@@ -203,7 +287,7 @@ void DEMSolver::CalcWallForce()
         for (index_type pi = 0; pi < particles.size(); ++pi)
         {
             DEMParticle& pa = particles[pi];
-            if (!pa.active) continue;
+            if (!pa.IsDynamic()) continue;
             double d = wall.SignedDist(pa.pos);
             double overlap = pa.radius - d;
             if (overlap <= 0.0) continue;
@@ -227,10 +311,12 @@ void DEMSolver::CalcWallForce()
             c.idx_b     = wall.id;
             c.overlap_n = overlap;
             c.normal    = -wall.normal; // 法向从 A 指向墙
-            c.contact_point = pa.pos - d * wall.normal;
+            c.contact_point = pa.pos - pa.radius * wall.normal;
+            RestoreContactHistory(c);
 
             m_contact_model->CalcNormalForce(pa, pb_wall, c, dt);
             m_contact_model->CalcTangentialForce(pa, pb_wall, c, dt);
+            SaveContactHistory(c);
 
             pa.force  += c.force_n + c.force_t;
             pa.torque += c.contact_point.cross(c.force_t) - pa.pos.cross(c.force_t);
@@ -243,7 +329,7 @@ void DEMSolver::CalcGravity()
     const Eigen::Vector3d& g = GetDEMParam()->GetGravity();
     for (auto& p : m_dem_data->GetParticles())
     {
-        if (p.active)
+        if (p.IsDynamic())
             p.force += p.mass * g;
     }
 }
@@ -254,13 +340,19 @@ void DEMSolver::Integrate()
     for (auto& p : m_dem_data->GetParticles())
     {
         if (!p.active) continue;
-        // Velocity-Verlet（半步速度已在上一步末尾完成；此处简化为前向 Euler，
-        //  完整 Verlet 需分两半步—可在后续迭代中完善）
+        if (p.kinematic)
+        {
+            p.rotation += p.omega * dt;
+            p.pos += p.vel * dt;
+            continue;
+        }
+        // 半隐式 Euler：先更新速度，再用新速度更新位置。
         Eigen::Vector3d acc   = p.force  / p.mass;
         Eigen::Vector3d alpha = p.torque / (p.inertia * p.mass * p.radius * p.radius);
 
         p.vel   += acc   * dt;
         p.omega += alpha * dt;
+        p.rotation += p.omega * dt;
         p.pos   += p.vel * dt;
         
     }
@@ -280,7 +372,7 @@ void DEMSolver::BackupField(const std::string& back_folder) const
         Log::warn("DEMSolver::BackupField: cannot open {}", fname);
         return;
     }
-    fout << "variables=id,group,radius,mass,px,py,pz,vx,vy,vz,ox,oy,oz\n";
+    fout << "id,group,radius,mass,px,py,pz,vx,vy,vz,rx,ry,rz,ox,oy,oz,fx,fy,fz,motion_type\n";
     for (const auto& p : m_dem_data->GetParticles())
     {
         fout << p.id    << ","
@@ -289,9 +381,32 @@ void DEMSolver::BackupField(const std::string& back_folder) const
              << p.mass  << ","
              << p.pos.x()   << "," << p.pos.y()   << "," << p.pos.z()   << ","
              << p.vel.x()   << "," << p.vel.y()   << "," << p.vel.z()   << ","
-             << p.omega.x() << "," << p.omega.y() << "," << p.omega.z() << "\n";
+             << p.rotation.x() << "," << p.rotation.y() << "," << p.rotation.z() << ","
+             << p.omega.x() << "," << p.omega.y() << "," << p.omega.z() << ","
+             << p.force.x() << "," << p.force.y() << "," << p.force.z() << ","
+             << (p.kinematic ? 2 : (p.active ? 1 : 0)) << "\n";
     }
-    Log::info("DEMSolver::BackupField: {} particles written to {}", m_dem_data->GetParticleNum(), fname);
+    fout.close();
+
+    const std::string bond_name = back_folder + "/bonds.dat";
+    std::ofstream bond_out(bond_name);
+    if (!bond_out.is_open())
+    {
+        Log::warn("DEMSolver::BackupField: cannot open {}", bond_name);
+        return;
+    }
+    bond_out << "id,particle_a_id,particle_b_id,rest_length,extension,fx,fy,fz,active\n";
+    const auto& particles = m_dem_data->GetParticles();
+    for (const auto& bond : m_dem_data->GetBonds())
+    {
+        bond_out << bond.id << "," << particles[bond.idx_a].id << ","
+                 << particles[bond.idx_b].id << "," << bond.rest_length << ","
+                 << bond.extension << "," << bond.force_a.x() << ","
+                 << bond.force_a.y() << "," << bond.force_a.z() << ","
+                 << (bond.active ? 1 : 0) << "\n";
+    }
+    Log::info("DEMSolver::BackupField: {} particles and {} bonds written to {}",
+              m_dem_data->GetParticleNum(), m_dem_data->GetBondNum(), back_folder);
 }
 
 } // namespace zaran

@@ -14,9 +14,10 @@
 #include "DEMParticle.h"
 #include "DEMWall.h"
 #include "DEMContact.h"
+#include "DEMBond.h"
 namespace zaran
 {
-    /// @brief DEM 场数据：粒子数组 + 墙面数组 + 当前接触对列表
+    /// @brief DEM 场数据：粒子、墙面、当前接触对和永久弹性键合
     class DEMFieldData
     {
     public:
@@ -49,9 +50,16 @@ namespace zaran
         dynamic_array<DEMContact>& GetContacts() { return m_contacts; }
         const dynamic_array<DEMContact>& GetContacts() const { return m_contacts; }
 
+        // --- 永久键合管理 ---
+        void AddBond(const DEMBond& bond) { m_bonds.push_back(bond); }
+        index_type GetBondNum() const { return m_bonds.size(); }
+        dynamic_array<DEMBond>& GetBonds() { return m_bonds; }
+        const dynamic_array<DEMBond>& GetBonds() const { return m_bonds; }
+
     private:
         dynamic_array<DEMParticle> m_particles;
         dynamic_array<DEMWall>     m_walls;
         dynamic_array<DEMContact>  m_contacts;
+        dynamic_array<DEMBond>     m_bonds;
     };
 } // namespace zaran

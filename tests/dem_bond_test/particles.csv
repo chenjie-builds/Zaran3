@@ -1,0 +1,3 @@
+id,group,radius,mass,px,py,pz,vx,vy,vz,ox,oy,oz,motion_type
+10,0,0.01,1.0,0.0,0,0,0,0,0,0,0,0,0
+20,0,0.01,1.0,0.1,0,0,0,0,0,0,0,0,1

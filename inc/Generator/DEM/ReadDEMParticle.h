@@ -19,8 +19,10 @@ namespace zaran
     ///
     /// CSV 文件格式（首行为表头，忽略或兼容）：
     ///   id, group, radius, mass, px, py, pz, vx, vy, vz, ox, oy, oz
+    /// 可选列：motion_type, young_modulus, poisson_ratio, friction_coeff, restitution_coeff
+    /// motion_type: 0=固定，1=动力学，2=按输入速度运动的运动学粒子。
     ///
-    /// 若缺少速度/角速度列，默认为零。
+    /// mass 为 0 时，求解器根据 dem.density 计算质量。
     class ReadDEMParticle
     {
     public:

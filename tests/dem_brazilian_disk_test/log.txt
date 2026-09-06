@@ -1,0 +1,21 @@
+[09/06/26 15:23:54] [info] Start Logger
+[09/06/26 15:23:54] [info] Log file path: ..\..\tests\dem_brazilian_disk_test\\log.txt
+[09/06/26 15:23:54] [info] ********Zaran: A Totally Automatic CFD Software!********
+[09/06/26 15:23:54] [info] >>>>>>>>Control File Version: V4.1.0<<<<<<<<
+[09/06/26 15:23:54] [info] >>>>>>>>Simulation Task: SOLVE_FIELD<<<<<<<<
+[09/06/26 15:23:54] [info] ReadDEMParticle: loaded 139 particles from '..\..\tests\dem_brazilian_disk_test\/particles.csv'
+[09/06/26 15:23:54] [info] ReadDEMBond: loaded 222 bonds from '..\..\tests\dem_brazilian_disk_test\/bonds.csv'
+[09/06/26 15:23:54] [info] DEMFieldGenerator: created DEMField with 139 particles, 222 bonds, 6 walls
+[09/06/26 15:23:54] [info] DEM SolverParam Init: dt=1.000000E-05, contact_model=LinearSpringDashpot, particle_file=particles.csv
+[09/06/26 15:23:54] [info] DEMSolver: contact model = LinearSpringDashpot
+[09/06/26 15:23:54] [info] DEMSolver InitField: 139 particles, 222 bonds
+[09/06/26 15:23:54] [info] DEMFieldSimulation: initialized with 139 particles
+[09/06/26 15:23:54] [info] Visual::WriteParticleVTP: 139 particles written to '..\..\tests\dem_brazilian_disk_test\/result/particles_0.vtp'
+[09/06/26 15:23:54] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to ..\..\tests\dem_brazilian_disk_test\/backup/iter=0
+[09/06/26 15:24:18] [info] DEM iter=2500, time=2.500000E-02, particles=139
+[09/06/26 15:24:18] [info] Visual::WriteParticleVTP: 139 particles written to '..\..\tests\dem_brazilian_disk_test\/result/particles_2500.vtp'
+[09/06/26 15:24:18] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to ..\..\tests\dem_brazilian_disk_test\/backup/iter=2500
+[09/06/26 15:24:41] [info] DEM iter=5000, time=5.000000E-02, particles=139
+[09/06/26 15:24:41] [info] Visual::WriteParticleVTP: 139 particles written to '..\..\tests\dem_brazilian_disk_test\/result/particles_5000.vtp'
+[09/06/26 15:24:41] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to ..\..\tests\dem_brazilian_disk_test\/backup/iter=5000
+[09/06/26 15:24:41] [info] DEM simulation finished. Total iter=5000

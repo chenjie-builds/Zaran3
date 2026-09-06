@@ -29,6 +29,7 @@ namespace zaran
         // 状态量
         Eigen::Vector3d pos   = Eigen::Vector3d::Zero();  ///< 质心位置 (m)
         Eigen::Vector3d vel   = Eigen::Vector3d::Zero();  ///< 平动速度 (m/s)
+        Eigen::Vector3d rotation = Eigen::Vector3d::Zero(); ///< 累积转角 (rad)
         Eigen::Vector3d omega = Eigen::Vector3d::Zero();  ///< 角速度 (rad/s)
 
         // 力/力矩（每步清零后累积）
@@ -42,6 +43,9 @@ namespace zaran
         double restitution_coeff = 0.9;    ///< 法向恢复系数
 
         bool active = true; ///< 粒子是否参与计算（可用于标记固定边界粒子）
+        bool kinematic = false; ///< 是否按给定速度运动而不受力加速度影响
         bool material_from_file = false; ///< 材料参数是否从文件显式指定（true 时 InitField 不覆盖）
+
+        bool IsDynamic() const { return active && !kinematic; }
     };
 } // namespace zaran

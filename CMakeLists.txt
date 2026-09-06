@@ -38,8 +38,7 @@ set( inc_dir
     ${PROJECT_SOURCE_DIR}/inc/Main
 )
 add_executable( ${EXECUTABLE_NAME} )
-file( GLOB_RECURSE
-    src_file
+file( GLOB_RECURSE src_file CONFIGURE_DEPENDS
     src/*.cpp
 )
 message( STATUS "source files:" ${src_file} )

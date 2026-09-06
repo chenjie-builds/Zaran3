@@ -14,6 +14,9 @@
 #include "DEMFieldData.h"
 #include "DEMSolverParam.h"
 #include "ContactModel.h"
+#include <map>
+#include <set>
+#include <tuple>
 namespace zaran
 {
     /// @brief DEM 求解器，继承 FieldSolver 基类
@@ -55,11 +58,21 @@ namespace zaran
         void ContactDetection();
         void CalcContactForce();
         void CalcWallForce();
+        void CalcBondForce();
         void CalcGravity();
         void Integrate();
 
     private:
+        using ContactKey = std::tuple<int, index_type, index_type>;
+
+        ContactKey MakeContactKey(const DEMContact& contact) const;
+        void RestoreContactHistory(DEMContact& contact) const;
+        void SaveContactHistory(const DEMContact& contact);
+        void PruneContactHistory();
+
         shared_ptr<DEMFieldData>   m_dem_data;
         unique_ptr<ContactModel>   m_contact_model;
+        std::map<ContactKey, Eigen::Vector3d> m_tangential_history;
+        std::set<ContactKey> m_contacts_this_step;
     };
 } // namespace zaran

@@ -37,6 +37,7 @@ namespace zaran
         double GetPoissonRatio()     const { return m_poisson_ratio; }
         double GetFrictionCoeff()    const { return m_friction_coeff; }
         double GetRestitutionCoeff() const { return m_restitution_coeff; }
+        double GetDensity()          const { return m_density; }
 
     private:
         double         m_dt             = 1.0e-6;
@@ -51,5 +52,6 @@ namespace zaran
         double m_poisson_ratio     = 0.3;
         double m_friction_coeff    = 0.4;
         double m_restitution_coeff = 0.9;
+        double m_density             = 2500.0;
     };
 } // namespace zaran

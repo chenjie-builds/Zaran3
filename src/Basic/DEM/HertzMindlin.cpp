@@ -40,7 +40,13 @@ void HertzMindlin::CalcNormalForce(const DEMParticle& pa, const DEMParticle& pb,
     double k_n = 2.0 * E_star * std::sqrt(R_star * delta);
 
     // 等效质量
-    double m_eff = (pa.mass * pb.mass) / (pa.mass + pb.mass);
+    double m_eff = 0.0;
+    if (!pa.IsDynamic())
+        m_eff = pb.mass;
+    else if (!pb.IsDynamic())
+        m_eff = pa.mass;
+    else
+        m_eff = (pa.mass * pb.mass) / (pa.mass + pb.mass);
 
     // 临界阻尼比（基于恢复系数）
     double e = std::min(pa.restitution_coeff, pb.restitution_coeff);
