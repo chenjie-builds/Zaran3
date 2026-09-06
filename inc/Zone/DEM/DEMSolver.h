@@ -17,6 +17,7 @@
 #include <map>
 #include <set>
 #include <tuple>
+#include <cstdint>
 namespace zaran
 {
     /// @brief DEM 求解器，继承 FieldSolver 基类
@@ -59,6 +60,11 @@ namespace zaran
         void CalcContactForce();
         void CalcWallForce();
         void CalcBondForce();
+        void CalcThermalReaction();
+        void CalcGasPressureForce();
+        double JwlPressure(const DEMParticle& particle, double gas_volume) const;
+        void UpdateGasSolidState(DEMParticle& particle) const;
+        void UpdateGasVoronoiMesh(bool force = false);
         void CalcGravity();
         void Integrate();
 
@@ -74,5 +80,23 @@ namespace zaran
         unique_ptr<ContactModel>   m_contact_model;
         std::map<ContactKey, Eigen::Vector3d> m_tangential_history;
         std::set<ContactKey> m_contacts_this_step;
+
+        struct GasVoronoiCell
+        {
+            std::vector<Eigen::Vector2d> vertices;
+            double area = 0.0;
+        };
+        struct GasVoronoiFace
+        {
+            index_type idx_a = 0;
+            index_type idx_b = 0;
+            double length = 0.0;
+            double area = 0.0;
+        };
+        std::vector<GasVoronoiCell> m_gas_voronoi_cells;
+        std::vector<GasVoronoiFace> m_gas_voronoi_faces;
+        std::uint64_t m_dem_step = 0;
+        bool m_voronoi_valid = false;
+        double m_lattice_spacing = 0.0;
     };
 } // namespace zaran

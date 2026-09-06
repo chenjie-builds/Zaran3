@@ -1,0 +1,5 @@
+backup/
+result/
+backup_lsm_fixed/
+result_lsm_fixed/
+log.txt

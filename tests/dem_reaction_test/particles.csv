@@ -1,0 +1,4 @@
+id,group,radius,mass,px,py,pz,vx,vy,vz,ox,oy,oz,motion_type,young_modulus,poisson_ratio,friction_coeff,restitution_coeff,energetic,temperature,reaction_progress,specific_heat,thermal_conductivity,reaction_heat,arrhenius_prefactor,activation_temperature,heat_source
+1,1,0.01,1.0,0,0,0,0,0,0,0,0,0,0,1e7,0.3,0,1,1,600,0,1000,0,100000,10,0,0
+2,0,0.01,1.0,0.2,0,0,0,0,0,0,0,0,0,1e7,0.3,0,1,0,400,0,1000,10,0,0,0,0
+3,0,0.01,1.0,0.3,0,0,0,0,0,0,0,0,0,1e7,0.3,0,1,0,300,0,1000,10,0,0,0,0

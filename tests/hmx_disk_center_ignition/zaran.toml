@@ -1,0 +1,68 @@
+version = "V4.1.0"
+
+[task]
+simulation = "SOLVE_FIELD"
+solver = "DEM"
+
+[output]
+result_folder = "result"
+
+[init]
+backup_folder = "backup"
+
+[dem]
+time_step = 1e-7
+end_time = 8e-4
+max_iter = 8000
+output_iter = 1000
+contact_model = "LinearSpringDashpot"
+particle_file = "particles.csv"
+bond_file = "bonds.csv"
+density = 1890.0
+young_modulus = 2.8764e10
+poisson_ratio = 0.20
+friction_coeff = 0.10
+restitution_coeff = 0.90
+gravity_x = 0.0
+gravity_y = 0.0
+gravity_z = 0.0
+
+reaction_enabled = true
+ignition_temperature = 500.0
+ignition_center_x = 0.0
+ignition_center_y = 0.0
+ignition_center_z = 0.0
+ignition_radius = 0.0021
+ignition_center_temperature = 1800.0
+mixed_phase_threshold = 0.001
+burnout_threshold = 0.99
+max_temperature = 8000.0
+lattice_thickness = 0.10
+internal_heat_limit = 0.25
+
+# A/B/R1/R2/omega 来自 LSM 源码中的 HMX 基 PBX 注释值。
+jwl_a = 8.545e11
+jwl_b = 2.493e10
+jwl_r1 = 4.60
+jwl_r2 = 1.35
+jwl_omega = 0.25
+pressure_cap = 1.0e5
+
+# 用户未提供 HMX 压力燃速系数。这里保留加速回归参数，用来在 8000 步内验证
+# 中心点火、邻点引燃、气固共存核心退缩和键损伤的完整程序路径，不用于定量预测。
+burn_a = 1.0e5
+burn_b = 1.19
+burn_pressure_threshold = 9.0e4
+burn_temperature_threshold = 1000.0
+gas_temperature_reference = 3000.0
+bond_break_strain = 0.002
+bond_peak_strain = 0.0005
+reaction_weakening = 0.80
+
+[dem.box]
+x_min = -0.1
+x_max = 0.1
+y_min = -0.1
+y_max = 0.1
+z_min = -0.1
+z_max = 0.1

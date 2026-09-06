@@ -61,8 +61,9 @@ void ReadDEMParticle::ReadCSV(const std::string& filename,
         double optional_value = 0.0;
         while (ss >> optional_value)
             optional.push_back(optional_value);
-        if (!ss.eof() || (optional.size() != 0 && optional.size() != 1 && optional.size() != 5))
-            throw std::runtime_error("ReadDEMParticle: expected 13, 14, or 18 fields at line "
+        if (!ss.eof() || (optional.size() != 0 && optional.size() != 1
+                          && optional.size() != 5 && optional.size() != 14))
+            throw std::runtime_error("ReadDEMParticle: expected 13, 14, 18, or 27 fields at line "
                                      + std::to_string(line_number));
         if (!optional.empty())
         {
@@ -72,13 +73,28 @@ void ReadDEMParticle::ReadCSV(const std::string& filename,
             p.active = optional[0] != 0.0;
             p.kinematic = optional[0] == 2.0;
         }
-        if (optional.size() == 5)
+        if (optional.size() == 5 || optional.size() == 14)
         {
             p.young_modulus = optional[1];
             p.poisson_ratio = optional[2];
             p.friction_coeff = optional[3];
             p.restitution_coeff = optional[4];
             p.material_from_file = true;
+        }
+        if (optional.size() == 14)
+        {
+            if (optional[5] != 0.0 && optional[5] != 1.0)
+                throw std::runtime_error("ReadDEMParticle: energetic must be 0 or 1 at line "
+                                         + std::to_string(line_number));
+            p.energetic = optional[5] != 0.0;
+            p.temperature = optional[6];
+            p.reaction_progress = optional[7];
+            p.specific_heat = optional[8];
+            p.thermal_conductivity = optional[9];
+            p.reaction_heat = optional[10];
+            p.arrhenius_prefactor = optional[11];
+            p.activation_temperature = optional[12];
+            p.heat_source = optional[13];
         }
 
         if (p.radius <= 0.0 || p.mass < 0.0 || !p.pos.allFinite()
@@ -93,6 +109,13 @@ void ReadDEMParticle::ReadCSV(const std::string& filename,
              || p.friction_coeff < 0.0 || p.restitution_coeff <= 0.0
              || p.restitution_coeff > 1.0))
             throw std::runtime_error("ReadDEMParticle: invalid material values at line "
+                                     + std::to_string(line_number));
+        if (optional.size() == 14
+            && (p.temperature <= 0.0 || p.reaction_progress < 0.0
+                || p.reaction_progress > 1.0 || p.specific_heat <= 0.0
+                || p.thermal_conductivity < 0.0 || p.reaction_heat < 0.0
+                || p.arrhenius_prefactor < 0.0 || p.activation_temperature < 0.0))
+            throw std::runtime_error("ReadDEMParticle: invalid thermal/reaction values at line "
                                      + std::to_string(line_number));
         p.inertia = 0.4; // 2/5 (球体)
 

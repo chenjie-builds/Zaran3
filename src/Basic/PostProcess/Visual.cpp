@@ -1476,6 +1476,66 @@ void Visual::WriteParticleVTP(const DEMFieldData& dem_data, const std::string& f
     for (const auto& p : particles) fout << "          " << p.group << "\n";
     fout << "        </DataArray>\n";
 
+    fout << "        <DataArray type=\"Float64\" Name=\"temperature\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.temperature << "\n";
+    fout << "        </DataArray>\n";
+
+    fout << "        <DataArray type=\"Float64\" Name=\"reaction_progress\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.reaction_progress << "\n";
+    fout << "        </DataArray>\n";
+
+    fout << "        <DataArray type=\"Float64\" Name=\"reaction_rate\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.reaction_rate << "\n";
+    fout << "        </DataArray>\n";
+
+    fout << "        <DataArray type=\"Int32\" Name=\"phase\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.phase << "\n";
+    fout << "        </DataArray>\n";
+
+    fout << "        <DataArray type=\"Float64\" Name=\"gas_temperature\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.gas_temperature << "\n";
+    fout << "        </DataArray>\n";
+
+    fout << "        <DataArray type=\"Float64\" Name=\"gas_pressure\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.gas_pressure << "\n";
+    fout << "        </DataArray>\n";
+
+    fout << "        <DataArray type=\"Float64\" Name=\"volume_ratio\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.volume_ratio << "\n";
+    fout << "        </DataArray>\n";
+
+    fout << "        <DataArray type=\"Float64\" Name=\"solid_volume\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.solid_volume << "\n";
+    fout << "        </DataArray>\n";
+
+    fout << "        <DataArray type=\"Float64\" Name=\"gas_volume\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.gas_volume << "\n";
+    fout << "        </DataArray>\n";
+
+    fout << "        <DataArray type=\"Float64\" Name=\"solid_core_radius\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.solid_core_radius << "\n";
+    fout << "        </DataArray>\n";
+
+    fout << "        <DataArray type=\"Float64\" Name=\"gas_internal_energy\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.gas_internal_energy << "\n";
+    fout << "        </DataArray>\n";
+
+    fout << "        <DataArray type=\"Float64\" Name=\"internal_heat_transfer\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.internal_heat_transfer << "\n";
+    fout << "        </DataArray>\n";
+
+    fout << "        <DataArray type=\"Float64\" Name=\"body_reaction_increment\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.body_reaction_increment << "\n";
+    fout << "        </DataArray>\n";
+
+    fout << "        <DataArray type=\"Float64\" Name=\"core_burn_increment\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.core_burn_increment << "\n";
+    fout << "        </DataArray>\n";
+
+    fout << "        <DataArray type=\"Float64\" Name=\"neighbor_burn_increment\" format=\"ascii\">\n";
+    for (const auto& p : particles) fout << "          " << p.neighbor_burn_increment << "\n";
+    fout << "        </DataArray>\n";
+
     fout << "      </PointData>\n";
 
     fout << "      <CellData>\n";
@@ -1491,6 +1551,22 @@ void Visual::WriteParticleVTP(const DEMFieldData& dem_data, const std::string& f
     for (index_type i = 0; i < N; ++i) fout << "          0 0 0\n";
     for (const auto& bond : bonds)
         fout << "          " << bond.force_a.x() << " " << bond.force_a.y() << " " << bond.force_a.z() << "\n";
+    fout << "        </DataArray>\n";
+    fout << "        <DataArray type=\"Float64\" Name=\"bond_heat_flow_a\" format=\"ascii\">\n";
+    for (index_type i = 0; i < N; ++i) fout << "          0\n";
+    for (const auto& bond : bonds) fout << "          " << bond.heat_flow_a << "\n";
+    fout << "        </DataArray>\n";
+    fout << "        <DataArray type=\"Float64\" Name=\"bond_damage\" format=\"ascii\">\n";
+    for (index_type i = 0; i < N; ++i) fout << "          0\n";
+    for (const auto& bond : bonds) fout << "          " << bond.damage << "\n";
+    fout << "        </DataArray>\n";
+    fout << "        <DataArray type=\"Float64\" Name=\"bond_elastic_energy\" format=\"ascii\">\n";
+    for (index_type i = 0; i < N; ++i) fout << "          0\n";
+    for (const auto& bond : bonds) fout << "          " << bond.elastic_energy << "\n";
+    fout << "        </DataArray>\n";
+    fout << "        <DataArray type=\"Float64\" Name=\"bond_fracture_energy\" format=\"ascii\">\n";
+    for (index_type i = 0; i < N; ++i) fout << "          0\n";
+    for (const auto& bond : bonds) fout << "          " << bond.fracture_energy << "\n";
     fout << "        </DataArray>\n";
     fout << "      </CellData>\n";
     fout << "    </Piece>\n";

@@ -1,0 +1,76 @@
+version = "V4.1.0"
+
+[task]
+simulation = "SOLVE_FIELD"
+solver = "DEM"
+
+[output]
+result_folder = "result_lsm_fixed"
+
+[init]
+backup_folder = "backup_lsm_fixed"
+
+[dem]
+time_step = 1e-7
+end_time = 8e-4
+max_iter = 8000
+output_iter = 1000
+contact_model = "LinearSpringDashpot"
+particle_file = "particles.csv"
+bond_file = "bonds.csv"
+density = 1890.0
+young_modulus = 2.8764e10
+poisson_ratio = 0.20
+friction_coeff = 0.10
+restitution_coeff = 0.90
+gravity_x = 0.0
+gravity_y = 0.0
+gravity_z = 0.0
+reaction_enabled = true
+ignition_temperature = 500.0
+ignition_center_x = 0.0
+ignition_center_y = 0.0
+ignition_center_z = 0.0
+ignition_radius = 0.001
+ignition_center_temperature = 1000.0
+mixed_phase_threshold = 0.001
+burnout_threshold = 0.99
+max_temperature = 8000.0
+lattice_thickness = 0.10
+internal_heat_limit = 0.25
+voronoi_enabled = true
+voronoi_update_interval = 100
+voronoi_max_volume_ratio = 4.0
+
+# HMX 固相、断裂与高压硬化参数。
+surface_energy = 1680.0
+grain_boundary_energy = 4.2
+high_pressure_rnn = 0.8
+high_pressure_knn = 10.0
+high_pressure_exponent = 1.0
+normal_viscosity = 100.0
+tangential_viscosity = 100.0
+jwl_a = 8.545e11
+jwl_b = 2.493e10
+jwl_r1 = 4.60
+jwl_r2 = 1.35
+jwl_omega = 0.25
+pressure_cap = 1.0e5
+# LSM initializers.f90 中 PBX-1/HMX 基材料使用的压力燃速参数。
+burn_a = 0.639
+burn_b = 1.19
+burn_pressure_threshold = 9.0e4
+burn_temperature_threshold = 1000.0
+gas_temperature_reference = 3000.0
+# surface_energy 启用 LSM LEP 能量断裂；应变参数只作为未提供表面能时的后备准则。
+bond_break_strain = 1.0e30
+bond_peak_strain = 1.0e30
+reaction_weakening = 0.0
+
+[dem.box]
+x_min = -0.05
+x_max = 0.05
+y_min = -0.05
+y_max = 0.05
+z_min = -0.01
+z_max = 0.01

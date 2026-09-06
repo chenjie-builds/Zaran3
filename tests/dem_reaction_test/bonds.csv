@@ -1,0 +1,2 @@
+id,particle_a_id,particle_b_id,rest_length,kn,kt,cn,ct,active,conduction_area
+1,2,3,0.1,0,0,0,0,1,0.01

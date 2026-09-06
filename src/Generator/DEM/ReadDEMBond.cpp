@@ -42,8 +42,14 @@ void ReadDEMBond::ReadCSV(const std::string& filename,
         if (ss.fail())
             throw std::runtime_error("ReadDEMBond: expected 9 fields at line "
                                      + std::to_string(line_number));
-        double extra = 0.0;
-        if (ss >> extra)
+        if (ss >> bond.conduction_area)
+        {
+            double extra = 0.0;
+            if (ss >> extra)
+                throw std::runtime_error("ReadDEMBond: too many fields at line "
+                                         + std::to_string(line_number));
+        }
+        if (!ss.eof())
             throw std::runtime_error("ReadDEMBond: too many fields at line "
                                      + std::to_string(line_number));
         if (active != 0 && active != 1)
@@ -58,7 +64,7 @@ void ReadDEMBond::ReadCSV(const std::string& filename,
                                      + std::to_string(line_number));
         if (bond.rest_length < 0.0 || bond.normal_stiffness < 0.0
             || bond.tangential_stiffness < 0.0 || bond.normal_damping < 0.0
-            || bond.tangential_damping < 0.0)
+            || bond.tangential_damping < 0.0 || bond.conduction_area < 0.0)
             throw std::runtime_error("ReadDEMBond: bond parameters must be non-negative");
         if (!bond_ids.insert(bond.id).second)
             throw std::runtime_error("ReadDEMBond: duplicate bond id");
