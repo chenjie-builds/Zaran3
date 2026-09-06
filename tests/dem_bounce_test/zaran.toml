@@ -1,4 +1,4 @@
-version = "V1.0.0"
+version = "V4.1.0"
 
 [task]
 simulation = "SOLVE_FIELD"
@@ -18,7 +18,7 @@ backup_folder = "backup"
 #   - t_end = 0.30 s（覆盖初次落地并第一次弹起的完整过程）
 # ─────────────────────────────────────────────────────────────────────────────
 [dem]
-time_step        = 1e-5
+time_step        = 1e-6
 end_time         = 0.30
 max_iter         = 30000
 output_iter      = 1000

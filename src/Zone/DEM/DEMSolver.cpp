@@ -21,7 +21,7 @@ DEMSolver::DEMSolver(index_type index,
 
 DEMSolverParam* DEMSolver::GetDEMParam() const
 {
-    return static_cast<DEMSolverParam*>(GetPara());
+    return static_cast<DEMSolverParam*>(const_cast<DEMSolver*>(this)->GetPara());
 }
 
 void DEMSolver::Init()
@@ -226,7 +226,7 @@ void DEMSolver::CalcWallForce()
             c.idx_a     = pi;
             c.idx_b     = wall.id;
             c.overlap_n = overlap;
-            c.normal    = wall.normal; // 法向从 A 指向墙
+            c.normal    = -wall.normal; // 法向从 A 指向墙
             c.contact_point = pa.pos - d * wall.normal;
 
             m_contact_model->CalcNormalForce(pa, pb_wall, c, dt);
@@ -262,6 +262,7 @@ void DEMSolver::Integrate()
         p.vel   += acc   * dt;
         p.omega += alpha * dt;
         p.pos   += p.vel * dt;
+        
     }
 }
 
@@ -272,14 +273,14 @@ void DEMSolver::BackupField(std::string& back_folder)
 
 void DEMSolver::BackupField(const std::string& back_folder) const
 {
-    std::string fname = back_folder + "/particles.csv";
+    std::string fname = back_folder + "/particles.dat";
     std::ofstream fout(fname);
     if (!fout.is_open())
     {
         Log::warn("DEMSolver::BackupField: cannot open {}", fname);
         return;
     }
-    fout << "id,group,radius,mass,px,py,pz,vx,vy,vz,ox,oy,oz\n";
+    fout << "variables=id,group,radius,mass,px,py,pz,vx,vy,vz,ox,oy,oz\n";
     for (const auto& p : m_dem_data->GetParticles())
     {
         fout << p.id    << ","

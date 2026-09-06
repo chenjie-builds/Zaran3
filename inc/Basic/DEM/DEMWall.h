@@ -1,4 +1,4 @@
-/**
+/**,,
  * Zaran	-	A Totally Automatic CFD Software
  * \file DEMWall.h
  * \brief DEMWall class, representing a planar boundary wall for DEM simulations.
@@ -17,7 +17,7 @@ namespace zaran
     struct DEMWall
     {
         index_type id = 0;              ///< 墙面编号
-        Eigen::Vector3d normal;         ///< 外法向（指向流体域）
+        Eigen::Vector3d normal;         ///< 内法向（指向墙内侧）
         Eigen::Vector3d point;          ///< 平面上一点
 
         // 材料参数（墙面侧）

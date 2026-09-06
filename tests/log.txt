@@ -1,0 +1,4 @@
+[09/02/26 17:53:01] [info] Start Logger
+[09/02/26 17:53:01] [info] Log file path: ..\..\tests\\log.txt
+[09/02/26 17:53:01] [error] Fatal error: Failed to parse control file: ..\..\tests\/zaran.toml : File could not be opened for reading
+	(error occurred at line 0, column 0 of '..\..\tests\/zaran.toml')

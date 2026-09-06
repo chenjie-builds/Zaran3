@@ -42,7 +42,9 @@ void LinearSpringDashpot::CalcNormalForce(const DEMParticle& pa, const DEMPartic
     double v_n_rel = rel_vel.dot(contact.normal);
 
     // F_n = -(k_n * δ + c_n * v_n_rel) * n  (排斥力，方向沿 -normal 作用于 A)
-    double Fn_mag = k_n * contact.overlap_n - c_n * v_n_rel;
+    double Fn_mag = k_n * contact.overlap_n + c_n * v_n_rel;
+    
+
     if (Fn_mag < 0.0) Fn_mag = 0.0; // 不允许拉力
 
     contact.force_n = -Fn_mag * contact.normal;

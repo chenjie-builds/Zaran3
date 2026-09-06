@@ -1,0 +1,846 @@
+[09/02/26 17:53:26] [info] Start Logger
+[09/02/26 17:53:26] [info] Log file path: E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test\log.txt
+[09/02/26 17:53:26] [info] ********Zaran: A Totally Automatic CFD Software!********
+[09/02/26 17:53:26] [info] >>>>>>>>Control File Version: V1.0.0<<<<<<<<
+[09/02/26 17:53:26] [warning] >>>>>>>>Control File is too old, please use new Control File!<<<<<<<<
+[09/02/26 17:53:26] [warning] >>>>>>>>The minus version Control File is:V4.0.0<<<<<<<<
+[09/02/26 17:53:26] [error] Fatal error: Control file version is too old
+[09/02/26 17:53:50] [info] Start Logger
+[09/02/26 17:53:50] [info] Log file path: E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test\log.txt
+[09/02/26 17:53:50] [info] ********Zaran: A Totally Automatic CFD Software!********
+[09/02/26 17:53:50] [info] >>>>>>>>Control File Version: V3.10.0<<<<<<<<
+[09/02/26 17:53:50] [warning] >>>>>>>>Control File is too old, please use new Control File!<<<<<<<<
+[09/02/26 17:53:50] [warning] >>>>>>>>The minus version Control File is:V4.0.0<<<<<<<<
+[09/02/26 17:53:50] [error] Fatal error: Control file version is too old
+[09/02/26 17:54:06] [info] Start Logger
+[09/02/26 17:54:06] [info] Log file path: E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test\log.txt
+[09/02/26 17:54:06] [info] ********Zaran: A Totally Automatic CFD Software!********
+[09/02/26 17:54:06] [info] >>>>>>>>Control File Version: V4.1.0<<<<<<<<
+[09/02/26 17:54:06] [info] >>>>>>>>Simulation Task: SOLVE_FIELD<<<<<<<<
+[09/02/26 17:54:06] [info] ReadDEMParticle: loaded 1 particles from 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/particles.csv'
+[09/02/26 17:54:06] [info] DEMFieldGenerator: created DEMField with 1 particles, 6 walls
+[09/02/26 17:54:06] [info] DEM SolverParam Init: dt=1.000000E-05, contact_model=LinearSpringDashpot, particle_file=particles.csv
+[09/02/26 17:54:06] [info] DEMSolver: contact model = LinearSpringDashpot
+[09/02/26 17:54:06] [info] DEMSolver InitField: 1 particles
+[09/02/26 17:54:06] [info] DEMFieldSimulation: initialized with 1 particles
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_0.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=0/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=1000, time=1.000000E-02, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_1000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=1000/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=2000, time=2.000000E-02, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_2000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=2000/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=3000, time=3.000000E-02, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_3000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=3000/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=4000, time=4.000000E-02, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_4000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=4000/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=5000, time=5.000000E-02, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_5000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=5000/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=6000, time=6.000000E-02, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_6000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=6000/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=7000, time=7.000000E-02, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_7000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=7000/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=8000, time=8.000000E-02, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_8000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=8000/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=9000, time=9.000000E-02, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_9000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=9000/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=10000, time=1.000000E-01, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_10000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=10000/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=11000, time=1.100000E-01, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_11000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=11000/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=12000, time=1.200000E-01, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_12000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=12000/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=13000, time=1.300000E-01, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_13000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=13000/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=14000, time=1.400000E-01, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_14000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=14000/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=15000, time=1.500000E-01, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_15000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=15000/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=16000, time=1.600000E-01, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_16000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=16000/particles.csv
+[09/02/26 17:54:06] [info] DEM iter=17000, time=1.700000E-01, particles=1
+[09/02/26 17:54:06] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_17000.vtp'
+[09/02/26 17:54:06] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=17000/particles.csv
+[09/02/26 17:54:07] [info] DEM iter=18000, time=1.800000E-01, particles=1
+[09/02/26 17:54:07] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_18000.vtp'
+[09/02/26 17:54:07] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=18000/particles.csv
+[09/02/26 17:54:07] [info] DEM iter=19000, time=1.900000E-01, particles=1
+[09/02/26 17:54:07] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_19000.vtp'
+[09/02/26 17:54:07] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=19000/particles.csv
+[09/02/26 17:54:07] [info] DEM iter=20000, time=2.000000E-01, particles=1
+[09/02/26 17:54:07] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_20000.vtp'
+[09/02/26 17:54:07] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=20000/particles.csv
+[09/02/26 17:54:07] [info] DEM iter=21000, time=2.100000E-01, particles=1
+[09/02/26 17:54:07] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_21000.vtp'
+[09/02/26 17:54:07] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=21000/particles.csv
+[09/02/26 17:54:07] [info] DEM iter=22000, time=2.200000E-01, particles=1
+[09/02/26 17:54:07] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_22000.vtp'
+[09/02/26 17:54:07] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=22000/particles.csv
+[09/02/26 17:54:07] [info] DEM iter=23000, time=2.300000E-01, particles=1
+[09/02/26 17:54:07] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_23000.vtp'
+[09/02/26 17:54:07] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=23000/particles.csv
+[09/02/26 17:54:07] [info] DEM iter=24000, time=2.400000E-01, particles=1
+[09/02/26 17:54:07] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_24000.vtp'
+[09/02/26 17:54:07] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=24000/particles.csv
+[09/02/26 17:54:07] [info] DEM iter=25000, time=2.500000E-01, particles=1
+[09/02/26 17:54:07] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_25000.vtp'
+[09/02/26 17:54:07] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=25000/particles.csv
+[09/02/26 17:54:07] [info] DEM iter=26000, time=2.600000E-01, particles=1
+[09/02/26 17:54:07] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_26000.vtp'
+[09/02/26 17:54:07] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=26000/particles.csv
+[09/02/26 17:54:07] [info] DEM iter=27000, time=2.700000E-01, particles=1
+[09/02/26 17:54:07] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_27000.vtp'
+[09/02/26 17:54:07] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=27000/particles.csv
+[09/02/26 17:54:07] [info] DEM iter=28000, time=2.800000E-01, particles=1
+[09/02/26 17:54:07] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_28000.vtp'
+[09/02/26 17:54:07] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=28000/particles.csv
+[09/02/26 17:54:07] [info] DEM iter=29000, time=2.900000E-01, particles=1
+[09/02/26 17:54:07] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_29000.vtp'
+[09/02/26 17:54:07] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=29000/particles.csv
+[09/02/26 17:54:07] [info] DEM iter=30000, time=3.000000E-01, particles=1
+[09/02/26 17:54:07] [info] Visual::WriteParticleVTP: 1 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_30000.vtp'
+[09/02/26 17:54:07] [info] DEMSolver::BackupField: 1 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=30000/particles.csv
+[09/02/26 17:54:07] [info] DEM simulation finished. Total iter=30000
+[09/02/26 18:48:53] [info] Start Logger
+[09/02/26 18:48:53] [info] Log file path: ..\..\tests\dem_bounce_test\\log.txt
+[09/02/26 18:48:53] [info] ********Zaran: A Totally Automatic CFD Software!********
+[09/02/26 18:48:53] [info] >>>>>>>>Control File Version: V4.1.0<<<<<<<<
+[09/02/26 18:48:53] [info] >>>>>>>>Simulation Task: SOLVE_FIELD<<<<<<<<
+[09/02/26 18:48:53] [info] ReadDEMParticle: loaded 1 particles from '..\..\tests\dem_bounce_test\/particles.csv'
+[09/02/26 18:48:53] [info] DEMFieldGenerator: created DEMField with 1 particles, 6 walls
+[09/02/26 18:48:53] [info] DEM SolverParam Init: dt=1.000000E-05, contact_model=LinearSpringDashpot, particle_file=particles.csv
+[09/02/26 18:48:53] [info] DEMSolver: contact model = LinearSpringDashpot
+[09/02/26 18:48:53] [info] DEMSolver InitField: 1 particles
+[09/02/26 18:48:53] [info] DEMFieldSimulation: initialized with 1 particles
+[09/02/26 18:48:53] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_0.vtp'
+[09/02/26 18:48:53] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=0/particles.dat
+[09/02/26 18:48:53] [info] DEM iter=1000, time=1.000000E-02, particles=1
+[09/02/26 18:48:53] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_1000.vtp'
+[09/02/26 18:48:53] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=1000/particles.dat
+[09/02/26 18:48:53] [info] DEM iter=2000, time=2.000000E-02, particles=1
+[09/02/26 18:48:53] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_2000.vtp'
+[09/02/26 18:48:53] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=2000/particles.dat
+[09/02/26 18:48:53] [info] DEM iter=3000, time=3.000000E-02, particles=1
+[09/02/26 18:48:53] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_3000.vtp'
+[09/02/26 18:48:53] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=3000/particles.dat
+[09/02/26 18:48:53] [info] DEM iter=4000, time=4.000000E-02, particles=1
+[09/02/26 18:48:53] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_4000.vtp'
+[09/02/26 18:48:53] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=4000/particles.dat
+[09/02/26 18:48:53] [info] DEM iter=5000, time=5.000000E-02, particles=1
+[09/02/26 18:48:53] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_5000.vtp'
+[09/02/26 18:48:53] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=5000/particles.dat
+[09/02/26 18:48:53] [info] DEM iter=6000, time=6.000000E-02, particles=1
+[09/02/26 18:48:53] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_6000.vtp'
+[09/02/26 18:48:53] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=6000/particles.dat
+[09/02/26 18:48:53] [info] DEM iter=7000, time=7.000000E-02, particles=1
+[09/02/26 18:48:53] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_7000.vtp'
+[09/02/26 18:48:53] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=7000/particles.dat
+[09/02/26 18:48:53] [info] DEM iter=8000, time=8.000000E-02, particles=1
+[09/02/26 18:48:53] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_8000.vtp'
+[09/02/26 18:48:53] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=8000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=9000, time=9.000000E-02, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_9000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=9000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=10000, time=1.000000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_10000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=10000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=11000, time=1.100000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_11000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=11000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=12000, time=1.200000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_12000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=12000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=13000, time=1.300000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_13000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=13000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=14000, time=1.400000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_14000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=14000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=15000, time=1.500000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_15000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=15000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=16000, time=1.600000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_16000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=16000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=17000, time=1.700000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_17000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=17000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=18000, time=1.800000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_18000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=18000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=19000, time=1.900000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_19000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=19000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=20000, time=2.000000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_20000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=20000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=21000, time=2.100000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_21000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=21000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=22000, time=2.200000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_22000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=22000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=23000, time=2.300000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_23000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=23000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=24000, time=2.400000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_24000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=24000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=25000, time=2.500000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_25000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=25000/particles.dat
+[09/02/26 18:48:54] [info] DEM iter=26000, time=2.600000E-01, particles=1
+[09/02/26 18:48:54] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_26000.vtp'
+[09/02/26 18:48:54] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=26000/particles.dat
+[09/02/26 18:48:55] [info] DEM iter=27000, time=2.700000E-01, particles=1
+[09/02/26 18:48:55] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_27000.vtp'
+[09/02/26 18:48:55] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=27000/particles.dat
+[09/02/26 18:48:55] [info] DEM iter=28000, time=2.800000E-01, particles=1
+[09/02/26 18:48:55] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_28000.vtp'
+[09/02/26 18:48:55] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=28000/particles.dat
+[09/02/26 18:48:55] [info] DEM iter=29000, time=2.900000E-01, particles=1
+[09/02/26 18:48:55] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_29000.vtp'
+[09/02/26 18:48:55] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=29000/particles.dat
+[09/02/26 18:48:55] [info] DEM iter=30000, time=3.000000E-01, particles=1
+[09/02/26 18:48:55] [info] Visual::WriteParticleVTP: 1 particles written to '..\..\tests\dem_bounce_test\/result/particles_30000.vtp'
+[09/02/26 18:48:55] [info] DEMSolver::BackupField: 1 particles written to ..\..\tests\dem_bounce_test\/backup/iter=30000/particles.dat
+[09/02/26 18:48:55] [info] DEM simulation finished. Total iter=30000
+[09/02/26 18:53:26] [info] Start Logger
+[09/02/26 18:53:26] [info] Log file path: ..\..\tests\dem_bounce_test\\log.txt
+[09/02/26 18:53:26] [info] ********Zaran: A Totally Automatic CFD Software!********
+[09/02/26 18:53:26] [info] >>>>>>>>Control File Version: V4.1.0<<<<<<<<
+[09/02/26 18:53:26] [info] >>>>>>>>Simulation Task: SOLVE_FIELD<<<<<<<<
+[09/02/26 18:53:26] [info] ReadDEMParticle: loaded 9 particles from '..\..\tests\dem_bounce_test\/particles.csv'
+[09/02/26 18:53:26] [info] DEMFieldGenerator: created DEMField with 9 particles, 6 walls
+[09/02/26 18:53:26] [info] DEM SolverParam Init: dt=1.000000E-05, contact_model=LinearSpringDashpot, particle_file=particles.csv
+[09/02/26 18:53:26] [info] DEMSolver: contact model = LinearSpringDashpot
+[09/02/26 18:53:26] [info] DEMSolver InitField: 9 particles
+[09/02/26 18:53:26] [info] DEMFieldSimulation: initialized with 9 particles
+[09/02/26 18:53:26] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_0.vtp'
+[09/02/26 18:53:26] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=0/particles.dat
+[09/02/26 18:53:27] [info] DEM iter=1000, time=1.000000E-02, particles=9
+[09/02/26 18:53:27] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_1000.vtp'
+[09/02/26 18:53:27] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=1000/particles.dat
+[09/02/26 18:53:27] [info] DEM iter=2000, time=2.000000E-02, particles=9
+[09/02/26 18:53:27] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_2000.vtp'
+[09/02/26 18:53:27] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=2000/particles.dat
+[09/02/26 18:53:27] [info] DEM iter=3000, time=3.000000E-02, particles=9
+[09/02/26 18:53:27] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_3000.vtp'
+[09/02/26 18:53:27] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=3000/particles.dat
+[09/02/26 18:53:28] [info] DEM iter=4000, time=4.000000E-02, particles=9
+[09/02/26 18:53:28] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_4000.vtp'
+[09/02/26 18:53:28] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=4000/particles.dat
+[09/02/26 18:53:28] [info] DEM iter=5000, time=5.000000E-02, particles=9
+[09/02/26 18:53:28] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_5000.vtp'
+[09/02/26 18:53:28] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=5000/particles.dat
+[09/02/26 18:53:29] [info] DEM iter=6000, time=6.000000E-02, particles=9
+[09/02/26 18:53:29] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_6000.vtp'
+[09/02/26 18:53:29] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=6000/particles.dat
+[09/02/26 18:53:29] [info] DEM iter=7000, time=7.000000E-02, particles=9
+[09/02/26 18:53:29] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_7000.vtp'
+[09/02/26 18:53:29] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=7000/particles.dat
+[09/02/26 18:53:29] [info] DEM iter=8000, time=8.000000E-02, particles=9
+[09/02/26 18:53:29] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_8000.vtp'
+[09/02/26 18:53:29] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=8000/particles.dat
+[09/02/26 18:53:30] [info] DEM iter=9000, time=9.000000E-02, particles=9
+[09/02/26 18:53:30] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_9000.vtp'
+[09/02/26 18:53:30] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=9000/particles.dat
+[09/02/26 18:53:30] [info] DEM iter=10000, time=1.000000E-01, particles=9
+[09/02/26 18:53:30] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_10000.vtp'
+[09/02/26 18:53:30] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=10000/particles.dat
+[09/02/26 18:53:31] [info] DEM iter=11000, time=1.100000E-01, particles=9
+[09/02/26 18:53:31] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_11000.vtp'
+[09/02/26 18:53:31] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=11000/particles.dat
+[09/02/26 18:53:32] [info] DEM iter=12000, time=1.200000E-01, particles=9
+[09/02/26 18:53:32] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_12000.vtp'
+[09/02/26 18:53:32] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=12000/particles.dat
+[09/02/26 18:53:33] [info] DEM iter=13000, time=1.300000E-01, particles=9
+[09/02/26 18:53:33] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_13000.vtp'
+[09/02/26 18:53:33] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=13000/particles.dat
+[09/02/26 18:53:33] [info] DEM iter=14000, time=1.400000E-01, particles=9
+[09/02/26 18:53:33] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_14000.vtp'
+[09/02/26 18:53:33] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=14000/particles.dat
+[09/02/26 18:53:34] [info] DEM iter=15000, time=1.500000E-01, particles=9
+[09/02/26 18:53:34] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_15000.vtp'
+[09/02/26 18:53:34] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=15000/particles.dat
+[09/02/26 18:53:35] [info] DEM iter=16000, time=1.600000E-01, particles=9
+[09/02/26 18:53:35] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_16000.vtp'
+[09/02/26 18:53:35] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=16000/particles.dat
+[09/02/26 18:53:36] [info] DEM iter=17000, time=1.700000E-01, particles=9
+[09/02/26 18:53:36] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_17000.vtp'
+[09/02/26 18:53:36] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=17000/particles.dat
+[09/02/26 18:53:38] [info] DEM iter=18000, time=1.800000E-01, particles=9
+[09/02/26 18:53:38] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_18000.vtp'
+[09/02/26 18:53:38] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=18000/particles.dat
+[09/02/26 18:53:39] [info] DEM iter=19000, time=1.900000E-01, particles=9
+[09/02/26 18:53:39] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_19000.vtp'
+[09/02/26 18:53:39] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=19000/particles.dat
+[09/02/26 18:53:41] [info] DEM iter=20000, time=2.000000E-01, particles=9
+[09/02/26 18:53:41] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_20000.vtp'
+[09/02/26 18:53:41] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=20000/particles.dat
+[09/02/26 18:53:43] [info] DEM iter=21000, time=2.100000E-01, particles=9
+[09/02/26 18:53:43] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_21000.vtp'
+[09/02/26 18:53:43] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=21000/particles.dat
+[09/02/26 18:53:44] [info] DEM iter=22000, time=2.200000E-01, particles=9
+[09/02/26 18:53:44] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_22000.vtp'
+[09/02/26 18:53:44] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=22000/particles.dat
+[09/02/26 18:53:45] [info] DEM iter=23000, time=2.300000E-01, particles=9
+[09/02/26 18:53:45] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_23000.vtp'
+[09/02/26 18:53:45] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=23000/particles.dat
+[09/02/26 18:53:47] [info] DEM iter=24000, time=2.400000E-01, particles=9
+[09/02/26 18:53:47] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_24000.vtp'
+[09/02/26 18:53:47] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=24000/particles.dat
+[09/02/26 18:53:48] [info] DEM iter=25000, time=2.500000E-01, particles=9
+[09/02/26 18:53:48] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_25000.vtp'
+[09/02/26 18:53:48] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=25000/particles.dat
+[09/02/26 18:53:50] [info] DEM iter=26000, time=2.600000E-01, particles=9
+[09/02/26 18:53:50] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_26000.vtp'
+[09/02/26 18:53:50] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=26000/particles.dat
+[09/02/26 18:53:51] [info] DEM iter=27000, time=2.700000E-01, particles=9
+[09/02/26 18:53:51] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_27000.vtp'
+[09/02/26 18:53:51] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=27000/particles.dat
+[09/02/26 18:53:53] [info] DEM iter=28000, time=2.800000E-01, particles=9
+[09/02/26 18:53:53] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_28000.vtp'
+[09/02/26 18:53:53] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=28000/particles.dat
+[09/02/26 18:53:54] [info] DEM iter=29000, time=2.900000E-01, particles=9
+[09/02/26 18:53:54] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_29000.vtp'
+[09/02/26 18:53:54] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=29000/particles.dat
+[09/02/26 18:53:56] [info] DEM iter=30000, time=3.000000E-01, particles=9
+[09/02/26 18:53:56] [info] Visual::WriteParticleVTP: 9 particles written to '..\..\tests\dem_bounce_test\/result/particles_30000.vtp'
+[09/02/26 18:53:56] [info] DEMSolver::BackupField: 9 particles written to ..\..\tests\dem_bounce_test\/backup/iter=30000/particles.dat
+[09/02/26 18:53:56] [info] DEM simulation finished. Total iter=30000
+[09/02/26 18:55:58] [info] Start Logger
+[09/02/26 18:55:58] [info] Log file path: E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test\log.txt
+[09/02/26 18:55:58] [info] ********Zaran: A Totally Automatic CFD Software!********
+[09/02/26 18:55:58] [info] >>>>>>>>Control File Version: V4.1.0<<<<<<<<
+[09/02/26 18:55:58] [info] >>>>>>>>Simulation Task: SOLVE_FIELD<<<<<<<<
+[09/02/26 18:55:58] [info] ReadDEMParticle: loaded 3 particles from 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/particles.csv'
+[09/02/26 18:55:58] [info] DEMFieldGenerator: created DEMField with 3 particles, 6 walls
+[09/02/26 18:55:58] [info] DEM SolverParam Init: dt=1.000000E-05, contact_model=LinearSpringDashpot, particle_file=particles.csv
+[09/02/26 18:55:58] [info] DEMSolver: contact model = LinearSpringDashpot
+[09/02/26 18:55:58] [info] DEMSolver InitField: 3 particles
+[09/02/26 18:55:58] [info] DEMFieldSimulation: initialized with 3 particles
+[09/02/26 18:55:58] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_0.vtp'
+[09/02/26 18:55:58] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=0/particles.csv
+[09/02/26 18:55:58] [info] DEM iter=1000, time=1.000000E-02, particles=3
+[09/02/26 18:55:58] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_1000.vtp'
+[09/02/26 18:55:58] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=1000/particles.csv
+[09/02/26 18:55:58] [info] DEM iter=2000, time=2.000000E-02, particles=3
+[09/02/26 18:55:58] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_2000.vtp'
+[09/02/26 18:55:58] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=2000/particles.csv
+[09/02/26 18:55:58] [info] DEM iter=3000, time=3.000000E-02, particles=3
+[09/02/26 18:55:58] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_3000.vtp'
+[09/02/26 18:55:58] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=3000/particles.csv
+[09/02/26 18:55:58] [info] DEM iter=4000, time=4.000000E-02, particles=3
+[09/02/26 18:55:58] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_4000.vtp'
+[09/02/26 18:55:58] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=4000/particles.csv
+[09/02/26 18:55:58] [info] DEM iter=5000, time=5.000000E-02, particles=3
+[09/02/26 18:55:58] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_5000.vtp'
+[09/02/26 18:55:58] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=5000/particles.csv
+[09/02/26 18:55:59] [info] DEM iter=6000, time=6.000000E-02, particles=3
+[09/02/26 18:55:59] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_6000.vtp'
+[09/02/26 18:55:59] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=6000/particles.csv
+[09/02/26 18:55:59] [info] DEM iter=7000, time=7.000000E-02, particles=3
+[09/02/26 18:55:59] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_7000.vtp'
+[09/02/26 18:55:59] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=7000/particles.csv
+[09/02/26 18:55:59] [info] DEM iter=8000, time=8.000000E-02, particles=3
+[09/02/26 18:55:59] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_8000.vtp'
+[09/02/26 18:55:59] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=8000/particles.csv
+[09/02/26 18:55:59] [info] DEM iter=9000, time=9.000000E-02, particles=3
+[09/02/26 18:55:59] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_9000.vtp'
+[09/02/26 18:55:59] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=9000/particles.csv
+[09/02/26 18:55:59] [info] DEM iter=10000, time=1.000000E-01, particles=3
+[09/02/26 18:55:59] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_10000.vtp'
+[09/02/26 18:55:59] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=10000/particles.csv
+[09/02/26 18:55:59] [info] DEM iter=11000, time=1.100000E-01, particles=3
+[09/02/26 18:55:59] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_11000.vtp'
+[09/02/26 18:55:59] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=11000/particles.csv
+[09/02/26 18:56:00] [info] DEM iter=12000, time=1.200000E-01, particles=3
+[09/02/26 18:56:00] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_12000.vtp'
+[09/02/26 18:56:00] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=12000/particles.csv
+[09/02/26 18:56:00] [info] DEM iter=13000, time=1.300000E-01, particles=3
+[09/02/26 18:56:00] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_13000.vtp'
+[09/02/26 18:56:00] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=13000/particles.csv
+[09/02/26 18:56:00] [info] DEM iter=14000, time=1.400000E-01, particles=3
+[09/02/26 18:56:00] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_14000.vtp'
+[09/02/26 18:56:00] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=14000/particles.csv
+[09/02/26 18:56:00] [info] DEM iter=15000, time=1.500000E-01, particles=3
+[09/02/26 18:56:00] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_15000.vtp'
+[09/02/26 18:56:00] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=15000/particles.csv
+[09/02/26 18:56:00] [info] DEM iter=16000, time=1.600000E-01, particles=3
+[09/02/26 18:56:00] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_16000.vtp'
+[09/02/26 18:56:00] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=16000/particles.csv
+[09/02/26 18:56:00] [info] DEM iter=17000, time=1.700000E-01, particles=3
+[09/02/26 18:56:00] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_17000.vtp'
+[09/02/26 18:56:00] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=17000/particles.csv
+[09/02/26 18:56:01] [info] DEM iter=18000, time=1.800000E-01, particles=3
+[09/02/26 18:56:01] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_18000.vtp'
+[09/02/26 18:56:01] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=18000/particles.csv
+[09/02/26 18:56:01] [info] DEM iter=19000, time=1.900000E-01, particles=3
+[09/02/26 18:56:01] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_19000.vtp'
+[09/02/26 18:56:01] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=19000/particles.csv
+[09/02/26 18:56:01] [info] DEM iter=20000, time=2.000000E-01, particles=3
+[09/02/26 18:56:01] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_20000.vtp'
+[09/02/26 18:56:01] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=20000/particles.csv
+[09/02/26 18:56:01] [info] DEM iter=21000, time=2.100000E-01, particles=3
+[09/02/26 18:56:01] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_21000.vtp'
+[09/02/26 18:56:01] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=21000/particles.csv
+[09/02/26 18:56:01] [info] DEM iter=22000, time=2.200000E-01, particles=3
+[09/02/26 18:56:01] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_22000.vtp'
+[09/02/26 18:56:01] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=22000/particles.csv
+[09/02/26 18:56:01] [info] DEM iter=23000, time=2.300000E-01, particles=3
+[09/02/26 18:56:01] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_23000.vtp'
+[09/02/26 18:56:01] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=23000/particles.csv
+[09/02/26 18:56:02] [info] DEM iter=24000, time=2.400000E-01, particles=3
+[09/02/26 18:56:02] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_24000.vtp'
+[09/02/26 18:56:02] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=24000/particles.csv
+[09/02/26 18:56:02] [info] DEM iter=25000, time=2.500000E-01, particles=3
+[09/02/26 18:56:02] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_25000.vtp'
+[09/02/26 18:56:02] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=25000/particles.csv
+[09/02/26 18:56:02] [info] DEM iter=26000, time=2.600000E-01, particles=3
+[09/02/26 18:56:02] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_26000.vtp'
+[09/02/26 18:56:02] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=26000/particles.csv
+[09/02/26 18:56:02] [info] DEM iter=27000, time=2.700000E-01, particles=3
+[09/02/26 18:56:02] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_27000.vtp'
+[09/02/26 18:56:02] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=27000/particles.csv
+[09/02/26 18:56:02] [info] DEM iter=28000, time=2.800000E-01, particles=3
+[09/02/26 18:56:02] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_28000.vtp'
+[09/02/26 18:56:02] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=28000/particles.csv
+[09/02/26 18:56:03] [info] DEM iter=29000, time=2.900000E-01, particles=3
+[09/02/26 18:56:03] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_29000.vtp'
+[09/02/26 18:56:03] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=29000/particles.csv
+[09/02/26 18:56:03] [info] DEM iter=30000, time=3.000000E-01, particles=3
+[09/02/26 18:56:03] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_30000.vtp'
+[09/02/26 18:56:03] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=30000/particles.csv
+[09/02/26 18:56:03] [info] DEM simulation finished. Total iter=30000
+[09/02/26 18:57:05] [info] Start Logger
+[09/02/26 18:57:05] [info] Log file path: E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test\log.txt
+[09/02/26 18:57:05] [info] ********Zaran: A Totally Automatic CFD Software!********
+[09/02/26 18:57:05] [info] >>>>>>>>Control File Version: V4.1.0<<<<<<<<
+[09/02/26 18:57:05] [info] >>>>>>>>Simulation Task: SOLVE_FIELD<<<<<<<<
+[09/02/26 18:57:05] [info] ReadDEMParticle: loaded 3 particles from 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/particles.csv'
+[09/02/26 18:57:05] [info] DEMFieldGenerator: created DEMField with 3 particles, 6 walls
+[09/02/26 18:57:05] [info] DEM SolverParam Init: dt=1.000000E-05, contact_model=LinearSpringDashpot, particle_file=particles.csv
+[09/02/26 18:57:05] [info] DEMSolver: contact model = LinearSpringDashpot
+[09/02/26 18:57:05] [info] DEMSolver InitField: 3 particles
+[09/02/26 18:57:05] [info] DEMFieldSimulation: initialized with 3 particles
+[09/02/26 18:57:05] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_0.vtp'
+[09/02/26 18:57:05] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=0/particles.csv
+[09/02/26 18:57:05] [info] DEM iter=1000, time=1.000000E-02, particles=3
+[09/02/26 18:57:05] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_1000.vtp'
+[09/02/26 18:57:05] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=1000/particles.csv
+[09/02/26 18:57:05] [info] DEM iter=2000, time=2.000000E-02, particles=3
+[09/02/26 18:57:05] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_2000.vtp'
+[09/02/26 18:57:05] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=2000/particles.csv
+[09/02/26 18:57:06] [info] DEM iter=3000, time=3.000000E-02, particles=3
+[09/02/26 18:57:06] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_3000.vtp'
+[09/02/26 18:57:06] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=3000/particles.csv
+[09/02/26 18:57:06] [info] DEM iter=4000, time=4.000000E-02, particles=3
+[09/02/26 18:57:06] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_4000.vtp'
+[09/02/26 18:57:06] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=4000/particles.csv
+[09/02/26 18:57:06] [info] DEM iter=5000, time=5.000000E-02, particles=3
+[09/02/26 18:57:06] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_5000.vtp'
+[09/02/26 18:57:06] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=5000/particles.csv
+[09/02/26 18:57:06] [info] DEM iter=6000, time=6.000000E-02, particles=3
+[09/02/26 18:57:06] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_6000.vtp'
+[09/02/26 18:57:06] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=6000/particles.csv
+[09/02/26 18:57:06] [info] DEM iter=7000, time=7.000000E-02, particles=3
+[09/02/26 18:57:06] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_7000.vtp'
+[09/02/26 18:57:06] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=7000/particles.csv
+[09/02/26 18:57:06] [info] DEM iter=8000, time=8.000000E-02, particles=3
+[09/02/26 18:57:06] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_8000.vtp'
+[09/02/26 18:57:06] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=8000/particles.csv
+[09/02/26 18:57:06] [info] DEM iter=9000, time=9.000000E-02, particles=3
+[09/02/26 18:57:06] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_9000.vtp'
+[09/02/26 18:57:06] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=9000/particles.csv
+[09/02/26 18:57:06] [info] DEM iter=10000, time=1.000000E-01, particles=3
+[09/02/26 18:57:06] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_10000.vtp'
+[09/02/26 18:57:06] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=10000/particles.csv
+[09/02/26 18:57:07] [info] DEM iter=11000, time=1.100000E-01, particles=3
+[09/02/26 18:57:07] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_11000.vtp'
+[09/02/26 18:57:07] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=11000/particles.csv
+[09/02/26 18:57:07] [info] DEM iter=12000, time=1.200000E-01, particles=3
+[09/02/26 18:57:07] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_12000.vtp'
+[09/02/26 18:57:07] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=12000/particles.csv
+[09/02/26 18:57:07] [info] DEM iter=13000, time=1.300000E-01, particles=3
+[09/02/26 18:57:07] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_13000.vtp'
+[09/02/26 18:57:07] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=13000/particles.csv
+[09/02/26 18:57:07] [info] DEM iter=14000, time=1.400000E-01, particles=3
+[09/02/26 18:57:07] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_14000.vtp'
+[09/02/26 18:57:07] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=14000/particles.csv
+[09/02/26 18:57:07] [info] DEM iter=15000, time=1.500000E-01, particles=3
+[09/02/26 18:57:07] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_15000.vtp'
+[09/02/26 18:57:07] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=15000/particles.csv
+[09/02/26 18:57:07] [info] DEM iter=16000, time=1.600000E-01, particles=3
+[09/02/26 18:57:07] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_16000.vtp'
+[09/02/26 18:57:07] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=16000/particles.csv
+[09/02/26 18:57:08] [info] DEM iter=17000, time=1.700000E-01, particles=3
+[09/02/26 18:57:08] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_17000.vtp'
+[09/02/26 18:57:08] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=17000/particles.csv
+[09/02/26 18:57:08] [info] DEM iter=18000, time=1.800000E-01, particles=3
+[09/02/26 18:57:08] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_18000.vtp'
+[09/02/26 18:57:08] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=18000/particles.csv
+[09/02/26 18:57:08] [info] DEM iter=19000, time=1.900000E-01, particles=3
+[09/02/26 18:57:08] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_19000.vtp'
+[09/02/26 18:57:08] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=19000/particles.csv
+[09/02/26 18:57:08] [info] DEM iter=20000, time=2.000000E-01, particles=3
+[09/02/26 18:57:08] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_20000.vtp'
+[09/02/26 18:57:08] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=20000/particles.csv
+[09/02/26 18:57:08] [info] DEM iter=21000, time=2.100000E-01, particles=3
+[09/02/26 18:57:08] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_21000.vtp'
+[09/02/26 18:57:08] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=21000/particles.csv
+[09/02/26 18:57:09] [info] DEM iter=22000, time=2.200000E-01, particles=3
+[09/02/26 18:57:09] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_22000.vtp'
+[09/02/26 18:57:09] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=22000/particles.csv
+[09/02/26 18:57:09] [info] DEM iter=23000, time=2.300000E-01, particles=3
+[09/02/26 18:57:09] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_23000.vtp'
+[09/02/26 18:57:09] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=23000/particles.csv
+[09/02/26 18:57:09] [info] DEM iter=24000, time=2.400000E-01, particles=3
+[09/02/26 18:57:09] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_24000.vtp'
+[09/02/26 18:57:09] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=24000/particles.csv
+[09/02/26 18:57:09] [info] DEM iter=25000, time=2.500000E-01, particles=3
+[09/02/26 18:57:09] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_25000.vtp'
+[09/02/26 18:57:09] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=25000/particles.csv
+[09/02/26 18:57:09] [info] DEM iter=26000, time=2.600000E-01, particles=3
+[09/02/26 18:57:09] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_26000.vtp'
+[09/02/26 18:57:09] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=26000/particles.csv
+[09/02/26 18:57:10] [info] DEM iter=27000, time=2.700000E-01, particles=3
+[09/02/26 18:57:10] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_27000.vtp'
+[09/02/26 18:57:10] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=27000/particles.csv
+[09/02/26 18:57:10] [info] DEM iter=28000, time=2.800000E-01, particles=3
+[09/02/26 18:57:10] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_28000.vtp'
+[09/02/26 18:57:10] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=28000/particles.csv
+[09/02/26 18:57:10] [info] DEM iter=29000, time=2.900000E-01, particles=3
+[09/02/26 18:57:10] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_29000.vtp'
+[09/02/26 18:57:10] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=29000/particles.csv
+[09/02/26 18:57:10] [info] DEM iter=30000, time=3.000000E-01, particles=3
+[09/02/26 18:57:10] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_30000.vtp'
+[09/02/26 18:57:10] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=30000/particles.csv
+[09/02/26 18:57:10] [info] DEM simulation finished. Total iter=30000
+[09/02/26 18:57:33] [info] Start Logger
+[09/02/26 18:57:33] [info] Log file path: E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test\log.txt
+[09/02/26 18:57:33] [info] ********Zaran: A Totally Automatic CFD Software!********
+[09/02/26 18:57:33] [info] >>>>>>>>Control File Version: V4.1.0<<<<<<<<
+[09/02/26 18:57:33] [info] >>>>>>>>Simulation Task: SOLVE_FIELD<<<<<<<<
+[09/02/26 18:57:33] [info] ReadDEMParticle: loaded 3 particles from 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/particles.csv'
+[09/02/26 18:57:33] [info] DEMFieldGenerator: created DEMField with 3 particles, 6 walls
+[09/02/26 18:57:33] [info] DEM SolverParam Init: dt=1.000000E-05, contact_model=LinearSpringDashpot, particle_file=particles.csv
+[09/02/26 18:57:33] [info] DEMSolver: contact model = LinearSpringDashpot
+[09/02/26 18:57:33] [info] DEMSolver InitField: 3 particles
+[09/02/26 18:57:33] [info] DEMFieldSimulation: initialized with 3 particles
+[09/02/26 18:57:33] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_0.vtp'
+[09/02/26 18:57:33] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=0/particles.dat
+[09/02/26 18:57:34] [info] DEM iter=1000, time=1.000000E-02, particles=3
+[09/02/26 18:57:34] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_1000.vtp'
+[09/02/26 18:57:34] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=1000/particles.dat
+[09/02/26 18:57:34] [info] DEM iter=2000, time=2.000000E-02, particles=3
+[09/02/26 18:57:34] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_2000.vtp'
+[09/02/26 18:57:34] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=2000/particles.dat
+[09/02/26 18:57:34] [info] DEM iter=3000, time=3.000000E-02, particles=3
+[09/02/26 18:57:34] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_3000.vtp'
+[09/02/26 18:57:34] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=3000/particles.dat
+[09/02/26 18:57:34] [info] DEM iter=4000, time=4.000000E-02, particles=3
+[09/02/26 18:57:34] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_4000.vtp'
+[09/02/26 18:57:34] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=4000/particles.dat
+[09/02/26 18:57:34] [info] DEM iter=5000, time=5.000000E-02, particles=3
+[09/02/26 18:57:34] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_5000.vtp'
+[09/02/26 18:57:34] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=5000/particles.dat
+[09/02/26 18:57:34] [info] DEM iter=6000, time=6.000000E-02, particles=3
+[09/02/26 18:57:34] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_6000.vtp'
+[09/02/26 18:57:34] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=6000/particles.dat
+[09/02/26 18:57:34] [info] DEM iter=7000, time=7.000000E-02, particles=3
+[09/02/26 18:57:34] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_7000.vtp'
+[09/02/26 18:57:34] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=7000/particles.dat
+[09/02/26 18:57:34] [info] DEM iter=8000, time=8.000000E-02, particles=3
+[09/02/26 18:57:34] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_8000.vtp'
+[09/02/26 18:57:34] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=8000/particles.dat
+[09/02/26 18:57:35] [info] DEM iter=9000, time=9.000000E-02, particles=3
+[09/02/26 18:57:35] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_9000.vtp'
+[09/02/26 18:57:35] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=9000/particles.dat
+[09/02/26 18:57:35] [info] DEM iter=10000, time=1.000000E-01, particles=3
+[09/02/26 18:57:35] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_10000.vtp'
+[09/02/26 18:57:35] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=10000/particles.dat
+[09/02/26 18:57:35] [info] DEM iter=11000, time=1.100000E-01, particles=3
+[09/02/26 18:57:35] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_11000.vtp'
+[09/02/26 18:57:35] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=11000/particles.dat
+[09/02/26 18:57:35] [info] DEM iter=12000, time=1.200000E-01, particles=3
+[09/02/26 18:57:35] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_12000.vtp'
+[09/02/26 18:57:35] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=12000/particles.dat
+[09/02/26 18:57:35] [info] DEM iter=13000, time=1.300000E-01, particles=3
+[09/02/26 18:57:35] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_13000.vtp'
+[09/02/26 18:57:35] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=13000/particles.dat
+[09/02/26 18:57:35] [info] DEM iter=14000, time=1.400000E-01, particles=3
+[09/02/26 18:57:35] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_14000.vtp'
+[09/02/26 18:57:35] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=14000/particles.dat
+[09/02/26 18:57:36] [info] DEM iter=15000, time=1.500000E-01, particles=3
+[09/02/26 18:57:36] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_15000.vtp'
+[09/02/26 18:57:36] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=15000/particles.dat
+[09/02/26 18:57:36] [info] DEM iter=16000, time=1.600000E-01, particles=3
+[09/02/26 18:57:36] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_16000.vtp'
+[09/02/26 18:57:36] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=16000/particles.dat
+[09/02/26 18:57:36] [info] DEM iter=17000, time=1.700000E-01, particles=3
+[09/02/26 18:57:36] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_17000.vtp'
+[09/02/26 18:57:36] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=17000/particles.dat
+[09/02/26 18:57:36] [info] DEM iter=18000, time=1.800000E-01, particles=3
+[09/02/26 18:57:36] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_18000.vtp'
+[09/02/26 18:57:36] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=18000/particles.dat
+[09/02/26 18:57:36] [info] DEM iter=19000, time=1.900000E-01, particles=3
+[09/02/26 18:57:36] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_19000.vtp'
+[09/02/26 18:57:36] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=19000/particles.dat
+[09/02/26 18:57:37] [info] DEM iter=20000, time=2.000000E-01, particles=3
+[09/02/26 18:57:37] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_20000.vtp'
+[09/02/26 18:57:37] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=20000/particles.dat
+[09/02/26 18:57:37] [info] DEM iter=21000, time=2.100000E-01, particles=3
+[09/02/26 18:57:37] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_21000.vtp'
+[09/02/26 18:57:37] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=21000/particles.dat
+[09/02/26 18:57:37] [info] DEM iter=22000, time=2.200000E-01, particles=3
+[09/02/26 18:57:37] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_22000.vtp'
+[09/02/26 18:57:37] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=22000/particles.dat
+[09/02/26 18:57:37] [info] DEM iter=23000, time=2.300000E-01, particles=3
+[09/02/26 18:57:37] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_23000.vtp'
+[09/02/26 18:57:37] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=23000/particles.dat
+[09/02/26 18:57:37] [info] DEM iter=24000, time=2.400000E-01, particles=3
+[09/02/26 18:57:37] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_24000.vtp'
+[09/02/26 18:57:37] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=24000/particles.dat
+[09/02/26 18:57:37] [info] DEM iter=25000, time=2.500000E-01, particles=3
+[09/02/26 18:57:37] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_25000.vtp'
+[09/02/26 18:57:37] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=25000/particles.dat
+[09/02/26 18:57:38] [info] DEM iter=26000, time=2.600000E-01, particles=3
+[09/02/26 18:57:38] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_26000.vtp'
+[09/02/26 18:57:38] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=26000/particles.dat
+[09/02/26 18:57:38] [info] DEM iter=27000, time=2.700000E-01, particles=3
+[09/02/26 18:57:38] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_27000.vtp'
+[09/02/26 18:57:38] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=27000/particles.dat
+[09/02/26 18:57:38] [info] DEM iter=28000, time=2.800000E-01, particles=3
+[09/02/26 18:57:38] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_28000.vtp'
+[09/02/26 18:57:38] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=28000/particles.dat
+[09/02/26 18:57:38] [info] DEM iter=29000, time=2.900000E-01, particles=3
+[09/02/26 18:57:38] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_29000.vtp'
+[09/02/26 18:57:38] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=29000/particles.dat
+[09/02/26 18:57:38] [info] DEM iter=30000, time=3.000000E-01, particles=3
+[09/02/26 18:57:38] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_30000.vtp'
+[09/02/26 18:57:38] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=30000/particles.dat
+[09/02/26 18:57:38] [info] DEM simulation finished. Total iter=30000
+[09/02/26 19:00:22] [info] Start Logger
+[09/02/26 19:00:22] [info] Log file path: E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test\log.txt
+[09/02/26 19:00:22] [info] ********Zaran: A Totally Automatic CFD Software!********
+[09/02/26 19:00:22] [info] >>>>>>>>Control File Version: V4.1.0<<<<<<<<
+[09/02/26 19:00:22] [info] >>>>>>>>Simulation Task: SOLVE_FIELD<<<<<<<<
+[09/02/26 19:00:22] [info] ReadDEMParticle: loaded 3 particles from 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/particles.csv'
+[09/02/26 19:00:22] [info] DEMFieldGenerator: created DEMField with 3 particles, 6 walls
+[09/02/26 19:00:22] [info] DEM SolverParam Init: dt=1.000000E-05, contact_model=LinearSpringDashpot, particle_file=particles.csv
+[09/02/26 19:00:22] [info] DEMSolver: contact model = LinearSpringDashpot
+[09/02/26 19:00:22] [info] DEMSolver InitField: 3 particles
+[09/02/26 19:00:22] [info] DEMFieldSimulation: initialized with 3 particles
+[09/02/26 19:00:22] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_0.vtp'
+[09/02/26 19:00:22] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=0/particles.dat
+[09/02/26 19:00:22] [info] DEM iter=1000, time=1.000000E-02, particles=3
+[09/02/26 19:00:22] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_1000.vtp'
+[09/02/26 19:00:22] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=1000/particles.dat
+[09/02/26 19:00:22] [info] DEM iter=2000, time=2.000000E-02, particles=3
+[09/02/26 19:00:22] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_2000.vtp'
+[09/02/26 19:00:22] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=2000/particles.dat
+[09/02/26 19:00:22] [info] DEM iter=3000, time=3.000000E-02, particles=3
+[09/02/26 19:00:22] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_3000.vtp'
+[09/02/26 19:00:22] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=3000/particles.dat
+[09/02/26 19:00:23] [info] DEM iter=4000, time=4.000000E-02, particles=3
+[09/02/26 19:00:23] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_4000.vtp'
+[09/02/26 19:00:23] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=4000/particles.dat
+[09/02/26 19:00:23] [info] DEM iter=5000, time=5.000000E-02, particles=3
+[09/02/26 19:00:23] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_5000.vtp'
+[09/02/26 19:00:23] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=5000/particles.dat
+[09/02/26 19:00:23] [info] DEM iter=6000, time=6.000000E-02, particles=3
+[09/02/26 19:00:23] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_6000.vtp'
+[09/02/26 19:00:23] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=6000/particles.dat
+[09/02/26 19:00:23] [info] DEM iter=7000, time=7.000000E-02, particles=3
+[09/02/26 19:00:23] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_7000.vtp'
+[09/02/26 19:00:23] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=7000/particles.dat
+[09/02/26 19:00:23] [info] DEM iter=8000, time=8.000000E-02, particles=3
+[09/02/26 19:00:23] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_8000.vtp'
+[09/02/26 19:00:23] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=8000/particles.dat
+[09/02/26 19:00:23] [info] DEM iter=9000, time=9.000000E-02, particles=3
+[09/02/26 19:00:23] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_9000.vtp'
+[09/02/26 19:00:23] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=9000/particles.dat
+[09/02/26 19:00:23] [info] DEM iter=10000, time=1.000000E-01, particles=3
+[09/02/26 19:00:23] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_10000.vtp'
+[09/02/26 19:00:23] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=10000/particles.dat
+[09/02/26 19:00:24] [info] DEM iter=11000, time=1.100000E-01, particles=3
+[09/02/26 19:00:24] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_11000.vtp'
+[09/02/26 19:00:24] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=11000/particles.dat
+[09/02/26 19:00:24] [info] DEM iter=12000, time=1.200000E-01, particles=3
+[09/02/26 19:00:24] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_12000.vtp'
+[09/02/26 19:00:24] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=12000/particles.dat
+[09/02/26 19:00:24] [info] DEM iter=13000, time=1.300000E-01, particles=3
+[09/02/26 19:00:24] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_13000.vtp'
+[09/02/26 19:00:24] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=13000/particles.dat
+[09/02/26 19:00:24] [info] DEM iter=14000, time=1.400000E-01, particles=3
+[09/02/26 19:00:24] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_14000.vtp'
+[09/02/26 19:00:24] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=14000/particles.dat
+[09/02/26 19:00:24] [info] DEM iter=15000, time=1.500000E-01, particles=3
+[09/02/26 19:00:24] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_15000.vtp'
+[09/02/26 19:00:24] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=15000/particles.dat
+[09/02/26 19:00:24] [info] DEM iter=16000, time=1.600000E-01, particles=3
+[09/02/26 19:00:24] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_16000.vtp'
+[09/02/26 19:00:24] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=16000/particles.dat
+[09/02/26 19:00:25] [info] DEM iter=17000, time=1.700000E-01, particles=3
+[09/02/26 19:00:25] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_17000.vtp'
+[09/02/26 19:00:25] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=17000/particles.dat
+[09/02/26 19:00:25] [info] DEM iter=18000, time=1.800000E-01, particles=3
+[09/02/26 19:00:25] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_18000.vtp'
+[09/02/26 19:00:25] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=18000/particles.dat
+[09/02/26 19:00:25] [info] DEM iter=19000, time=1.900000E-01, particles=3
+[09/02/26 19:00:25] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_19000.vtp'
+[09/02/26 19:00:25] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=19000/particles.dat
+[09/02/26 19:00:25] [info] DEM iter=20000, time=2.000000E-01, particles=3
+[09/02/26 19:00:25] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_20000.vtp'
+[09/02/26 19:00:25] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=20000/particles.dat
+[09/02/26 19:00:25] [info] DEM iter=21000, time=2.100000E-01, particles=3
+[09/02/26 19:00:25] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_21000.vtp'
+[09/02/26 19:00:25] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=21000/particles.dat
+[09/02/26 19:00:26] [info] DEM iter=22000, time=2.200000E-01, particles=3
+[09/02/26 19:00:26] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_22000.vtp'
+[09/02/26 19:00:26] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=22000/particles.dat
+[09/02/26 19:00:26] [info] DEM iter=23000, time=2.300000E-01, particles=3
+[09/02/26 19:00:26] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_23000.vtp'
+[09/02/26 19:00:26] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=23000/particles.dat
+[09/02/26 19:00:26] [info] DEM iter=24000, time=2.400000E-01, particles=3
+[09/02/26 19:00:26] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_24000.vtp'
+[09/02/26 19:00:26] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=24000/particles.dat
+[09/02/26 19:00:26] [info] DEM iter=25000, time=2.500000E-01, particles=3
+[09/02/26 19:00:26] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_25000.vtp'
+[09/02/26 19:00:26] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=25000/particles.dat
+[09/02/26 19:00:26] [info] DEM iter=26000, time=2.600000E-01, particles=3
+[09/02/26 19:00:26] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_26000.vtp'
+[09/02/26 19:00:26] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=26000/particles.dat
+[09/02/26 19:00:26] [info] DEM iter=27000, time=2.700000E-01, particles=3
+[09/02/26 19:00:26] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_27000.vtp'
+[09/02/26 19:00:26] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=27000/particles.dat
+[09/02/26 19:00:27] [info] DEM iter=28000, time=2.800000E-01, particles=3
+[09/02/26 19:00:27] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_28000.vtp'
+[09/02/26 19:00:27] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=28000/particles.dat
+[09/02/26 19:00:27] [info] DEM iter=29000, time=2.900000E-01, particles=3
+[09/02/26 19:00:27] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_29000.vtp'
+[09/02/26 19:00:27] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=29000/particles.dat
+[09/02/26 19:00:27] [info] DEM iter=30000, time=3.000000E-01, particles=3
+[09/02/26 19:00:27] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_30000.vtp'
+[09/02/26 19:00:27] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=30000/particles.dat
+[09/02/26 19:00:27] [info] DEM simulation finished. Total iter=30000
+[09/02/26 19:01:12] [info] Start Logger
+[09/02/26 19:01:12] [info] Log file path: E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test\log.txt
+[09/02/26 19:01:12] [info] ********Zaran: A Totally Automatic CFD Software!********
+[09/02/26 19:01:12] [info] >>>>>>>>Control File Version: V4.1.0<<<<<<<<
+[09/02/26 19:01:12] [info] >>>>>>>>Simulation Task: SOLVE_FIELD<<<<<<<<
+[09/02/26 19:01:12] [info] ReadDEMParticle: loaded 3 particles from 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/particles.csv'
+[09/02/26 19:01:12] [info] DEMFieldGenerator: created DEMField with 3 particles, 6 walls
+[09/02/26 19:01:12] [info] DEM SolverParam Init: dt=1.000000E-06, contact_model=LinearSpringDashpot, particle_file=particles.csv
+[09/02/26 19:01:12] [info] DEMSolver: contact model = LinearSpringDashpot
+[09/02/26 19:01:12] [info] DEMSolver InitField: 3 particles
+[09/02/26 19:01:12] [info] DEMFieldSimulation: initialized with 3 particles
+[09/02/26 19:01:12] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_0.vtp'
+[09/02/26 19:01:12] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=0/particles.dat
+[09/02/26 19:01:13] [info] DEM iter=1000, time=1.000000E-03, particles=3
+[09/02/26 19:01:13] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_1000.vtp'
+[09/02/26 19:01:13] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=1000/particles.dat
+[09/02/26 19:01:13] [info] DEM iter=2000, time=2.000000E-03, particles=3
+[09/02/26 19:01:13] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_2000.vtp'
+[09/02/26 19:01:13] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=2000/particles.dat
+[09/02/26 19:01:13] [info] DEM iter=3000, time=3.000000E-03, particles=3
+[09/02/26 19:01:13] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_3000.vtp'
+[09/02/26 19:01:13] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=3000/particles.dat
+[09/02/26 19:01:13] [info] DEM iter=4000, time=4.000000E-03, particles=3
+[09/02/26 19:01:13] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_4000.vtp'
+[09/02/26 19:01:13] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=4000/particles.dat
+[09/02/26 19:01:13] [info] DEM iter=5000, time=5.000000E-03, particles=3
+[09/02/26 19:01:13] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_5000.vtp'
+[09/02/26 19:01:13] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=5000/particles.dat
+[09/02/26 19:01:13] [info] DEM iter=6000, time=6.000000E-03, particles=3
+[09/02/26 19:01:13] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_6000.vtp'
+[09/02/26 19:01:13] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=6000/particles.dat
+[09/02/26 19:01:13] [info] DEM iter=7000, time=7.000000E-03, particles=3
+[09/02/26 19:01:13] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_7000.vtp'
+[09/02/26 19:01:13] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=7000/particles.dat
+[09/02/26 19:01:13] [info] DEM iter=8000, time=8.000000E-03, particles=3
+[09/02/26 19:01:13] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_8000.vtp'
+[09/02/26 19:01:13] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=8000/particles.dat
+[09/02/26 19:01:14] [info] DEM iter=9000, time=9.000000E-03, particles=3
+[09/02/26 19:01:14] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_9000.vtp'
+[09/02/26 19:01:14] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=9000/particles.dat
+[09/02/26 19:01:14] [info] DEM iter=10000, time=1.000000E-02, particles=3
+[09/02/26 19:01:14] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_10000.vtp'
+[09/02/26 19:01:14] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=10000/particles.dat
+[09/02/26 19:01:14] [info] DEM iter=11000, time=1.100000E-02, particles=3
+[09/02/26 19:01:14] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_11000.vtp'
+[09/02/26 19:01:14] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=11000/particles.dat
+[09/02/26 19:01:14] [info] DEM iter=12000, time=1.200000E-02, particles=3
+[09/02/26 19:01:14] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_12000.vtp'
+[09/02/26 19:01:14] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=12000/particles.dat
+[09/02/26 19:01:14] [info] DEM iter=13000, time=1.300000E-02, particles=3
+[09/02/26 19:01:14] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_13000.vtp'
+[09/02/26 19:01:14] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=13000/particles.dat
+[09/02/26 19:01:14] [info] DEM iter=14000, time=1.400000E-02, particles=3
+[09/02/26 19:01:14] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_14000.vtp'
+[09/02/26 19:01:14] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=14000/particles.dat
+[09/02/26 19:01:14] [info] DEM iter=15000, time=1.500000E-02, particles=3
+[09/02/26 19:01:14] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_15000.vtp'
+[09/02/26 19:01:14] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=15000/particles.dat
+[09/02/26 19:01:14] [info] DEM iter=16000, time=1.600000E-02, particles=3
+[09/02/26 19:01:14] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_16000.vtp'
+[09/02/26 19:01:14] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=16000/particles.dat
+[09/02/26 19:01:15] [info] DEM iter=17000, time=1.700000E-02, particles=3
+[09/02/26 19:01:15] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_17000.vtp'
+[09/02/26 19:01:15] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=17000/particles.dat
+[09/02/26 19:01:15] [info] DEM iter=18000, time=1.800000E-02, particles=3
+[09/02/26 19:01:15] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_18000.vtp'
+[09/02/26 19:01:15] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=18000/particles.dat
+[09/02/26 19:01:15] [info] DEM iter=19000, time=1.900000E-02, particles=3
+[09/02/26 19:01:15] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_19000.vtp'
+[09/02/26 19:01:15] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=19000/particles.dat
+[09/02/26 19:01:15] [info] DEM iter=20000, time=2.000000E-02, particles=3
+[09/02/26 19:01:15] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_20000.vtp'
+[09/02/26 19:01:15] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=20000/particles.dat
+[09/02/26 19:01:15] [info] DEM iter=21000, time=2.100000E-02, particles=3
+[09/02/26 19:01:15] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_21000.vtp'
+[09/02/26 19:01:15] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=21000/particles.dat
+[09/02/26 19:01:15] [info] DEM iter=22000, time=2.200000E-02, particles=3
+[09/02/26 19:01:15] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_22000.vtp'
+[09/02/26 19:01:15] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=22000/particles.dat
+[09/02/26 19:01:15] [info] DEM iter=23000, time=2.300000E-02, particles=3
+[09/02/26 19:01:15] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_23000.vtp'
+[09/02/26 19:01:15] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=23000/particles.dat
+[09/02/26 19:01:15] [info] DEM iter=24000, time=2.400000E-02, particles=3
+[09/02/26 19:01:15] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_24000.vtp'
+[09/02/26 19:01:15] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=24000/particles.dat
+[09/02/26 19:01:16] [info] DEM iter=25000, time=2.500000E-02, particles=3
+[09/02/26 19:01:16] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_25000.vtp'
+[09/02/26 19:01:16] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=25000/particles.dat
+[09/02/26 19:01:16] [info] DEM iter=26000, time=2.600000E-02, particles=3
+[09/02/26 19:01:16] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_26000.vtp'
+[09/02/26 19:01:16] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=26000/particles.dat
+[09/02/26 19:01:16] [info] DEM iter=27000, time=2.700000E-02, particles=3
+[09/02/26 19:01:16] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_27000.vtp'
+[09/02/26 19:01:16] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=27000/particles.dat
+[09/02/26 19:01:16] [info] DEM iter=28000, time=2.800000E-02, particles=3
+[09/02/26 19:01:16] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_28000.vtp'
+[09/02/26 19:01:16] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=28000/particles.dat
+[09/02/26 19:01:16] [info] DEM iter=29000, time=2.900000E-02, particles=3
+[09/02/26 19:01:16] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_29000.vtp'
+[09/02/26 19:01:16] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=29000/particles.dat
+[09/02/26 19:01:16] [info] DEM iter=30000, time=3.000000E-02, particles=3
+[09/02/26 19:01:16] [info] Visual::WriteParticleVTP: 3 particles written to 'E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/result/particles_30000.vtp'
+[09/02/26 19:01:16] [info] DEMSolver::BackupField: 3 particles written to E:\ZARAN_DEM\ZARAN\Zaran3\tests\dem_bounce_test/backup/iter=30000/particles.dat
+[09/02/26 19:01:16] [info] DEM simulation finished. Total iter=30000
