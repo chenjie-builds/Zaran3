@@ -3,6 +3,7 @@
 #include "Log.h"
 #include "NSFieldFN.h"
 #include "DEMField.h"
+#include "FastNumberFormat.h"
 #include <TECIO.h>
 #include <cgnslib.h>
 #include <filesystem>
@@ -1385,195 +1386,172 @@ void Visual::WriteParticleVTP(shared_ptr<FieldManager> field_manager, int iter)
 
 void Visual::WriteParticleVTP(const DEMFieldData& dem_data, const std::string& filename)
 {
-    std::ofstream fout(filename);
-    if (!fout.is_open())
-    {
-        Log::warn("Visual::WriteParticleVTP: cannot open '{}'", filename);
-        return;
-    }
-
     const auto& particles = dem_data.GetParticles();
     const index_type N = particles.size();
     const auto& bonds = dem_data.GetBonds();
     const index_type B = bonds.size();
 
-    fout << "<?xml version=\"1.0\"?>\n";
-    fout << "<VTKFile type=\"PolyData\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
-    fout << "  <PolyData>\n";
-    fout << "    <Piece NumberOfPoints=\"" << N << "\" NumberOfVerts=\"" << N << "\""
-         << " NumberOfLines=\"" << B << "\" NumberOfStrips=\"0\" NumberOfPolys=\"0\">\n";
+    // 性能：改为"整块字符串缓冲 + std::to_chars + 单次落盘"。
+    // 旧实现逐字段 `fout <<`，万级粒子/键合下每帧需数十万次流格式化（实测约 200 ms/帧）。
+    // 数值文本与旧实现保持可比（general 格式、6 位有效数字）。
+    std::string buf;
+    buf.reserve(static_cast<std::size_t>(N) * 520 + static_cast<std::size_t>(B) * 240 + 4096);
+
+    auto num = [&](auto v) { AppendNumber(buf, v); };
+    auto sp  = [&] { buf.push_back(' '); };
+    auto nl  = [&] { buf.push_back('\n'); };
+    auto raw = [&](const char* s) { buf.append(s); };
+
+    auto point_scalar = [&](const char* type, const char* name, auto getter)
+    {
+        raw("        <DataArray type=\""); raw(type); raw("\" Name=\""); raw(name);
+        raw("\" format=\"ascii\">\n");
+        for (const auto& p : particles) { raw("          "); num(getter(p)); nl(); }
+        raw("        </DataArray>\n");
+    };
+    auto point_vec3 = [&](const char* name, auto getter)
+    {
+        raw("        <DataArray type=\"Float64\" Name=\""); raw(name);
+        raw("\" NumberOfComponents=\"3\" format=\"ascii\">\n");
+        for (const auto& p : particles)
+        {
+            const Eigen::Vector3d v = getter(p);
+            raw("          "); num(v.x()); sp(); num(v.y()); sp(); num(v.z()); nl();
+        }
+        raw("        </DataArray>\n");
+    };
+    auto cell_head = [&](const char* type, const char* name, const char* nc)
+    {
+        raw("        <DataArray type=\""); raw(type); raw("\" Name=\""); raw(name);
+        raw("\""); raw(nc); raw(" format=\"ascii\">\n");
+    };
+    auto cell_tail = [&] { raw("        </DataArray>\n"); };
+
+    raw("<?xml version=\"1.0\"?>\n");
+    raw("<VTKFile type=\"PolyData\" version=\"0.1\" byte_order=\"LittleEndian\">\n");
+    raw("  <PolyData>\n");
+    raw("    <Piece NumberOfPoints=\""); num(N);
+    raw("\" NumberOfVerts=\""); num(N);
+    raw("\" NumberOfLines=\""); num(B);
+    raw("\" NumberOfStrips=\"0\" NumberOfPolys=\"0\">\n");
 
     // --- 点坐标 ---
-    fout << "      <Points>\n";
-    fout << "        <DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\"ascii\">\n";
+    raw("      <Points>\n");
+    raw("        <DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\"ascii\">\n");
     for (const auto& p : particles)
-        fout << "          " << p.pos.x() << " " << p.pos.y() << " " << p.pos.z() << "\n";
-    fout << "        </DataArray>\n";
-    fout << "      </Points>\n";
+    {
+        raw("          "); num(p.pos.x()); sp(); num(p.pos.y()); sp(); num(p.pos.z()); nl();
+    }
+    raw("        </DataArray>\n");
+    raw("      </Points>\n");
 
     // --- Verts (每个点作为一个 Vertex cell) ---
-    fout << "      <Verts>\n";
-    fout << "        <DataArray type=\"Int64\" Name=\"connectivity\" format=\"ascii\">\n";
-    fout << "          ";
-    for (index_type i = 0; i < N; ++i) fout << i << " ";
-    fout << "\n        </DataArray>\n";
-    fout << "        <DataArray type=\"Int64\" Name=\"offsets\" format=\"ascii\">\n";
-    fout << "          ";
-    for (index_type i = 1; i <= N; ++i) fout << i << " ";
-    fout << "\n        </DataArray>\n";
-    fout << "      </Verts>\n";
+    raw("      <Verts>\n");
+    raw("        <DataArray type=\"Int64\" Name=\"connectivity\" format=\"ascii\">\n");
+    raw("          ");
+    for (index_type i = 0; i < N; ++i) { num(i); sp(); }
+    raw("\n        </DataArray>\n");
+    raw("        <DataArray type=\"Int64\" Name=\"offsets\" format=\"ascii\">\n");
+    raw("          ");
+    for (index_type i = 1; i <= N; ++i) { num(i); sp(); }
+    raw("\n        </DataArray>\n");
+    raw("      </Verts>\n");
 
     // 永久弹性键合以线单元输出。
-    fout << "      <Lines>\n";
-    fout << "        <DataArray type=\"Int64\" Name=\"connectivity\" format=\"ascii\">\n";
+    raw("      <Lines>\n");
+    raw("        <DataArray type=\"Int64\" Name=\"connectivity\" format=\"ascii\">\n");
     for (const auto& bond : bonds)
-        fout << "          " << bond.idx_a << " " << bond.idx_b << "\n";
-    fout << "        </DataArray>\n";
-    fout << "        <DataArray type=\"Int64\" Name=\"offsets\" format=\"ascii\">\n";
-    for (index_type i = 1; i <= B; ++i) fout << "          " << 2 * i << "\n";
-    fout << "        </DataArray>\n";
-    fout << "      </Lines>\n";
+    {
+        raw("          "); num(bond.idx_a); sp(); num(bond.idx_b); nl();
+    }
+    raw("        </DataArray>\n");
+    raw("        <DataArray type=\"Int64\" Name=\"offsets\" format=\"ascii\">\n");
+    for (index_type i = 1; i <= B; ++i) { raw("          "); num(2 * i); nl(); }
+    raw("        </DataArray>\n");
+    raw("      </Lines>\n");
 
     // --- 点数据 ---
-    fout << "      <PointData>\n";
+    raw("      <PointData>\n");
+    point_scalar("Float64", "radius", [](const DEMParticle& p) { return p.radius; });
+    point_vec3("velocity", [](const DEMParticle& p) { return p.vel; });
+    point_vec3("rotation", [](const DEMParticle& p) { return p.rotation; });
+    point_vec3("omega", [](const DEMParticle& p) { return p.omega; });
+    point_vec3("force", [](const DEMParticle& p) { return p.force; });
+    point_scalar("Int64", "id", [](const DEMParticle& p) { return p.id; });
+    point_scalar("Int32", "group", [](const DEMParticle& p) { return p.group; });
+    point_scalar("Float64", "temperature", [](const DEMParticle& p) { return p.temperature; });
+    point_scalar("Float64", "reaction_progress", [](const DEMParticle& p) { return p.reaction_progress; });
+    point_scalar("Float64", "reaction_rate", [](const DEMParticle& p) { return p.reaction_rate; });
+    point_scalar("Int32", "phase", [](const DEMParticle& p) { return p.phase; });
+    point_scalar("Float64", "gas_temperature", [](const DEMParticle& p) { return p.gas_temperature; });
+    point_scalar("Float64", "gas_pressure", [](const DEMParticle& p) { return p.gas_pressure; });
+    point_scalar("Float64", "volume_ratio", [](const DEMParticle& p) { return p.volume_ratio; });
+    point_scalar("Float64", "solid_volume", [](const DEMParticle& p) { return p.solid_volume; });
+    point_scalar("Float64", "gas_volume", [](const DEMParticle& p) { return p.gas_volume; });
+    point_scalar("Float64", "solid_core_radius", [](const DEMParticle& p) { return p.solid_core_radius; });
+    point_scalar("Float64", "gas_internal_energy", [](const DEMParticle& p) { return p.gas_internal_energy; });
+    point_scalar("Float64", "internal_heat_transfer", [](const DEMParticle& p) { return p.internal_heat_transfer; });
+    point_scalar("Float64", "body_reaction_increment", [](const DEMParticle& p) { return p.body_reaction_increment; });
+    point_scalar("Float64", "core_burn_increment", [](const DEMParticle& p) { return p.core_burn_increment; });
+    point_scalar("Float64", "neighbor_burn_increment", [](const DEMParticle& p) { return p.neighbor_burn_increment; });
+    raw("      </PointData>\n");
 
-    // 半径
-    fout << "        <DataArray type=\"Float64\" Name=\"radius\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.radius << "\n";
-    fout << "        </DataArray>\n";
+    // --- 单元数据（前 N 个对应 Verts：占位；其后 B 个对应 Lines）---
+    raw("      <CellData>\n");
 
-    // 速度
-    fout << "        <DataArray type=\"Float64\" Name=\"velocity\" NumberOfComponents=\"3\" format=\"ascii\">\n";
-    for (const auto& p : particles)
-        fout << "          " << p.vel.x() << " " << p.vel.y() << " " << p.vel.z() << "\n";
-    fout << "        </DataArray>\n";
+    cell_head("Int64", "bond_id", "");
+    for (index_type i = 0; i < N; ++i) raw("          -1\n");
+    for (const auto& bond : bonds) { raw("          "); num(bond.id); nl(); }
+    cell_tail();
 
-    // 累计转角
-    fout << "        <DataArray type=\"Float64\" Name=\"rotation\" NumberOfComponents=\"3\" format=\"ascii\">\n";
-    for (const auto& p : particles)
-        fout << "          " << p.rotation.x() << " " << p.rotation.y() << " " << p.rotation.z() << "\n";
-    fout << "        </DataArray>\n";
+    cell_head("Float64", "bond_extension", "");
+    for (index_type i = 0; i < N; ++i) raw("          0\n");
+    for (const auto& bond : bonds) { raw("          "); num(bond.extension); nl(); }
+    cell_tail();
 
-    // 角速度
-    fout << "        <DataArray type=\"Float64\" Name=\"omega\" NumberOfComponents=\"3\" format=\"ascii\">\n";
-    for (const auto& p : particles)
-        fout << "          " << p.omega.x() << " " << p.omega.y() << " " << p.omega.z() << "\n";
-    fout << "        </DataArray>\n";
-
-    // 合力
-    fout << "        <DataArray type=\"Float64\" Name=\"force\" NumberOfComponents=\"3\" format=\"ascii\">\n";
-    for (const auto& p : particles)
-        fout << "          " << p.force.x() << " " << p.force.y() << " " << p.force.z() << "\n";
-    fout << "        </DataArray>\n";
-
-    // id
-    fout << "        <DataArray type=\"Int64\" Name=\"id\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.id << "\n";
-    fout << "        </DataArray>\n";
-
-    // group
-    fout << "        <DataArray type=\"Int32\" Name=\"group\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.group << "\n";
-    fout << "        </DataArray>\n";
-
-    fout << "        <DataArray type=\"Float64\" Name=\"temperature\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.temperature << "\n";
-    fout << "        </DataArray>\n";
-
-    fout << "        <DataArray type=\"Float64\" Name=\"reaction_progress\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.reaction_progress << "\n";
-    fout << "        </DataArray>\n";
-
-    fout << "        <DataArray type=\"Float64\" Name=\"reaction_rate\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.reaction_rate << "\n";
-    fout << "        </DataArray>\n";
-
-    fout << "        <DataArray type=\"Int32\" Name=\"phase\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.phase << "\n";
-    fout << "        </DataArray>\n";
-
-    fout << "        <DataArray type=\"Float64\" Name=\"gas_temperature\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.gas_temperature << "\n";
-    fout << "        </DataArray>\n";
-
-    fout << "        <DataArray type=\"Float64\" Name=\"gas_pressure\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.gas_pressure << "\n";
-    fout << "        </DataArray>\n";
-
-    fout << "        <DataArray type=\"Float64\" Name=\"volume_ratio\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.volume_ratio << "\n";
-    fout << "        </DataArray>\n";
-
-    fout << "        <DataArray type=\"Float64\" Name=\"solid_volume\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.solid_volume << "\n";
-    fout << "        </DataArray>\n";
-
-    fout << "        <DataArray type=\"Float64\" Name=\"gas_volume\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.gas_volume << "\n";
-    fout << "        </DataArray>\n";
-
-    fout << "        <DataArray type=\"Float64\" Name=\"solid_core_radius\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.solid_core_radius << "\n";
-    fout << "        </DataArray>\n";
-
-    fout << "        <DataArray type=\"Float64\" Name=\"gas_internal_energy\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.gas_internal_energy << "\n";
-    fout << "        </DataArray>\n";
-
-    fout << "        <DataArray type=\"Float64\" Name=\"internal_heat_transfer\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.internal_heat_transfer << "\n";
-    fout << "        </DataArray>\n";
-
-    fout << "        <DataArray type=\"Float64\" Name=\"body_reaction_increment\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.body_reaction_increment << "\n";
-    fout << "        </DataArray>\n";
-
-    fout << "        <DataArray type=\"Float64\" Name=\"core_burn_increment\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.core_burn_increment << "\n";
-    fout << "        </DataArray>\n";
-
-    fout << "        <DataArray type=\"Float64\" Name=\"neighbor_burn_increment\" format=\"ascii\">\n";
-    for (const auto& p : particles) fout << "          " << p.neighbor_burn_increment << "\n";
-    fout << "        </DataArray>\n";
-
-    fout << "      </PointData>\n";
-
-    fout << "      <CellData>\n";
-    fout << "        <DataArray type=\"Int64\" Name=\"bond_id\" format=\"ascii\">\n";
-    for (index_type i = 0; i < N; ++i) fout << "          -1\n";
-    for (const auto& bond : bonds) fout << "          " << bond.id << "\n";
-    fout << "        </DataArray>\n";
-    fout << "        <DataArray type=\"Float64\" Name=\"bond_extension\" format=\"ascii\">\n";
-    for (index_type i = 0; i < N; ++i) fout << "          0\n";
-    for (const auto& bond : bonds) fout << "          " << bond.extension << "\n";
-    fout << "        </DataArray>\n";
-    fout << "        <DataArray type=\"Float64\" Name=\"bond_force_a\" NumberOfComponents=\"3\" format=\"ascii\">\n";
-    for (index_type i = 0; i < N; ++i) fout << "          0 0 0\n";
+    cell_head("Float64", "bond_force_a", " NumberOfComponents=\"3\"");
+    for (index_type i = 0; i < N; ++i) raw("          0 0 0\n");
     for (const auto& bond : bonds)
-        fout << "          " << bond.force_a.x() << " " << bond.force_a.y() << " " << bond.force_a.z() << "\n";
-    fout << "        </DataArray>\n";
-    fout << "        <DataArray type=\"Float64\" Name=\"bond_heat_flow_a\" format=\"ascii\">\n";
-    for (index_type i = 0; i < N; ++i) fout << "          0\n";
-    for (const auto& bond : bonds) fout << "          " << bond.heat_flow_a << "\n";
-    fout << "        </DataArray>\n";
-    fout << "        <DataArray type=\"Float64\" Name=\"bond_damage\" format=\"ascii\">\n";
-    for (index_type i = 0; i < N; ++i) fout << "          0\n";
-    for (const auto& bond : bonds) fout << "          " << bond.damage << "\n";
-    fout << "        </DataArray>\n";
-    fout << "        <DataArray type=\"Float64\" Name=\"bond_elastic_energy\" format=\"ascii\">\n";
-    for (index_type i = 0; i < N; ++i) fout << "          0\n";
-    for (const auto& bond : bonds) fout << "          " << bond.elastic_energy << "\n";
-    fout << "        </DataArray>\n";
-    fout << "        <DataArray type=\"Float64\" Name=\"bond_fracture_energy\" format=\"ascii\">\n";
-    for (index_type i = 0; i < N; ++i) fout << "          0\n";
-    for (const auto& bond : bonds) fout << "          " << bond.fracture_energy << "\n";
-    fout << "        </DataArray>\n";
-    fout << "      </CellData>\n";
-    fout << "    </Piece>\n";
-    fout << "  </PolyData>\n";
-    fout << "</VTKFile>\n";
+    {
+        raw("          "); num(bond.force_a.x()); sp(); num(bond.force_a.y()); sp(); num(bond.force_a.z()); nl();
+    }
+    cell_tail();
+
+    cell_head("Float64", "bond_heat_flow_a", "");
+    for (index_type i = 0; i < N; ++i) raw("          0\n");
+    for (const auto& bond : bonds) { raw("          "); num(bond.heat_flow_a); nl(); }
+    cell_tail();
+
+    cell_head("Float64", "bond_damage", "");
+    for (index_type i = 0; i < N; ++i) raw("          0\n");
+    for (const auto& bond : bonds) { raw("          "); num(bond.damage); nl(); }
+    cell_tail();
+
+    cell_head("Float64", "bond_elastic_energy", "");
+    for (index_type i = 0; i < N; ++i) raw("          0\n");
+    for (const auto& bond : bonds) { raw("          "); num(bond.elastic_energy); nl(); }
+    cell_tail();
+
+    cell_head("Float64", "bond_fracture_energy", "");
+    for (index_type i = 0; i < N; ++i) raw("          0\n");
+    for (const auto& bond : bonds) { raw("          "); num(bond.fracture_energy); nl(); }
+    cell_tail();
+
+    raw("      </CellData>\n");
+    raw("    </Piece>\n");
+    raw("  </PolyData>\n");
+    raw("</VTKFile>\n");
+
+    std::ofstream fout(filename, std::ios::binary);
+    if (!fout.is_open())
+    {
+        Log::warn("Visual::WriteParticleVTP: cannot open '{}'", filename);
+        return;
+    }
+    fout.write(buf.data(), static_cast<std::streamsize>(buf.size()));
 
     Log::info("Visual::WriteParticleVTP: {} particles written to '{}'", N, filename);
 }
+
 
 } // namespace zaran

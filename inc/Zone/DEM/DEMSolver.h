@@ -14,9 +14,7 @@
 #include "DEMFieldData.h"
 #include "DEMSolverParam.h"
 #include "ContactModel.h"
-#include <map>
-#include <set>
-#include <tuple>
+#include <algorithm>
 #include <cstdint>
 namespace zaran
 {
@@ -68,18 +66,140 @@ namespace zaran
         void CalcGravity();
         void Integrate();
 
-    private:
-        using ContactKey = std::tuple<int, index_type, index_type>;
+        // --- 均匀网格（链表式单元表）：接触检测与初始弹簧网络共用 ---
+        /// @brief 建立单元表；cell 为期望单元边长（会放大以限制单元总数），返回实际边长
+        double BuildUniformGrid(const dynamic_array<DEMParticle>& particles, double cell);
+        /// @brief 查询点所属单元索引（须先调用 BuildUniformGrid）
+        index_type GridCellOf(const Eigen::Vector3d& q) const;
 
-        ContactKey MakeContactKey(const DEMContact& contact) const;
+        // --- 可选功能：初始弹簧连接网络（脆性材料断裂/破坏）---
+        /// @brief 在仿真开始时按几何邻近关系自动建立弹簧连接，追加到键合列表。
+        /// 与逐步接触检测相互独立：只在 t=0 执行一次，之后每步仅按 CalcBondForce 计算。
+        void BuildSpringNetwork();
+
+    private:
+        /// @brief 接触对唯一键：打包的 64 位整数（最高位区分"粒子-墙"）。
+        /// 旧实现用 std::tuple 作为 std::map/std::set 的键，每个接触每步都要做
+        /// 红黑树查找 + 节点分配，是万级粒子下的主要开销之一。
+        using ContactKey = std::uint64_t;
+
+        /// @brief 接触历史（切向弹簧位移）开放寻址哈希表。
+        /// 采用"双缓冲 + 代标记"：每步把上一步的表作为只读历史，写进当前表；
+        /// 步末交换，未出现的接触自然被淘汰。重置为 O(1)（只递增代标记），
+        /// 全程无节点分配。
+        struct ContactHistoryTable
+        {
+            struct Entry
+            {
+                ContactKey      key     = 0;
+                Eigen::Vector3d delta_t = Eigen::Vector3d::Zero();
+                std::uint32_t   gen     = 0; ///< 等于本表 gen 时该槽被占用
+            };
+
+            dynamic_array<Entry> slots;
+            std::uint32_t        gen   = 0;
+            index_type           count = 0;
+
+            static std::size_t Hash(ContactKey x)
+            {
+                x ^= x >> 33; x *= 0xff51afd7ed558ccdULL;
+                x ^= x >> 33; x *= 0xc4ceb9fe1a85ec53ULL;
+                x ^= x >> 33;
+                return static_cast<std::size_t>(x);
+            }
+
+            /// @brief O(1) 清空（代标记递增；回绕时做一次真正的清零）
+            void Reset()
+            {
+                if (++gen == 0)
+                {
+                    for (auto& e : slots) e.gen = 0;
+                    gen = 1;
+                }
+                count = 0;
+            }
+
+            void Reserve(index_type need)
+            {
+                index_type cap = 16;
+                while (cap < need * 2) cap <<= 1;
+                if (static_cast<index_type>(slots.size()) < cap)
+                {
+                    slots.assign(cap, Entry{});
+                    gen = 0;
+                    Reset();
+                }
+            }
+
+            const Eigen::Vector3d* Find(ContactKey key) const
+            {
+                if (slots.empty()) return nullptr;
+                const std::size_t mask = slots.size() - 1;
+                std::size_t s = Hash(key) & mask;
+                while (slots[s].gen == gen)
+                {
+                    if (slots[s].key == key) return &slots[s].delta_t;
+                    s = (s + 1) & mask;
+                }
+                return nullptr;
+            }
+
+            void InsertRaw(ContactKey key, const Eigen::Vector3d& v)
+            {
+                const std::size_t mask = slots.size() - 1;
+                std::size_t s = Hash(key) & mask;
+                while (slots[s].gen == gen)
+                {
+                    if (slots[s].key == key) { slots[s].delta_t = v; return; }
+                    s = (s + 1) & mask;
+                }
+                slots[s].key = key;
+                slots[s].delta_t = v;
+                slots[s].gen = gen;
+                ++count;
+            }
+
+            void Insert(ContactKey key, const Eigen::Vector3d& v)
+            {
+                if (slots.empty() || (count + 1) * 2 > slots.size()) Grow();
+                InsertRaw(key, v);
+            }
+
+            void Grow()
+            {
+                dynamic_array<Entry> old = std::move(slots);
+                const std::uint32_t old_gen = gen;
+                slots.assign(std::max<std::size_t>(16, old.size() * 2 + 8), Entry{});
+                gen = 1;
+                count = 0;
+                for (const auto& e : old)
+                    if (e.gen == old_gen) InsertRaw(e.key, e.delta_t);
+            }
+        };
+
+        static ContactKey MakeContactKey(const DEMContact& contact);
         void RestoreContactHistory(DEMContact& contact) const;
         void SaveContactHistory(const DEMContact& contact);
-        void PruneContactHistory();
+        /// @brief 步末推进接触历史：交换双缓冲并清空当前表
+        void AdvanceContactHistory();
+
+        /// @brief 上一步的接触历史（只读，用于恢复 delta_t）
+        ContactHistoryTable m_history_prev;
+        /// @brief 当前步写入的接触历史
+        ContactHistoryTable m_history_cur;
+
+        // --- 均匀网格（cell list）接触检测缓冲，跨步复用，零每步分配 ---
+        dynamic_array<index_type> m_grid_head; ///< 每个网格单元的首个粒子槽（-1 表示空）
+        dynamic_array<index_type> m_grid_next; ///< 同单元内下一个粒子槽
+        index_type         m_grid_nx  = 0;
+        index_type         m_grid_ny  = 0;
+        index_type         m_grid_nz  = 0;
+        index_type         m_grid_nyz = 0;
+        Eigen::Vector3d    m_grid_lo  = Eigen::Vector3d::Zero();
+        double             m_grid_cell = 0.0;
 
         shared_ptr<DEMFieldData>   m_dem_data;
         unique_ptr<ContactModel>   m_contact_model;
-        std::map<ContactKey, Eigen::Vector3d> m_tangential_history;
-        std::set<ContactKey> m_contacts_this_step;
 
         struct GasVoronoiCell
         {
@@ -98,5 +218,20 @@ namespace zaran
         std::uint64_t m_dem_step = 0;
         bool m_voronoi_valid = false;
         double m_lattice_spacing = 0.0;
+
+        // --- 热化学/反应每步复用的临时缓冲 ---
+        // 原实现在每步构造 7 个大小为 N 的 std::vector，产生持续的
+        // 分配/释放；改为成员缓冲 + assign，容量复用、不再分配。
+        dynamic_array<double> m_tmp_energy_delta;
+        dynamic_array<double> m_tmp_surface_delta;
+        dynamic_array<double> m_tmp_core_delta;
+        dynamic_array<double> m_tmp_length_ratio_sum;
+        dynamic_array<int>    m_tmp_length_ratio_count;
+        dynamic_array<double> m_tmp_gas_pressure_sum;
+        dynamic_array<int>    m_tmp_gas_pressure_count;
+
+        /// @brief 备份输出的复用文本缓冲（先拼完整内容再一次性写盘，
+        /// 避免逐字段 `ostream <<` 的格式化开销）
+        mutable std::string m_out_buffer;
     };
 } // namespace zaran

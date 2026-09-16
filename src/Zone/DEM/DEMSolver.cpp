@@ -1,7 +1,7 @@
 #include "DEMSolver.h"
 #include "LinearSpringDashpot.h"
 #include "HertzMindlin.h"
-#include "KDTree.h"
+#include "FastNumberFormat.h"
 #include "Log.h"
 #include "ZaranError.h"
 #include "CommonPara.h"
@@ -148,6 +148,12 @@ namespace zaran
                 * (p.specific_heat * p.temperature + p.reaction_heat);
             UpdateGasSolidState(p);
         }
+        // --- 可选：仿真开始时（t=0）按几何邻近关系建立弹簧连接网络 ---
+        // 与逐步接触检测相互独立：仅在初始化阶段执行一次，之后每个时间步
+        // 由 CalcBondForce 统一计算弹簧力与断裂判据。
+        if (para->GetSpringNetworkEnabled())
+            BuildSpringNetwork();
+
         double rest_length_sum = 0.0;
         std::size_t rest_length_count = 0;
         for (auto& bond : m_dem_data->GetBonds())
@@ -196,13 +202,12 @@ namespace zaran
 
     void DEMSolver::Solve()
     {
-        m_contacts_this_step.clear();
         ZeroForce();
         CalcBondForce();
         ContactDetection();
         CalcContactForce();
         CalcWallForce();
-        PruneContactHistory();
+        AdvanceContactHistory();
         CalcGravity();
         CalcThermalReaction();
         CalcGasPressureForce();
@@ -413,13 +418,22 @@ namespace zaran
         UpdateGasVoronoiMesh();
         auto& particles = m_dem_data->GetParticles();
         const double dt = GetDEMParam()->GetTimeStep();
-        std::vector<double> energy_delta(particles.size(), 0.0);
-        std::vector<double> surface_delta(particles.size(), 0.0);
-        std::vector<double> core_delta(particles.size(), 0.0);
-        std::vector<double> length_ratio_sum(particles.size(), 0.0);
-        std::vector<int> length_ratio_count(particles.size(), 0);
-        std::vector<double> gas_pressure_sum(particles.size(), 0.0);
-        std::vector<int> gas_pressure_count(particles.size(), 1);
+        const index_type np = particles.size();
+        // 复用成员缓冲（容量跨步保留），避免每步分配 7 个 N 大小数组
+        auto& energy_delta        = m_tmp_energy_delta;
+        auto& surface_delta       = m_tmp_surface_delta;
+        auto& core_delta          = m_tmp_core_delta;
+        auto& length_ratio_sum    = m_tmp_length_ratio_sum;
+        auto& length_ratio_count  = m_tmp_length_ratio_count;
+        auto& gas_pressure_sum    = m_tmp_gas_pressure_sum;
+        auto& gas_pressure_count  = m_tmp_gas_pressure_count;
+        energy_delta.assign(np, 0.0);
+        surface_delta.assign(np, 0.0);
+        core_delta.assign(np, 0.0);
+        length_ratio_sum.assign(np, 0.0);
+        length_ratio_count.assign(np, 0);
+        gas_pressure_sum.assign(np, 0.0);
+        gas_pressure_count.assign(np, 1);
 
         if (!m_voronoi_valid)
         {
@@ -802,34 +816,37 @@ namespace zaran
         }
     }
 
-    DEMSolver::ContactKey DEMSolver::MakeContactKey(const DEMContact& contact) const
+    DEMSolver::ContactKey DEMSolver::MakeContactKey(const DEMContact& contact)
     {
-        return std::make_tuple(static_cast<int>(contact.type), contact.idx_a, contact.idx_b);
+        // 打包为 64 位：粒子-粒子用 (min<<32)|max；粒子-墙用最高位置 1。
+        if (contact.type == ContactType::ParticleWall)
+        {
+            return (std::uint64_t(1) << 63)
+                 | (std::uint64_t(contact.idx_a) << 32)
+                 | std::uint64_t(contact.idx_b & 0xffffffffu);
+        }
+        index_type a = contact.idx_a;
+        index_type b = contact.idx_b;
+        if (a > b) std::swap(a, b);
+        return (std::uint64_t(a) << 32) | std::uint64_t(b & 0xffffffffu);
     }
 
     void DEMSolver::RestoreContactHistory(DEMContact& contact) const
     {
-        const auto it = m_tangential_history.find(MakeContactKey(contact));
-        if (it != m_tangential_history.end())
-            contact.delta_t = it->second;
+        if (const Eigen::Vector3d* v = m_history_prev.Find(MakeContactKey(contact)))
+            contact.delta_t = *v;
     }
 
     void DEMSolver::SaveContactHistory(const DEMContact& contact)
     {
-        const ContactKey key = MakeContactKey(contact);
-        m_tangential_history[key] = contact.delta_t;
-        m_contacts_this_step.insert(key);
+        m_history_cur.Insert(MakeContactKey(contact), contact.delta_t);
     }
 
-    void DEMSolver::PruneContactHistory()
+    void DEMSolver::AdvanceContactHistory()
     {
-        for (auto it = m_tangential_history.begin(); it != m_tangential_history.end();)
-        {
-            if (m_contacts_this_step.find(it->first) == m_contacts_this_step.end())
-                it = m_tangential_history.erase(it);
-            else
-                ++it;
-        }
+        // 当前表成为下一步的历史；另一张表 O(1) 清空后作为新表。
+        std::swap(m_history_prev, m_history_cur);
+        m_history_cur.Reset();
     }
 
     void DEMSolver::ZeroForce()
@@ -841,6 +858,64 @@ namespace zaran
         }
     }
 
+    double DEMSolver::BuildUniformGrid(const dynamic_array<DEMParticle>& particles, double cell)
+    {
+        const index_type N = particles.size();
+
+        // 包围盒
+        Eigen::Vector3d lo = particles[0].pos;
+        Eigen::Vector3d hi = lo;
+        for (index_type i = 0; i < N; ++i)
+        {
+            lo = lo.cwiseMin(particles[i].pos);
+            hi = hi.cwiseMax(particles[i].pos);
+        }
+        m_grid_lo = lo;
+
+        if (!(cell > 0.0)) cell = 1.0; // 退化保护（半径为 0）
+        const Eigen::Vector3d ext = (hi - lo).cwiseMax(Eigen::Vector3d::Zero());
+
+        // 单元总数上限：稀疏/超大域时放大 cell（放大只会增加候选，不影响正确性）
+        const double k_max_cells = 1.0e6;
+        index_type nx = 1, ny = 1, nz = 1;
+        for (int guard = 0; guard < 64; ++guard)
+        {
+            nx = static_cast<index_type>(std::floor(ext.x() / cell)) + 1;
+            ny = static_cast<index_type>(std::floor(ext.y() / cell)) + 1;
+            nz = static_cast<index_type>(std::floor(ext.z() / cell)) + 1;
+            if (double(nx) * double(ny) * double(nz) <= k_max_cells) break;
+            cell *= 2.0;
+        }
+        m_grid_nx  = nx;
+        m_grid_ny  = ny;
+        m_grid_nz  = nz;
+        m_grid_nyz = ny * nz;
+        m_grid_cell = cell;
+
+        // 链表式单元表（O(N)，缓冲跨步复用，无每步分配）
+        const index_type ncell = nx * m_grid_nyz;
+        m_grid_head.assign(ncell, static_cast<index_type>(-1));
+        m_grid_next.resize(N);
+        for (index_type i = 0; i < N; ++i)
+        {
+            const index_type c = GridCellOf(particles[i].pos);
+            m_grid_next[i] = m_grid_head[c];
+            m_grid_head[c] = i;
+        }
+        return cell;
+    }
+
+    index_type DEMSolver::GridCellOf(const Eigen::Vector3d& q) const
+    {
+        index_type ix = static_cast<index_type>((q.x() - m_grid_lo.x()) / m_grid_cell);
+        index_type iy = static_cast<index_type>((q.y() - m_grid_lo.y()) / m_grid_cell);
+        index_type iz = static_cast<index_type>((q.z() - m_grid_lo.z()) / m_grid_cell);
+        if (ix >= m_grid_nx) ix = m_grid_nx - 1;
+        if (iy >= m_grid_ny) iy = m_grid_ny - 1;
+        if (iz >= m_grid_nz) iz = m_grid_nz - 1;
+        return ix * m_grid_nyz + iy * m_grid_nz + iz;
+    }
+
     void DEMSolver::ContactDetection()
     {
         auto& particles = m_dem_data->GetParticles();
@@ -848,56 +923,212 @@ namespace zaran
 
         m_dem_data->ClearContacts();
 
-        if (N == 0) return;
-
-        // 固定粒子也进入邻域搜索；它们不积分，但仍可向活动粒子施加接触力。
-        point_vec pts;
-        pts.reserve(N);
-        for (index_type i = 0; i < N; ++i)
-        {
-            pts.push_back({ particles[i].pos.x(), particles[i].pos.y(), particles[i].pos.z() });
-        }
-
         if (N < 2) return;
 
-        KDTree kd(pts);
-
-        // 对每个粒子 i，查询半径 = r_i + r_max_neighbor 内的邻居
+        // ---- 包围盒与最大半径 ----
+        // 接触判据：dist < r_i + r_j ≤ 2·r_max。取单元边长 ≥ 2·r_max，
+        // 则任一接触对必落在相邻（含自身）的 3×3×3 单元内。
         double r_max = 0.0;
-        for (const auto& particle : particles)
-            r_max = std::max(r_max, particle.radius);
+        for (index_type i = 0; i < N; ++i)
+            r_max = std::max(r_max, particles[i].radius);
+        BuildUniformGrid(particles, 2.0 * r_max);
+
+        // ---- 3×3×3 邻域配对（每个单元只访问一次，天然无重复对）----
+        for (index_type i = 0; i < N; ++i)
+        {
+            const DEMParticle& pa = particles[i];
+            const index_type ci = GridCellOf(pa.pos);
+            const index_type ix0 = ci / m_grid_nyz;
+            const index_type iy0 = (ci / m_grid_nz) % m_grid_ny;
+            const index_type iz0 = ci % m_grid_nz;
+
+            const index_type xb = (ix0 == 0) ? 0 : ix0 - 1;
+            const index_type xe = std::min(ix0 + 1, m_grid_nx - 1);
+            const index_type yb = (iy0 == 0) ? 0 : iy0 - 1;
+            const index_type ye = std::min(iy0 + 1, m_grid_ny - 1);
+            const index_type zb = (iz0 == 0) ? 0 : iz0 - 1;
+            const index_type ze = std::min(iz0 + 1, m_grid_nz - 1);
+
+            for (index_type ix = xb; ix <= xe; ++ix)
+            for (index_type iy = yb; iy <= ye; ++iy)
+            for (index_type iz = zb; iz <= ze; ++iz)
+            {
+                const index_type base = ix * m_grid_nyz + iy * m_grid_nz + iz;
+                for (index_type j = m_grid_head[base]; j != static_cast<index_type>(-1); j = m_grid_next[j])
+                {
+                    if (j <= i) continue; // 每对只算一次
+                    const DEMParticle& pb = particles[j];
+                    const bool a_dyn = pa.IsDynamic();
+                    const bool b_dyn = pb.IsDynamic();
+                    if (!a_dyn && !b_dyn) continue;
+
+                    const double sum_r = pa.radius + pb.radius;
+                    const Eigen::Vector3d delta = pb.pos - pa.pos;
+
+                    // --- 刚性边界（可选）：把 prescribed-motion 粒子当作刚体平面 ---
+                    // 球-球法向由两球心连线给出，一旦粒子中心越过压板球心，法向翻转，
+                    // 接触力由"压入"变成"抛出"，粒子会被弹出边界（表现为穿透）。
+                    // 规定运动体的推进方向是确定的，故取其作为固定法向，并用投影长度
+                    // 计算重叠量：这样即使深度侵入，力仍始终把粒子推回试件内侧。
+                    Eigen::Vector3d normal;
+                    double gap = 0.0;
+                    bool use_rigid = false;
+                    if (GetDEMParam()->GetRigidBoundaryEnabled() && (a_dyn != b_dyn))
+                    {
+                        const DEMParticle& kine = a_dyn ? pb : pa;
+                        const double speed2 = kine.vel.squaredNorm();
+                        if (speed2 > 1.0e-24)
+                        {
+                            const Eigen::Vector3d vhat = kine.vel / std::sqrt(speed2);
+                            // normal 由 A 指向 B：B 为刚体时取 -v̂，A 为刚体时取 +v̂
+                            normal = b_dyn ? vhat : -vhat;
+                            gap = delta.dot(normal);
+                            use_rigid = true;
+                        }
+                    }
+                    if (!use_rigid)
+                    {
+                        const double dist2 = delta.squaredNorm();
+                        if (dist2 >= sum_r * sum_r) continue;
+                        const double dist = std::sqrt(dist2);
+                        if (dist < 1.0e-15) continue;
+                        normal = delta / dist; // n 从 A 指向 B
+                        gap = dist;
+                    }
+
+                    const double overlap = sum_r - gap;
+                    if (overlap <= 0.0) continue;
+
+                    DEMContact c;
+                    c.type = ContactType::ParticleParticle;
+                    c.idx_a = i;
+                    c.idx_b = j;
+                    c.overlap_n = overlap;
+                    c.normal = normal;
+                    c.contact_point = pa.pos + (pa.radius - 0.5 * overlap) * normal;
+                    RestoreContactHistory(c);
+                    m_dem_data->AddContact(c);
+                }
+            }
+        }
+
+        // 预留接触历史容量（含墙面接触余量），避免写入过程中的再散列
+        m_history_cur.Reserve(m_dem_data->GetContacts().size() * 2 + 64);
+    }
+
+    void DEMSolver::BuildSpringNetwork()
+    {
+        auto* para = GetDEMParam();
+        const auto& particles = m_dem_data->GetParticles();
+        const index_type N = particles.size();
+        if (N < 2) return;
+
+        // 已存在的连接对（一般来自 bonds.csv），避免重复建链
+        std::set<std::pair<index_type, index_type>> existing;
+        index_type next_bond_id = 0;
+        for (const auto& b : m_dem_data->GetBonds())
+        {
+            index_type a = b.idx_a;
+            index_type c = b.idx_b;
+            if (a > c) std::swap(a, c);
+            existing.insert({a, c});
+            next_bond_id = std::max(next_bond_id, b.id + 1);
+        }
+
+        // 建链判据：d ≤ (r_a + r_b) · (1 + gap)
+        const double gap = para->GetSpringNetworkGap();
+        const double factor = 1.0 + gap;
+
+        double r_max = 0.0;
+        for (index_type i = 0; i < N; ++i)
+            r_max = std::max(r_max, particles[i].radius);
+
+        // 单元边长需 ≥ 最大连接距离 2·r_max·(1+gap)，保证 3×3×3 邻域即可覆盖
+        BuildUniformGrid(particles, 2.0 * r_max * factor);
+
+        const double user_kn = para->GetSpringNetworkStiffness();
+        const double user_kt = para->GetSpringNetworkTangentialStiffness();
+        const double fracture_strain = para->GetSpringNetworkFractureStrain();
+        const bool energy_from_surface = para->GetSurfaceEnergy() > 0.0;
+
+        index_type created = 0;
+        const index_type npos = static_cast<index_type>(-1);
 
         for (index_type i = 0; i < N; ++i)
         {
             const DEMParticle& pa = particles[i];
-            coord_vec pt_i = { pa.pos.x(), pa.pos.y(), pa.pos.z() };
+            if (!pa.IsDynamic() && !pa.kinematic) continue;
 
-            double search_r = pa.radius + r_max;
-            auto neighbors = kd.NeighborhoodIndices(pt_i, search_r);
+            const index_type ci = GridCellOf(pa.pos);
+            const index_type ix0 = ci / m_grid_nyz;
+            const index_type iy0 = (ci / m_grid_nz) % m_grid_ny;
+            const index_type iz0 = ci % m_grid_nz;
+            const index_type xb = (ix0 == 0) ? 0 : ix0 - 1;
+            const index_type xe = std::min(ix0 + 1, m_grid_nx - 1);
+            const index_type yb = (iy0 == 0) ? 0 : iy0 - 1;
+            const index_type ye = std::min(iy0 + 1, m_grid_ny - 1);
+            const index_type zb = (iz0 == 0) ? 0 : iz0 - 1;
+            const index_type ze = std::min(iz0 + 1, m_grid_nz - 1);
 
-            for (index_type kj : neighbors)
+            for (index_type ix = xb; ix <= xe; ++ix)
+            for (index_type iy = yb; iy <= ye; ++iy)
+            for (index_type iz = zb; iz <= ze; ++iz)
             {
-                index_type j = kj;
-                if (j <= i) continue; // 每对只算一次
+                const index_type base = ix * m_grid_nyz + iy * m_grid_nz + iz;
+                for (index_type j = m_grid_head[base]; j != npos; j = m_grid_next[j])
+                {
+                    if (j <= i) continue; // 每对只建一次
+                    const DEMParticle& pb = particles[j];
+                    if (!pb.IsDynamic() && !pb.kinematic) continue;
 
-                const DEMParticle& pb = particles[j];
-                if (!pa.IsDynamic() && !pb.IsDynamic()) continue;
-                Eigen::Vector3d d = pb.pos - pa.pos;
-                double dist = d.norm();
-                double sum_r = pa.radius + pb.radius;
-                if (dist >= sum_r || dist < 1.0e-15) continue;
+                    const double dist = (pb.pos - pa.pos).norm();
+                    if (dist <= 1.0e-15) continue;
+                    if (dist > (pa.radius + pb.radius) * factor) continue;
+                    if (!existing.insert({i, j}).second) continue; // 已有连接
 
-                DEMContact c;
-                c.type = ContactType::ParticleParticle;
-                c.idx_a = i;
-                c.idx_b = j;
-                c.overlap_n = sum_r - dist;
-                c.normal = d / dist; // n 从 A 指向 B
-                c.contact_point = pa.pos + (pa.radius - 0.5 * c.overlap_n) * c.normal;
-                RestoreContactHistory(c);
-                m_dem_data->AddContact(c);
+                    DEMBond bond;
+                    bond.id = next_bond_id++;
+                    bond.idx_a = i;
+                    bond.idx_b = j;
+                    bond.rest_length = dist; // 初始无应力长度 = 初始中心距
+                    bond.active = true;
+
+                    if (user_kn > 0.0)
+                    {
+                        bond.normal_stiffness = user_kn;
+                    }
+                    else
+                    {
+                        // 与线性接触模型一致的等效刚度：k_n = 2·E*·R*
+                        const double inv_E = (1.0 - pa.poisson_ratio * pa.poisson_ratio) / pa.young_modulus
+                                           + (1.0 - pb.poisson_ratio * pb.poisson_ratio) / pb.young_modulus;
+                        const double E_star = 1.0 / inv_E;
+                        const double R_star = (pa.radius * pb.radius) / (pa.radius + pb.radius);
+                        bond.normal_stiffness = 2.0 * E_star * R_star;
+                    }
+                    bond.tangential_stiffness = user_kt > 0.0 ? user_kt : 0.5 * bond.normal_stiffness;
+
+                    // 断裂能：优先由表面能（InitField 中统一覆盖）；否则由断裂应变换算：
+                    // 轴向弹性能 0.5·k_n·(ε·L0)² 达到该阈值即断。
+                    if (!energy_from_surface && fracture_strain > 0.0)
+                    {
+                        const double critical_extension = fracture_strain * bond.rest_length;
+                        bond.fracture_energy = 0.5 * bond.normal_stiffness
+                                             * critical_extension * critical_extension;
+                    }
+
+                    m_dem_data->AddBond(bond);
+                    ++created;
+                }
             }
         }
+
+        Log::info("DEMSolver: spring network built at t=0 -> {} connections "
+                  "({} pre-existing pairs, {} bonds total, gap={:g}, fracture_strain={:g})",
+                  created, existing.size() - created, m_dem_data->GetBondNum(), gap, fracture_strain);
+        if (created == 0)
+            Log::warn("DEMSolver: spring network enabled but no connection was generated "
+                      "(check dem.spring_network_gap / particle spacing)");
     }
 
     void DEMSolver::CalcContactForce()
@@ -1012,82 +1243,128 @@ namespace zaran
         BackupField(static_cast<const std::string&>(back_folder));
     }
 
+    namespace
+    {
+        /// @brief 一次性写入文本文件（内容已在内存拼好），避免逐字段 << 的开销
+        void WriteTextFile(const std::string& path, const std::string& content)
+        {
+            std::ofstream f(path, std::ios::binary);
+            if (!f.is_open())
+            {
+                Log::warn("DEMSolver::BackupField: cannot open {}", path);
+                return;
+            }
+            f.write(content.data(), static_cast<std::streamsize>(content.size()));
+        }
+    } // namespace
+
     void DEMSolver::BackupField(const std::string& back_folder) const
     {
-        std::string fname = back_folder + "/particles.dat";
-        std::ofstream fout(fname);
-        if (!fout.is_open())
-        {
-            Log::warn("DEMSolver::BackupField: cannot open {}", fname);
-            return;
-        }
+        const auto& particles = m_dem_data->GetParticles();
+        const auto& bonds     = m_dem_data->GetBonds();
+        std::string& buf = m_out_buffer;
+
+        // --- particles.dat ---
         // 缺陷修复：此前的表头以 "variables=" 开头（沿用了残差文件的 Tecplot 风格），
         // 与同目录的 bonds.dat、gas_voronoi_faces.dat 以及输入文件 particles.csv
         // 的纯 CSV 表头不一致，且会破坏下游按 csv.DictReader 解析 "id" 的脚本。
         // 现统一为纯 CSV 表头。
-        fout << "id,group,radius,mass,px,py,pz,vx,vy,vz,rx,ry,rz,ox,oy,oz,fx,fy,fz,motion_type,temperature,reaction_progress,reaction_rate,phase,energetic,gas_temperature,gas_pressure,volume_ratio,total_volume,solid_volume,gas_volume,solid_core_radius,gas_radius,gas_internal_energy,internal_heat_transfer,body_reaction_increment,core_burn_increment,neighbor_burn_increment\n";
-        for (const auto& p : m_dem_data->GetParticles())
+        //
+        // 性能：改为"整块字符串缓冲 + std::to_chars + 单次 write"。
+        // 旧实现逐字段 `fout <<`，万级粒子下每帧需数十万次流格式化（实测 ~200 ms/帧）。
+        buf.clear();
+        buf.reserve(particles.size() * 320 + 512);
+        buf.append("id,group,radius,mass,px,py,pz,vx,vy,vz,rx,ry,rz,ox,oy,oz,fx,fy,fz,motion_type,temperature,reaction_progress,reaction_rate,phase,energetic,gas_temperature,gas_pressure,volume_ratio,total_volume,solid_volume,gas_volume,solid_core_radius,gas_radius,gas_internal_energy,internal_heat_transfer,body_reaction_increment,core_burn_increment,neighbor_burn_increment\n");
+        for (const auto& p : particles)
         {
-            fout << p.id << ","
-                << p.group << ","
-                << p.radius << ","
-                << p.mass << ","
-                << p.pos.x() << "," << p.pos.y() << "," << p.pos.z() << ","
-                << p.vel.x() << "," << p.vel.y() << "," << p.vel.z() << ","
-                << p.rotation.x() << "," << p.rotation.y() << "," << p.rotation.z() << ","
-                << p.omega.x() << "," << p.omega.y() << "," << p.omega.z() << ","
-                << p.force.x() << "," << p.force.y() << "," << p.force.z() << ","
-                << (p.kinematic ? 2 : (p.active ? 1 : 0)) << ","
-                << p.temperature << "," << p.reaction_progress << ","
-                << p.reaction_rate << "," << p.phase << "," << (p.energetic ? 1 : 0) << ","
-                << p.gas_temperature << "," << p.gas_pressure << "," << p.volume_ratio << ","
-                << p.total_volume << "," << p.solid_volume << "," << p.gas_volume << ","
-                << p.solid_core_radius << "," << p.gas_radius << ","
-                << p.gas_internal_energy << "," << p.internal_heat_transfer << ","
-                << p.body_reaction_increment << "," << p.core_burn_increment << ","
-                << p.neighbor_burn_increment << "\n";
+            AppendNumber(buf, p.id);                                    buf.push_back(',');
+            AppendNumber(buf, p.group);                                 buf.push_back(',');
+            AppendNumber(buf, p.radius);                                buf.push_back(',');
+            AppendNumber(buf, p.mass);                                  buf.push_back(',');
+            AppendNumber(buf, p.pos.x()); buf.push_back(',');
+            AppendNumber(buf, p.pos.y()); buf.push_back(',');
+            AppendNumber(buf, p.pos.z());                               buf.push_back(',');
+            AppendNumber(buf, p.vel.x()); buf.push_back(',');
+            AppendNumber(buf, p.vel.y()); buf.push_back(',');
+            AppendNumber(buf, p.vel.z());                               buf.push_back(',');
+            AppendNumber(buf, p.rotation.x()); buf.push_back(',');
+            AppendNumber(buf, p.rotation.y()); buf.push_back(',');
+            AppendNumber(buf, p.rotation.z());                          buf.push_back(',');
+            AppendNumber(buf, p.omega.x()); buf.push_back(',');
+            AppendNumber(buf, p.omega.y()); buf.push_back(',');
+            AppendNumber(buf, p.omega.z());                             buf.push_back(',');
+            AppendNumber(buf, p.force.x()); buf.push_back(',');
+            AppendNumber(buf, p.force.y()); buf.push_back(',');
+            AppendNumber(buf, p.force.z());                             buf.push_back(',');
+            AppendNumber(buf, p.kinematic ? 2 : (p.active ? 1 : 0));     buf.push_back(',');
+            AppendNumber(buf, p.temperature);                           buf.push_back(',');
+            AppendNumber(buf, p.reaction_progress);                     buf.push_back(',');
+            AppendNumber(buf, p.reaction_rate);                         buf.push_back(',');
+            AppendNumber(buf, p.phase);                                 buf.push_back(',');
+            AppendNumber(buf, p.energetic ? 1 : 0);                     buf.push_back(',');
+            AppendNumber(buf, p.gas_temperature);                       buf.push_back(',');
+            AppendNumber(buf, p.gas_pressure);                          buf.push_back(',');
+            AppendNumber(buf, p.volume_ratio);                          buf.push_back(',');
+            AppendNumber(buf, p.total_volume);                          buf.push_back(',');
+            AppendNumber(buf, p.solid_volume);                          buf.push_back(',');
+            AppendNumber(buf, p.gas_volume);                            buf.push_back(',');
+            AppendNumber(buf, p.solid_core_radius);                     buf.push_back(',');
+            AppendNumber(buf, p.gas_radius);                            buf.push_back(',');
+            AppendNumber(buf, p.gas_internal_energy);                   buf.push_back(',');
+            AppendNumber(buf, p.internal_heat_transfer);                buf.push_back(',');
+            AppendNumber(buf, p.body_reaction_increment);               buf.push_back(',');
+            AppendNumber(buf, p.core_burn_increment);                   buf.push_back(',');
+            AppendNumber(buf, p.neighbor_burn_increment);               buf.push_back('\n');
         }
-        fout.close();
+        WriteTextFile(back_folder + "/particles.dat", buf);
 
-        const std::string bond_name = back_folder + "/bonds.dat";
-        std::ofstream bond_out(bond_name);
-        if (!bond_out.is_open())
+        // --- bonds.dat ---
+        buf.clear();
+        buf.reserve(bonds.size() * 176 + 256);
+        buf.append("id,particle_a_id,particle_b_id,rest_length,extension,fx,fy,fz,active,heat_flow_a,damage,maximum_tensile_strain,elastic_energy,fracture_energy,dissipated_fracture_energy\n");
+        for (const auto& b : bonds)
         {
-            Log::warn("DEMSolver::BackupField: cannot open {}", bond_name);
-            return;
+            AppendNumber(buf, b.id);                                    buf.push_back(',');
+            AppendNumber(buf, particles[b.idx_a].id);                   buf.push_back(',');
+            AppendNumber(buf, particles[b.idx_b].id);                   buf.push_back(',');
+            AppendNumber(buf, b.rest_length);                           buf.push_back(',');
+            AppendNumber(buf, b.extension);                             buf.push_back(',');
+            AppendNumber(buf, b.force_a.x()); buf.push_back(',');
+            AppendNumber(buf, b.force_a.y()); buf.push_back(',');
+            AppendNumber(buf, b.force_a.z());                           buf.push_back(',');
+            AppendNumber(buf, b.active ? 1 : 0);                        buf.push_back(',');
+            AppendNumber(buf, b.heat_flow_a);                           buf.push_back(',');
+            AppendNumber(buf, b.damage);                                buf.push_back(',');
+            AppendNumber(buf, b.maximum_tensile_strain);                buf.push_back(',');
+            AppendNumber(buf, b.elastic_energy);                        buf.push_back(',');
+            AppendNumber(buf, b.fracture_energy);                       buf.push_back(',');
+            AppendNumber(buf, b.dissipated_fracture_energy);            buf.push_back('\n');
         }
-        bond_out << "id,particle_a_id,particle_b_id,rest_length,extension,fx,fy,fz,active,heat_flow_a,damage,maximum_tensile_strain,elastic_energy,fracture_energy,dissipated_fracture_energy\n";
-        const auto& particles = m_dem_data->GetParticles();
-        for (const auto& bond : m_dem_data->GetBonds())
-        {
-            bond_out << bond.id << "," << particles[bond.idx_a].id << ","
-                << particles[bond.idx_b].id << "," << bond.rest_length << ","
-                << bond.extension << "," << bond.force_a.x() << ","
-                << bond.force_a.y() << "," << bond.force_a.z() << ","
-                << (bond.active ? 1 : 0) << "," << bond.heat_flow_a << ","
-                << bond.damage << "," << bond.maximum_tensile_strain << ","
-                << bond.elastic_energy << "," << bond.fracture_energy << ","
-                << bond.dissipated_fracture_energy << "\n";
-        }
+        WriteTextFile(back_folder + "/bonds.dat", buf);
+
         Log::info("DEMSolver::BackupField: {} particles and {} bonds written to {}",
             m_dem_data->GetParticleNum(), m_dem_data->GetBondNum(), back_folder);
 
         if (m_voronoi_valid)
         {
-            const std::string face_name = back_folder + "/gas_voronoi_faces.dat";
-            std::ofstream face_out(face_name);
-            if (face_out.is_open())
+            const auto& faces = m_gas_voronoi_faces;
+            buf.clear();
+            buf.reserve(faces.size() * 104 + 256);
+            buf.append("particle_a_id,particle_b_id,length,area,phase_a,phase_b,pressure_a,pressure_b\n");
+            for (const auto& face : faces)
             {
-                face_out << "particle_a_id,particle_b_id,length,area,phase_a,phase_b,pressure_a,pressure_b\n";
-                for (const auto& face : m_gas_voronoi_faces)
-                {
-                    const auto& pa = particles[face.idx_a];
-                    const auto& pb = particles[face.idx_b];
-                    face_out << pa.id << "," << pb.id << "," << face.length << ","
-                        << face.area << "," << pa.phase << "," << pb.phase << ","
-                        << pa.gas_pressure << "," << pb.gas_pressure << "\n";
-                }
+                const auto& pa = particles[face.idx_a];
+                const auto& pb = particles[face.idx_b];
+                AppendNumber(buf, pa.id);          buf.push_back(',');
+                AppendNumber(buf, pb.id);          buf.push_back(',');
+                AppendNumber(buf, face.length);    buf.push_back(',');
+                AppendNumber(buf, face.area);      buf.push_back(',');
+                AppendNumber(buf, pa.phase);       buf.push_back(',');
+                AppendNumber(buf, pb.phase);       buf.push_back(',');
+                AppendNumber(buf, pa.gas_pressure); buf.push_back(',');
+                AppendNumber(buf, pb.gas_pressure); buf.push_back('\n');
             }
+            WriteTextFile(back_folder + "/gas_voronoi_faces.dat", buf);
         }
     }
 

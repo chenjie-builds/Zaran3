@@ -110,6 +110,22 @@ void DEMSolverParam::Init()
     if (GlobalData::IsExist("dem.tangential_viscosity"))
         m_tangential_viscosity = GlobalData::GetDouble("dem.tangential_viscosity");
 
+    // --- 初始弹簧连接网络（可选）---
+    if (GlobalData::IsExist("dem.spring_network_enabled"))
+        m_spring_network_enabled = GlobalData::GetBool("dem.spring_network_enabled");
+    if (GlobalData::IsExist("dem.spring_network_gap"))
+        m_spring_network_gap = GlobalData::GetDouble("dem.spring_network_gap");
+    if (GlobalData::IsExist("dem.spring_network_stiffness"))
+        m_spring_network_stiffness = GlobalData::GetDouble("dem.spring_network_stiffness");
+    if (GlobalData::IsExist("dem.spring_network_tangential_stiffness"))
+        m_spring_network_tangential_stiffness = GlobalData::GetDouble("dem.spring_network_tangential_stiffness");
+    if (GlobalData::IsExist("dem.spring_network_fracture_strain"))
+        m_spring_network_fracture_strain = GlobalData::GetDouble("dem.spring_network_fracture_strain");
+
+    // --- 刚性边界（可选）---
+    if (GlobalData::IsExist("dem.rigid_boundary"))
+        m_rigid_boundary_enabled = GlobalData::GetBool("dem.rigid_boundary");
+
     // 重力向量（分量分别读取）
     if (GlobalData::IsExist("dem.gravity_x"))
         m_gravity.x() = GlobalData::GetDouble("dem.gravity_x");
@@ -159,9 +175,13 @@ void DEMSolverParam::Init()
         || m_high_pressure_knn < 0.0 || m_high_pressure_exponent < 0.0
         || m_normal_viscosity < 0.0 || m_tangential_viscosity < 0.0)
         throw ZaranError("DEM Voronoi/material parameters are invalid");
+    if (m_spring_network_gap < 0.0 || m_spring_network_stiffness < 0.0
+        || m_spring_network_tangential_stiffness < 0.0
+        || m_spring_network_fracture_strain < 0.0)
+        throw ZaranError("DEM spring network parameters are invalid");
 
-    Log::info("DEM SolverParam Init: dt={:E}, contact_model={}, particle_file={}",
-              m_dt, m_contact_model, m_particle_file);
+    Log::info("DEM SolverParam Init: dt={:E}, contact_model={}, particle_file={}, spring_network={}",
+              m_dt, m_contact_model, m_particle_file, m_spring_network_enabled ? "on" : "off");
 }
 
 } // namespace zaran

@@ -77,6 +77,22 @@ namespace zaran
         double GetNormalViscosity() const { return m_normal_viscosity; }
         double GetTangentialViscosity() const { return m_tangential_viscosity; }
 
+        // --- 初始弹簧连接网络（可选，用于脆性材料断裂/破坏；与逐步接触检测相互独立）---
+        /// @brief 是否在仿真开始时按几何邻近关系自动建立弹簧连接网络
+        bool GetSpringNetworkEnabled() const { return m_spring_network_enabled; }
+        /// @brief 建链判据的相对间隙容差：dist ≤ (r_a+r_b)·(1+gap)
+        double GetSpringNetworkGap() const { return m_spring_network_gap; }
+        /// @brief 弹簧法向刚度 (N/m)；≤0 表示按接触模型的等效刚度自动推导
+        double GetSpringNetworkStiffness() const { return m_spring_network_stiffness; }
+        /// @brief 弹簧切向刚度 (N/m)；≤0 表示取法向刚度的一半
+        double GetSpringNetworkTangentialStiffness() const { return m_spring_network_tangential_stiffness; }
+        /// @brief 弹簧断裂应变阈值；≤0 表示回退到 dem.bond_break_strain
+        double GetSpringNetworkFractureStrain() const { return m_spring_network_fracture_strain; }
+
+        // --- 刚性边界（把 prescribed-motion 粒子当作刚体平面）---
+        /// @brief 是否将 kinematic（规定运动）粒子视为刚性边界平面
+        bool GetRigidBoundaryEnabled() const { return m_rigid_boundary_enabled; }
+
     private:
         double         m_dt             = 1.0e-6;
         Eigen::Vector3d m_gravity       = Eigen::Vector3d(0.0, -9.81, 0.0);
@@ -130,5 +146,16 @@ namespace zaran
         double m_high_pressure_exponent = 0.0;
         double m_normal_viscosity = 0.0;
         double m_tangential_viscosity = 0.0;
+
+        // 初始弹簧连接网络（默认关闭，不影响既有算例）
+        bool   m_spring_network_enabled = false;
+        double m_spring_network_gap = 0.02;
+        double m_spring_network_stiffness = 0.0;
+        double m_spring_network_tangential_stiffness = 0.0;
+        double m_spring_network_fracture_strain = 0.02;
+
+        // 刚性边界：把 prescribed-motion（kinematic）粒子当作刚体平面。
+        // 关闭时保持原行为（球-球接触，法向随中心连线翻转）。
+        bool m_rigid_boundary_enabled = false;
     };
 } // namespace zaran
