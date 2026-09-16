@@ -1021,7 +1021,11 @@ namespace zaran
             Log::warn("DEMSolver::BackupField: cannot open {}", fname);
             return;
         }
-        fout << "variables=id,group,radius,mass,px,py,pz,vx,vy,vz,rx,ry,rz,ox,oy,oz,fx,fy,fz,motion_type,temperature,reaction_progress,reaction_rate,phase,energetic,gas_temperature,gas_pressure,volume_ratio,total_volume,solid_volume,gas_volume,solid_core_radius,gas_radius,gas_internal_energy,internal_heat_transfer,body_reaction_increment,core_burn_increment,neighbor_burn_increment\n";
+        // 缺陷修复：此前的表头以 "variables=" 开头（沿用了残差文件的 Tecplot 风格），
+        // 与同目录的 bonds.dat、gas_voronoi_faces.dat 以及输入文件 particles.csv
+        // 的纯 CSV 表头不一致，且会破坏下游按 csv.DictReader 解析 "id" 的脚本。
+        // 现统一为纯 CSV 表头。
+        fout << "id,group,radius,mass,px,py,pz,vx,vy,vz,rx,ry,rz,ox,oy,oz,fx,fy,fz,motion_type,temperature,reaction_progress,reaction_rate,phase,energetic,gas_temperature,gas_pressure,volume_ratio,total_volume,solid_volume,gas_volume,solid_core_radius,gas_radius,gas_internal_energy,internal_heat_transfer,body_reaction_increment,core_burn_increment,neighbor_burn_increment\n";
         for (const auto& p : m_dem_data->GetParticles())
         {
             fout << p.id << ","

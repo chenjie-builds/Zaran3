@@ -48,10 +48,17 @@ void LinearSpringDashpot::CalcNormalForce(const DEMParticle& pa, const DEMPartic
     double v_n_rel = rel_vel.dot(contact.normal);
 
     // F_n = -(k_n * δ + c_n * v_n_rel) * n  (排斥力，方向沿 -normal 作用于 A)
+    //
+    // 注意（缺陷修复）：
+    //   标准线性弹簧-阻尼模型（Cundall-Strack）在回弹阶段允许阻尼项产生
+    //   小幅"拉力"（c_n·v_n_rel 使 F_n 为负），这正是
+    //       c_n = 2·beta·sqrt(m_eff·k_n),  beta = -ln(e)/sqrt(pi² + ln²e)
+    //   这一恢复系数标定公式成立的前提。旧实现中的
+    //       if (Fn_mag < 0.0) Fn_mag = 0.0;   // 不允许拉力
+    //   会在回弹阶段抹掉这部分耗能，使实测恢复系数系统性高于标称值
+    //   （例如 e=0.5 实测约 0.55）。接触的建立与解除由几何重叠判据
+    //   （dist < sum_r）负责，无需用力钳位来防止颗粒粘连。
     double Fn_mag = k_n * contact.overlap_n + c_n * v_n_rel;
-    
-
-    if (Fn_mag < 0.0) Fn_mag = 0.0; // 不允许拉力
 
     contact.force_n = -Fn_mag * contact.normal;
 }
