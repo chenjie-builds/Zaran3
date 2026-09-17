@@ -22,6 +22,9 @@ namespace zaran
 	public:
 		void WriteTecASCII(shared_ptr<FieldManager> field_manager);
 		void WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostream& os);
+		/// @brief 带气相体积分数的 Tecplot ASCII 输出（两相求解器使用）
+		void WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostream& os,
+			bool with_volume_fraction);
 		static void WriteTecplotASCII(const shared_ptr<NSFieldZaran>& field, std::ostream& os);
         void WriteTecplotASCII(shared_ptr<NSFieldFNFDM> field, std::ostream &os);
 
@@ -30,6 +33,11 @@ namespace zaran
 		void WriteTecplotBinary(shared_ptr<NSFieldFNFDM> field);
 		void WriteTecplotBinary(shared_ptr<NSFieldZaran> field);
 		void WriteTecplotBinary(shared_ptr<NSFieldStruct> field);
+		/// @brief 带气相体积分数的 Tecplot 二进制输出（两相求解器使用）
+		void WriteTecplotBinary(shared_ptr<NSFieldStruct> field, bool with_volume_fraction);
+
+		/// @brief 该场的数据里是否含气相体积分数（两相场才注册了这个量）
+		static bool HasVolumeFraction(const shared_ptr<Field>& field);
 
 		void WriteVtkASCII(shared_ptr<FieldManager> field_manager);
 		void WriteVtkASCII(shared_ptr<NSFieldStruct> field, std::ostream& os);

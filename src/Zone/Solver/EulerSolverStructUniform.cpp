@@ -55,6 +55,19 @@ namespace zaran
 				nk = static_cast<int>(grid.GetNk());
 			}
 		};
+
+		/// @brief 把"本征"守恒量按节点体积分数加权后写出（单相时权重恒为 1.0，精确）
+		/// @details 守恒量以 "每单位总体积的气相量" 存储，即 cons = ε · cons_intrinsic；
+		///          虚拟节点也必须遵守同一约定，否则后续 Cons2Prim 会读出被 ε 缩放的 ρ、p。
+		void WeightCons(const double* volume_fraction, index_type idx,
+			const double* cons_intrinsic, double* cons_out)
+		{
+			const double weight = (volume_fraction != nullptr) ? volume_fraction[idx] : 1.0;
+			for (int eq = 0; eq < kEqNum; ++eq)
+			{
+				cons_out[eq] = weight * cons_intrinsic[eq];
+			}
+		}
 	}
 
 	// ==================================================================
@@ -436,26 +449,38 @@ namespace zaran
 		}
 	}
 
-	// ==================================================================
-	// 变量转换与残差清零
-	// ==================================================================
-	void EulerSolverStructUniform::Prim2Cons()
-	{
-		auto gas = GetGas();
-		auto grid = GetGrid();
-		auto data_manager = GetDataManager();
-		IdProxyStruct& idx_proxy = GetIdxProxy();
-		const NodeCounts counts(*m_grid);
-		const int ni = counts.ni, nj = counts.nj, nk = counts.nk;
-		// OpenMP 要求循环边界是简单变量
-		const int ni_i = ni;
-		const int nj_i = nj;
-		const int nk_i = nk;
-		// 用字面量尺寸 + private 子句，与 NSSolverStruct::Prim2Cons 写法一致
-		double prim[5], cons[5];
+// ==================================================================
+// 变量转换与残差清零
+// ==================================================================
+// 体积分数的引入方式（两相扩展）
+// -----------------------------
+// 守恒量按"每单位**总体积**的气相量"存储：cons = ε · cons_intrinsic，
+// 其中 cons_intrinsic 是单相求解器里那套 (ρ, ρu, ρv, ρw, E)。相应地动量/能量
+// 方程就是 ∂(εU)/∂t + ∇·(εF) = S，与界面通量按 ε 加权完全一致，守恒律不会
+// 被 ε 梯度凭空破坏。原始变量仍然存**气相本身**的 (ρ, u, v, w, p)，与单相
+// 求解器、与 Tecplot 输出、与状态方程 Gas::Prim2Cons 全部一致。
+//
+// 单相时 ε ≡ 1：乘 1.0 / 除 1.0 在 IEEE 下是精确运算，所以下面两条路径
+// 产生的 cons 与 prim 与改动前逐位相同。
+void EulerSolverStructUniform::Prim2Cons()
+{
+	auto gas = GetGas();
+	auto grid = GetGrid();
+	auto data_manager = GetDataManager();
+	IdProxyStruct& idx_proxy = GetIdxProxy();
+	const NodeCounts counts(*m_grid);
+	const int ni = counts.ni, nj = counts.nj, nk = counts.nk;
+	// OpenMP 要求循环边界是简单变量
+	const int ni_i = ni;
+	const int nj_i = nj;
+	const int nk_i = nk;
+	// 体积分数场（单相为 nullptr ⇒ 权重恒 1.0）
+	const double* volume_fraction = GetVolumeFractionField();
+	// 用字面量尺寸 + private 子句，与 NSSolverStruct::Prim2Cons 写法一致
+	double prim[5], cons[5], cons_intrinsic[5];
 
 #ifdef USE_OMP
-#pragma omp parallel for collapse(3) private(prim, cons)
+#pragma omp parallel for collapse(3) private(prim, cons, cons_intrinsic)
 #endif
 		for (int k = 0; k < nk_i; ++k)
 		{
@@ -468,7 +493,12 @@ namespace zaran
 					{
 						prim[eq] = data_manager->GetPrim(eq, idx);
 					}
-					gas->Prim2Cons(prim, cons);
+					gas->Prim2Cons(prim, cons_intrinsic);
+					const double weight = (volume_fraction != nullptr) ? volume_fraction[idx] : 1.0;
+					for (int eq = 0; eq < kEqNum; ++eq)
+					{
+						cons[eq] = weight * cons_intrinsic[eq];
+					}
 					data_manager->SetCons(idx, cons);
 					// 注意：DataManagerNS 只为 SetPrim / SetCons / SetResidual 提供了指针重载，
 					// SetConsOld 需要逐分量写入
@@ -479,23 +509,24 @@ namespace zaran
 				}
 			}
 		}
-	}
+}
 
-	void EulerSolverStructUniform::Cons2Prim()
-	{
-		auto gas = GetGas();
-		auto grid = GetGrid();
-		auto data_manager = GetDataManager();
-		IdProxyStruct& idx_proxy = GetIdxProxy();
-		const NodeCounts counts(*m_grid);
-		const int ni = counts.ni, nj = counts.nj, nk = counts.nk;
-		const int ni_i = ni;
-		const int nj_i = nj;
-		const int nk_i = nk;
-		double prim[5], cons[5];
+void EulerSolverStructUniform::Cons2Prim()
+{
+	auto gas = GetGas();
+	auto grid = GetGrid();
+	auto data_manager = GetDataManager();
+	IdProxyStruct& idx_proxy = GetIdxProxy();
+	const NodeCounts counts(*m_grid);
+	const int ni = counts.ni, nj = counts.nj, nk = counts.nk;
+	const int ni_i = ni;
+	const int nj_i = nj;
+	const int nk_i = nk;
+	const double* volume_fraction = GetVolumeFractionField();
+	double prim[5], cons[5], cons_intrinsic[5];
 
 #ifdef USE_OMP
-#pragma omp parallel for collapse(3) private(prim, cons)
+#pragma omp parallel for collapse(3) private(prim, cons, cons_intrinsic)
 #endif
 		for (int k = 0; k < nk_i; ++k)
 		{
@@ -508,12 +539,17 @@ namespace zaran
 					{
 						cons[eq] = data_manager->GetCons(eq, idx);
 					}
-					gas->Cons2Prim(cons, prim);
+					const double weight = (volume_fraction != nullptr) ? volume_fraction[idx] : 1.0;
+					for (int eq = 0; eq < kEqNum; ++eq)
+					{
+						cons_intrinsic[eq] = cons[eq] / weight;
+					}
+					gas->Cons2Prim(cons_intrinsic, prim);
 					data_manager->SetPrim(idx, prim);
 				}
 			}
 		}
-	}
+}
 
 	void EulerSolverStructUniform::ZeroResidual()
 	{
@@ -614,6 +650,10 @@ namespace zaran
 		{
 			residual[eq] = data_manager->GetResidual(eq);
 		}
+		// 体积分数场（单相为 nullptr）。界面权重取两侧节点的**算术平均**，
+		// 见 docs/TWO_PHASE_EULER_STAGE1.md：算术平均 + 中心差分的 ∇ε 恰好抵消，
+		// 使"均匀压强 + 静止"成为离散精确的定常解（well-balanced）。
+		const double* volume_fraction = GetVolumeFractionField();
 
 		Eigen::Vector3d norm = Eigen::Vector3d::Zero();
 		norm(dir) = 1.0;
@@ -670,9 +710,24 @@ namespace zaran
 					riemann_para.nt = 0.0;
 					m_riemann_solver->Solver(riemann_para);
 
-					for (int eq = 0; eq < kEqNum; ++eq)
+					// 体积分数加权：face 权重取两侧节点的算术平均。
+					// 单相时 volume_fraction == nullptr ⇒ eps_face 恒为 1.0，
+					// 乘 1.0 在 IEEE 下精确，故通量与改动前逐位相同。
+					const double eps_face = (volume_fraction != nullptr)
+						? 0.5 * (volume_fraction[idx_l] + volume_fraction[idx_r]) : 1.0;
+					if (eps_face != 1.0)
 					{
-						data_manager->SetMidNodeFlux(eq, dir, idx_l, riemann_para.flux(eq));
+						for (int eq = 0; eq < kEqNum; ++eq)
+						{
+							data_manager->SetMidNodeFlux(eq, dir, idx_l, riemann_para.flux(eq) * eps_face);
+						}
+					}
+					else
+					{
+						for (int eq = 0; eq < kEqNum; ++eq)
+						{
+							data_manager->SetMidNodeFlux(eq, dir, idx_l, riemann_para.flux(eq));
+						}
 					}
 				}
 			}
@@ -915,9 +970,17 @@ namespace zaran
 	/// @details 支持的类型与 mesh.inp 中使用的名字一致：
 	///          - "outlet"   零梯度外推（也是激波管的入流/出流边界）
 	///          - "inlet"    给定来流常值
-	///          - "wall"     固壁（法向动量反号）
+	///          - "wall"     固壁（镜像反射）
 	///          - "hole"     内部挖洞，跳过
 	///          未识别的名字会直接报错，避免静默地使用错误边界。
+	///
+	///          **镜像必须逐层取不同的内部节点**：第 k 层虚拟节点 = 第 k 个内部
+	///          节点关于壁面的镜像，即 ghost(k) = mirror(node[is + k - 1])。
+	///          若所有层都镜像同一个边界节点（剖面向外是"平的"），MUSCL 重构在
+	///          壁面的左右斜率就不再成镜像，界面两侧状态不再对称，壁面质量通量
+	///          变成 O(ρu) 而非零 —— 表现为**质量不守恒**（实测一维爆轰反射算例
+	///          在 t=0.2 内凭空增加 4.3% 质量）。逐层镜像后重构精确对称，壁面
+	///          质量/能量通量为零（仅剩浮点舍入）。见 docs/TWO_PHASE_EULER_STAGE1.md。
 	void EulerSolverStructUniform::BoundaryCondition()
 	{
 		auto grid = GetGrid();
@@ -936,6 +999,9 @@ namespace zaran
 		};
 		double cons_inflow[kEqNum];
 		GetGas()->Prim2Cons(prim_inflow, cons_inflow);
+
+		// 体积分数场（单相为 nullptr ⇒ 权重恒 1.0，乘/除 1.0 精确）
+		const double* volume_fraction = GetVolumeFractionField();
 
 		for (auto& boundary : bound_map->GetBoundMap())
 		{
@@ -959,13 +1025,24 @@ namespace zaran
 				const index_type idx_bound = idx_proxy(i_bound, j_bound, k_bound);
 				const auto direction = bound[iBound].GetDirectionSrc();
 
-				// 边界节点自身的原始变量（outlet / wall 需要用它外推或镜像）
+				// 边界节点自身的原始变量（outlet / inlet / wall 层 1 需要用它外推或镜像）
 				double prim_bound[kEqNum], cons_bound[kEqNum];
 				for (int eq = 0; eq < kEqNum; ++eq)
 				{
 					prim_bound[eq] = data_manager->GetPrim(eq, idx_bound);
 				}
 				GetGas()->Prim2Cons(prim_bound, cons_bound);
+
+				// 固壁的法向（direction 指向计算域外）
+				dimension_type normal_dir = 0;
+				for (dimension_type iDim = 0; iDim < dim; ++iDim)
+				{
+					if (direction[iDim] != 0)
+					{
+						normal_dir = iDim;
+						break;
+					}
+				}
 
 				for (size_t iGhost = 1; iGhost <= ghost_level; ++iGhost)
 				{
@@ -974,42 +1051,45 @@ namespace zaran
 					const index_type k_ghost = k_bound + iGhost * direction[2];
 					const index_type idx_ghost = idx_proxy(i_ghost, j_ghost, k_ghost);
 
+					double cons_ghost[kEqNum];
 					if (bound_name == "inlet")
 					{
 						data_manager->SetPrim(idx_ghost, prim_inflow);
-						data_manager->SetCons(idx_ghost, cons_inflow);
+						WeightCons(volume_fraction, idx_ghost, cons_inflow, cons_ghost);
+						data_manager->SetCons(idx_ghost, cons_ghost);
 					}
 					else if (bound_name == "outlet")
 					{
 						data_manager->SetPrim(idx_ghost, prim_bound);
-						data_manager->SetCons(idx_ghost, cons_bound);
+						WeightCons(volume_fraction, idx_ghost, cons_bound, cons_ghost);
+						data_manager->SetCons(idx_ghost, cons_ghost);
 					}
 					else // wall
 					{
-						// 固壁：密度、压力、切向动量取镜像，法向动量反号
-						// 边界方向指向计算域外，故法向分量为 -direction
-						dimension_type normal_dir = 0;
-						double normal_sign = 1.0;
-						for (dimension_type iDim = 0; iDim < dim; ++iDim)
-						{
-							if (direction[iDim] != 0)
-							{
-								normal_dir = iDim;
-								normal_sign = -static_cast<double>(direction[iDim]);
-								break;
-							}
-						}
-						double cons_ghost[kEqNum];
+						// 逐层镜像：第 iGhost 层取"第 iGhost 个内部节点"的镜像，
+						// 即源节点 = 边界节点沿 +direction 的反方向偏移 iGhost-1 层。
+						const index_type shift = static_cast<index_type>(iGhost) - 1;
+						const index_type i_src = i_bound - shift * direction[0];
+						const index_type j_src = j_bound - shift * direction[1];
+						const index_type k_src = k_bound - shift * direction[2];
+						const index_type idx_src = idx_proxy(i_src, j_src, k_src);
+
+						// 守恒量是按 ε 加权存的，必须**先还原成本征守恒量再镜像**：
+						// 否则 ε≠1 时 Gas::Cons2Prim 会把镜像后的 ρ、p 整体乘上 ε_src，
+						// 界面两侧状态不再对称，壁面质量通量变成 O(ρu) 而非零。
+						const double weight_src = (volume_fraction != nullptr)
+							? volume_fraction[idx_src] : 1.0;
+						double cons_intrinsic[kEqNum];
 						for (int eq = 0; eq < kEqNum; ++eq)
 						{
-							cons_ghost[eq] = cons_bound[eq];
+							cons_intrinsic[eq] = data_manager->GetCons(eq, idx_src) / weight_src;
 						}
-						// 指向域外 => ghost 的法向速度与边界节点相反
-						cons_ghost[1 + normal_dir] = -cons_bound[1 + normal_dir];
+						// 法向动量反号（密度、压强、切向动量取镜像）
+						cons_intrinsic[1 + normal_dir] = -cons_intrinsic[1 + normal_dir];
 						double prim_ghost[kEqNum];
-						GetGas()->Cons2Prim(cons_ghost, prim_ghost);
-						(void)normal_sign;
+						GetGas()->Cons2Prim(cons_intrinsic, prim_ghost);
 						data_manager->SetPrim(idx_ghost, prim_ghost);
+						WeightCons(volume_fraction, idx_ghost, cons_intrinsic, cons_ghost);
 						data_manager->SetCons(idx_ghost, cons_ghost);
 					}
 				}

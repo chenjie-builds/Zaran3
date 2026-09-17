@@ -793,7 +793,28 @@ void Visual::WriteVtkBinary(shared_ptr<NSFieldStruct> field, std::ostream &os)
     }
 }
 
+bool zaran::Visual::HasVolumeFraction(const shared_ptr<Field>& field)
+{
+    if (!field)
+    {
+        return false;
+    }
+    auto data = field->GetData();
+    if (!data)
+    {
+        return false;
+    }
+    // 只有两相场（DataManagerNSTwoPhase）才注册了这个量
+    return data->HasData("volume_fraction");
+}
+
 void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostream &os)
+{
+    WriteTecplotASCII(field, os, HasVolumeFraction(field));
+}
+
+void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostream &os,
+    bool with_volume_fraction)
 {
     auto grid = field->GetGrid();
     auto node = grid->GetNode();
@@ -815,6 +836,14 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostr
     const double *velocity_y = data_manager->GetPrim(ID_VELOCITY_Y);
     const double *velocity_z = data_manager->GetPrim(ID_VELOCITY_Z);
     const double *pressure = data_manager->GetPrim(ID_PRESSURE);
+    // 两相场：额外输出气相体积分数（该量由 DataManagerNSTwoPhase 注册在 FieldData 里）
+    const double *volume_fraction = nullptr;
+    if (with_volume_fraction)
+    {
+        double *volume_fraction_buffer = nullptr;
+        field->GetData()->GetData("volume_fraction", volume_fraction_buffer);
+        volume_fraction = volume_fraction_buffer;
+    }
     // double zeta_z_Linf = -LARGE_NUMBER;
     // double zeta_z_L2 = 0.0;
     // double zeta_z_error;
@@ -902,13 +931,19 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostr
     // pressure_L2 /= node_num;
     // pressure_L2 = std::sqrt(pressure_L2);
     os << "TITLE=\"NSFieldStruct Field\"\n";
-    // os <<
-    // "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\",\"x_zeta\",\"y_zeta\",\"z_xi\",\"ERR_J\"\n";
-    os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\"\n"; // os
-                                                                                                                 // <<
-                                                                                                                 // "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure,\"zeta_z\n";
+    if (volume_fraction != nullptr)
+    {
+        os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\","
+              "\"Pressure\",\"Volume_fraction\"\n";
+    }
+    else
+    {
+        os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\"\n";
+    }
     os << "ZONE I=" << ni << ", J=" << nj << ", K=" << nk << ", F=POINT\n";
     double solution_time = GlobalData::GetDouble("iteration.current_time");
+    // 该输出通道主要用于脚本后处理与精度验证，因此用能往返 double 的精度
+    os.precision(17);
     os << "SOLUTIONTIME=" << solution_time << "\n";
 
     for (int k = ks; k <= ke; ++k)
@@ -954,7 +989,12 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostr
                    // metrics->GetJacobian(idx)-zeta_z_exac)/zeta_z_exact << "\n";
                    //<< pressure[idx] << " " << metrics->GetX(idx)[2] << " " << metrics->GetY(idx)[2] << " " <<
                    // metrics->GetZ(idx)[0] << " " << jacobi_error << "\n";
-                   << pressure[idx] << "\n";
+                   << pressure[idx];
+                if (volume_fraction != nullptr)
+                {
+                    os << " " << volume_fraction[idx];
+                }
+                os << "\n";
             }
         }
     }
@@ -1198,6 +1238,11 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldZaran> field)
 }
 void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldStruct> field)
 {
+    WriteTecplotBinary(field, HasVolumeFraction(field));
+}
+
+void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldStruct> field, bool with_volume_fraction)
+{
     auto data_manager = field->GetDataManager();
     auto grid = field->GetGrid();
     auto node = grid->GetNode();
@@ -1214,6 +1259,18 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldStruct> field)
     INTEGER4 cell_num = (ni - 1) * (nj - 1) * (nk - 1);
     dynamic_array<double> x(node_num), y(node_num), z(node_num), density(node_num), velocity_x(node_num),
         velocity_y(node_num), velocity_z(node_num), pressure(node_num), iblank(node_num);
+    dynamic_array<double> volume_fraction;
+    if (with_volume_fraction)
+    {
+        volume_fraction.resize(node_num);
+    }
+    const double *volume_fraction_field = nullptr;
+    if (with_volume_fraction)
+    {
+        double *volume_fraction_buffer = nullptr;
+        field->GetData()->GetData("volume_fraction", volume_fraction_buffer);
+        volume_fraction_field = volume_fraction_buffer;
+    }
     for (index_type k = 0; k < nk; ++k)
     {
         for (index_type j = 0; j < nj; ++j)
@@ -1230,6 +1287,10 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldStruct> field)
                 velocity_y[idx] = data_manager->GetPrim(ID_VELOCITY_Y, idx0);
                 velocity_z[idx] = data_manager->GetPrim(ID_VELOCITY_Z, idx0);
                 pressure[idx] = data_manager->GetPrim(ID_PRESSURE, idx0);
+                if (volume_fraction_field != nullptr)
+                {
+                    volume_fraction[idx] = volume_fraction_field[idx0];
+                }
                 iblank[idx] =-1;
             }
         }
@@ -1264,6 +1325,10 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldStruct> field)
     i = TECDAT142(&node_num, velocity_z.data(), &vIsDouble);
     i = TECDAT142(&node_num, pressure.data(), &vIsDouble);
     i = TECDAT142(&node_num, iblank.data(), &vIsDouble);
+    if (!volume_fraction.empty())
+    {
+        i = TECDAT142(&node_num, volume_fraction.data(), &vIsDouble);
+    }
 }
 void Visual::WriteTecASCII(shared_ptr<FieldManager> field_manager)
 {
@@ -1281,7 +1346,8 @@ void Visual::WriteTecASCII(shared_ptr<FieldManager> field_manager)
         if (field_type == FieldType::NS_Structured)
         {
             auto field_struct = std::dynamic_pointer_cast<NSFieldStruct>(field);
-            WriteTecplotASCII(field_struct, out);
+            // 两相场多输出一个气相体积分数（单相场不输出，保持既有格式不变）
+            WriteTecplotASCII(field_struct, out, HasVolumeFraction(field));
         }
         else if (field_type == FieldType::NS_Zaran)
         {
@@ -1308,7 +1374,23 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<FieldManager> field_manager)
     INTEGER4 vIsInt = 0;
     INTEGER4 fileType = 0;
     string grid_name = "grid";
+    // 变量名必须与各场实际写出的数据条数一致：两相场会多写一个体积分数，
+    // 因此先扫一遍场列表，只要有一个 NS_Structured 场带体积分数就切换表头。
+    bool with_volume_fraction = false;
+    for (size_t iter_field = 0; iter_field < field_manager->GetFieldNum(); iter_field++)
+    {
+        auto probe = field_manager->GetField(iter_field);
+        if (probe->GetFieldType() == FieldType::NS_Structured && HasVolumeFraction(probe))
+        {
+            with_volume_fraction = true;
+            break;
+        }
+    }
     string var_name = "x, y, z, density, velocity_x, velocity_y, velocity_z, pressure, iBlank";
+    if (with_volume_fraction)
+    {
+        var_name += ", volume_fraction";
+    }
     std::string work_dir = GlobalData::GetString("work_dir");
     std::string file_name = std::to_string(GlobalData::GetInt("iteration.current_iter")) + ".plt";
     std::string temp_file_name = std::to_string(GlobalData::GetInt("iteration.current_iter")) + ".tmp";
@@ -1332,7 +1414,7 @@ void zaran::Visual::WriteTecplotBinary(shared_ptr<FieldManager> field_manager)
         else if (field_type == FieldType::NS_Structured)
         {
             auto field_struct = std::dynamic_pointer_cast<NSFieldStruct>(field);
-            WriteTecplotBinary(field_struct);
+            WriteTecplotBinary(field_struct, with_volume_fraction && HasVolumeFraction(field));
         }
         else
         {

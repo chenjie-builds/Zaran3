@@ -185,6 +185,21 @@ namespace zaran
 				throw ZaranError("Unsupported Grid Type for Euler solver");
 			}
 		}
+		else if (solver_type_name == "EulerTwoPhase")
+		{
+			// 两相（气相体积分数加权）Euler 求解器：网格与 Euler 分支相同，
+			// 只是求解器/参数/数据管理器换成两相版本（多一个体积分数场）。
+			if (grid_type_name == "Structured")
+			{
+				grid_type = GridType::Structured;
+				solver_type = FieldSolverType::Euler_TwoPhase_Uniform;
+			}
+			else
+			{
+				Log::warn("EulerTwoPhase solver requires task.grid_type = Structured! Please Check!");
+				throw ZaranError("Unsupported Grid Type for EulerTwoPhase solver");
+			}
+		}
 		else
 		{
 			Log::warn("Unsupported Solver Type! Please Check!");

@@ -23,6 +23,17 @@
  *     - 雅可比恒为 1，通量差分即普通的中心差；
  *     - 不需要 Metric 相关的任何存储。
  *   这也正是为后续接入 DEM 两相耦合预留的、最简单也最容易验证的流体基座。
+ *
+ *  体积分数（两相）扩展点
+ *   ----------------------
+ *   两相版本 EulerTwoPhaseStructUniform 直接继承本类，只通过一个虚钩子接入：
+ *
+ *       virtual const double* GetVolumeFractionField() const;
+ *
+ *   单相时返回 nullptr，此时
+ *     - 界面通量的体积分数权重恒为 1.0，乘 1.0 在 IEEE 下精确（通量逐位不变）；
+ *     - 变量转换的权重恒为 1.0，乘/除 1.0 同样精确（守恒量逐位不变）。
+ *   于是"ε ≡ 1 时逐位退化到单相结果"不是靠特判分支，而是由算术本身保证的。
  */
 
 #pragma once
@@ -86,6 +97,13 @@ namespace zaran
 
 		// ---------------- FlowFieldSolver 接口 ----------------
 		void ReduceTimeStep(double& dt) override;
+
+	protected:
+		/// @brief 气相体积分数场（节点中心，含 ghost）。
+		/// @details 单相求解器返回 nullptr，此时所有体积分数权重恒为 1.0，
+		///          乘 1.0 / 除 1.0 在 IEEE 下精确，因而通量与变量转换逐位不变。
+		///          两相求解器（EulerTwoPhaseStructUniform）覆盖该函数返回 ε 场。
+		virtual const double* GetVolumeFractionField() const { return nullptr; }
 
 	private:
 		/// @brief 沿指定方向累加对流通量残差

@@ -9,6 +9,7 @@
 #include "NSFieldFN.h"
 #include "NSFieldStruct.h"
 #include "NSFieldStructUniform.h"
+#include "NSFieldStructTwoPhase.h"
 #include "NSFieldZaran.h"
 #include "PolyData.h"
 #include "ReadSTL.h"
@@ -67,18 +68,26 @@ namespace zaran
 				field_list[iField]->SetIdx(iField);
 			}
 			else if (m_solver_type == FieldSolverType::NS_Struct
-				|| m_solver_type == FieldSolverType::Euler_Struct_Uniform)
+				|| m_solver_type == FieldSolverType::Euler_Struct_Uniform
+				|| m_solver_type == FieldSolverType::Euler_TwoPhase_Uniform)
 			{
-				// 两种求解器共用同一个结构网格：NS_Struct 面向贴体曲线坐标，
-				// Euler_Struct_Uniform 面向均匀笛卡尔网格，差异只在求解器与参数类。
+				// 三种求解器共用同一个结构网格：
+				//   NS_Struct                面向贴体曲线坐标；
+				//   Euler_Struct_Uniform     均匀笛卡尔网格上的单相 Euler；
+				//   Euler_TwoPhase_Uniform   同上，但带气相体积分数加权。
+				// 差异只在求解器类、参数类与数据管理器。
 				auto grid_struct = std::dynamic_pointer_cast<GridStruct>(grid_list[iField]);
 				if (m_solver_type == FieldSolverType::NS_Struct)
 				{
 					field_list[iField] = make_shared < NSFieldStruct>(grid_struct);
 				}
-				else
+				else if (m_solver_type == FieldSolverType::Euler_Struct_Uniform)
 				{
 					field_list[iField] = make_shared < NSFieldStructUniform>(grid_struct);
+				}
+				else
+				{
+					field_list[iField] = make_shared < NSFieldStructTwoPhase>(grid_struct);
 				}
 				field_list[iField]->SetIdx(iField);
 				int ni = grid_struct->GetNi();

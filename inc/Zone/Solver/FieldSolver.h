@@ -22,6 +22,8 @@ namespace zaran
 		DEM,
 		/// @brief 均匀笛卡尔结构网格上的 Euler 方程求解器
 		Euler_Struct_Uniform,
+		/// @brief 均匀笛卡尔结构网格上的**两相**（气相体积分数加权）Euler 方程求解器
+		Euler_TwoPhase_Uniform,
 	};
 	/// @brief 场求解器基类
 	class FieldSolver :public Solver

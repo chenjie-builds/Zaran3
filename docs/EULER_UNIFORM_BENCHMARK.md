@@ -241,11 +241,18 @@ MSVC 会报 `fatal error C1001: 内部编译器错误`。
 
 ## 8. 与 DEM 耦合的衔接点
 
-求解器已按框架规范就位，后续两相扩展只需在既有位置追加：
+> **状态更新（2026-09-17）**：本节的规划已经落地——**阶段 1 的两相（气相体积分数加权）
+> 求解器已实现并验证**，见 `docs/TWO_PHASE_EULER_STAGE1.md`。`volume_fraction` 场由
+> `DataManagerNSTwoPhase` 注册，通量按 `ε_face = ½(ε_L+ε_R)` 加权，动量方程取 `ε∇p`
+> 形式（含 `+p∇ε` 源项）。实现过程中顺带查出并修复了本求解器的**两个边界处理缺陷**
+> （反射界面虚拟节点未逐层镜像；虚拟节点守恒量的 ε 换算不一致），
+> 两者都表现为封闭系统质量/能量不守恒——详见 TWO_PHASE 文档第 6 节。
+> 修复后 `sod` / `lax` / `vortex` 等 `outlet` 边界的算例数值**逐位未变**
+> （一阶 `8.40207e-03`、二阶 `1.57360e-03` @N=400），19/19 项 DEM 回归全部通过。
 
 | 要加的东西 | 挂在哪里 |
 |---|---|
-| 体积分数 ε_g | 新增一个由 `DataManagerNS` 管理的场（如 `volume_fraction`），参与 `AddFluxResidual` 的面通量与残差 |
+| 体积分数 ε_g | ✅ 已实现：`DataManagerNSTwoPhase` 注册 `volume_fraction`，由 `GetVolumeFractionField()` 钩子参与面通量与变量转换 |
 | 相间源项 S_mom | `CalcSourceResidual()`（目前为空实现，与 `NSSolverStruct` 一致），在 `m_residual` 上叠加 |
 | 曳力 / ∇p 力 | 由 DEM 侧提供，按节点映射为源项；映射时的多线程归约可参考 `AddFluxResidual` 阶段 2 的写法 |
 | 时间步协调 | `EulerSolverStructUniform::CalcMinTimeStep` 之后与 DEM 的 `dt` 做子循环匹配 |
