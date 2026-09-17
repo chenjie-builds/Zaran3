@@ -33,7 +33,8 @@ namespace zaran
 		FarFlowNoVelocity,//远场无速度
 		Backup,//备份文件
 		Explosion,//爆炸
-		Vortex//等熵涡,仅用于测试
+		Vortex,//等熵涡,仅用于测试
+		Riemann1D//一维 Riemann 问题(激波管),仅用于测试
 	};
 	class FlowSolverParam :public SolverParam
 	{

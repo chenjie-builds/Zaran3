@@ -8,6 +8,7 @@
 #include "ZaranError.h"
 #include "NSFieldFN.h"
 #include "NSFieldStruct.h"
+#include "NSFieldStructUniform.h"
 #include "NSFieldZaran.h"
 #include "PolyData.h"
 #include "ReadSTL.h"
@@ -65,10 +66,20 @@ namespace zaran
 				field_list[iField] = make_shared < NSFieldFNFDM>(grid);
 				field_list[iField]->SetIdx(iField);
 			}
-			else if (m_solver_type == FieldSolverType::NS_Struct)
+			else if (m_solver_type == FieldSolverType::NS_Struct
+				|| m_solver_type == FieldSolverType::Euler_Struct_Uniform)
 			{
+				// 两种求解器共用同一个结构网格：NS_Struct 面向贴体曲线坐标，
+				// Euler_Struct_Uniform 面向均匀笛卡尔网格，差异只在求解器与参数类。
 				auto grid_struct = std::dynamic_pointer_cast<GridStruct>(grid_list[iField]);
-				field_list[iField] = make_shared < NSFieldStruct>(grid_struct);
+				if (m_solver_type == FieldSolverType::NS_Struct)
+				{
+					field_list[iField] = make_shared < NSFieldStruct>(grid_struct);
+				}
+				else
+				{
+					field_list[iField] = make_shared < NSFieldStructUniform>(grid_struct);
+				}
 				field_list[iField]->SetIdx(iField);
 				int ni = grid_struct->GetNi();
 				int nj = grid_struct->GetNj();

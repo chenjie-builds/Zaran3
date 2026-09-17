@@ -20,6 +20,8 @@ namespace zaran
 		NS_FNFDM,
 		NS_ZaRan,
 		DEM,
+		/// @brief 均匀笛卡尔结构网格上的 Euler 方程求解器
+		Euler_Struct_Uniform,
 	};
 	/// @brief 场求解器基类
 	class FieldSolver :public Solver

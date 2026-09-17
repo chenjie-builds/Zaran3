@@ -63,6 +63,11 @@ void FlowSolverParam::Init()
 	{
 		m_init_field_type = InitFieldType::Vortex;
 	}
+	else if (inflow_type == "Riemann1D")
+	{
+		// 一维 Riemann（激波管）初值：由 [init.riemann] 节给出膜片位置与左右状态
+		m_init_field_type = InitFieldType::Riemann1D;
+	}
 	else
 	{
         Log::warn("Unsupported Init Field Type: {}, Please Check Control File!", inflow_type);

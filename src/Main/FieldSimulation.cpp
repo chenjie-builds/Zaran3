@@ -35,7 +35,18 @@ void NSFieldSimulation::Initialize() const
 void NSFieldSimulation::SaveDataTecplot() const
 {
      //m_visual->WriteTecASCII(m_field_manager);
-    m_visual->WriteTecplotBinary(m_field_manager);
+    // 默认输出 Tecplot 二进制 (.plt)；若控制文件里 output.tecplot_ascii = true，
+    // 则输出 Tecplot ASCII (.dat)，便于用脚本直接做后处理与精度评估。
+    const bool use_ascii = GlobalData::IsExist("output.tecplot_ascii")
+        && GlobalData::GetBool("output.tecplot_ascii");
+    if (use_ascii)
+    {
+        m_visual->WriteTecASCII(m_field_manager);
+    }
+    else
+    {
+        m_visual->WriteTecplotBinary(m_field_manager);
+    }
     // m_visual->WriteVtkASCII(m_field_manager);
     // m_visual->WriteCGNS(m_field_manager);
 }

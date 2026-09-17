@@ -170,6 +170,21 @@ namespace zaran
 				throw ZaranError("Unsupported Grid Type");
 			}
 		}
+		else if (solver_type_name == "Euler")
+		{
+			// 均匀笛卡尔结构网格上的 Euler 方程求解器：
+			// 与 NS 共用结构化网格（GridStruct），差别只在求解器与参数类。
+			if (grid_type_name == "Structured")
+			{
+				grid_type = GridType::Structured;
+				solver_type = FieldSolverType::Euler_Struct_Uniform;
+			}
+			else
+			{
+				Log::warn("Euler solver requires task.grid_type = Structured! Please Check!");
+				throw ZaranError("Unsupported Grid Type for Euler solver");
+			}
+		}
 		else
 		{
 			Log::warn("Unsupported Solver Type! Please Check!");

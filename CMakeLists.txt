@@ -149,3 +149,10 @@ message( STATUS "CMAKE_CXX_FLAGS:" ${CMAKE_CXX_FLAGS} )
 #输出target_compile_definitions
 get_target_property(compile_definitions ${EXECUTABLE_NAME} COMPILE_DEFINITIONS)
 message(STATUS "compile_definitions: ${compile_definitions}")
+
+# ======================================================================
+# 说明：均匀结构网格 Euler 求解器（EulerSolverStructUniform）已按项目规范
+# 改造为框架内求解器（继承 NSSolver，使用 FieldData / DataManager 管理流场数据，
+# 结果通过 Visual 输出 Tecplot），因此不再需要独立的基准可执行文件。
+# 原先的自包含实现与独立驱动已移至 _eulerbench/stale_standalone/ 备查。
+# ======================================================================
