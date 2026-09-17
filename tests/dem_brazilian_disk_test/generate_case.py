@@ -8,8 +8,10 @@ from pathlib import Path
 
 DISK_RADIUS = 0.05
 SPACING = 0.01
-PARTICLE_RADIUS = 0.0035
+# 试件半径取"半间距" → 相邻粒子中心距 = SPACING = 2r，**恰好外切**（无缝隙）。
+PARTICLE_RADIUS = 0.5 * SPACING
 PARTICLE_MASS = 0.01
+# 压板球心间距恒取 2·PLATEN_RADIUS → 压板球彼此**始终外切**；取略小于试件粒子。
 PLATEN_RADIUS = 0.004
 PLATEN_SPEED = 0.01
 

@@ -38,7 +38,7 @@ void LinearSpringDashpot::CalcNormalStiffness(const DEMParticle& pa, const DEMPa
 }
 
 void LinearSpringDashpot::CalcNormalForce(const DEMParticle& pa, const DEMParticle& pb,
-                                           DEMContact& contact, double /*dt*/)
+                                           DEMContact& contact, double dt)
 {
     double k_n = 0.0, c_n = 0.0;
     CalcNormalStiffness(pa, pb, k_n, c_n);
@@ -61,6 +61,10 @@ void LinearSpringDashpot::CalcNormalForce(const DEMParticle& pa, const DEMPartic
     double Fn_mag = k_n * contact.overlap_n + c_n * v_n_rel;
 
     contact.force_n = -Fn_mag * contact.normal;
+
+    // 法向阻尼耗散：只有粘性（阻尼）部分不可逆，弹性项 k_n·δ 属可逆储能。
+    // 由动量守恒可推得该对被粘性耗散的功率为 c_n·v_n_rel²（恒 ≥ 0）。
+    contact.dissipation = c_n * v_n_rel * v_n_rel * dt;
 }
 
 void LinearSpringDashpot::CalcTangentialForce(const DEMParticle& pa, const DEMParticle& pb,
@@ -89,9 +93,16 @@ void LinearSpringDashpot::CalcTangentialForce(const DEMParticle& pa, const DEMPa
     double Ft_max = mu * Fn_mag;
     if (Ft.norm() > Ft_max)
     {
+        // 切向摩擦耗散：库仑截断把切向弹簧的储能削掉一截，这部分能量不可逆地
+        // 转为热。取截断前后的弹簧储能之差，它严格非负，且在持续滑动时恰好
+        // 等于滑动功 mu*|Fn|*|Δs|（与 LSM 的 ft*vt 在滑动状态下的取值一致，
+        // 但在粘滞-滑移转换过程中不会出现负的"耗散"）。
+        const double stored_before = 0.5 * k_t * contact.delta_t.squaredNorm();
         Ft = Ft.normalized() * Ft_max;
         // 滑动时重置弹簧位移
         contact.delta_t = -Ft / k_t;
+        const double stored_after = 0.5 * k_t * contact.delta_t.squaredNorm();
+        contact.dissipation += stored_before - stored_after;
     }
 
     contact.force_t = Ft;

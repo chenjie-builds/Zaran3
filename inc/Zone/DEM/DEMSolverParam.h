@@ -13,6 +13,7 @@
 #include "SolverPara.h"
 #include "GlobalData.h"
 #include "BasicType.h"
+#include <cstdint>
 namespace zaran
 {
     /// @brief DEM 求解参数，从 GlobalData（zaran.toml）读取
@@ -89,9 +90,37 @@ namespace zaran
         /// @brief 弹簧断裂应变阈值；≤0 表示回退到 dem.bond_break_strain
         double GetSpringNetworkFractureStrain() const { return m_spring_network_fracture_strain; }
 
+        // --- 键合强度：压缩失效 + 逐键异质性 ---
+        /// @brief 抗压/抗拉强度比 σ_c/σ_t（脆性材料典型 8–15）。线性弹性下
+        ///        压缩断裂应变 = ratio × 抗拉断裂应变。0 表示不做压缩失效判定。
+        double GetBondCompressionStrengthRatio() const { return m_bond_compression_strength_ratio; }
+        /// @brief 直接指定压缩断裂应变；>0 时优先于 ratio（两者都按逐键强度系数缩放）
+        double GetBondBreakStrainCompression() const { return m_bond_break_strain_compression; }
+        /// @brief Weibull 形状参数（模量）m；0 表示关闭异质性（所有键共用同一阈值）。
+        ///        抽样归一化到均值为 1，故不改变整体强度标定，只引入离散度。
+        double GetBondWeibullModulus() const { return m_bond_weibull_modulus; }
+        /// @brief Weibull 抽样种子（按 (seed, id_a, id_b) 哈希，保证可复现且与键序无关）
+        std::uint64_t GetBondWeibullSeed() const { return m_bond_weibull_seed; }
+
         // --- 刚性边界（把 prescribed-motion 粒子当作刚体平面）---
         /// @brief 是否将 kinematic（规定运动）粒子视为刚性边界平面
         bool GetRigidBoundaryEnabled() const { return m_rigid_boundary_enabled; }
+
+        // --- 接触重叠限制：不允许两个粒子重叠过近（参考 LSM rn_limit / rn_rebound）---
+        /// @brief 过深压缩时放大法向排斥力的阈值，以 (r_a+r_b) 的倍数给出；
+        ///        当 dist < ratio·(r_a+r_b) 时把法向排斥力乘以 (ratio·(r_a+r_b)/dist)^20。
+        ///        ≤0 表示关闭该机制。
+        double GetContactStiffenRatio() const { return m_contact_stiffen_ratio; }
+        /// @brief 深压缩刚性回弹阈值，以 (r_a+r_b) 的倍数给出；
+        ///        当 dist < ratio·(r_a+r_b) 且两端仍相向运动时，
+        ///        基于动量守恒按（准）弹性碰撞直接改写两端的法向速度。
+        ///        ≤0 表示关闭该机制。
+        double GetContactReboundRatio() const { return m_contact_rebound_ratio; }
+
+        // --- 机械耗散生热 ---
+        /// @brief 是否把机械耗散（接触法向阻尼、接触切向摩擦、键合阻尼）计入温度。
+        /// 关闭后温度只由键合导热与外部体热源驱动（与旧行为一致）。
+        bool GetMechanicalHeatingEnabled() const { return m_mechanical_heating; }
 
     private:
         double         m_dt             = 1.0e-6;
@@ -157,5 +186,30 @@ namespace zaran
         // 刚性边界：把 prescribed-motion（kinematic）粒子当作刚体平面。
         // 关闭时保持原行为（球-球接触，法向随中心连线翻转）。
         bool m_rigid_boundary_enabled = false;
+
+        // 键合强度：压缩失效（默认按 σ_c/σ_t = 8 由抗拉阈值派生）与 Weibull 异质性（默认关闭）。
+        double        m_bond_compression_strength_ratio = 8.0;
+        double        m_bond_break_strain_compression = 0.0;
+        double        m_bond_weibull_modulus = 0.0;
+        std::uint64_t m_bond_weibull_seed = 20260917ULL;
+
+        // 接触重叠限制。(r_a+r_b) 对应 LSM 的平衡间距 r0，默认取 LSM 的 0.6 作为统一阈值。
+        //   ① 排斥力放大：dist < ratio·(r_a+r_b) 时 F_n *= (ratio·(r_a+r_b)/dist)^20
+        //      （对应 LSM rn_limit = 0.6·r0）。从阈值处平滑起步、被回弹在同一阈值截住，
+        //      实际倍数远小于上限；实测巴西盘算例开启后 max|v| 与关闭时一致，无额外动能注入。
+        //   ② 刚性回弹：dist < ratio·(r_a+r_b) 且相向运动 → 按弹性碰撞改写法向速度
+        //      （对应 LSM rn_rebound，LSM 取 0.5·r0）。这是硬约束：把最近接近距离
+        //      截在约 ratio·(r_a+r_b)，接触法向不会翻转。
+        // 阈值为何取 0.6 而非 LSM 的 0.5：当**加载边界由离散球排构成**时（如巴西盘的
+        // 位移控制压板，球心间距 = 2·R_boundary），试件粒子可从相邻边界球的尖角缝隙穿过，
+        // 除非下限超过 R_boundary/(R_boundary + R_particle)（本工程算例 = 0.533）。
+        // 实测 ratio=0.5 时 10 万步后仍逃逸 30/30 个粒子，ratio=0.6 则为 0/0。
+        // 若想严格复刻 LSM，可显式设 contact_stiffen_ratio=0.6 / contact_rebound_ratio=0.5。
+        // 两项均以 0 表示关闭；同时启用时要求 回弹阈值 ≤ 放大阈值。
+        double m_contact_stiffen_ratio  = 0.6;
+        double m_contact_rebound_ratio  = 0.6;
+
+        // 机械耗散（接触法向阻尼 / 切向摩擦 / 键合阻尼）是否计入温度，默认开启。
+        bool m_mechanical_heating = true;
     };
 } // namespace zaran

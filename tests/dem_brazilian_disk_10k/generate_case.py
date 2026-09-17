@@ -46,7 +46,13 @@ def make_lattice():
 def main():
     root = Path(__file__).resolve().parent
     points, spacing = make_lattice()
-    particle_radius = 0.35 * spacing
+    # 试件半径取"半间距" → 相邻晶格粒子的中心距恰为 spacing，
+    # 而 2r = spacing，因此相邻粒子**恰好外切**（无缝隙）。
+    # 之前取 0.35·spacing 会在相邻粒子间留下 0.30·spacing 的空隙，
+    # 试件在粒子尺度上不是封闭体。
+    particle_radius = 0.5 * spacing
+    # 压板球心间距恒取 2·platen_radius，故压板球彼此**始终外切**。
+    # 取 0.40·spacing 使压板球略小于试件粒子，尖角缝隙更窄、边界更难被穿过。
     platen_radius = 0.40 * spacing
     cell_area = 0.5 * math.sqrt(3.0) * spacing * spacing
     particle_mass = DENSITY * cell_area * THICKNESS

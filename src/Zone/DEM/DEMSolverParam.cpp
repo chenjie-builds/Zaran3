@@ -69,6 +69,15 @@ void DEMSolverParam::Init()
         m_bond_break_strain = GlobalData::GetDouble("dem.bond_break_strain");
     if (GlobalData::IsExist("dem.bond_peak_strain"))
         m_bond_peak_strain = GlobalData::GetDouble("dem.bond_peak_strain");
+    // 压缩失效（脆性材料 σ_c/σ_t）与逐键 Weibull 强度异质性
+    if (GlobalData::IsExist("dem.bond_compression_strength_ratio"))
+        m_bond_compression_strength_ratio = GlobalData::GetDouble("dem.bond_compression_strength_ratio");
+    if (GlobalData::IsExist("dem.bond_break_strain_compression"))
+        m_bond_break_strain_compression = GlobalData::GetDouble("dem.bond_break_strain_compression");
+    if (GlobalData::IsExist("dem.bond_weibull_modulus"))
+        m_bond_weibull_modulus = GlobalData::GetDouble("dem.bond_weibull_modulus");
+    if (GlobalData::IsExist("dem.bond_weibull_seed"))
+        m_bond_weibull_seed = static_cast<std::uint64_t>(GlobalData::GetInt("dem.bond_weibull_seed"));
     if (GlobalData::IsExist("dem.reaction_weakening"))
         m_reaction_weakening = GlobalData::GetDouble("dem.reaction_weakening");
     if (GlobalData::IsExist("dem.ignition_center_x"))
@@ -126,6 +135,16 @@ void DEMSolverParam::Init()
     if (GlobalData::IsExist("dem.rigid_boundary"))
         m_rigid_boundary_enabled = GlobalData::GetBool("dem.rigid_boundary");
 
+    // --- 接触重叠限制（可选；参考 LSM rn_limit=0.6·r0 / rn_rebound=0.5·r0）---
+    if (GlobalData::IsExist("dem.contact_stiffen_ratio"))
+        m_contact_stiffen_ratio = GlobalData::GetDouble("dem.contact_stiffen_ratio");
+    if (GlobalData::IsExist("dem.contact_rebound_ratio"))
+        m_contact_rebound_ratio = GlobalData::GetDouble("dem.contact_rebound_ratio");
+
+    // --- 机械耗散生热（可选，默认开启）---
+    if (GlobalData::IsExist("dem.mechanical_heating"))
+        m_mechanical_heating = GlobalData::GetBool("dem.mechanical_heating");
+
     // 重力向量（分量分别读取）
     if (GlobalData::IsExist("dem.gravity_x"))
         m_gravity.x() = GlobalData::GetDouble("dem.gravity_x");
@@ -179,9 +198,27 @@ void DEMSolverParam::Init()
         || m_spring_network_tangential_stiffness < 0.0
         || m_spring_network_fracture_strain < 0.0)
         throw ZaranError("DEM spring network parameters are invalid");
+    // 重叠限制阈值必须落在 [0,1)：≥1 会在尚未接触时就触发，属无意义配置；
+    // 同时启用时回弹阈值不得超过放大阈值。
+    if (m_contact_stiffen_ratio < 0.0 || m_contact_stiffen_ratio >= 1.0
+        || m_contact_rebound_ratio < 0.0 || m_contact_rebound_ratio >= 1.0)
+        throw ZaranError("DEM contact overlap-limit ratios must be in [0, 1)");
+    if (m_contact_stiffen_ratio > 0.0 && m_contact_rebound_ratio > 0.0
+        && m_contact_rebound_ratio > m_contact_stiffen_ratio)
+        throw ZaranError("dem.contact_rebound_ratio must not exceed dem.contact_stiffen_ratio");
+    if (m_bond_compression_strength_ratio < 0.0 || m_bond_break_strain_compression < 0.0
+        || m_bond_weibull_modulus < 0.0)
+        throw ZaranError("DEM bond strength parameters are invalid "
+            "(compression ratio / compression strain / Weibull modulus must be >= 0)");
+    if (m_bond_weibull_modulus > 0.0 && m_bond_weibull_modulus < 0.1)
+        throw ZaranError("dem.bond_weibull_modulus is too small to be meaningful (< 0.1)");
 
-    Log::info("DEM SolverParam Init: dt={:E}, contact_model={}, particle_file={}, spring_network={}",
-              m_dt, m_contact_model, m_particle_file, m_spring_network_enabled ? "on" : "off");
+    Log::info("DEM SolverParam Init: dt={:E}, contact_model={}, particle_file={}, spring_network={}, "
+              "overlap_limit(stiffen={:g}, rebound={:g}), compression_fail={:g}x tensile, weibull_m={:g}",
+              m_dt, m_contact_model, m_particle_file, m_spring_network_enabled ? "on" : "off",
+              m_contact_stiffen_ratio, m_contact_rebound_ratio,
+              m_bond_break_strain_compression > 0.0 ? 0.0 : m_bond_compression_strength_ratio,
+              m_bond_weibull_modulus);
 }
 
 } // namespace zaran

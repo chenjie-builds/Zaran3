@@ -39,5 +39,12 @@ namespace zaran
         // 当前步接触力
         Eigen::Vector3d force_n = Eigen::Vector3d::Zero();   ///< 法向接触力（施加于 A）
         Eigen::Vector3d force_t = Eigen::Vector3d::Zero();   ///< 切向接触力（施加于 A）
+
+        /// @brief 本步该接触对不可逆耗散的能量 (J)：法向阻尼耗散 + 切向摩擦耗散。
+        /// 由接触模型写入（CalcNormalForce 先重置并累加法向项，CalcTangentialForce
+        /// 再累加切向项），随后由 DEMSolver 对半分给两端并计入温度的能量账。
+        /// 恒为非负（法向阻尼项 c_n·v_n²·dt ≥ 0；切向项取库仑截断前后的切向弹簧
+        /// 储能之差，亦 ≥ 0）。
+        double dissipation = 0.0;
     };
 } // namespace zaran

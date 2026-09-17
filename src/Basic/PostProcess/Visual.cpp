@@ -1470,6 +1470,31 @@ void Visual::WriteParticleVTP(const DEMFieldData& dem_data, const std::string& f
     raw("        </DataArray>\n");
     raw("      </Lines>\n");
 
+    // --- 弹簧/键合连接信息开关（output.bond_details，默认开启）---
+    // 目的：让 ParaView 中能直接分辨"哪些线是弹簧连接、哪些已断裂、当前受力与伸长"。
+    // 置 false 时输出与历史版本完全一致，便于超大规模键数时压缩文件体积。
+    const bool bond_details =
+        !GlobalData::IsExist("output.bond_details") || GlobalData::GetBool("output.bond_details");
+
+    // 粒子级聚合量：与该粒子相连的键数、其中已断裂的条数及比例。
+    // 用 bonds_broken_ratio 着色即可让裂纹带/断裂面在云图上直接凸显。
+    std::vector<int> bond_incident(N, 0);
+    std::vector<int> bond_broken_count(N, 0);
+    if (bond_details)
+    {
+        for (const auto& bond : bonds)
+        {
+            if (bond.idx_a >= N || bond.idx_b >= N) continue;
+            ++bond_incident[bond.idx_a];
+            ++bond_incident[bond.idx_b];
+            if (!bond.active)
+            {
+                ++bond_broken_count[bond.idx_a];
+                ++bond_broken_count[bond.idx_b];
+            }
+        }
+    }
+
     // --- 点数据 ---
     raw("      <PointData>\n");
     point_scalar("Float64", "radius", [](const DEMParticle& p) { return p.radius; });
@@ -1494,6 +1519,25 @@ void Visual::WriteParticleVTP(const DEMFieldData& dem_data, const std::string& f
     point_scalar("Float64", "body_reaction_increment", [](const DEMParticle& p) { return p.body_reaction_increment; });
     point_scalar("Float64", "core_burn_increment", [](const DEMParticle& p) { return p.core_burn_increment; });
     point_scalar("Float64", "neighbor_burn_increment", [](const DEMParticle& p) { return p.neighbor_burn_increment; });
+    if (bond_details)
+    {
+        raw("        <DataArray type=\"Int32\" Name=\"bonds_incident\" format=\"ascii\">\n");
+        for (index_type i = 0; i < N; ++i) { raw("          "); num(bond_incident[i]); nl(); }
+        raw("        </DataArray>\n");
+        raw("        <DataArray type=\"Int32\" Name=\"bonds_broken\" format=\"ascii\">\n");
+        for (index_type i = 0; i < N; ++i) { raw("          "); num(bond_broken_count[i]); nl(); }
+        raw("        </DataArray>\n");
+        raw("        <DataArray type=\"Float64\" Name=\"bonds_broken_ratio\" format=\"ascii\">\n");
+        for (index_type i = 0; i < N; ++i)
+        {
+            raw("          ");
+            num(bond_incident[i] > 0
+                    ? static_cast<double>(bond_broken_count[i]) / static_cast<double>(bond_incident[i])
+                    : 0.0);
+            nl();
+        }
+        raw("        </DataArray>\n");
+    }
     raw("      </PointData>\n");
 
     // --- 单元数据（前 N 个对应 Verts：占位；其后 B 个对应 Lines）---
@@ -1536,6 +1580,77 @@ void Visual::WriteParticleVTP(const DEMFieldData& dem_data, const std::string& f
     for (index_type i = 0; i < N; ++i) raw("          0\n");
     for (const auto& bond : bonds) { raw("          "); num(bond.fracture_energy); nl(); }
     cell_tail();
+
+    if (bond_details)
+    {
+        // 是否仍在承载：1 = 完好，0 = 已断裂。
+        // ParaView 中对该数组做 Threshold(0,0) 即只显示断裂的连接。
+        cell_head("Int32", "bond_active", "");
+        for (index_type i = 0; i < N; ++i) raw("          0\n");
+        for (const auto& bond : bonds) { raw("          "); num(bond.active ? 1 : 0); nl(); }
+        cell_tail();
+
+        // 连接来源：0 = 输入 bonds.csv 给定，1 = t=0 按几何自动生成的弹簧连接网络。
+        cell_head("Int32", "bond_source", "");
+        for (index_type i = 0; i < N; ++i) raw("          0\n");
+        for (const auto& bond : bonds) { raw("          "); num(bond.source); nl(); }
+        cell_tail();
+
+        // 法向刚度 k_n (N/m)
+        cell_head("Float64", "bond_stiffness", "");
+        for (index_type i = 0; i < N; ++i) raw("          0\n");
+        for (const auto& bond : bonds) { raw("          "); num(bond.normal_stiffness); nl(); }
+        cell_tail();
+
+        // 无应力长度 L0 (m)
+        cell_head("Float64", "bond_rest_length", "");
+        for (index_type i = 0; i < N; ++i) raw("          0\n");
+        for (const auto& bond : bonds) { raw("          "); num(bond.rest_length); nl(); }
+        cell_tail();
+
+        // 当前轴向应变 extension/L0（正 = 拉伸，负 = 压缩）
+        cell_head("Float64", "bond_strain", "");
+        for (index_type i = 0; i < N; ++i) raw("          0\n");
+        for (const auto& bond : bonds)
+        {
+            raw("          ");
+            num(bond.rest_length > 0.0 ? bond.extension / bond.rest_length : 0.0);
+            nl();
+        }
+        cell_tail();
+
+        // 历史最大拉伸应变：与 dem.bond_break_strain / dem.spring_network_fracture_strain
+        // 直接可比，用来判断"离断裂还有多远"。
+        cell_head("Float64", "bond_max_strain", "");
+        for (index_type i = 0; i < N; ++i) raw("          0\n");
+        for (const auto& bond : bonds) { raw("          "); num(bond.maximum_tensile_strain); nl(); }
+        cell_tail();
+
+        // 键合力大小 |F_a| (N)：断裂后恒为 0，可直接作为着色变量
+        cell_head("Float64", "bond_force_magnitude", "");
+        for (index_type i = 0; i < N; ++i) raw("          0\n");
+        for (const auto& bond : bonds) { raw("          "); num(bond.force_a.norm()); nl(); }
+        cell_tail();
+
+        // 断裂时耗散的能量 (J)：> 0 即真实发生过断裂
+        cell_head("Float64", "bond_energy_loss", "");
+        for (index_type i = 0; i < N; ++i) raw("          0\n");
+        for (const auto& bond : bonds) { raw("          "); num(bond.dissipated_fracture_energy); nl(); }
+        cell_tail();
+
+        // 历史最大压缩应变：与"压缩断裂阈值 = ratio × 抗拉阈值 × strength_scale"直接可比，
+        // 用来判断破坏是否由压缩（粉碎）而非拉伸（劈裂）主导。
+        cell_head("Float64", "bond_max_compression", "");
+        for (index_type i = 0; i < N; ++i) raw("          0\n");
+        for (const auto& bond : bonds) { raw("          "); num(bond.maximum_compressive_strain); nl(); }
+        cell_tail();
+
+        // 逐键强度折减系数（Weibull 异质性；1 = 均质）。有效阈值为名义值乘以该系数。
+        cell_head("Float64", "bond_strength_scale", "");
+        for (index_type i = 0; i < N; ++i) raw("          1\n");
+        for (const auto& bond : bonds) { raw("          "); num(bond.strength_scale); nl(); }
+        cell_tail();
+    }
 
     raw("      </CellData>\n");
     raw("    </Piece>\n");

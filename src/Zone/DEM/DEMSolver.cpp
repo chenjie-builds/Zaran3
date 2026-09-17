@@ -20,6 +20,16 @@ namespace
 {
 using Polygon2D = std::vector<Eigen::Vector2d>;
 
+/// @brief splitmix64：用于逐键 Weibull 抽样的确定性哈希。
+/// 键与粒子 id 绑定（而不是数组下标），因此同一物理连接无论输入顺序如何都得到同一强度。
+std::uint64_t SplitMix64(std::uint64_t x)
+{
+    x += 0x9E3779B97F4A7C15ULL;
+    x = (x ^ (x >> 30)) * 0xBF58476D1CE4E5B9ULL;
+    x = (x ^ (x >> 27)) * 0x94D049BB133111EBULL;
+    return x ^ (x >> 31);
+}
+
 Polygon2D ClipVoronoiHalfPlane(const Polygon2D& polygon,
                                const Eigen::Vector2d& normal,
                                double offset)
@@ -185,6 +195,9 @@ namespace zaran
         }
         if (rest_length_count > 0)
             m_lattice_spacing = rest_length_sum / static_cast<double>(rest_length_count);
+        // --- 可选：逐键强度异质性（Weibull）---
+        // 放在键合参数（含 fracture_energy）确定之后、且覆盖文件给定与自动建链两种来源。
+        AssignBondStrengthScales();
         UpdateGasVoronoiMesh(true);
         Log::info("DEMSolver InitField: {} particles, {} bonds",
             m_dem_data->GetParticleNum(), m_dem_data->GetBondNum());
@@ -413,9 +426,12 @@ namespace zaran
 
     void DEMSolver::CalcThermalReaction()
     {
-        if (!GetDEMParam()->GetReactionEnabled()) return;
-
-        UpdateGasVoronoiMesh();
+        // 温度更新与反应解耦：
+        //   反应 / 气相 / Voronoi / 燃烧 / Arrhenius 化学只在 reaction_enabled 时执行；
+        //   而「键合导热 + 外部体热源 + 机械耗散（接触摩擦与阻尼、键合阻尼）」以及
+        //   温度更新本身，对所有算例（含惰性算例）都执行。
+        const bool reaction = GetDEMParam()->GetReactionEnabled();
+        if (reaction) UpdateGasVoronoiMesh();
         auto& particles = m_dem_data->GetParticles();
         const double dt = GetDEMParam()->GetTimeStep();
         const index_type np = particles.size();
@@ -435,111 +451,114 @@ namespace zaran
         gas_pressure_sum.assign(np, 0.0);
         gas_pressure_count.assign(np, 1);
 
-        if (!m_voronoi_valid)
+        if (reaction)
         {
-            for (const auto& bond : m_dem_data->GetBonds())
+            if (!m_voronoi_valid)
             {
-                if (bond.rest_length <= 0.0) continue;
-                const double ratio = (particles[bond.idx_b].pos - particles[bond.idx_a].pos).norm()
-                    / bond.rest_length;
-                length_ratio_sum[bond.idx_a] += ratio * ratio;
-                length_ratio_sum[bond.idx_b] += ratio * ratio;
-                ++length_ratio_count[bond.idx_a];
-                ++length_ratio_count[bond.idx_b];
-            }
-        }
-        for (index_type i = 0; i < particles.size(); ++i)
-        {
-            DEMParticle& p = particles[i];
-            if (m_voronoi_valid && i < m_gas_voronoi_cells.size()
-                && m_gas_voronoi_cells[i].area > 0.0 && p.reference_volume > 0.0)
-            {
-                const double voronoi_volume = m_gas_voronoi_cells[i].area
-                                            * GetDEMParam()->GetLatticeThickness();
-                p.volume_ratio = std::min(GetDEMParam()->GetVoronoiMaxVolumeRatio(),
-                    std::max(0.25, voronoi_volume / p.reference_volume));
-            }
-            else if (length_ratio_count[i] > 0)
-                p.volume_ratio = std::max(0.25, length_ratio_sum[i] / length_ratio_count[i]);
-
-            UpdateGasSolidState(p);
-            gas_pressure_sum[i] = p.gas_pressure;
-        }
-
-        if (m_voronoi_valid)
-        {
-            for (const auto& face : m_gas_voronoi_faces)
-            {
-                const DEMParticle& pa = particles[face.idx_a];
-                const DEMParticle& pb = particles[face.idx_b];
-                if (pb.reaction_progress > 0.0)
+                for (const auto& bond : m_dem_data->GetBonds())
                 {
-                    gas_pressure_sum[face.idx_a] += pb.gas_pressure;
-                    ++gas_pressure_count[face.idx_a];
-                }
-                if (pa.reaction_progress > 0.0)
-                {
-                    gas_pressure_sum[face.idx_b] += pa.gas_pressure;
-                    ++gas_pressure_count[face.idx_b];
+                    if (bond.rest_length <= 0.0) continue;
+                    const double ratio = (particles[bond.idx_b].pos - particles[bond.idx_a].pos).norm()
+                        / bond.rest_length;
+                    length_ratio_sum[bond.idx_a] += ratio * ratio;
+                    length_ratio_sum[bond.idx_b] += ratio * ratio;
+                    ++length_ratio_count[bond.idx_a];
+                    ++length_ratio_count[bond.idx_b];
                 }
             }
-        }
-        else
-        {
-            for (const auto& bond : m_dem_data->GetBonds())
+            for (index_type i = 0; i < particles.size(); ++i)
             {
-                const DEMParticle& pa = particles[bond.idx_a];
-                const DEMParticle& pb = particles[bond.idx_b];
-                if (pb.reaction_progress > 0.0)
+                DEMParticle& p = particles[i];
+                if (m_voronoi_valid && i < m_gas_voronoi_cells.size()
+                    && m_gas_voronoi_cells[i].area > 0.0 && p.reference_volume > 0.0)
                 {
-                    gas_pressure_sum[bond.idx_a] += pb.gas_pressure;
-                    ++gas_pressure_count[bond.idx_a];
+                    const double voronoi_volume = m_gas_voronoi_cells[i].area
+                                                * GetDEMParam()->GetLatticeThickness();
+                    p.volume_ratio = std::min(GetDEMParam()->GetVoronoiMaxVolumeRatio(),
+                        std::max(0.25, voronoi_volume / p.reference_volume));
                 }
-                if (pa.reaction_progress > 0.0)
-                {
-                    gas_pressure_sum[bond.idx_b] += pa.gas_pressure;
-                    ++gas_pressure_count[bond.idx_b];
-                }
-            }
-        }
+                else if (length_ratio_count[i] > 0)
+                    p.volume_ratio = std::max(0.25, length_ratio_sum[i] / length_ratio_count[i]);
 
-        // 气固共存点内部传热和固相核表面燃烧。LSM 使用二维固相核周长乘厚度
-        // 作为界面面积，并用本点与相邻气相点的平均压力计算燃速。
-        for (index_type i = 0; i < particles.size(); ++i)
-        {
-            DEMParticle& p = particles[i];
-            p.internal_heat_transfer = 0.0;
-            if (p.phase != 1 || p.solid_core_radius <= 0.0 || p.gas_volume <= 0.0)
-                continue;
-            const double interface_area = 2.0 * PI * p.solid_core_radius
-                * GetDEMParam()->GetLatticeThickness();
-            const double transfer_distance = 0.5 * (p.solid_core_radius + p.gas_radius);
-            if (transfer_distance > 0.0 && p.thermal_conductivity > 0.0)
-            {
-                double transfer = p.thermal_conductivity
-                    * (p.gas_temperature - p.temperature) * interface_area
-                    / transfer_distance * dt;
-                const double gas_limit = GetDEMParam()->GetInternalHeatLimit()
-                    * p.gas_internal_energy;
-                const double solid_energy = p.mass * (1.0 - p.reaction_progress)
-                    * p.specific_heat * p.temperature;
-                const double solid_limit = GetDEMParam()->GetInternalHeatLimit() * solid_energy;
-                if (transfer >= 0.0) transfer = std::min(transfer, gas_limit);
-                else transfer = std::max(transfer, -solid_limit);
-                p.internal_heat_transfer = transfer;
-                p.gas_internal_energy -= transfer;
-                energy_delta[i] += transfer;
+                UpdateGasSolidState(p);
+                gas_pressure_sum[i] = p.gas_pressure;
             }
 
-            const double average_pressure = gas_pressure_sum[i] / gas_pressure_count[i];
-            if (average_pressure > GetDEMParam()->GetBurnPressureThreshold()
-                && p.gas_temperature > GetDEMParam()->GetBurnTemperatureThreshold())
+            if (m_voronoi_valid)
             {
-                double burn_rate = 1.0e-3 * GetDEMParam()->GetBurnA()
-                    * std::pow(average_pressure * 1.0e-6, GetDEMParam()->GetBurnB());
-                if (p.gas_temperature < GetDEMParam()->GetGasTemperatureReference())
-                    burn_rate *= p.gas_temperature / GetDEMParam()->GetGasTemperatureReference();
-                core_delta[i] = burn_rate * interface_area * dt / p.reference_volume;
+                for (const auto& face : m_gas_voronoi_faces)
+                {
+                    const DEMParticle& pa = particles[face.idx_a];
+                    const DEMParticle& pb = particles[face.idx_b];
+                    if (pb.reaction_progress > 0.0)
+                    {
+                        gas_pressure_sum[face.idx_a] += pb.gas_pressure;
+                        ++gas_pressure_count[face.idx_a];
+                    }
+                    if (pa.reaction_progress > 0.0)
+                    {
+                        gas_pressure_sum[face.idx_b] += pa.gas_pressure;
+                        ++gas_pressure_count[face.idx_b];
+                    }
+                }
+            }
+            else
+            {
+                for (const auto& bond : m_dem_data->GetBonds())
+                {
+                    const DEMParticle& pa = particles[bond.idx_a];
+                    const DEMParticle& pb = particles[bond.idx_b];
+                    if (pb.reaction_progress > 0.0)
+                    {
+                        gas_pressure_sum[bond.idx_a] += pb.gas_pressure;
+                        ++gas_pressure_count[bond.idx_a];
+                    }
+                    if (pa.reaction_progress > 0.0)
+                    {
+                        gas_pressure_sum[bond.idx_b] += pa.gas_pressure;
+                        ++gas_pressure_count[bond.idx_b];
+                    }
+                }
+            }
+
+            // 气固共存点内部传热和固相核表面燃烧。LSM 使用二维固相核周长乘厚度
+            // 作为界面面积，并用本点与相邻气相点的平均压力计算燃速。
+            for (index_type i = 0; i < particles.size(); ++i)
+            {
+                DEMParticle& p = particles[i];
+                p.internal_heat_transfer = 0.0;
+                if (p.phase != 1 || p.solid_core_radius <= 0.0 || p.gas_volume <= 0.0)
+                    continue;
+                const double interface_area = 2.0 * PI * p.solid_core_radius
+                    * GetDEMParam()->GetLatticeThickness();
+                const double transfer_distance = 0.5 * (p.solid_core_radius + p.gas_radius);
+                if (transfer_distance > 0.0 && p.thermal_conductivity > 0.0)
+                {
+                    double transfer = p.thermal_conductivity
+                        * (p.gas_temperature - p.temperature) * interface_area
+                        / transfer_distance * dt;
+                    const double gas_limit = GetDEMParam()->GetInternalHeatLimit()
+                        * p.gas_internal_energy;
+                    const double solid_energy = p.mass * (1.0 - p.reaction_progress)
+                        * p.specific_heat * p.temperature;
+                    const double solid_limit = GetDEMParam()->GetInternalHeatLimit() * solid_energy;
+                    if (transfer >= 0.0) transfer = std::min(transfer, gas_limit);
+                    else transfer = std::max(transfer, -solid_limit);
+                    p.internal_heat_transfer = transfer;
+                    p.gas_internal_energy -= transfer;
+                    energy_delta[i] += transfer;
+                }
+
+                const double average_pressure = gas_pressure_sum[i] / gas_pressure_count[i];
+                if (average_pressure > GetDEMParam()->GetBurnPressureThreshold()
+                    && p.gas_temperature > GetDEMParam()->GetBurnTemperatureThreshold())
+                {
+                    double burn_rate = 1.0e-3 * GetDEMParam()->GetBurnA()
+                        * std::pow(average_pressure * 1.0e-6, GetDEMParam()->GetBurnB());
+                    if (p.gas_temperature < GetDEMParam()->GetGasTemperatureReference())
+                        burn_rate *= p.gas_temperature / GetDEMParam()->GetGasTemperatureReference();
+                    core_delta[i] = burn_rate * interface_area * dt / p.reference_volume;
+                }
             }
         }
 
@@ -563,86 +582,100 @@ namespace zaran
             energy_delta[bond.idx_b] -= bond.heat_flow_a * dt;
         }
 
-        // LSM 的颗粒间表面燃烧：Voronoi 气固共边是实际燃烧面积。
-        auto accumulate_surface_burn = [&](index_type source_index, index_type target_index,
-                                           double interface_area)
+        if (reaction)
         {
-            const DEMParticle& source = particles[source_index];
-            const DEMParticle& target = particles[target_index];
-            if (!target.energetic || target.reaction_progress >= 1.0
-                || source.reaction_progress <= 0.19
-                || source.gas_pressure <= GetDEMParam()->GetBurnPressureThreshold()
-                || source.gas_temperature <= GetDEMParam()->GetBurnTemperatureThreshold()
-                || target.reference_volume <= 0.0 || interface_area <= 0.0)
-                return;
-            double burn_rate = 1.0e-3 * GetDEMParam()->GetBurnA()
-                * std::pow(source.gas_pressure * 1.0e-6, GetDEMParam()->GetBurnB());
-            if (source.gas_temperature < GetDEMParam()->GetGasTemperatureReference())
-                burn_rate *= source.gas_temperature / GetDEMParam()->GetGasTemperatureReference();
-            surface_delta[target_index] += burn_rate * interface_area * dt
-                                         / target.reference_volume;
-        };
-        if (m_voronoi_valid)
-        {
-            for (const auto& face : m_gas_voronoi_faces)
+            // LSM 的颗粒间表面燃烧：Voronoi 气固共边是实际燃烧面积。
+            auto accumulate_surface_burn = [&](index_type source_index, index_type target_index,
+                                               double interface_area)
             {
-                accumulate_surface_burn(face.idx_a, face.idx_b, face.area);
-                accumulate_surface_burn(face.idx_b, face.idx_a, face.area);
+                const DEMParticle& source = particles[source_index];
+                const DEMParticle& target = particles[target_index];
+                if (!target.energetic || target.reaction_progress >= 1.0
+                    || source.reaction_progress <= 0.19
+                    || source.gas_pressure <= GetDEMParam()->GetBurnPressureThreshold()
+                    || source.gas_temperature <= GetDEMParam()->GetBurnTemperatureThreshold()
+                    || target.reference_volume <= 0.0 || interface_area <= 0.0)
+                    return;
+                double burn_rate = 1.0e-3 * GetDEMParam()->GetBurnA()
+                    * std::pow(source.gas_pressure * 1.0e-6, GetDEMParam()->GetBurnB());
+                if (source.gas_temperature < GetDEMParam()->GetGasTemperatureReference())
+                    burn_rate *= source.gas_temperature / GetDEMParam()->GetGasTemperatureReference();
+                surface_delta[target_index] += burn_rate * interface_area * dt
+                                             / target.reference_volume;
+            };
+            if (m_voronoi_valid)
+            {
+                for (const auto& face : m_gas_voronoi_faces)
+                {
+                    accumulate_surface_burn(face.idx_a, face.idx_b, face.area);
+                    accumulate_surface_burn(face.idx_b, face.idx_a, face.area);
+                }
             }
-        }
-        else
-        {
-            for (const auto& bond : m_dem_data->GetBonds())
+            else
             {
-                accumulate_surface_burn(bond.idx_a, bond.idx_b, bond.conduction_area);
-                accumulate_surface_burn(bond.idx_b, bond.idx_a, bond.conduction_area);
+                for (const auto& bond : m_dem_data->GetBonds())
+                {
+                    accumulate_surface_burn(bond.idx_a, bond.idx_b, bond.conduction_area);
+                    accumulate_surface_burn(bond.idx_b, bond.idx_a, bond.conduction_area);
+                }
             }
         }
 
         for (index_type i = 0; i < particles.size(); ++i)
         {
             DEMParticle& p = particles[i];
-            p.reaction_rate = 0.0;
-            p.body_reaction_increment = 0.0;
-            p.core_burn_increment = 0.0;
-            p.neighbor_burn_increment = 0.0;
-            energy_delta[i] += p.heat_source * dt;
-
-            // 与 LSM calculation.f90 一致的一级 Arrhenius 基体热分解项：
-            // d_alpha = Z (1-alpha) exp(-Ta/T) dt，并在本步截断到 [0,1]。
-            if (p.energetic
-                && (p.temperature >= GetDEMParam()->GetIgnitionTemperature()
-                    || p.reaction_progress >= GetDEMParam()->GetMixedPhaseThreshold())
-                && p.reaction_progress < 1.0 && p.arrhenius_prefactor > 0.0
-                && p.activation_temperature >= 0.0)
+            if (reaction)
             {
-                p.reaction_rate = p.arrhenius_prefactor * (1.0 - p.reaction_progress)
-                    * std::exp(-p.activation_temperature / p.temperature);
-                p.body_reaction_increment = std::max(0.0, p.reaction_rate * dt);
+                p.reaction_rate = 0.0;
+                p.body_reaction_increment = 0.0;
+                p.core_burn_increment = 0.0;
+                p.neighbor_burn_increment = 0.0;
             }
-            if (p.energetic && p.reaction_progress < 1.0)
+            // ==== 以下对所有算例（含惰性）都执行 ====
+            // 外部体热源（来自粒子文件）
+            energy_delta[i] += p.heat_source * dt;
+            // 机械耗散生热：接触法向阻尼 + 接触切向摩擦 + 键合阻尼
+            if (GetDEMParam()->GetMechanicalHeatingEnabled())
+                energy_delta[i] += m_tmp_dissipation[i];
+
+            if (reaction)
             {
-                p.core_burn_increment = std::max(0.0, core_delta[i]);
-                p.neighbor_burn_increment = std::max(0.0, surface_delta[i]);
-                double d_alpha = p.body_reaction_increment + p.core_burn_increment
-                    + p.neighbor_burn_increment;
-                const double remaining = 1.0 - p.reaction_progress;
-                if (d_alpha > remaining && d_alpha > 0.0)
+                // 与 LSM calculation.f90 一致的一级 Arrhenius 基体热分解项：
+                // d_alpha = Z (1-alpha) exp(-Ta/T) dt，并在本步截断到 [0,1]。
+                if (p.energetic
+                    && (p.temperature >= GetDEMParam()->GetIgnitionTemperature()
+                        || p.reaction_progress >= GetDEMParam()->GetMixedPhaseThreshold())
+                    && p.reaction_progress < 1.0 && p.arrhenius_prefactor > 0.0
+                    && p.activation_temperature >= 0.0)
                 {
-                    const double scale = remaining / d_alpha;
-                    p.body_reaction_increment *= scale;
-                    p.core_burn_increment *= scale;
-                    p.neighbor_burn_increment *= scale;
-                    d_alpha = remaining;
+                    p.reaction_rate = p.arrhenius_prefactor * (1.0 - p.reaction_progress)
+                        * std::exp(-p.activation_temperature / p.temperature);
+                    p.body_reaction_increment = std::max(0.0, p.reaction_rate * dt);
                 }
-                const double old_alpha = p.reaction_progress;
-                p.reaction_progress += d_alpha;
-                p.reaction_rate = d_alpha / dt;
-                // 新生成气体带入原固相显热，反应热只加入气相内能。
-                p.gas_internal_energy += p.mass * d_alpha
-                    * (p.specific_heat * p.temperature + p.reaction_heat);
-                if (old_alpha <= 0.0 && d_alpha > 0.0)
-                    p.phase = 1;
+                if (p.energetic && p.reaction_progress < 1.0)
+                {
+                    p.core_burn_increment = std::max(0.0, core_delta[i]);
+                    p.neighbor_burn_increment = std::max(0.0, surface_delta[i]);
+                    double d_alpha = p.body_reaction_increment + p.core_burn_increment
+                        + p.neighbor_burn_increment;
+                    const double remaining = 1.0 - p.reaction_progress;
+                    if (d_alpha > remaining && d_alpha > 0.0)
+                    {
+                        const double scale = remaining / d_alpha;
+                        p.body_reaction_increment *= scale;
+                        p.core_burn_increment *= scale;
+                        p.neighbor_burn_increment *= scale;
+                        d_alpha = remaining;
+                    }
+                    const double old_alpha = p.reaction_progress;
+                    p.reaction_progress += d_alpha;
+                    p.reaction_rate = d_alpha / dt;
+                    // 新生成气体带入原固相显热，反应热只加入气相内能。
+                    p.gas_internal_energy += p.mass * d_alpha
+                        * (p.specific_heat * p.temperature + p.reaction_heat);
+                    if (old_alpha <= 0.0 && d_alpha > 0.0)
+                        p.phase = 1;
+                }
             }
 
             const double solid_fraction = std::max(0.0, 1.0 - p.reaction_progress);
@@ -667,7 +700,7 @@ namespace zaran
             else if (p.reaction_progress >= GetDEMParam()->GetMixedPhaseThreshold()) p.phase = 1;
             else p.phase = 0;
 
-            UpdateGasSolidState(p);
+            if (reaction) UpdateGasSolidState(p);
         }
     }
 
@@ -716,6 +749,45 @@ namespace zaran
         }
     }
 
+    void DEMSolver::AssignBondStrengthScales()
+    {
+        const double modulus = GetDEMParam()->GetBondWeibullModulus();
+        if (!(modulus > 0.0))
+            return; // 均质：所有键保持 strength_scale = 1
+
+        // Weibull(k = modulus, λ) 的形状参数不为 1 时均值不等于 λ，
+        // 取 λ = 1/Γ(1+1/k) 把均值归一到 1 —— 这样"名义阈值"仍是期望值，
+        // 引入的只是离散度，不改变上一节按宏观量标定出的整体强度。
+        const double lambda = 1.0 / std::tgamma(1.0 + 1.0 / modulus);
+        const std::uint64_t seed = GetDEMParam()->GetBondWeibullSeed();
+        const auto& particles = m_dem_data->GetParticles();
+
+        double sum = 0.0;
+        double minimum = 1.0e30;
+        double maximum = -1.0e30;
+        for (auto& bond : m_dem_data->GetBonds())
+        {
+            const std::uint64_t ia = static_cast<std::uint64_t>(particles[bond.idx_a].id);
+            const std::uint64_t ib = static_cast<std::uint64_t>(particles[bond.idx_b].id);
+            const std::uint64_t key = SplitMix64(seed
+                ^ (ia * 0x9E3779B97F4A7C15ULL)
+                ^ ((ib + 0x165667B19E3779F9ULL) * 0xC2B2AE3D27D4EB4FULL));
+            // u ∈ (0,1)，避免 u = 0 时抽样退化为 0
+            const double u = (static_cast<double>(key >> 11) + 0.5) * (1.0 / 9007199254740992.0);
+            const double sample = lambda * std::pow(-std::log(1.0 - u), 1.0 / modulus);
+            // 保护：极端尾部不应产生 0 或爆炸式阈值
+            bond.strength_scale = std::min(std::max(sample, 1.0e-2), 1.0e2);
+            sum += bond.strength_scale;
+            minimum = std::min(minimum, bond.strength_scale);
+            maximum = std::max(maximum, bond.strength_scale);
+        }
+
+        const double count = static_cast<double>(std::max<std::size_t>(1, m_dem_data->GetBondNum()));
+        Log::info("DEMSolver: bond strength heterogeneity ON "
+                  "(Weibull m={:g}, seed={}, {} bonds, mean scale={:.4f}, min={:.4f}, max={:.4f})",
+                  modulus, seed, m_dem_data->GetBondNum(), sum / count, minimum, maximum);
+    }
+
     void DEMSolver::CalcBondForce()
     {
         auto& particles = m_dem_data->GetParticles();
@@ -733,6 +805,7 @@ namespace zaran
                 // 与 LSM 的固相格点燃尽删除一致：任一端燃尽后，该连接不再承载固相力。
                 // 固定连接仍保留为当前近似气相拓扑，供压力和燃烧界面使用。
                 bond.active = false;
+                bond.elastic_energy = 0.0; // 不承载也不储能
                 bond.force_a.setZero();
                 continue;
             }
@@ -744,10 +817,15 @@ namespace zaran
             // LSM 通过缩小固相核几何尺寸退化承载截面，而不是直接按反应度降低
             // 材料的断裂应变。几何平均保证端点交换对称。
             const double solid_area_scale = std::sqrt(solid_a * solid_b);
-            const double limit = GetDEMParam()->GetBondBreakStrain();
-            const double peak = GetDEMParam()->GetBondPeakStrain();
+            // 逐键强度折减（Weibull 异质性）：阈值按 strength_scale 缩放，
+            // strength_scale = 1 时与均质情形完全一致。
+            const double strength_scale = bond.strength_scale;
+            const double limit = GetDEMParam()->GetBondBreakStrain() * strength_scale;
+            const double peak = GetDEMParam()->GetBondPeakStrain() * strength_scale;
             const double tensile_strain = std::max(0.0, (length - bond.rest_length) / bond.rest_length);
+            const double compressive_strain = std::max(0.0, (bond.rest_length - length) / bond.rest_length);
             bond.maximum_tensile_strain = std::max(bond.maximum_tensile_strain, tensile_strain);
+            bond.maximum_compressive_strain = std::max(bond.maximum_compressive_strain, compressive_strain);
 
             const Eigen::Vector3d normal = separation / length;
             const Eigen::Vector3d arm_a = 0.5 * length * normal;
@@ -757,6 +835,18 @@ namespace zaran
             const double velocity_n = relative_velocity.dot(normal);
             const Eigen::Vector3d velocity_t = relative_velocity - velocity_n * normal;
 
+            // 键合阻尼耗散：阻尼力 -nd*vn*n - td*vt 对相对运动做负功，
+            // 该对被耗散的功率为 nd*vn² + td*|vt|²（恒 ≥ 0），两端各记一半。
+            {
+                const double damping_energy = (bond.normal_damping * velocity_n * velocity_n
+                    + bond.tangential_damping * velocity_t.squaredNorm()) * dt;
+                if (damping_energy > 0.0)
+                {
+                    m_tmp_dissipation[bond.idx_a] += 0.5 * damping_energy;
+                    m_tmp_dissipation[bond.idx_b] += 0.5 * damping_energy;
+                }
+            }
+
             bond.delta_t += velocity_t * dt;
             bond.delta_t -= bond.delta_t.dot(normal) * normal;
             bond.extension = length - bond.rest_length;
@@ -764,11 +854,40 @@ namespace zaran
             bond.elastic_energy = 0.5 * solid_area_scale
                 * (bond.normal_stiffness * bond.extension * bond.extension
                    + bond.tangential_stiffness * bond.delta_t.squaredNorm());
+
+            // --- 压缩/屈曲失效（脆性材料在压缩侧同样有强度上限）---
+            // 线性弹性下压缩强度 σ_c 对应应变 ε_c = σ_c/E，而抗拉阈值 ε_t = σ_t/E，
+            // 故 ε_c = (σ_c/σ_t)·ε_t：默认直接由抗拉阈值按强度比派生，
+            // 也可用 dem.bond_break_strain_compression 直接给定。
+            // 与拉伸的"先软化后断"不同，压缩破坏取脆性判据（达阈值即断），
+            // 因为粉碎区的渐进失效正来自应变场的非均匀性而非软化段。
+            // 必须独立于断裂能准则：能量准则只在 extension ≥ 0 时生效（LSM LEP），
+            // 若把压缩判据也放进那个分支，能量口径的算例会失去压缩强度。
+            const double compression_limit = GetDEMParam()->GetBondBreakStrainCompression() > 0.0
+                ? GetDEMParam()->GetBondBreakStrainCompression() * strength_scale
+                : GetDEMParam()->GetBondCompressionStrengthRatio() * limit;
+            if (compression_limit > 0.0 && compressive_strain > compression_limit)
+            {
+                bond.dissipated_fracture_energy += bond.elastic_energy;
+                // 断开的键不再储能：清零后 Σelastic_energy 只统计完好键，
+                // 不会与 dissipated_fracture_energy 重复计数（否则能量账会算错）。
+                bond.elastic_energy = 0.0;
+                bond.damage = 1.0;
+                bond.active = false;
+                bond.force_a.setZero();
+                continue;
+            }
+
             if (bond.fracture_energy > 0.0 && bond.extension >= 0.0
-                && bond.elastic_energy >= bond.fracture_energy * solid_area_scale)
+                && bond.elastic_energy >= bond.fracture_energy * solid_area_scale
+                    * strength_scale * strength_scale)
             {
                 // LSM LEP：法向与切向储能之和超过表面能控制的单键断裂能。
+                // 强度按 s 缩放时应力应变同乘 s，故断裂能按 s² 缩放，保持口径一致。
                 bond.dissipated_fracture_energy += bond.elastic_energy;
+                // 断开的键不再储能：清零后 Σelastic_energy 只统计完好键，
+                // 不会与 dissipated_fracture_energy 重复计数（否则能量账会算错）。
+                bond.elastic_energy = 0.0;
                 bond.damage = 1.0;
                 bond.active = false;
                 bond.force_a.setZero();
@@ -782,6 +901,7 @@ namespace zaran
                 if (tensile_strain > limit)
                 {
                     bond.dissipated_fracture_energy += bond.elastic_energy;
+                    bond.elastic_energy = 0.0; // 断开的键不再储能
                     bond.active = false;
                     bond.force_a.setZero();
                     continue;
@@ -851,7 +971,10 @@ namespace zaran
 
     void DEMSolver::ZeroForce()
     {
-        for (auto& p : m_dem_data->GetParticles())
+        auto& particles = m_dem_data->GetParticles();
+        // 机械耗散缓冲：容量跨步保留，每步清零（由键合/接触/墙面三处累加）
+        m_tmp_dissipation.assign(particles.size(), 0.0);
+        for (auto& p : particles)
         {
             p.force.setZero();
             p.torque.setZero();
@@ -1092,6 +1215,7 @@ namespace zaran
                     bond.idx_b = j;
                     bond.rest_length = dist; // 初始无应力长度 = 初始中心距
                     bond.active = true;
+                    bond.source = 1; // 标记为"初始时刻自动生成的弹簧连接网络"
 
                     if (user_kn > 0.0)
                     {
@@ -1131,6 +1255,77 @@ namespace zaran
                       "(check dem.spring_network_gap / particle spacing)");
     }
 
+    bool DEMSolver::ApplyContactRebound(DEMParticle& pa, DEMParticle& pb,
+                                        const DEMContact& contact) const
+    {
+        const double ratio = GetDEMParam()->GetContactReboundRatio();
+        if (ratio <= 0.0) return false;
+
+        const bool a_dyn = pa.IsDynamic();
+        const bool b_dyn = pb.IsDynamic();
+        if (!a_dyn && !b_dyn) return false;
+
+        const double sum_r = pa.radius + pb.radius;
+        if (sum_r <= 0.0) return false;
+
+        // 接触距离。几何法向下 dist = (r_a+r_b) − δ；刚性边界模式（rigid_boundary）下
+        // δ 是沿规定运动方向的投影重叠量，此处同样按该口径折算，用作统一的接近度指标。
+        const double dist = sum_r - contact.overlap_n;
+        if (dist >= ratio * sum_r) return false; // 尚未过深，不干预
+
+        const Eigen::Vector3d& n = contact.normal; // A → B
+        // 法向相对速度：< 0 表示正在相向接近，才需要回弹
+        const double v_n = (pb.vel - pa.vel).dot(n);
+        if (v_n >= 0.0) return false;
+
+        // 目标：把法向相对速度由 v_n 改为 −e·v_n（即按恢复系数 e 反弹），
+        // 再按线动量守恒把该增量分配给两端。
+        double e = std::min(pa.restitution_coeff, pb.restitution_coeff);
+        e = std::max(e, 1.0e-3);
+        const double dv_n = -e * v_n - v_n; // > 0
+
+        // 由 m_a·α_a + m_b·α_b = 0 与 (α_b − α_a)·n = Δv_n 解得：
+        //   α_a = −Δv_n·m_b/(m_a+m_b)，α_b = +Δv_n·m_a/(m_a+m_b)
+        if (!b_dyn)
+        {
+            // B 为规定运动体（无限质量）：A 独立承担全部修正，B 速度不变
+            pa.vel += n * (-dv_n);
+        }
+        else if (!a_dyn)
+        {
+            pb.vel += n * dv_n;
+        }
+        else
+        {
+            const double msum = pa.mass + pb.mass;
+            if (msum <= 0.0) return false;
+            pa.vel += n * (-dv_n * pb.mass / msum);
+            pb.vel += n * ( dv_n * pa.mass / msum);
+        }
+        return true;
+    }
+
+    void DEMSolver::AmplifyDeepOverlapForce(DEMContact& contact, double sum_radius) const
+    {
+        const double ratio = GetDEMParam()->GetContactStiffenRatio();
+        if (ratio <= 0.0) return;
+        if (sum_radius <= 0.0) return;
+
+        const double limit = ratio * sum_radius;
+        const double dist = sum_radius - contact.overlap_n;
+        if (dist >= limit) return;
+
+        // 参考 LSM：fn = (rn_limit/rn)^20 · fn。
+        // 配合回弹阈值（默认 0.5），放大倍数实际有界（≤(0.6/0.5)^20≈38）；
+        // 仍加上限保护，避免两端几乎完全重合时出现 inf/NaN。
+        double factor = std::pow(limit / std::max(dist, 1.0e-30), 20.0);
+        if (!(factor > 1.0)) return; // 含 NaN/未放大
+        if (factor > 1.0e6) factor = 1.0e6;
+        contact.force_n *= factor;
+        // 法向阻尼耗散同步放大（此时 dissipation 只含法向阻尼项，切向尚未计算）
+        contact.dissipation *= factor;
+    }
+
     void DEMSolver::CalcContactForce()
     {
         auto& particles = m_dem_data->GetParticles();
@@ -1142,9 +1337,25 @@ namespace zaran
             DEMParticle& pa = particles[c.idx_a];
             DEMParticle& pb = particles[c.idx_b];
 
+            // --- 重叠限制（① 刚性回弹）---
+            // 深压缩且仍相向接近时，先把法向速度按弹性碰撞改写。
+            // 放在法向力之前，使阻尼项使用回弹后的相对速度（与 LSM 的处理顺序一致）。
+            ApplyContactRebound(pa, pb, c);
+
             m_contact_model->CalcNormalForce(pa, pb, c, dt);
+
+            // --- 重叠限制（② 过深压缩时放大法向排斥力）---
+            // 必须在切向之前：切向库仑摩擦上限取 contact.force_n 的模，
+            // 放大后再算切向，可使摩擦上限同步放大（与 LSM 一致）。
+            AmplifyDeepOverlapForce(c, pa.radius + pb.radius);
+
             m_contact_model->CalcTangentialForce(pa, pb, c, dt);
             SaveContactHistory(c);
+
+            // 机械耗散（法向阻尼 + 切向摩擦）对半分给两端 → 后续计入温度
+            const double dissipated = 0.5 * c.dissipation;
+            m_tmp_dissipation[c.idx_a] += dissipated;
+            m_tmp_dissipation[c.idx_b] += dissipated;
 
             Eigen::Vector3d F = c.force_n + c.force_t;
 
@@ -1197,6 +1408,9 @@ namespace zaran
                 m_contact_model->CalcNormalForce(pa, pb_wall, c, dt);
                 m_contact_model->CalcTangentialForce(pa, pb_wall, c, dt);
                 SaveContactHistory(c);
+
+                // 墙面不可动（无限质量），该对的耗散能量全部计入粒子
+                m_tmp_dissipation[pi] += c.dissipation;
 
                 pa.force += c.force_n + c.force_t;
                 pa.torque += c.contact_point.cross(c.force_t) - pa.pos.cross(c.force_t);
@@ -1321,7 +1535,7 @@ namespace zaran
         // --- bonds.dat ---
         buf.clear();
         buf.reserve(bonds.size() * 176 + 256);
-        buf.append("id,particle_a_id,particle_b_id,rest_length,extension,fx,fy,fz,active,heat_flow_a,damage,maximum_tensile_strain,elastic_energy,fracture_energy,dissipated_fracture_energy\n");
+        buf.append("id,particle_a_id,particle_b_id,rest_length,extension,fx,fy,fz,active,heat_flow_a,damage,maximum_tensile_strain,elastic_energy,fracture_energy,dissipated_fracture_energy,source,maximum_compressive_strain,strength_scale\n");
         for (const auto& b : bonds)
         {
             AppendNumber(buf, b.id);                                    buf.push_back(',');
@@ -1338,7 +1552,10 @@ namespace zaran
             AppendNumber(buf, b.maximum_tensile_strain);                buf.push_back(',');
             AppendNumber(buf, b.elastic_energy);                        buf.push_back(',');
             AppendNumber(buf, b.fracture_energy);                       buf.push_back(',');
-            AppendNumber(buf, b.dissipated_fracture_energy);            buf.push_back('\n');
+            AppendNumber(buf, b.dissipated_fracture_energy);            buf.push_back(',');
+            AppendNumber(buf, b.source);                                buf.push_back(',');
+            AppendNumber(buf, b.maximum_compressive_strain);            buf.push_back(',');
+            AppendNumber(buf, b.strength_scale);                        buf.push_back('\n');
         }
         WriteTextFile(back_folder + "/bonds.dat", buf);
 

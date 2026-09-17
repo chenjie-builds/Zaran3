@@ -24,7 +24,7 @@ void HertzMindlin::CalcEffectiveParams(const DEMParticle& pa, const DEMParticle&
 }
 
 void HertzMindlin::CalcNormalForce(const DEMParticle& pa, const DEMParticle& pb,
-                                    DEMContact& contact, double /*dt*/)
+                                    DEMContact& contact, double dt)
 {
     double E_star = 0.0, R_star = 0.0, G_star = 0.0;
     CalcEffectiveParams(pa, pb, E_star, R_star, G_star);
@@ -33,6 +33,7 @@ void HertzMindlin::CalcNormalForce(const DEMParticle& pa, const DEMParticle& pb,
     if (delta <= 0.0)
     {
         contact.force_n.setZero();
+        contact.dissipation = 0.0;
         return;
     }
 
@@ -75,6 +76,10 @@ void HertzMindlin::CalcNormalForce(const DEMParticle& pa, const DEMParticle& pb,
     double Fn_mag = Fn_hertz + Fn_damp;
 
     contact.force_n = -Fn_mag * contact.normal;
+
+    // 法向阻尼耗散：只有粘性（阻尼）部分不可逆，Hertz 弹性项属可逆储能。
+    // 该对被粘性耗散的功率为 c_n·v_n_rel²（恒 ≥ 0）。
+    contact.dissipation = c_n * v_n_rel * v_n_rel * dt;
 }
 
 void HertzMindlin::CalcTangentialForce(const DEMParticle& pa, const DEMParticle& pb,
@@ -111,8 +116,13 @@ void HertzMindlin::CalcTangentialForce(const DEMParticle& pa, const DEMParticle&
     double Ft_max = mu * Fn_mag;
     if (Ft.norm() > Ft_max)
     {
+        // 切向摩擦耗散：取库仑截断前后切向弹簧储能之差（严格非负），
+        // 持续滑动时等于滑动功 mu*|Fn|*|Δs|。
+        const double stored_before = 0.5 * k_t * contact.delta_t.squaredNorm();
         Ft = Ft.normalized() * Ft_max;
         contact.delta_t = -Ft / k_t;
+        const double stored_after = 0.5 * k_t * contact.delta_t.squaredNorm();
+        contact.dissipation += stored_before - stored_after;
     }
 
     contact.force_t = Ft;
