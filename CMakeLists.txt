@@ -35,6 +35,7 @@ set( inc_dir
     ${PROJECT_SOURCE_DIR}/inc/Basic/Utilities
     ${PROJECT_SOURCE_DIR}/inc/Basic/DEM
     ${PROJECT_SOURCE_DIR}/inc/Basic/DEM/ContactModel
+    ${PROJECT_SOURCE_DIR}/inc/Basic/TwoPhase
     ${PROJECT_SOURCE_DIR}/inc/Main
 )
 add_executable( ${EXECUTABLE_NAME} )
@@ -156,3 +157,37 @@ message(STATUS "compile_definitions: ${compile_definitions}")
 # 结果通过 Visual 输出 Tecplot），因此不再需要独立的基准可执行文件。
 # 原先的自包含实现与独立驱动已移至 _eulerbench/stale_standalone/ 备查。
 # ======================================================================
+
+# ======================================================================
+# MappingBench：两相耦合的"粒子 → 均匀笛卡尔网格"几何映射的验证驱动。
+# ParticleGridMapper 是**纯几何工具**（不含求解器、不参与主程序流程），
+# 因此单独出一个 target，可以在不改动主程序的前提下反复做几何自检
+# （体积精确配分、与子采样参考解对比、力散射守恒、保守光顺）。
+# ======================================================================
+option( BUILD_MAPPING_BENCH "ON to build the particle-to-grid mapping benchmark" ON )
+if( BUILD_MAPPING_BENCH )
+    set( MAPPING_BENCH_EXE "MappingBench" )
+    add_executable( ${MAPPING_BENCH_EXE}
+        ${PROJECT_SOURCE_DIR}/benchmarks/two_phase_mapping/mapping_main.cpp
+        ${PROJECT_SOURCE_DIR}/src/Basic/TwoPhase/ParticleGridMapper.cpp
+        ${PROJECT_SOURCE_DIR}/src/Basic/Utilities/log.cpp
+    )
+    target_include_directories( ${MAPPING_BENCH_EXE} PRIVATE
+        ${PROJECT_SOURCE_DIR}/inc/Basic/TwoPhase
+        ${PROJECT_SOURCE_DIR}/inc/Basic/Common
+        ${PROJECT_SOURCE_DIR}/inc/Basic/Math
+        ${PROJECT_SOURCE_DIR}/inc/Basic/Utilities
+        ${Eigen_DIR}
+        ${spdlog_DIR}
+        ${SpanLite_INC_DIR}
+    )
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        target_compile_options( ${MAPPING_BENCH_EXE} PRIVATE /bigobj /utf-8 )
+    endif()
+    set_target_properties( ${MAPPING_BENCH_EXE} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PROJECT_SOURCE_DIR}/bin/Release
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_SOURCE_DIR}/bin/Debug
+    )
+    message( STATUS "MappingBench target enabled" )
+endif()
