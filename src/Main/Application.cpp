@@ -11,6 +11,8 @@
 #include "ZaranError.h"
 #include "DEMFieldGenerator.h"
 #include "DEMFieldSimulation.h"
+#include "DEMCFDSimulation.h"
+#include "MappingSimulation.h"
 #include <sstream>
 
 namespace
@@ -38,6 +40,10 @@ namespace zaran
 		if (m_task == TaskType::SOLVE_FIELD)
 		{
 			SolveField();
+		}
+		else if (m_task == TaskType::MAPPING)
+		{
+			MapParticles();
 		}
 		else if (m_task == TaskType::CONVERT_GRID)
 		{
@@ -75,6 +81,10 @@ namespace zaran
 		else if (simuTask == "READ_MODEL")
 		{
 			m_task = TaskType::READ_MODEL;
+		}
+		else if (simuTask == "MAPPING")
+		{
+			m_task = TaskType::MAPPING;
 		}
 		else
 		{
@@ -200,6 +210,25 @@ namespace zaran
 				throw ZaranError("Unsupported Grid Type for EulerTwoPhase solver");
 			}
 		}
+		else if (solver_type_name == "EulerDEM")
+		{
+			// 阶段 3：DEM-CFD 单向耦合。流体侧**就是**两相 Euler 求解器（同为
+			// Euler_TwoPhase_Uniform），差别只在两处：
+			//   1. ε 场不是解析给出的，而是由 DEMCFDSimulation 从 particles.csv
+			//      经耦合器映射后注入（控制文件里写 init.volume_fraction.type = "external"）；
+			//   2. 时间推进用 NSFieldSimulation 的耦合子类 DEMCFDSimulation，
+			//      每个写盘步之后额外输出逐粒子的气态与相间力。
+			if (grid_type_name == "Structured")
+			{
+				grid_type = GridType::Structured;
+				solver_type = FieldSolverType::Euler_TwoPhase_Uniform;
+			}
+			else
+			{
+				Log::warn("EulerDEM solver requires task.grid_type = Structured! Please Check!");
+				throw ZaranError("Unsupported Grid Type for EulerDEM solver");
+			}
+		}
 		else
 		{
 			Log::warn("Unsupported Solver Type! Please Check!");
@@ -208,8 +237,18 @@ namespace zaran
 		shared_ptr<FieldGenerator> fieldFactory = make_shared<FieldGenerator>(grid_type, solver_type, dim);
 		//FieldGeneratorBuildingExplosion* fieldFactory = new FieldGeneratorBuildingExplosion(grid_type, solver_type, dim);
 		shared_ptr<FieldManager> global_field = fieldFactory->Create();
-		shared_ptr<NSFieldSimulation> controller = make_shared <NSFieldSimulation>(global_field);
-		controller->SolveField();
+		if (solver_type_name == "EulerDEM")
+		{
+			// 单向耦合的时间推进骨架与普通流场求解完全一致，只有三个钩子不同，
+			// 所以这里换成 NSFieldSimulation 的耦合子类（不另写一份时间循环）。
+			shared_ptr<DEMCFDSimulation> controller = make_shared<DEMCFDSimulation>(global_field);
+			controller->SolveField();
+		}
+		else
+		{
+			shared_ptr<NSFieldSimulation> controller = make_shared <NSFieldSimulation>(global_field);
+			controller->SolveField();
+		}
 	}
 
 	void Application::ConvertGrid()
@@ -233,6 +272,25 @@ namespace zaran
 			Log::info("Import Model: {}, is closed!", modelFileName);
 		else
 			Log::info("Import Model: {}, is not closed!", modelFileName);
+	}
+
+	void Application::MapParticles() const
+	{
+		// 粒子 → 网格映射算例：不做时间推进，只输出映射结果（α 云图 + 粒子点云）与报告。
+		// 目录口径与 DEM 分支一致：结果目录必建，备份目录仅在控制文件写了才建。
+		if (!GlobalData::IsExist("output.result_folder"))
+		{
+			Log::warn("MAPPING: [output] result_folder is missing, using 'result'");
+		}
+		CreateFolder(m_work_dir + "/" + (GlobalData::IsExist("output.result_folder")
+			? GlobalData::GetString("output.result_folder") : "result"));
+		if (GlobalData::IsExist("init.backup_folder"))
+		{
+			CreateFolder(m_work_dir + "/" + GlobalData::GetString("init.backup_folder"));
+		}
+
+		shared_ptr<MappingSimulation> controller = make_shared<MappingSimulation>(m_work_dir);
+		controller->Run();
 	}
 
 }

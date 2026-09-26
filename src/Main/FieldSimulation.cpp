@@ -35,10 +35,39 @@ void NSFieldSimulation::Initialize() const
 void NSFieldSimulation::SaveDataTecplot() const
 {
      //m_visual->WriteTecASCII(m_field_manager);
-    // 默认输出 Tecplot 二进制 (.plt)；若控制文件里 output.tecplot_ascii = true，
-    // 则输出 Tecplot ASCII (.dat)，便于用脚本直接做后处理与精度评估。
-    const bool use_ascii = GlobalData::IsExist("output.tecplot_ascii")
-        && GlobalData::GetBool("output.tecplot_ascii");
+    // 输出格式：output.tecplot_format = ascii | binary（默认 ascii）
+    //   ascii  —— Tecplot ASCII (.dat)：纯文本，Tecplot 与脚本都能直接读，
+    //             与 DEM 的 particles_*.dat / bonds_*.dat 口径一致；
+    //   binary —— Tecplot 二进制 (.plt)：体积小、读入快，适合大网格。
+    // 兼容旧键 output.tecplot_ascii（bool）：仅在未写新键时生效（新键优先）。
+    bool use_ascii = true;
+    if (GlobalData::IsExist("output.tecplot_ascii"))
+    {
+        static bool warned = false;
+        if (!warned)
+        {
+            Log::warn("output.tecplot_ascii 已由 output.tecplot_format 取代，建议改用后者");
+            warned = true;
+        }
+        use_ascii = GlobalData::GetBool("output.tecplot_ascii");
+    }
+    if (GlobalData::IsExist("output.tecplot_format"))
+    {
+        const std::string fmt = GlobalData::GetString("output.tecplot_format");
+        if (fmt == "binary")
+        {
+            use_ascii = false;
+        }
+        else if (fmt == "ascii")
+        {
+            use_ascii = true;
+        }
+        else
+        {
+            Log::warn("output.tecplot_format='{}' 无法识别（应为 ascii|binary），按 ascii 处理", fmt);
+            use_ascii = true;
+        }
+    }
     if (use_ascii)
     {
         m_visual->WriteTecASCII(m_field_manager);
@@ -54,8 +83,14 @@ void NSFieldSimulation::SaveDataTecplot() const
 void NSFieldSimulation::SolveField()
 {
     Log::info("Start to solve field!");
+    // 耦合钩子之一：必须在 Initialize() 之前（外部 ε 场要先写进数据管理器）
+    PrepareCoupling();
     Initialize();
     Log::info("Initialize finished!");
+    // iter = 0 的耦合记录：此刻初始流场已就绪，但时间循环还没开始；
+    // 基类紧接着会写出初始流场（result/0.dat），两者的帧号与时刻因此对齐。
+    // 单相/两相算例的钩子是空实现，这一步在数值上是空操作。
+    CouplingPostStep(0);
     Log::info("Save init field data...");
     SaveFieldData();
     Log::info("Save init field data finished!");
@@ -64,9 +99,11 @@ void NSFieldSimulation::SolveField()
     {
         int currentIter = GlobalData::GetInt("iteration.current_iter");
         GlobalData::Update("iteration.current_iter", ++currentIter);
+        CouplingPreStep(currentIter);
         PreSolve();
         SolveOneStep();
         PostSolve();
+        CouplingPostStep(currentIter);
     }
     PostSolve();
     SaveFieldData();

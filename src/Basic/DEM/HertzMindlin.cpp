@@ -34,6 +34,7 @@ void HertzMindlin::CalcNormalForce(const DEMParticle& pa, const DEMParticle& pb,
     {
         contact.force_n.setZero();
         contact.dissipation = 0.0;
+        contact.elastic_energy = 0.0;
         return;
     }
 
@@ -80,6 +81,11 @@ void HertzMindlin::CalcNormalForce(const DEMParticle& pa, const DEMParticle& pb,
     // 法向阻尼耗散：只有粘性（阻尼）部分不可逆，Hertz 弹性项属可逆储能。
     // 该对被粘性耗散的功率为 c_n·v_n_rel²（恒 ≥ 0）。
     contact.dissipation = c_n * v_n_rel * v_n_rel * dt;
+
+    // 接触弹簧的可逆储能：Hertz 弹性项 ∫F dδ = (2/5)·F_n·δ
+    // （Fn = (4/3)E*√R*·δ^1.5 ⇒ 储能 = 0.4·Fn_hertz·δ）；切向项由
+    // CalcTangentialForce 追加。
+    contact.elastic_energy = 0.4 * Fn_hertz * delta;
 }
 
 void HertzMindlin::CalcTangentialForce(const DEMParticle& pa, const DEMParticle& pb,
@@ -110,6 +116,30 @@ void HertzMindlin::CalcTangentialForce(const DEMParticle& pa, const DEMParticle&
 
     Eigen::Vector3d Ft = -k_t * contact.delta_t;
 
+    // 切向阻尼（可选）：c_t = λ·c_n。λ ≤ 0（默认）时完全不进入该分支。
+    // c_n 必须与 CalcNormalForce 完全同式（含 Hertz 的 sqrt(5/6) 因子），
+    // 否则"按恢复系数标定"的口径在切向与法向会不一致。
+    double c_t = 0.0;
+    if (m_tangential_damping_scale > 0.0)
+    {
+        const double k_n = 2.0 * E_star * std::sqrt(R_star * delta);
+        double m_eff = 0.0;
+        if (!pa.IsDynamic())      m_eff = pb.mass;
+        else if (!pb.IsDynamic()) m_eff = pa.mass;
+        else                      m_eff = (pa.mass * pb.mass) / (pa.mass + pb.mass);
+        double e = std::min(pa.restitution_coeff, pb.restitution_coeff);
+        e = std::max(e, 1.0e-3);
+        const double ln_e = std::log(e);
+        const double beta = -ln_e / std::sqrt(PI * PI + ln_e * ln_e);
+        const double c_n = 2.0 * std::sqrt(5.0 / 6.0) * beta * std::sqrt(m_eff * k_n);
+        c_t = m_tangential_damping_scale * c_n;
+    }
+    if (c_t > 0.0)
+    {
+        Ft -= c_t * v_t;
+        contact.dissipation += c_t * v_t.squaredNorm() * dt;
+    }
+
     // Coulomb 摩擦截断
     double mu = std::min(pa.friction_coeff, pb.friction_coeff);
     double Fn_mag = contact.force_n.norm();
@@ -120,12 +150,17 @@ void HertzMindlin::CalcTangentialForce(const DEMParticle& pa, const DEMParticle&
         // 持续滑动时等于滑动功 mu*|Fn|*|Δs|。
         const double stored_before = 0.5 * k_t * contact.delta_t.squaredNorm();
         Ft = Ft.normalized() * Ft_max;
-        contact.delta_t = -Ft / k_t;
+        // 有切向阻尼时，阻尼部分不属于弹簧，故 δ_t = −(Ft + c_t·v_t)/k_t。
+        if (c_t > 0.0) contact.delta_t = -(Ft + c_t * v_t) / k_t;
+        else           contact.delta_t = -Ft / k_t;
         const double stored_after = 0.5 * k_t * contact.delta_t.squaredNorm();
         contact.dissipation += stored_before - stored_after;
     }
 
     contact.force_t = Ft;
+
+    // 切向弹簧的剩余可逆储能（库仑截断之后的口径），追加到接触弹性能。
+    contact.elastic_energy += 0.5 * k_t * contact.delta_t.squaredNorm();
 }
 
 } // namespace zaran

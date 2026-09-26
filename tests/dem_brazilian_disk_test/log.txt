@@ -157,3 +157,195 @@
 [09/06/26 22:54:16] [info] Visual::WriteParticleVTP: 139 particles written to '..\..\tests\dem_brazilian_disk_test\/result/particles_50000.vtp'
 [09/06/26 22:54:16] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to ..\..\tests\dem_brazilian_disk_test\/backup/iter=50000
 [09/06/26 22:54:16] [info] DEM simulation finished. Total iter=50000
+[09/17/26 16:46:02] [info] Start Logger
+[09/17/26 16:46:02] [info] Log file path: tests/dem_brazilian_disk_test\log.txt
+[09/17/26 16:46:02] [info] ********Zaran: A Totally Automatic CFD Software!********
+[09/17/26 16:46:02] [info] >>>>>>>>Control File Version: V4.1.0<<<<<<<<
+[09/17/26 16:46:02] [info] >>>>>>>>Simulation Task: SOLVE_FIELD<<<<<<<<
+[09/17/26 16:46:02] [info] ReadDEMParticle: loaded 139 particles from 'tests/dem_brazilian_disk_test/particles.csv'
+[09/17/26 16:46:02] [info] ReadDEMBond: loaded 222 bonds from 'tests/dem_brazilian_disk_test/bonds.csv'
+[09/17/26 16:46:02] [info] DEMFieldGenerator: created DEMField with 139 particles, 222 bonds, 6 walls
+[09/17/26 16:46:02] [info] DEM SolverParam Init: dt=1.000000E-05, contact_model=LinearSpringDashpot, particle_file=particles.csv, spring_network=off, overlap_limit(stiffen=0.6, rebound=0.6), compression_fail=8x tensile, weibull_m=0
+[09/17/26 16:46:02] [info] DEMSolver: contact model = LinearSpringDashpot
+[09/17/26 16:46:02] [info] DEMSolver InitField: 139 particles, 222 bonds
+[09/17/26 16:46:02] [info] DEMFieldSimulation: initialized with 139 particles
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_0.dat'
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_0.dat'
+[09/17/26 16:46:02] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=0
+[09/17/26 16:46:02] [info] DEM iter=2500, time=2.500000E-02, particles=139
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_2500.dat'
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_2500.dat'
+[09/17/26 16:46:02] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=2500
+[09/17/26 16:46:02] [info] DEM iter=5000, time=5.000000E-02, particles=139
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_5000.dat'
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_5000.dat'
+[09/17/26 16:46:02] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=5000
+[09/17/26 16:46:02] [info] DEM iter=7500, time=7.500000E-02, particles=139
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_7500.dat'
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_7500.dat'
+[09/17/26 16:46:02] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=7500
+[09/17/26 16:46:02] [info] DEM iter=10000, time=1.000000E-01, particles=139
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_10000.dat'
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_10000.dat'
+[09/17/26 16:46:02] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=10000
+[09/17/26 16:46:02] [info] DEM iter=12500, time=1.250000E-01, particles=139
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_12500.dat'
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_12500.dat'
+[09/17/26 16:46:02] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=12500
+[09/17/26 16:46:02] [info] DEM iter=15000, time=1.500000E-01, particles=139
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_15000.dat'
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_15000.dat'
+[09/17/26 16:46:02] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=15000
+[09/17/26 16:46:02] [info] DEM iter=17500, time=1.750000E-01, particles=139
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_17500.dat'
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_17500.dat'
+[09/17/26 16:46:02] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=17500
+[09/17/26 16:46:02] [info] DEM iter=20000, time=2.000000E-01, particles=139
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_20000.dat'
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_20000.dat'
+[09/17/26 16:46:02] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=20000
+[09/17/26 16:46:02] [info] DEM iter=22500, time=2.250000E-01, particles=139
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_22500.dat'
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_22500.dat'
+[09/17/26 16:46:02] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=22500
+[09/17/26 16:46:02] [info] DEM iter=25000, time=2.500000E-01, particles=139
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_25000.dat'
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_25000.dat'
+[09/17/26 16:46:02] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=25000
+[09/17/26 16:46:02] [info] DEM iter=27500, time=2.750000E-01, particles=139
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_27500.dat'
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_27500.dat'
+[09/17/26 16:46:02] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=27500
+[09/17/26 16:46:02] [info] DEM iter=30000, time=3.000000E-01, particles=139
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_30000.dat'
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_30000.dat'
+[09/17/26 16:46:02] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=30000
+[09/17/26 16:46:02] [info] DEM iter=32500, time=3.250000E-01, particles=139
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_32500.dat'
+[09/17/26 16:46:02] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_32500.dat'
+[09/17/26 16:46:02] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=32500
+[09/17/26 16:46:03] [info] DEM iter=35000, time=3.500000E-01, particles=139
+[09/17/26 16:46:03] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_35000.dat'
+[09/17/26 16:46:03] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_35000.dat'
+[09/17/26 16:46:03] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=35000
+[09/17/26 16:46:03] [info] DEM iter=37500, time=3.750000E-01, particles=139
+[09/17/26 16:46:03] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_37500.dat'
+[09/17/26 16:46:03] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_37500.dat'
+[09/17/26 16:46:03] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=37500
+[09/17/26 16:46:03] [info] DEM iter=40000, time=4.000000E-01, particles=139
+[09/17/26 16:46:03] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_40000.dat'
+[09/17/26 16:46:03] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_40000.dat'
+[09/17/26 16:46:03] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=40000
+[09/17/26 16:46:03] [info] DEM iter=42500, time=4.250000E-01, particles=139
+[09/17/26 16:46:03] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_42500.dat'
+[09/17/26 16:46:03] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_42500.dat'
+[09/17/26 16:46:03] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=42500
+[09/17/26 16:46:03] [info] DEM iter=45000, time=4.500000E-01, particles=139
+[09/17/26 16:46:03] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_45000.dat'
+[09/17/26 16:46:03] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_45000.dat'
+[09/17/26 16:46:03] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=45000
+[09/17/26 16:46:03] [info] DEM iter=47500, time=4.750000E-01, particles=139
+[09/17/26 16:46:03] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_47500.dat'
+[09/17/26 16:46:03] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_47500.dat'
+[09/17/26 16:46:03] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=47500
+[09/17/26 16:46:03] [info] DEM iter=50000, time=5.000000E-01, particles=139
+[09/17/26 16:46:03] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_50000.dat'
+[09/17/26 16:46:03] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_50000.dat'
+[09/17/26 16:46:03] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=50000
+[09/17/26 16:46:03] [info] DEM simulation finished. Total iter=50000
+[09/17/26 17:35:47] [info] Start Logger
+[09/17/26 17:35:47] [info] Log file path: tests/dem_brazilian_disk_test\log.txt
+[09/17/26 17:35:47] [info] ********Zaran: A Totally Automatic CFD Software!********
+[09/17/26 17:35:47] [info] >>>>>>>>Control File Version: V4.1.0<<<<<<<<
+[09/17/26 17:35:47] [info] >>>>>>>>Simulation Task: SOLVE_FIELD<<<<<<<<
+[09/17/26 17:35:47] [info] ReadDEMParticle: loaded 139 particles from 'tests/dem_brazilian_disk_test/particles.csv'
+[09/17/26 17:35:47] [info] ReadDEMBond: loaded 222 bonds from 'tests/dem_brazilian_disk_test/bonds.csv'
+[09/17/26 17:35:47] [info] DEMFieldGenerator: created DEMField with 139 particles, 222 bonds, 6 walls
+[09/17/26 17:35:47] [info] DEM SolverParam Init: dt=1.000000E-05, contact_model=LinearSpringDashpot, particle_file=particles.csv, spring_network=off, overlap_limit(stiffen=0.6, rebound=0.6), compression_fail=8x tensile, weibull_m=0
+[09/17/26 17:35:47] [info] DEMSolver: contact model = LinearSpringDashpot
+[09/17/26 17:35:47] [info] DEMSolver InitField: 139 particles, 222 bonds
+[09/17/26 17:35:47] [info] DEMFieldSimulation: initialized with 139 particles
+[09/17/26 17:35:47] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_0.dat'
+[09/17/26 17:35:47] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_0.dat'
+[09/17/26 17:35:47] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=0
+[09/17/26 17:35:47] [info] DEM iter=2500, time=2.500000E-02, particles=139
+[09/17/26 17:35:47] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_2500.dat'
+[09/17/26 17:35:47] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_2500.dat'
+[09/17/26 17:35:47] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=2500
+[09/17/26 17:35:47] [info] DEM iter=5000, time=5.000000E-02, particles=139
+[09/17/26 17:35:47] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_5000.dat'
+[09/17/26 17:35:47] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_5000.dat'
+[09/17/26 17:35:47] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=5000
+[09/17/26 17:35:47] [info] DEM iter=7500, time=7.500000E-02, particles=139
+[09/17/26 17:35:47] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_7500.dat'
+[09/17/26 17:35:47] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_7500.dat'
+[09/17/26 17:35:47] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=7500
+[09/17/26 17:35:47] [info] DEM iter=10000, time=1.000000E-01, particles=139
+[09/17/26 17:35:47] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_10000.dat'
+[09/17/26 17:35:47] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_10000.dat'
+[09/17/26 17:35:47] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=10000
+[09/17/26 17:35:48] [info] DEM iter=12500, time=1.250000E-01, particles=139
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_12500.dat'
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_12500.dat'
+[09/17/26 17:35:48] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=12500
+[09/17/26 17:35:48] [info] DEM iter=15000, time=1.500000E-01, particles=139
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_15000.dat'
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_15000.dat'
+[09/17/26 17:35:48] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=15000
+[09/17/26 17:35:48] [info] DEM iter=17500, time=1.750000E-01, particles=139
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_17500.dat'
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_17500.dat'
+[09/17/26 17:35:48] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=17500
+[09/17/26 17:35:48] [info] DEM iter=20000, time=2.000000E-01, particles=139
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_20000.dat'
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_20000.dat'
+[09/17/26 17:35:48] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=20000
+[09/17/26 17:35:48] [info] DEM iter=22500, time=2.250000E-01, particles=139
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_22500.dat'
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_22500.dat'
+[09/17/26 17:35:48] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=22500
+[09/17/26 17:35:48] [info] DEM iter=25000, time=2.500000E-01, particles=139
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_25000.dat'
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_25000.dat'
+[09/17/26 17:35:48] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=25000
+[09/17/26 17:35:48] [info] DEM iter=27500, time=2.750000E-01, particles=139
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_27500.dat'
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_27500.dat'
+[09/17/26 17:35:48] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=27500
+[09/17/26 17:35:48] [info] DEM iter=30000, time=3.000000E-01, particles=139
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_30000.dat'
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_30000.dat'
+[09/17/26 17:35:48] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=30000
+[09/17/26 17:35:48] [info] DEM iter=32500, time=3.250000E-01, particles=139
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_32500.dat'
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_32500.dat'
+[09/17/26 17:35:48] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=32500
+[09/17/26 17:35:48] [info] DEM iter=35000, time=3.500000E-01, particles=139
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_35000.dat'
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_35000.dat'
+[09/17/26 17:35:48] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=35000
+[09/17/26 17:35:48] [info] DEM iter=37500, time=3.750000E-01, particles=139
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_37500.dat'
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_37500.dat'
+[09/17/26 17:35:48] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=37500
+[09/17/26 17:35:48] [info] DEM iter=40000, time=4.000000E-01, particles=139
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_40000.dat'
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_40000.dat'
+[09/17/26 17:35:48] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=40000
+[09/17/26 17:35:48] [info] DEM iter=42500, time=4.250000E-01, particles=139
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_42500.dat'
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_42500.dat'
+[09/17/26 17:35:48] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=42500
+[09/17/26 17:35:48] [info] DEM iter=45000, time=4.500000E-01, particles=139
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_45000.dat'
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_45000.dat'
+[09/17/26 17:35:48] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=45000
+[09/17/26 17:35:48] [info] DEM iter=47500, time=4.750000E-01, particles=139
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_47500.dat'
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_47500.dat'
+[09/17/26 17:35:48] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=47500
+[09/17/26 17:35:48] [info] DEM iter=50000, time=5.000000E-01, particles=139
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 139 particles, 25 variables -> 'tests/dem_brazilian_disk_test/result/particles_50000.dat'
+[09/17/26 17:35:48] [info] Visual::WriteParticleTecplotASCII: 222 bonds (85 nodes, 20 cell variables) -> 'tests/dem_brazilian_disk_test/result/bonds_50000.dat'
+[09/17/26 17:35:48] [info] DEMSolver::BackupField: 139 particles and 222 bonds written to tests/dem_brazilian_disk_test/backup/iter=50000
+[09/17/26 17:35:48] [info] DEM simulation finished. Total iter=50000

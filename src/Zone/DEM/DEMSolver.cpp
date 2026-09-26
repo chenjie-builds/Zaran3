@@ -112,6 +112,11 @@ namespace zaran
         {
             throw ZaranError("Unknown DEM contact model: " + model_name);
         }
+        // 切向接触阻尼（c_t = λ·c_n）。λ ≤ 0 时接触模型内部完全跳过该分支。
+        m_contact_model->SetTangentialDampingScale(para->GetTangentialDampingScale());
+        if (para->GetTangentialDampingScale() > 0.0)
+            Log::info("DEMSolver: 切向接触阻尼已启用，c_t = {:g}·c_n",
+                para->GetTangentialDampingScale());
     }
 
     void DEMSolver::InitField()
@@ -198,7 +203,79 @@ namespace zaran
         // --- 可选：逐键强度异质性（Weibull）---
         // 放在键合参数（含 fracture_energy）确定之后、且覆盖文件给定与自动建链两种来源。
         AssignBondStrengthScales();
+        // --- 多通道失效：切向独立断裂能阈值 UtIII = α·UnIII ---
+        // 必须在 fracture_energy 全部确定之后（含文件给定与 surface_energy 派生两种来源）。
+        // α ≤ 0（默认）时全部为 0 ⇒ 切向断裂/压剪两条通道完全不参与计算。
+        {
+            const double shear_ratio = para->GetBondShearEnergyRatio();
+            index_type shear_bonds = 0;
+            double shear_ratio_min = 1.0e30, shear_ratio_max = 0.0;
+            for (auto& bond : m_dem_data->GetBonds())
+            {
+                bond.fracture_energy_shear = (shear_ratio > 0.0)
+                    ? shear_ratio * bond.fracture_energy : 0.0;
+                if (bond.fracture_energy_shear > 0.0 && bond.fracture_energy > 0.0)
+                {
+                    ++shear_bonds;
+                    const double r = bond.fracture_energy_shear / bond.fracture_energy;
+                    shear_ratio_min = std::min(shear_ratio_min, r);
+                    shear_ratio_max = std::max(shear_ratio_max, r);
+                }
+            }
+            if (shear_bonds > 0)
+            {
+                Log::info("DEM 多通道失效: {} 条键启用切向独立断裂通道，"
+                    "UtIII/UnIII ∈ [{:.4f}, {:.4f}]（切向先断时按 LSM GBratio 折减法向阈值）",
+                    shear_bonds, shear_ratio_min, shear_ratio_max);
+            }
+            else if (shear_ratio > 0.0)
+            {
+                Log::warn("DEM 多通道失效: dem.bond_shear_energy_ratio = {:g} > 0，"
+                    "但没有任何键有正的断裂能（fracture_energy ≤ 0 ⇒ 需要 dem.surface_energy），"
+                    "切向独立断裂通道实际未生效。", shear_ratio);
+            }
+        }
+        // γ 控制的内聚律参数（δ_p、δ_f）必须在 fracture_energy 与 strength_scale
+        // 都确定之后、且覆盖"文件给定 + 自动建链"两种来源。
+        PrepareCohesiveLaw();
+        // 每个键的初始半径（径向损伤剖面的拉格朗日坐标），建键后赋值一次
+        {
+            const Eigen::Vector3d center = para->GetGasCavityCenter();
+            for (auto& b : m_dem_data->GetBonds())
+            {
+                if (b.idx_a >= m_dem_data->GetParticleNum()
+                    || b.idx_b >= m_dem_data->GetParticleNum())
+                {
+                    continue;
+                }
+                const auto& pa = m_dem_data->GetParticles()[b.idx_a];
+                const auto& pb = m_dem_data->GetParticles()[b.idx_b];
+                b.initial_radius = std::hypot(
+                    0.5 * (pa.pos.x() + pb.pos.x()) - center.x(),
+                    0.5 * (pa.pos.y() + pb.pos.y()) - center.y());
+            }
+        }
         UpdateGasVoronoiMesh(true);
+
+        // --- 可选：高压气腔加载（孔洞内充压气体把脆性材料撑碎）---
+        // 必须放在键合参数（含 m_lattice_spacing）确定之后：边界环识别用格距作容差。
+        if (para->GetGasCavityEnabled())
+        {
+            CavityGasOptions gas;
+            gas.enabled = true;
+            gas.center = para->GetGasCavityCenter();
+            gas.cavity_radius = para->GetGasCavityRadius();
+            gas.pressure_initial = para->GetGasPressureInitial();
+            gas.polytropic_index = para->GetGasPolytropicIndex();
+            gas.ramp_time = para->GetGasRampTime();
+            gas.thickness = para->GetLatticeThickness();
+            gas.shell_tolerance = para->GetGasCavityShellTolerance();
+            gas.disk_radius = para->GetSampleRadius();
+            gas.vent_area_ratio = para->GetGasCavityVentAreaRatio();
+            gas.pressure_cap = para->GetGasCavityPressureCap();
+            m_cavity_gas.Initialize(m_dem_data->GetParticles(), gas, m_lattice_spacing);
+        }
+
         Log::info("DEMSolver InitField: {} particles, {} bonds",
             m_dem_data->GetParticleNum(), m_dem_data->GetBondNum());
     }
@@ -224,8 +301,332 @@ namespace zaran
         CalcGravity();
         CalcThermalReaction();
         CalcGasPressureForce();
+
+        // 高压气腔加载：受力必须在积分**之前**（用步初位置确定边界环几何），
+        // 体积/内能的更新必须在积分**之后**；两者共用同一套边界离散 ⇒ W ≡ pΔV。
+        const double dt = GetDEMParam()->GetTimeStep();
+        const double time = static_cast<double>(m_dem_step) * dt;
+        CalcCavityGasForce(time);
+
         Integrate();
+        UpdateCavityGasState(dt, time);
+
+        // 机械耗散累计：m_tmp_dissipation 在 ZeroForce 里清零、本步值即 J，
+        // 单独累计一份供能量账本闭合检查（与写入温度的用法互不干扰）。
+        for (index_type i = 0; i < m_tmp_dissipation.size(); ++i)
+        {
+            m_dissipation_total += m_tmp_dissipation[i];
+        }
+
         ++m_dem_step;
+    }
+
+    void DEMSolver::CalcCavityGasForce(double time)    {
+        if (!m_cavity_gas.IsEnabled()) return;
+        m_cavity_gas.ApplyPressureForce(m_dem_data->GetParticles(), time);
+    }
+
+    void DEMSolver::UpdateCavityGasState(double dt, double time)
+    {
+        if (!m_cavity_gas.IsEnabled()) return;
+        m_cavity_gas.UpdateState(m_dem_data->GetParticles(), dt, time);
+    }
+
+    DEMSolver::EnergyBudget DEMSolver::GetEnergyBudget() const
+    {
+        EnergyBudget budget;
+        const auto& particles = m_dem_data->GetParticles();
+        for (const auto& p : particles)
+        {
+            budget.kinetic_translation += 0.5 * p.mass * p.vel.squaredNorm();
+            budget.kinetic_rotation += 0.5 * p.inertia * p.mass * p.radius * p.radius
+                * p.omega.squaredNorm();
+            budget.max_speed = std::max(budget.max_speed, p.vel.norm());
+            const double dx = p.pos.x() - GetDEMParam()->GetGasCavityCenter().x();
+            const double dy = p.pos.y() - GetDEMParam()->GetGasCavityCenter().y();
+            budget.max_fragment_distance = std::max(budget.max_fragment_distance,
+                std::sqrt(dx * dx + dy * dy));
+        }
+        for (const auto& b : m_dem_data->GetBonds())
+        {
+            budget.bond_elastic += b.elastic_energy;
+            budget.bond_fracture += b.dissipated_fracture_energy;
+            // 切向独立断裂的耗散单列统计，并并入断裂耗散总量
+            // （未启用切向通道时恒为 0，历史账本逐位不变）。
+            if (b.dissipated_shear_energy > 0.0)
+            {
+                budget.bond_fracture += b.dissipated_shear_energy;
+                budget.bond_shear_fracture += b.dissipated_shear_energy;
+            }
+            if (b.active) ++budget.active_bonds; else ++budget.broken_bonds;
+        }
+        budget.dissipation = m_dissipation_total;
+        budget.contact_elastic = m_contact_elastic;
+        budget.rebound_loss = m_rebound_loss;
+        return budget;
+    }
+
+    // ==================================================================
+    // γ 控制的双线性内聚律：逐键参数（δ_p、δ_f）与自洽性检查
+    // ==================================================================
+    // 关键关系（推导见 DEMBond.h 的注释）：
+    //   曲线下面积 = ½·F_p·δ_f，令其等于 Efract = γ·L0·t/√3·(1−Egb/γ)·s²
+    //   ⇒ δ_f = 2·Efract/(k_n·δ_p)        （solid_area_scale 自动约掉）
+    // 物理含义：**δ_f ≥ δ_p 等价于 L0 ≤ γ_eff·E/σ_t²** —— γ 与 σ_t 是两个独立材料量，
+    // 网格越粗就越无法同时表示它们；这是"裂纹能被分辨开"的先决条件，必须显式检查。
+    void DEMSolver::PrepareCohesiveLaw()
+    {
+        auto* para = GetDEMParam();
+        const bool want = para->GetBondCohesiveEnabled();
+        const double eps_peak_input = para->GetBondPeakStrain();
+        const bool have_peak = eps_peak_input > 0.0 && eps_peak_input < 1.0e29;
+
+        index_type cohesive_bonds = 0;
+        index_type degenerate_bonds = 0;
+        double min_ratio = 1.0e30;
+        double max_ratio = 0.0;
+        double min_zone_bonds = 1.0e30;
+        const double thickness = para->GetLatticeThickness();
+        const auto& particles = m_dem_data->GetParticles();
+
+        for (auto& b : m_dem_data->GetBonds())
+        {
+            b.cohesive = false;
+            b.cohesive_peak_separation = 0.0;
+            b.cohesive_failure_separation = 0.0;
+            if (!want || !have_peak || b.fracture_energy <= 0.0
+                || b.normal_stiffness <= 0.0 || b.rest_length <= 0.0)
+            {
+                continue;
+            }
+            ++cohesive_bonds;
+            const DEMParticle& bp = particles[static_cast<size_t>(b.idx_a)];
+            const double s = b.strength_scale;
+            // δ_p 用**未放大**的峰值应变乘 L0（含逐键强度折减 s）
+            const double dp = eps_peak_input * s * b.rest_length;
+            // Efract 已按 s² 缩放（强度按 s 缩放时应力应变同乘 s）
+            const double efract_scaled = b.fracture_energy * s * s;
+            const double df = 2.0 * efract_scaled / (b.normal_stiffness * dp);
+            b.cohesive_peak_separation = dp;
+            b.cohesive_failure_separation = df;
+
+            if (!(df > dp))
+            {
+                // 储能还没到峰值就已经用完了全部断裂能 ⇒ 无法表示软化段。
+                // 默认直接报错（静默退化是最难发现的一类错误），可用
+                // dem.bond_cohesive_strict = false 降级为"脆断"。
+                b.cohesive = false;
+                ++degenerate_bonds;
+                continue;
+            }
+            b.cohesive = true;
+            const double ratio = df / dp;
+            min_ratio = std::min(min_ratio, ratio);
+            max_ratio = std::max(max_ratio, ratio);
+
+            // 内聚区长度（平面应力）：l_cz = E·G_f/σ_p²，G_f = Efract/A_bond，σ_p = F_p/A_bond。
+            // 注意 **δ_f 本身不是内聚区长度** —— 它是材料分离度（~10 μm），而内聚区
+            // 是裂尖附近牵引力起作用的那一段（~mm 量级），必须按 E·G_f/σ_t² 估。
+            const double a_bond = (thickness > 0.0)
+                ? b.rest_length * thickness / 1.7320508075688772 : 0.0;
+            if (a_bond > 0.0 && bp.young_modulus > 0.0)
+            {
+                const double sigma_p = b.normal_stiffness * dp / a_bond;
+                if (sigma_p > 0.0)
+                {
+                    const double zone = bp.young_modulus * (efract_scaled / a_bond)
+                        / (sigma_p * sigma_p);
+                    min_zone_bonds = std::min(min_zone_bonds, zone / b.rest_length);
+                }
+            }
+        }
+
+        if (cohesive_bonds == 0)
+        {
+            return;
+        }
+
+        // 网格分辨力的判据：内聚区至少要覆盖 min_bonds 个键长
+        const double min_bonds_required = para->GetBondCohesiveMinSofteningBonds();
+        if (min_bonds_required > 0.0
+            && min_zone_bonds < min_bonds_required)
+        {
+            Log::warn("DEM cohesive law: 内聚区只有 {:.2f} 个键长（要求 ≥ {:g}）—— "
+                "牵引力起作用的区域落在网格尺度以内，裂纹无法沿路径扩展而会弥散粉碎。"
+                "增大断裂功（dem.surface_energy）或加密网格：需要 "
+                "l_cz = E·γ/σ_t² ≥ {:g}·L0。", min_zone_bonds, min_bonds_required,
+                min_bonds_required);
+        }
+
+        if (degenerate_bonds > 0)
+        {
+            const std::string msg = "DEM cohesive law: " + std::to_string(degenerate_bonds)
+                + " / " + std::to_string(cohesive_bonds)
+                + " 条键的 δ_f ≤ δ_p（峰值储能已超过断裂能）⇒ 无法表示软化段。"
+                "请提高 dem.surface_energy 或降低 dem.bond_peak_strain；"
+                "自洽条件为 γ_eff ≥ E·ε_p²·L0（等价 L0 ≤ γ_eff·E/σ_t²）。";
+            if (para->GetBondCohesiveStrict())
+            {
+                throw ZaranError("DEM cohesive law 参数不自洽: " + msg);
+            }
+            Log::warn(msg + " 已按 dem.bond_cohesive_strict = false 退化为脆断口径。");
+        }
+
+        Log::info("DEM cohesive law: {} 条键启用 γ 控制双线性内聚律；"
+            "δ_f/δ_p ∈ [{:.3f}, {:.3f}]，内聚区 ≥ {:.2f} 个键长；"
+            "曲线下面积 ≡ fracture_energy（γ·A）",
+            cohesive_bonds, min_ratio, max_ratio, min_zone_bonds);
+    }
+
+    // ==================================================================
+    // 破碎形态统计：未断键连通分量 = 完整碎块；已断键连通 = 裂纹带
+    // ==================================================================
+    // 只看"断键率"会被骗：94% 断键既可能是 3 条主裂纹（含大量被切开的面），
+    // 也可能是全盘粉化。碎块尺寸分布才是"几大块 + 飞溅细粒"的定量口径。
+    DEMSolver::FragmentStats DEMSolver::ComputeFragmentStats() const
+    {
+        FragmentStats stats;
+        const auto& particles = m_dem_data->GetParticles();
+        const auto& bonds = m_dem_data->GetBonds();
+        const index_type n = particles.size();
+        const index_type e = bonds.size();
+        if (n == 0)
+        {
+            return stats;
+        }
+
+        // 并查集（路径压缩 + 按大小合并）
+        auto make_uf = [&](std::vector<index_type>& parent)
+        {
+            parent.resize(static_cast<size_t>(n));
+            for (index_type i = 0; i < n; ++i) parent[static_cast<size_t>(i)] = i;
+        };
+        auto find = [&](std::vector<index_type>& parent, index_type a)
+        {
+            while (parent[static_cast<size_t>(a)] != a)
+            {
+                parent[static_cast<size_t>(a)] = parent[static_cast<size_t>(parent[static_cast<size_t>(a)])];
+                a = parent[static_cast<size_t>(a)];
+            }
+            return a;
+        };
+        auto unite = [&](std::vector<index_type>& parent, index_type a, index_type b)
+        {
+            const index_type ra = find(parent, a);
+            const index_type rb = find(parent, b);
+            if (ra != rb) parent[static_cast<size_t>(ra)] = rb;
+        };
+
+        // ---- 完整碎块（未断键连通分量）----
+        std::vector<index_type> pu;
+        make_uf(pu);
+        for (const auto& b : bonds)
+        {
+            if (b.active && b.idx_a < n && b.idx_b < n) unite(pu, b.idx_a, b.idx_b);
+        }
+        std::vector<index_type> count(static_cast<size_t>(n), 0);
+        std::vector<double> mass(static_cast<size_t>(n), 0.0);
+        double total_mass = 0.0;
+        for (index_type i = 0; i < n; ++i)
+        {
+            const index_type r = find(pu, i);
+            ++count[static_cast<size_t>(r)];
+            mass[static_cast<size_t>(r)] += particles[static_cast<size_t>(i)].mass;
+            total_mass += particles[static_cast<size_t>(i)].mass;
+        }
+        for (index_type i = 0; i < n; ++i)
+        {
+            if (count[static_cast<size_t>(i)] == 0) continue;
+            ++stats.fragments;
+            if (count[static_cast<size_t>(i)] == 1) ++stats.isolated_particles;
+            const double frac = (total_mass > 0.0)
+                ? mass[static_cast<size_t>(i)] / total_mass : 0.0;
+            if (count[static_cast<size_t>(i)] > stats.largest_fragment)
+            {
+                stats.largest_fragment = count[static_cast<size_t>(i)];
+                stats.largest_fragment_mass_fraction = frac;
+            }
+            if (count[static_cast<size_t>(i)] >= 20)
+            {
+                ++stats.fragments_ge_20;
+                stats.fragments_ge_20_mass_fraction += frac;
+            }
+        }
+
+        // ---- 裂纹带（已断键连通分量）----
+        std::vector<index_type> pb;
+        make_uf(pb);
+        std::vector<char> touched(static_cast<size_t>(n), 0);
+        for (const auto& b : bonds)
+        {
+            if (b.active || b.idx_a >= n || b.idx_b >= n) continue;
+            unite(pb, b.idx_a, b.idx_b);
+            touched[static_cast<size_t>(b.idx_a)] = 1;
+            touched[static_cast<size_t>(b.idx_b)] = 1;
+        }
+        std::vector<index_type> bc(static_cast<size_t>(n), 0);
+        for (index_type i = 0; i < n; ++i)
+        {
+            if (!touched[static_cast<size_t>(i)]) continue;
+            ++bc[static_cast<size_t>(find(pb, i))];
+        }
+        for (index_type i = 0; i < n; ++i)
+        {
+            stats.largest_crack_band = std::max(stats.largest_crack_band,
+                bc[static_cast<size_t>(i)]);
+        }
+
+        // ---- 径向断键率（12 个等宽环带）----
+        // ⚠ 归一化必须用**固定的参考半径**（试件初始半径），不能用"当前最大半径"：
+        //   一旦碎片飞出，max_radius 会随时间暴涨，环带会跟着漂移，
+        //   而飞出去的高速碎块（键全断）会全部落进最外两环、把剖面刷成 100%，
+        //   读起来像是"外缘被碎成粉末"，与事实正好相反。同时**只统计参考半径以内**的键，
+        //   让这条曲线始终是"原始圆盘上的损伤分布"。
+        const Eigen::Vector3d center = GetDEMParam()->GetGasCavityCenter();
+        for (const auto& p : particles)
+        {
+            stats.max_radius = std::max(stats.max_radius,
+                std::hypot(p.pos.x() - center.x(), p.pos.y() - center.y()));
+        }
+        const double ref_radius = (GetDEMParam()->GetSampleRadius() > 0.0)
+            ? GetDEMParam()->GetSampleRadius() : stats.max_radius;
+        if (ref_radius > 0.0)
+        {
+            double band_total[12] = { 0.0 };
+            double band_broken[12] = { 0.0 };
+            for (index_type k = 0; k < e; ++k)
+            {
+                const auto& b = bonds[static_cast<size_t>(k)];
+                if (b.idx_a >= n || b.idx_b >= n) continue;
+                // 用**初始**半径（拉格朗日坐标）：空腔膨胀/碎块飞出后，
+                // 按当前位置统计会让环带漂移，读出来的图像完全反过来。
+                double r;
+                if (b.initial_radius >= 0.0)
+                {
+                    r = b.initial_radius;
+                }
+                else
+                {
+                    const double x = 0.5 * (particles[static_cast<size_t>(b.idx_a)].pos.x()
+                        + particles[static_cast<size_t>(b.idx_b)].pos.x()) - center.x();
+                    const double y = 0.5 * (particles[static_cast<size_t>(b.idx_a)].pos.y()
+                        + particles[static_cast<size_t>(b.idx_b)].pos.y()) - center.y();
+                    r = std::hypot(x, y);
+                }
+                if (r > ref_radius) continue;
+                int ib = static_cast<int>(r / ref_radius * 12.0);
+                if (ib < 0) ib = 0;
+                if (ib > 11) ib = 11;
+                band_total[ib] += 1.0;
+                if (!b.active) band_broken[ib] += 1.0;
+            }
+            for (int i = 0; i < 12; ++i)
+            {
+                stats.radial_broken_fraction[i] = (band_total[i] > 0.0)
+                    ? band_broken[i] / band_total[i] : 0.0;
+            }
+        }
+        return stats;
     }
 
     void DEMSolver::UpdateGasVoronoiMesh(bool force)
@@ -849,9 +1250,14 @@ namespace zaran
 
             bond.delta_t += velocity_t * dt;
             bond.delta_t -= bond.delta_t.dot(normal) * normal;
+            // 切向弹簧已独立断裂时不再累积切向位移：否则 δ_t 会重新增长，
+            // 让后面所有"切向储能"的口径（判据与记账）都虚高。
+            if (bond.shear_broken) bond.delta_t.setZero();
             bond.extension = length - bond.rest_length;
 
-            bond.elastic_energy = 0.5 * solid_area_scale
+            // 弹性能。内聚模式下受力刚度已按 (1−d) 折减，储能必须同步折减，
+            // 否则账本里的"可逆储能"与卸载路径不一致（这是账本闭合的必要条件）。
+            bond.elastic_energy = 0.5 * solid_area_scale * (bond.cohesive ? (1.0 - bond.damage) : 1.0)
                 * (bond.normal_stiffness * bond.extension * bond.extension
                    + bond.tangential_stiffness * bond.delta_t.squaredNorm());
 
@@ -866,8 +1272,38 @@ namespace zaran
             const double compression_limit = GetDEMParam()->GetBondBreakStrainCompression() > 0.0
                 ? GetDEMParam()->GetBondBreakStrainCompression() * strength_scale
                 : GetDEMParam()->GetBondCompressionStrengthRatio() * limit;
+            // --- 压剪通道（LSM breakmod = 2）---
+            // 压缩侧（rn ≤ r0 ⇒ extension < 0）且切向有明显错动、切向弹簧储能达到 UtIII
+            // ⇒ 剪切型破坏。它与"压缩压溃"（breakmod = 3，纯法向压缩过深）是两条独立通道：
+            // 前者由剪切滑移驱动（孔洞/裂隙壁面的错动正是这种），后者由法向压密驱动。
+            // 只有 α > 0（显式启用切向通道）时才存在；默认关闭 ⇒ 逐位回退。
+            if (bond.cohesive && bond.extension < 0.0 && bond.fracture_energy_shear > 0.0
+                && !bond.shear_broken && bond.tangential_stiffness > 0.0
+                && bond.delta_t.squaredNorm() > 0.0)
+            {
+                const double u_t_eff = bond.fracture_energy_shear * solid_area_scale
+                    * strength_scale * strength_scale;
+                const double Et_now = 0.5 * solid_area_scale * bond.tangential_stiffness
+                    * bond.delta_t.squaredNorm();
+                if (u_t_eff > 0.0 && Et_now >= u_t_eff)
+                {
+                    bond.break_mode = 2;
+                    // 法向压缩储能与切向弹簧储能分别记账，避免与 dissipated_shear_energy 重复
+                    const double E_n_elastic = 0.5 * solid_area_scale
+                        * (1.0 - bond.damage) * bond.normal_stiffness
+                        * bond.extension * bond.extension;
+                    bond.dissipated_fracture_energy += E_n_elastic;
+                    bond.dissipated_shear_energy += Et_now;
+                    bond.elastic_energy = 0.0;
+                    bond.damage = 1.0;
+                    bond.active = false;
+                    bond.force_a.setZero();
+                    continue;
+                }
+            }
             if (compression_limit > 0.0 && compressive_strain > compression_limit)
             {
+                bond.break_mode = 3;
                 bond.dissipated_fracture_energy += bond.elastic_energy;
                 // 断开的键不再储能：清零后 Σelastic_energy 只统计完好键，
                 // 不会与 dissipated_fracture_energy 重复计数（否则能量账会算错）。
@@ -878,7 +1314,166 @@ namespace zaran
                 continue;
             }
 
-            if (bond.fracture_energy > 0.0 && bond.extension >= 0.0
+            if (bond.cohesive && bond.extension >= 0.0)
+            {
+                // ============ γ 控制的双线性内聚律 ============
+                // 牵引-分离曲线：δ ≤ δ_p 线性升至 F_p = k_n·δ_p；δ_p<δ<δ_f 线性软化到 0；
+                // δ ≥ δ_f 失效。构造保证曲线下**总面积 = fracture_energy·s²**（见
+                // DEMBond::cohesive_failure_separation 的推导），所以"造新表面要花多少能量"
+                // 是一个真正的材料输入，而不是由网格/阈值派生的量。
+                //
+                // 损伤由 δ 的解析式给出（形如 LSM 的二阶段软化，但面积严格守恒）：
+                //   d(δ) = 1 − (δ_p/δ)·(δ_f−δ)/(δ_f−δ_p)
+                // 于是 F = (1−d)·k_n·δ 恰好落在从 (δ_p,F_p) 到 (δ_f,0) 的直线上。
+                // 可逆弹性能取卸载回原点的 ½(1−d)k_nδ²，耗散能取包络面积减可逆部分，
+                // 二者之和逐位等于键力对外做的功 —— 这是能量账本能闭合的前提。
+                const double dp = bond.cohesive_peak_separation;
+                const double e = bond.extension;
+                const double k_eff = solid_area_scale * bond.normal_stiffness;
+                const double f_peak = k_eff * dp;
+                // 断裂能的逐键缩放（强度按 s 缩放时应力应变同乘 s ⇒ 能量密度 ∝ s²）
+                const double energy_scale = solid_area_scale * strength_scale * strength_scale;
+
+                // ---- 切向独立断裂通道（LSM breakmod = 4）----
+                // 切向弹簧储能 Et 达到 UtIII 时，切向先于法向失效：
+                //   ① 切向不再承载（bond.shear_broken ⇒ 下面 force_t 取 0）；
+                //   ② 按 LSM 的 GBratio 折减规则压低**法向能量预算**
+                //      （Un_eff ← Un_eff − Ut_eff），于是"造切向新表面"与
+                //      "造法向新表面"共享同一份材料断裂能。
+                // ⚠ 折减的是能量阈值，**不是 δ_f** —— LSM 里 rnmax 是材料常数、
+                // 全程不改动。若按面积重解 δ_f，会在"法向已经吸收了部分包络功之后
+                // 才切向断裂"时把那段已吸收的功抹掉（实测丢 1.3e-5 相对能量）。
+                // 只在 bond.fracture_energy_shear > 0（α > 0）时进入，默认关闭。
+                const bool shear_independent = bond.fracture_energy_shear > 0.0;
+                if (shear_independent && !bond.shear_broken
+                    && bond.tangential_stiffness > 0.0)
+                {
+                    const double u_t_eff = bond.fracture_energy_shear * energy_scale;
+                    const double Et = 0.5 * solid_area_scale * bond.tangential_stiffness
+                        * bond.delta_t.squaredNorm();
+                    if (u_t_eff > 0.0 && Et >= u_t_eff)
+                    {
+                        bond.shear_broken = true;
+                        bond.break_mode = 4;
+                        // 切向弹簧的储能全部不可逆地转为热（刚度归零 ⇒ 不再可逆）
+                        bond.dissipated_shear_energy += Et;
+                        bond.delta_t.setZero();
+                        // LSM 的 GBratio 折减：只降**能量阈值**，δ_f（材料常数）不动：
+                        //   GBratio_new = (UnIII − UtIII)·GBratio_old / UnIII
+                        // 于是"造切向新表面"与"造法向新表面"共享同一份材料断裂能。
+                        bond.cohesive_budget_scale *=
+                            (bond.fracture_energy - bond.fracture_energy_shear)
+                            / bond.fracture_energy;
+                    }
+                }
+
+                const double df = bond.cohesive_failure_separation;
+                // 损伤由**历史最大**拉伸分离度驱动 ⇒ 卸载不恢复损伤；卸载刚度取 (1−d)k_n，
+                // 即线性卸载回原点（标准损伤力学口径）。
+                const double e_drive = std::max(e,
+                    bond.maximum_tensile_strain * bond.rest_length);
+
+                double d_local;
+                if (e_drive <= dp)
+                {
+                    d_local = 0.0;
+                }
+                else if (e_drive < df)
+                {
+                    d_local = 1.0 - (dp / e_drive) * ((df - e_drive) / (df - dp));
+                }
+                else
+                {
+                    d_local = 1.0;
+                }
+                if (d_local < 0.0) d_local = 0.0;
+                if (d_local > 1.0) d_local = 1.0;
+                bond.damage = d_local;
+
+                // 包络（牵引-分离曲线）在 e_drive 处的累积面积 = 该键吸收过的总功
+                double area_env;
+                if (e_drive <= dp)
+                {
+                    area_env = 0.5 * k_eff * e_drive * e_drive;
+                }
+                else
+                {
+                    const double f_at = (df > dp)
+                        ? f_peak * (df - e_drive) / (df - dp) : 0.0;
+                    area_env = 0.5 * f_peak * dp + 0.5 * (f_peak + f_at) * (e_drive - dp);
+                    if (area_env < 0.0) area_env = 0.5 * f_peak * dp;
+                }
+
+                // 可逆部分用**当前**分离度，耗散部分 = 吸收的总功 − 包络上那一点的可逆能。
+                // 于是 (可逆 + 耗散) = 净吸收能量，卸载时会把能量还回去，账本自动闭合。
+                const double reversible_normal = 0.5 * k_eff * (1.0 - d_local) * e * e;
+                const double reversible_at_drive = 0.5 * k_eff * (1.0 - d_local)
+                    * e_drive * e_drive;
+                // 切向退化因子：默认与法向损伤绑定（历史口径，逐位不变）；
+                // 启用切向独立通道后，切向弹簧有自己的强度极限、不随法向损伤折减
+                // （与 LSM 的 En / Et 两条独立通道一致），切向断裂后直接归零。
+                const double tangential_factor = shear_independent
+                    ? (bond.shear_broken ? 0.0 : 1.0) : (1.0 - d_local);
+                bond.elastic_energy = reversible_normal
+                    + 0.5 * solid_area_scale * tangential_factor
+                        * bond.tangential_stiffness * bond.delta_t.squaredNorm();
+                double dissipated = area_env - reversible_at_drive;
+                if (dissipated < 0.0) dissipated = 0.0;
+                bond.dissipated_fracture_energy = dissipated;
+
+                // 失效判据。默认（未启用切向通道）逐位等价于历史写法 `e_drive >= df`：
+                // area_env 在 e_drive ≥ δ_f 处恰等于 Un_eff（曲线下总面积）。
+                bool bond_failed = (e_drive >= df);
+                // 启用切向通道时的两条额外判据（LSM）
+                double envelope_total = 0.0, budget = 0.0;
+                if (shear_independent)
+                {
+                    envelope_total = bond.fracture_energy * energy_scale;
+                    budget = envelope_total * bond.cohesive_budget_scale;
+                    const double Et_now = bond.shear_broken ? 0.0
+                        : 0.5 * solid_area_scale * bond.tangential_stiffness
+                            * bond.delta_t.squaredNorm();
+                    // 拉伸混合通道（LSM breakmod = 1）：En + Et ≥ Un_eff。
+                    // 剪切储能参与把键拉断 —— 这是"法向还没到软化终点、但剪切已经
+                    // 帮着把键带坏"的情形，也让裂纹走向对剪切场敏感。
+                    if (!bond_failed && budget > 0.0 && area_env + Et_now >= budget)
+                    {
+                        bond_failed = true;
+                    }
+                }
+                if (bond_failed)
+                {
+                    // 完全失效。**默认路径保持历史表达式逐位不变**（闭式 Un_eff，
+                    // 避免最后一步数值积分漂移）；启用切向通道时按"实际吸收"记账：
+                    //   · 键断开后，当前储存在键里的可逆能全部转为不可逆耗散；
+                    //   · 法向部分 = 已走完的包络面积，但不超过（已折减的）能量预算；
+                    //   · 切向部分 = 切向弹簧储能（切向已断则此前已记账，此处为 0）。
+                    // 于是 Σ(法向 + 切向) 恰好等于该键从系统吸收的总能量，账本逐位闭合。
+                    bond.break_mode = 1;
+                    bond.damage = 1.0;
+                    if (shear_independent)
+                    {
+                        const double Et_now = bond.shear_broken ? 0.0
+                            : 0.5 * solid_area_scale * bond.tangential_stiffness
+                                * bond.delta_t.squaredNorm();
+                        bond.dissipated_shear_energy += Et_now;
+                        // e_drive ≥ δ_f 时包络已经走完 ⇒ 吸收量取整条曲线的面积
+                        const double absorbed = (e_drive >= df) ? envelope_total : area_env;
+                        bond.dissipated_fracture_energy =
+                            (absorbed < budget) ? absorbed : budget;
+                    }
+                    else
+                    {
+                        bond.dissipated_fracture_energy = bond.fracture_energy
+                            * solid_area_scale * strength_scale * strength_scale;
+                    }
+                    bond.elastic_energy = 0.0;
+                    bond.active = false;
+                    bond.force_a.setZero();
+                    continue;
+                }
+            }
+            else if (bond.fracture_energy > 0.0 && bond.extension >= 0.0
                 && bond.elastic_energy >= bond.fracture_energy * solid_area_scale
                     * strength_scale * strength_scale)
             {
@@ -893,7 +1488,7 @@ namespace zaran
                 bond.force_a.setZero();
                 continue;
             }
-            if (bond.fracture_energy <= 0.0)
+            if (!bond.cohesive && bond.fracture_energy <= 0.0)
             {
                 if (bond.maximum_tensile_strain > peak && limit > peak)
                     bond.damage = std::max(bond.damage,
@@ -925,8 +1520,17 @@ namespace zaran
             }
             const Eigen::Vector3d force_n = (effective_stiffness * elastic_normal_force
                 - bond.normal_damping * velocity_n) * normal;
-            const Eigen::Vector3d force_t = -effective_stiffness * bond.tangential_stiffness * bond.delta_t
-                - bond.tangential_damping * velocity_t;
+            // 切向承载因子。默认与历史逐位一致：(1−d)·sas 作用在刚度上、阻尼不受损伤影响。
+            // 启用切向独立通道后，切向不随法向损伤折减（独立强度通道），切向断裂后完全退出。
+            const bool shear_carry_independent = bond.fracture_energy_shear > 0.0;
+            const double tangential_stiffness_factor = shear_carry_independent
+                ? (bond.shear_broken ? 0.0 : solid_area_scale)
+                : (1.0 - bond.damage) * solid_area_scale;
+            const double tangential_damping_factor =
+                (shear_carry_independent && bond.shear_broken) ? 0.0 : 1.0;
+            const Eigen::Vector3d force_t =
+                -tangential_stiffness_factor * bond.tangential_stiffness * bond.delta_t
+                - tangential_damping_factor * bond.tangential_damping * velocity_t;
             bond.force_a = force_n + force_t;
 
             pa.force += bond.force_a;
@@ -974,6 +1578,8 @@ namespace zaran
         auto& particles = m_dem_data->GetParticles();
         // 机械耗散缓冲：容量跨步保留，每步清零（由键合/接触/墙面三处累加）
         m_tmp_dissipation.assign(particles.size(), 0.0);
+        // 本步接触弹簧储能之和，同样每步清零后由 CalcContactForce 累加
+        m_contact_elastic = 0.0;
         for (auto& p : particles)
         {
             p.force.setZero();
@@ -1284,6 +1890,11 @@ namespace zaran
         e = std::max(e, 1.0e-3);
         const double dv_n = -e * v_n - v_n; // > 0
 
+        // 这是**速度改写**而不是力的做功：把它移出的动能单独记账，
+        // 否则剧烈压缩段的能量账本会凭空缺口（实测可达十几个百分点）。
+        const double ke_before = 0.5 * pa.mass * pa.vel.squaredNorm()
+            + 0.5 * pb.mass * pb.vel.squaredNorm();
+
         // 由 m_a·α_a + m_b·α_b = 0 与 (α_b − α_a)·n = Δv_n 解得：
         //   α_a = −Δv_n·m_b/(m_a+m_b)，α_b = +Δv_n·m_a/(m_a+m_b)
         if (!b_dyn)
@@ -1302,6 +1913,9 @@ namespace zaran
             pa.vel += n * (-dv_n * pb.mass / msum);
             pb.vel += n * ( dv_n * pa.mass / msum);
         }
+        const double ke_after = 0.5 * pa.mass * pa.vel.squaredNorm()
+            + 0.5 * pb.mass * pb.vel.squaredNorm();
+        m_rebound_loss += ke_before - ke_after; // >0 表示回弹移出了动能
         return true;
     }
 
@@ -1324,6 +1938,57 @@ namespace zaran
         contact.force_n *= factor;
         // 法向阻尼耗散同步放大（此时 dissipation 只含法向阻尼项，切向尚未计算）
         contact.dissipation *= factor;
+    }
+
+    // ==================================================================
+    // 碎后接触：滚动阻力矩
+    // ==================================================================
+    // 为什么需要它：DEM 里的"粒子"是光滑球，一旦碎块之间只剩球-球接触，
+    // 它们可以自由滚动 ⇒ 碎块堆会像干砂一样摊平，而不是像真实的不规则
+    // 碎块那样互相"角锁"、堆成有休止角的堆。滚动阻力矩就是角锁的最低阶
+    // 等效描述（Ai, Mistry, Ibrahim 等 2011 的简化模型）：
+    //     M_r = −μ_r · R* · |F_n| · ω̂_rel
+    // 力矩与相对角速度反平行 ⇒ 耗散功率 |M_r|·|ω_rel| 恒 ≥ 0。
+    // μ_r 有**长度量纲**（不是无量纲摩擦系数），量级 ~ 粒子半径的 0.01–0.1 倍。
+    void DEMSolver::ApplyRollingResistance(const DEMParticle& pa, const DEMParticle& pb,
+                                           DEMContact& contact, double dt) const
+    {
+        contact.torque_r.setZero();
+        const double mu_r = GetDEMParam()->GetRollingFriction();
+        if (!(mu_r > 0.0) || !(dt > 0.0)) return;
+
+        const double Fn_mag = contact.force_n.norm();
+        if (!(Fn_mag > 0.0)) return;
+
+        // 相对角速度（A 相对 B）。注意接触的切向速度里用的是
+        // (r_a·ω_a + r_b·ω_b)×n，方向约定与这里的 ω_a − ω_b 不同；
+        // 滚动阻力只看两端角速度的**差**，与接触点位置无关。
+        const Eigen::Vector3d omega_rel = pa.omega - pb.omega;
+        const double w = omega_rel.norm();
+        if (!(w > 1.0e-30)) return;
+
+        // 等效半径与等效转动惯量（与法向等效质量同一套"不可动端按无限大"口径）
+        const double denom = pa.radius + pb.radius;
+        if (!(denom > 0.0)) return;
+        const double R_star = (pa.radius * pb.radius) / denom;
+
+        const double I_a = pa.inertia * pa.mass * pa.radius * pa.radius;
+        const double I_b = pb.inertia * pb.mass * pb.radius * pb.radius;
+        double I_eff = 0.0;
+        if (!pa.IsDynamic())      I_eff = I_b;
+        else if (!pb.IsDynamic()) I_eff = I_a;
+        else                      I_eff = (I_a * I_b) / (I_a + I_b);
+
+        double M = mu_r * R_star * Fn_mag;
+        // 过冲截断：一步内最多把相对角速度恰好减到 0。没有这一步，力矩会在
+        // 静止接触上把 ω_rel 推过零并反向，产生高频抖动（永远收敛不到"不滚"）。
+        if (I_eff > 0.0)
+        {
+            const double M_limit = I_eff * w / dt;
+            if (M > M_limit) M = M_limit;
+        }
+        contact.torque_r = -M * (omega_rel / w);
+        contact.dissipation += M * w * dt;
     }
 
     void DEMSolver::CalcContactForce()
@@ -1350,12 +2015,18 @@ namespace zaran
             AmplifyDeepOverlapForce(c, pa.radius + pb.radius);
 
             m_contact_model->CalcTangentialForce(pa, pb, c, dt);
+            // 滚动阻力矩：必须在切向之后（它依赖 contact.force_n，且与切向力无关）
+            ApplyRollingResistance(pa, pb, c, dt);
             SaveContactHistory(c);
 
-            // 机械耗散（法向阻尼 + 切向摩擦）对半分给两端 → 后续计入温度
+            // 机械耗散（法向阻尼 + 切向摩擦 + 切向阻尼 + 滚动阻力）对半分给两端 → 后续计入温度
             const double dissipated = 0.5 * c.dissipation;
             m_tmp_dissipation[c.idx_a] += dissipated;
             m_tmp_dissipation[c.idx_b] += dissipated;
+
+            // 接触弹簧的可逆储能（½k_nδ² + ½k_t|δt|²）：剧烈压缩下可达焦耳量级，
+            // 必须在能量账本里单列，否则压碎段会"凭空少掉"十几个百分点。
+            m_contact_elastic += c.elastic_energy;
 
             Eigen::Vector3d F = c.force_n + c.force_t;
 
@@ -1364,6 +2035,9 @@ namespace zaran
             pa.torque += c.contact_point.cross(c.force_t) - pa.pos.cross(c.force_t);
             pb.force -= F;
             pb.torque -= c.contact_point.cross(c.force_t) - pb.pos.cross(c.force_t);
+            // 滚动阻力是**力偶**：两端力矩大小相等、方向相反（不产生净力矩）
+            pa.torque += c.torque_r;
+            pb.torque -= c.torque_r;
         }
     }
 
@@ -1407,6 +2081,7 @@ namespace zaran
 
                 m_contact_model->CalcNormalForce(pa, pb_wall, c, dt);
                 m_contact_model->CalcTangentialForce(pa, pb_wall, c, dt);
+                ApplyRollingResistance(pa, pb_wall, c, dt);
                 SaveContactHistory(c);
 
                 // 墙面不可动（无限质量），该对的耗散能量全部计入粒子
@@ -1414,6 +2089,7 @@ namespace zaran
 
                 pa.force += c.force_n + c.force_t;
                 pa.torque += c.contact_point.cross(c.force_t) - pa.pos.cross(c.force_t);
+                pa.torque += c.torque_r;
             }
         }
     }
@@ -1535,7 +2211,7 @@ namespace zaran
         // --- bonds.dat ---
         buf.clear();
         buf.reserve(bonds.size() * 176 + 256);
-        buf.append("id,particle_a_id,particle_b_id,rest_length,extension,fx,fy,fz,active,heat_flow_a,damage,maximum_tensile_strain,elastic_energy,fracture_energy,dissipated_fracture_energy,source,maximum_compressive_strain,strength_scale\n");
+        buf.append("id,particle_a_id,particle_b_id,rest_length,extension,fx,fy,fz,active,heat_flow_a,damage,maximum_tensile_strain,elastic_energy,fracture_energy,dissipated_fracture_energy,source,maximum_compressive_strain,strength_scale,shear_broken,dissipated_shear_energy,break_mode,tangential_displacement,cohesive_budget_scale\n");
         for (const auto& b : bonds)
         {
             AppendNumber(buf, b.id);                                    buf.push_back(',');
@@ -1555,7 +2231,12 @@ namespace zaran
             AppendNumber(buf, b.dissipated_fracture_energy);            buf.push_back(',');
             AppendNumber(buf, b.source);                                buf.push_back(',');
             AppendNumber(buf, b.maximum_compressive_strain);            buf.push_back(',');
-            AppendNumber(buf, b.strength_scale);                        buf.push_back('\n');
+            AppendNumber(buf, b.strength_scale);                        buf.push_back(',');
+            AppendNumber(buf, b.shear_broken ? 1 : 0);                  buf.push_back(',');
+            AppendNumber(buf, b.dissipated_shear_energy);               buf.push_back(',');
+            AppendNumber(buf, b.break_mode);                            buf.push_back(',');
+            AppendNumber(buf, b.delta_t.norm());                        buf.push_back(',');
+            AppendNumber(buf, b.cohesive_budget_scale);                 buf.push_back('\n');
         }
         WriteTextFile(back_folder + "/bonds.dat", buf);
 

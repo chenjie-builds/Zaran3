@@ -300,3 +300,118 @@ SubCell 的行只作对照：随着 Δx 变小、粒子相对单元变大，它�
 （Ergun / Wen–Yu / Gidaspow + 可压缩修正）与 `∇p` 力的重合问题确认清楚，再加反作用。
 验证阶梯的第 1–2 级（单球阻力 `C_D–Re`、固定床压降 vs Ergun）都可以在现有结构上直接搭。
 
+---
+
+## 9. 直接可运行的算例：`tests/mapping_demo`
+
+映射器此前只有独立的基准驱动（`MappingBench`，靠命令行喂参数），不像其它算例那样
+"给一个目录就能跑"。现在补上了这一环：`task.simulation = "MAPPING"`。
+
+### 9.1 三步跑完
+
+```bash
+# 1) 生成粒子与网格参数（RSA 无重叠堆积 + 逐级加密的网格序列）
+python tests/mapping_demo/generate_case.py
+
+# 2) 跑（不做时间推进，只做映射与输出）
+bin/Release/Zaran3.10.2.exe tests/mapping_demo
+
+# 3) 独立校验（不需要 Tecplot）
+python tests/mapping_demo/verify.py
+```
+
+### 9.2 它产出什么
+
+| 文件 | 内容 |
+|---|---|
+| `result/alpha_<k>.dat` | 固相体积分数 α 的 Tecplot ASCII（ORDERED 网格，变量 `X,Y,Z,Alpha`），每个网格分辨率 × 每种方法一帧 |
+| `result/particles.dat` | 粒子点云（`FEPOINT`），可在 Tecplot 里与 α 云图叠加 |
+| `result/mapping_report.csv` | 逐帧的机器可读汇总（Δx/d_p、守恒残差、α 范围、最大跳变、L1 vs Exact）|
+
+帧的 `ZONE T=` 自带说明（如 `alpha subcell n=8 dx/dp=0.75`），
+在 Tecplot 的 Zone 列表里一眼就能分辨，且所有帧带 `SOLUTIONTIME` 可做时间动画。
+
+### 9.3 参数（`[mapping]` 段）
+
+```toml
+particle_file = "particles.csv"   # 与 DEM 同一格式（复用 ReadDEMParticle）
+dim = 3                           # 2 或 3
+x_min/x_max/y_min/y_max/z_min/z_max   # 物理计算域（两端各含半格）
+n0 = 2; refine = 2; n_levels = 4  # 每方向单元数 = n0 × refine^level
+method = "both"                   # subcell | exact | both
+n_sub = 2                         # SubCell 每轴细分数
+smooth_passes = 0                 # >0 时启用保守光顺
+write_particles = true
+```
+
+生成器把 `n0` 反着算出来：让最粗一级的 Δx/d_p 正好等于 `--dxdp`（默认 3.0，
+即体积分数法的经验下限），逐级 ×2。默认参数（box=0.06 m、r=5 mm、120 粒子、φ=0.29）
+给出的 Δx/d_p 序列是 **3.0 / 1.5 / 0.75 / 0.375**。
+
+### 9.4 实测结果（默认参数）
+
+`bin/Release/Zaran3.10.2.exe tests/mapping_demo` 的日志：
+
+| 帧 | 方法 | n | Δx/d_p | ΣαV/V_p − 1 | α_max | max_jump |
+|---|---|---|---|---|---|---|
+| 0 | exact | 2 | 3.000 | 0 | 0.3069 | 0.0401 |
+| 1 | subcell | 2 | 3.000 | 2.35e-14 | 0.3127 | 0.0533 |
+| 2 | exact | 4 | 1.500 | 2.16e-16 | 0.4131 | 0.2091 |
+| 3 | subcell | 4 | 1.500 | 2.35e-14 | 0.4654 | 0.3103 |
+| 4 | exact | 8 | 0.750 | 1.65e-10 | 0.8207 | 0.7341 |
+| 5 | subcell | 8 | 0.750 | 2.35e-14 | **1.2411** | 0.9308 |
+| 6 | exact | 16 | 0.375 | 1.42e-11 | 1.0000 | 0.9585 |
+| 7 | subcell | 16 | 0.375 | 2.35e-14 | **2.4823** | 2.4823 |
+
+L1(SubCell − Exact)：
+
+| Δx/d_p | 3.000 | 1.500 | 0.750 | 0.375 |
+|---|---|---|---|---|
+| L1 | 1.42e-02 | 4.08e-02 | 1.28e-01 | 3.50e-01 |
+
+**这张表用一个数字说明了两件事**：
+
+1. **SubCell 的守恒是"构造级"的**：ΣαV 的相对残差恒为 2.35e-14，且**不随分辨率变化**
+   （它只是在把 `n³` 份体积往单元里加时的加法舍入）；Exact 的残差来自球–长方体交集体积的
+   1 维高斯积分，随 Δx/d_p 变化，量级 1e-11。
+2. **SubCell 在 Δx < d_p 时必然失效**：α_max 从 0.31 一路涨到 **2.48** —— 单元平均体积分数
+   超过 1 在几何上是不可能的，原因是 SubCell 会把整个粒子的体积塞进少数几个单元。
+   所以 **"α > 1" 本身就是"该方法已跑出适用范围"的判据**，不需要额外理论推导。
+   Exact 的 α_max 全程 ≤ 1（第 6 帧恰好到 1.0，因为 Δx 已经小到有单元完全落在粒子内部）。
+
+### 9.5 校验脚本的口径（`verify.py`）
+
+| 检查 | 判据 |
+|---|---|
+| 结构 | `VARIABLES = X,Y,Z,Alpha`；坐标的不同取值数 == `I/J/K` |
+| 体积守恒 | \|Σα·V_cell − ΣV_p\| / ΣV_p ≤ 1e-9（V_p 由 `particles.csv` **独立**重算）|
+| α 下界 | α ≥ −1e-12（任何方法都不该产生负体积分数）|
+| α 上界 | **只对 Exact 断言** α ≤ 1；SubCell 若出现 α > 1，则断言此时必须 Δx/d_p < 1 |
+| 趋势 | L1(SubCell−Exact) 随 Δx/d_p 减小而增大 |
+| 交叉核对 | 从 `.dat` 重算的 residual/α_max 与 C++ 写的 `mapping_report.csv` 一致 |
+| 点云 | `particles.dat` 的点数与坐标与 `particles.csv` 一致（逐位）|
+
+最后一条是**两条独立路径的互证**：CSV 是 C++ 内部统计，`verify.py` 是把 12 位有效数字的
+α 读回来重新求和。
+
+### 9.6 三个有用的变体
+
+| 变体 | 改法 | 能看到什么 |
+|---|---|---|
+| 开光顺 | `smooth_passes = 2` | max_jump 大幅下降（n=16 时 2.48 → 0.55；Exact 0.96 → 0.29），守恒不变 |
+| 只跑一种方法 | `method = "subcell"` 或 `"exact"` | 帧数减半 |
+| 二维 | `dim = 2` | 网格变成 I×1×1，粒子体积按圆面积算 |
+
+### 9.7 实现要点
+
+- 控制器：`inc/Main/MappingSimulation.h` + `src/Main/MappingSimulation.cpp`；
+  挂载点：`TaskType::MAPPING` → `Application::MapParticles()`（`task.simulation = "MAPPING"`）。
+- 输出复用 `Visual::WriteUniformGridScalarTecplotASCII`（新增，通用"均匀网格标量场 → Tecplot
+  ASCII"，与网格文件无关）；粒子点云复用 `Visual::WriteParticleTecplotASCII`。
+- 单粒子体积公式统一到 `ParticleGridMapper::ParticleVolume(dim, r)`，映射器内部与新算例
+  共用一份，避免"守恒判据里的 ΣV_p"和"映射用的体积"两处公式漂移。
+- 粒子读取复用 DEM 的 `ReadDEMParticle` ⇒ 输入格式与 DEM 算例完全一致（`id,group,radius,mass,
+  px,py,pz,vx,vy,vz,ox,oy,oz[,motion_type]`）。
+- 域外粒子会被显式计数并告警：中心落在计算域外的粒子其体积不会落到网格上，
+  不点名的话很容易把"几何摆放错误"误读成"映射器 bug"。
+

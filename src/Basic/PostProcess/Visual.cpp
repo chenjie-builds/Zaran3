@@ -4,11 +4,16 @@
 #include "NSFieldFN.h"
 #include "DEMField.h"
 #include "FastNumberFormat.h"
+#include "ZaranError.h"
 #include <TECIO.h>
 #include <cgnslib.h>
+#include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <string>
+#include <utility>
 #include <vector>
 using namespace zaran;
 void zaran::Visual::WriteTecplotBinary(shared_ptr<NSFieldFNFDM> field)
@@ -940,11 +945,15 @@ void zaran::Visual::WriteTecplotASCII(shared_ptr<NSFieldStruct> field, std::ostr
     {
         os << "VARIABLES=\"X\",\"Y\",\"Z\",\"Density\",\"Velocity_x\",\"Velocity_y\",\"Velocity_z\",\"Pressure\"\n";
     }
-    os << "ZONE I=" << ni << ", J=" << nj << ", K=" << nk << ", F=POINT\n";
     double solution_time = GlobalData::GetDouble("iteration.current_time");
+    // ZONE 参数全部写在同一行（含 SOLUTIONTIME）：
+    // Tecplot 允许控制行续行，但把参数集中在一行是"无歧义"的写法，
+    // 也方便脚本按 key=value 直接解析。
+    os << "ZONE T=\"Flow\", STRANDID=1, SOLUTIONTIME=" << solution_time
+       << ", I=" << ni << ", J=" << nj << ", K=" << nk
+       << ", ZONETYPE=ORDERED, DATAPACKING=POINT\n";
     // 该输出通道主要用于脚本后处理与精度验证，因此用能往返 double 的精度
     os.precision(17);
-    os << "SOLUTIONTIME=" << solution_time << "\n";
 
     for (int k = ks; k <= ke; ++k)
     {
@@ -1732,6 +1741,21 @@ void Visual::WriteParticleVTP(const DEMFieldData& dem_data, const std::string& f
         for (index_type i = 0; i < N; ++i) raw("          1\n");
         for (const auto& bond : bonds) { raw("          "); num(bond.strength_scale); nl(); }
         cell_tail();
+
+        // 切向弹簧是否已独立断裂（LSM breakmod=4）：1 = 切向已断、只剩法向承载。
+        // 与 bond_active 不同 —— 切向断裂**不**断开整条键，只是退出切向通道并把
+        // 剩余法向断裂能按 UtIII 折减。用该数组着色可看到"切向先坏"的损伤前驱区。
+        cell_head("Int32", "bond_shear_broken", "");
+        for (index_type i = 0; i < N; ++i) raw("          0\n");
+        for (const auto& bond : bonds) { raw("          "); num(bond.shear_broken ? 1 : 0); nl(); }
+        cell_tail();
+
+        // 失效模式（LSM break_mod）：0 = 未失效，1 = 拉伸混合，2 = 压剪，3 = 压缩压溃，
+        // 4 = 切向独立断裂。用它可以直接回答"这片区域是被拉开的还是被剪/压碎的"。
+        cell_head("Int32", "bond_break_mode", "");
+        for (index_type i = 0; i < N; ++i) raw("          0\n");
+        for (const auto& bond : bonds) { raw("          "); num(bond.break_mode); nl(); }
+        cell_tail();
     }
 
     raw("      </CellData>\n");
@@ -1748,6 +1772,662 @@ void Visual::WriteParticleVTP(const DEMFieldData& dem_data, const std::string& f
     fout.write(buf.data(), static_cast<std::streamsize>(buf.size()));
 
     Log::info("Visual::WriteParticleVTP: {} particles written to '{}'", N, filename);
+}
+
+// ==================================================================
+// DEM 输出：Tecplot ASCII
+//
+// 为什么拆成两个文件：
+//   Tecplot ASCII 的文件头 `VARIABLES` 是**整个文件共享**的，不是每个 zone 各自一套。
+//   粒子是点云（惰性算例 25 个变量、含能算例 45 个），键合是线元（3 个节点量 + 20 个
+//   单元中心量，共 23 个），两者的变量表不同；硬塞进一个文件只能用大量空列去凑，
+//   既浪费体积又难读。所以粒子、键合各写一个 .dat，流场（网格）本来就有自己的 .dat。
+// ==================================================================
+namespace
+{
+	/// @brief 解析粒子点云的 ZONE 行写法（控制文件 output.particle_zone_keywords）
+	/// @details Tecplot ASCII 有两代关键字风格：
+	///            - 传统（Tecplot 10 / Focus）：有限元 zone 用 `F=FEPOINT` + `N=` + `E=`
+	///              元素类型 `ET=TRIANGLE|QUADRILATERAL|TETRAHEDRON|BRICK`；
+	///            - 新版（Tecplot 360 之后）：`ZONETYPE=FEPOINT` + `DATAPACKING=POINT`。
+	///          两代混写时有些 Tecplot 版本会直接拒绝该 zone（甚至整个文件），
+	///          因此这里给三档：
+	///            "none"    （默认）ZONE 行只留 T= 与 SOLUTIONTIME=，最小化关键字；
+	///            "modern"  ZONETYPE=FEPOINT + DATAPACKING=POINT（360 系）；
+	///            "classic" F=FEPOINT + N= + E=0（传统 FE 写法）。
+	///          默认取 "none" —— 用户实测其 Tecplot 只认这一种。
+	enum class ParticleZoneStyle
+	{
+		None,
+		Modern,
+		Classic,
+	};
+
+	ParticleZoneStyle ResolveParticleZoneStyle()
+	{
+		std::string mode = "none";
+		if (GlobalData::IsExist("output.particle_zone_keywords"))
+		{
+			mode = GlobalData::GetString("output.particle_zone_keywords");
+		}
+		if (mode == "none") { return ParticleZoneStyle::None; }
+		if (mode == "modern") { return ParticleZoneStyle::Modern; }
+		if (mode == "classic") { return ParticleZoneStyle::Classic; }
+		Log::warn("output.particle_zone_keywords='{}' 无法识别（应为 none|modern|classic），"
+			"按 none 处理", mode);
+		return ParticleZoneStyle::None;
+	}
+
+	/// @brief 解析输出精度（控制文件 output.tecplot_precision，默认 12 位有效数字）
+	int ResolveTecplotPrecision()
+	{
+		if (GlobalData::IsExist("output.tecplot_precision"))
+		{
+			const int p = GlobalData::GetInt("output.tecplot_precision");
+			if (p >= 6 && p <= 17)
+			{
+				return p;
+			}
+			Log::warn("output.tecplot_precision={} 超出允许范围 [6,17]，改用默认值 12", p);
+		}
+		return 12;
+	}
+
+	/// @brief 解析粒子变量集（控制文件 output.particle_fields = auto | core | full）
+	/// @details auto（默认）= 只有出现含能粒子时才附加热化学列。惰性算例因此少 20 列，
+	///          既省体积，也不会出现一整列常数的无用字段。
+	bool ResolveParticleFieldsFull(const DEMFieldData& dem_data)
+	{
+		std::string mode = "auto";
+		if (GlobalData::IsExist("output.particle_fields"))
+		{
+			mode = GlobalData::GetString("output.particle_fields");
+		}
+		if (mode == "full") { return true; }
+		if (mode == "core") { return false; }
+		if (mode != "auto")
+		{
+			Log::warn("output.particle_fields='{}' 无法识别（应为 auto|core|full），按 auto 处理", mode);
+		}
+		const auto& particles = dem_data.GetParticles();
+		return std::any_of(particles.begin(), particles.end(),
+			[](const DEMParticle& p) { return p.energetic; });
+	}
+
+	/// @brief Tecplot ASCII 缓冲区：统一处理分隔符、换行与非有限值
+	class TecplotBuffer
+	{
+	public:
+		explicit TecplotBuffer(int precision) : m_precision(precision) {}
+
+		void Reserve(std::size_t n) { m_buf.reserve(n); }
+		void Raw(const char* s) { m_buf.append(s); }
+		void Raw(const std::string& s) { m_buf.append(s); }
+		void Sp() { m_buf.push_back(' '); }
+		void Nl() { m_buf.push_back('\n'); }
+
+		/// @brief 写一个浮点数（general 格式、m_precision 位有效数字）
+		/// @details 非有限值（NaN/Inf）必须替换掉：Tecplot 解析不了 "nan"/"inf"，
+		///          一旦写出会让**整个文件**打不开，而不只是那一个值不对。
+		void Real(double v)
+		{
+			if (!std::isfinite(v))
+			{
+				++m_non_finite;
+				v = 0.0;
+			}
+			char tmp[64];
+			const auto r = std::to_chars(tmp, tmp + sizeof(tmp), v,
+				std::chars_format::general, m_precision);
+			m_buf.append(tmp, static_cast<std::size_t>(r.ptr - tmp));
+		}
+
+		void Int(long long v)
+		{
+			char tmp[32];
+			const auto r = std::to_chars(tmp, tmp + sizeof(tmp), v);
+			m_buf.append(tmp, static_cast<std::size_t>(r.ptr - tmp));
+		}
+
+		int NonFinite() const { return m_non_finite; }
+		const std::string& Str() const { return m_buf; }
+
+	private:
+		std::string m_buf;
+		int m_precision = 12;
+		int m_non_finite = 0;
+	};
+
+	/// @brief 写粒子点云的 ZONE 行（三种风格共用一份代码，避免两处漂移）
+	/// @details `none`（默认）只写 T= 与 SOLUTIONTIME= —— 用户实测其 Tecplot 只认这一种；
+	///          需要 FE 关键字时用 `output.particle_zone_keywords = modern|classic`。
+	void WriteParticleZoneLine(TecplotBuffer& out, const std::string& title,
+		double solution_time, long long num_points, ParticleZoneStyle style)
+	{
+		out.Raw("ZONE T=\""); out.Raw(title); out.Raw("\"");
+		if (style == ParticleZoneStyle::Modern)
+		{
+			out.Raw(", STRANDID=1");
+		}
+		out.Raw(", SOLUTIONTIME="); out.Real(solution_time);
+		if (style == ParticleZoneStyle::Classic)
+		{
+			out.Raw(", N="); out.Int(num_points);
+			out.Raw(", E=0, F=FEPOINT");
+		}
+		else if (style == ParticleZoneStyle::Modern)
+		{
+			out.Raw(", N="); out.Int(num_points);
+			out.Raw(", E=0, ZONETYPE=FEPOINT, DATAPACKING=POINT");
+		}
+		out.Raw("\n");
+	}
+
+	/// @brief 写一个 BLOCK 数据块（每 per_line 个值换行；长常量段压缩成 `Rep*Num`）
+	/// @details Tecplot ASCII 支持 `Rep*Num` 记法（如 `20000*1`）。键合的 active /
+	///          source / 常刚度这类整块常量用它能把文件缩小一个量级。
+	///          粒子走的是 POINT 打包（一行一粒子），不经这里，以保证脚本可直接解析。
+	template <typename Getter>
+	void WriteTecplotBlock(TecplotBuffer& out, std::size_t count, Getter&& value,
+		std::size_t per_line = 8, std::size_t min_run = 8)
+	{
+		std::size_t col = 0;
+		auto sep = [&]()
+		{
+			if (col == per_line) { out.Nl(); col = 0; }
+			else if (col > 0) { out.Sp(); }
+		};
+		std::size_t i = 0;
+		while (i < count)
+		{
+			const double v = value(i);
+			std::size_t j = i + 1;
+			while (j < count && value(j) == v) { ++j; }
+			if (j - i >= min_run)
+			{
+				sep();
+				out.Int(static_cast<long long>(j - i));
+				out.Raw("*");
+				out.Real(v);
+				++col;
+			}
+			else
+			{
+				for (std::size_t k = i; k < j; ++k)
+				{
+					sep();
+					out.Real(value(k));
+					++col;
+				}
+			}
+			i = j;
+		}
+		if (col > 0) { out.Nl(); }
+	}
+
+	/// @brief 由变量名列表生成 Tecplot 的 VARIABLES 行
+	std::string TecplotVariableLine(const std::vector<std::string>& names)
+	{
+		std::string s = "VARIABLES=";
+		for (std::size_t i = 0; i < names.size(); ++i)
+		{
+			if (i > 0) { s += ","; }
+			s += "\"";
+			s += names[i];
+			s += "\"";
+		}
+		s += "\n";
+		return s;
+	}
+
+	/// @brief 落盘（文本模式，与流场 ASCII 输出保持一致）
+	bool FlushTecplotFile(const std::string& filename, const std::string& buf)
+	{
+		std::ofstream out(filename);
+		if (!out.is_open())
+		{
+			Log::warn("Visual: cannot open '{}' for writing", filename);
+			return false;
+		}
+		out.write(buf.data(), static_cast<std::streamsize>(buf.size()));
+		return out.good();
+	}
+} // namespace
+
+void Visual::WriteParticleTecplotASCII(shared_ptr<FieldManager> field_manager, int iter,
+	double solution_time, bool with_bonds)
+{
+	// 找到第一个 DEMField
+	for (size_t i = 0; i < field_manager->GetFieldNum(); ++i)
+	{
+		auto f = std::dynamic_pointer_cast<DEMField>(field_manager->GetField(i));
+		if (!f) continue;
+
+		std::string work_dir = GlobalData::GetString("work_dir");
+		std::string result_folder = GlobalData::IsExist("output.result_folder")
+			? GlobalData::GetString("output.result_folder")
+			: "result";
+		std::string dir = work_dir + "/" + result_folder;
+		WriteParticleTecplotASCII(*f->GetDEMData(),
+			dir + "/particles_" + std::to_string(iter) + ".dat",
+			dir + "/bonds_" + std::to_string(iter) + ".dat",
+			solution_time, with_bonds);
+		return;
+	}
+	Log::warn("Visual::WriteParticleTecplotASCII: no DEMField found in FieldManager");
+}
+
+void Visual::WriteParticleTecplotASCII(const DEMFieldData& dem_data,
+	const std::string& particle_file, const std::string& bond_file,
+	double solution_time, bool with_bonds)
+{
+	const auto& particles = dem_data.GetParticles();
+	const auto& bonds = dem_data.GetBonds();
+	const std::size_t n_particle = particles.size();
+	const std::size_t n_bond = bonds.size();
+	const int precision = ResolveTecplotPrecision();
+	const bool full_fields = ResolveParticleFieldsFull(dem_data);
+
+	if (n_particle == 0)
+	{
+		Log::warn("Visual::WriteParticleTecplotASCII: 粒子数为 0，跳过输出（N=0 的 zone 在 Tecplot 里非法）");
+		return;
+	}
+
+	// ---- 粒子级聚合量：相邻键数 / 已断键数（与 VTP 输出口径一致）----
+	std::vector<int> bond_incident(n_particle, 0);
+	std::vector<int> bond_broken(n_particle, 0);
+	for (const auto& bond : bonds)
+	{
+		const index_type ends[2] = { bond.idx_a, bond.idx_b };
+		for (const index_type e : ends)
+		{
+			if (e >= static_cast<index_type>(n_particle)) { continue; }
+			++bond_incident[e];
+			if (!bond.active) { ++bond_broken[e]; }
+		}
+	}
+
+	// ---- 粒子变量表：表头与数据出自同一份列表，杜绝列错位 ----
+	using ParticleGetter = std::function<double(const DEMParticle&)>;
+	std::vector<std::pair<std::string, ParticleGetter>> fields;
+	fields.reserve(full_fields ? 48 : 32);
+	auto add = [&fields](const char* name, ParticleGetter g)
+	{
+		fields.emplace_back(name, std::move(g));
+	};
+	add("X", [](const DEMParticle& p) { return p.pos.x(); });
+	add("Y", [](const DEMParticle& p) { return p.pos.y(); });
+	add("Z", [](const DEMParticle& p) { return p.pos.z(); });
+	add("id", [](const DEMParticle& p) { return static_cast<double>(p.id); });
+	add("group", [](const DEMParticle& p) { return static_cast<double>(p.group); });
+	add("radius", [](const DEMParticle& p) { return p.radius; });
+	add("mass", [](const DEMParticle& p) { return p.mass; });
+	add("active", [](const DEMParticle& p) { return p.active ? 1.0 : 0.0; });
+	add("kinematic", [](const DEMParticle& p) { return p.kinematic ? 1.0 : 0.0; });
+	add("velocity_x", [](const DEMParticle& p) { return p.vel.x(); });
+	add("velocity_y", [](const DEMParticle& p) { return p.vel.y(); });
+	add("velocity_z", [](const DEMParticle& p) { return p.vel.z(); });
+	add("omega_x", [](const DEMParticle& p) { return p.omega.x(); });
+	add("omega_y", [](const DEMParticle& p) { return p.omega.y(); });
+	add("omega_z", [](const DEMParticle& p) { return p.omega.z(); });
+	add("force_x", [](const DEMParticle& p) { return p.force.x(); });
+	add("force_y", [](const DEMParticle& p) { return p.force.y(); });
+	add("force_z", [](const DEMParticle& p) { return p.force.z(); });
+	add("torque_x", [](const DEMParticle& p) { return p.torque.x(); });
+	add("torque_y", [](const DEMParticle& p) { return p.torque.y(); });
+	add("torque_z", [](const DEMParticle& p) { return p.torque.z(); });
+	add("temperature", [](const DEMParticle& p) { return p.temperature; });
+
+	if (full_fields)
+	{
+		add("energetic", [](const DEMParticle& p) { return p.energetic ? 1.0 : 0.0; });
+		add("phase", [](const DEMParticle& p) { return static_cast<double>(p.phase); });
+		add("rotation_x", [](const DEMParticle& p) { return p.rotation.x(); });
+		add("rotation_y", [](const DEMParticle& p) { return p.rotation.y(); });
+		add("rotation_z", [](const DEMParticle& p) { return p.rotation.z(); });
+		add("reaction_progress", [](const DEMParticle& p) { return p.reaction_progress; });
+		add("reaction_rate", [](const DEMParticle& p) { return p.reaction_rate; });
+		add("gas_temperature", [](const DEMParticle& p) { return p.gas_temperature; });
+		add("gas_pressure", [](const DEMParticle& p) { return p.gas_pressure; });
+		add("volume_ratio", [](const DEMParticle& p) { return p.volume_ratio; });
+		add("solid_volume", [](const DEMParticle& p) { return p.solid_volume; });
+		add("gas_volume", [](const DEMParticle& p) { return p.gas_volume; });
+		add("solid_core_radius", [](const DEMParticle& p) { return p.solid_core_radius; });
+		add("gas_internal_energy", [](const DEMParticle& p) { return p.gas_internal_energy; });
+		add("internal_heat_transfer", [](const DEMParticle& p) { return p.internal_heat_transfer; });
+		add("body_reaction_increment", [](const DEMParticle& p) { return p.body_reaction_increment; });
+		add("core_burn_increment", [](const DEMParticle& p) { return p.core_burn_increment; });
+		add("neighbor_burn_increment", [](const DEMParticle& p) { return p.neighbor_burn_increment; });
+	}
+
+	// 末三列由下标决定，单独补上（保证它们总在末尾）
+	std::vector<std::string> extra_names{ "bonds_incident", "bonds_broken", "bonds_broken_ratio" };
+
+	// ---- 写粒子文件 ----
+	{
+		TecplotBuffer out(precision);
+		out.Reserve(n_particle * ((fields.size() + extra_names.size()) * 16 + 32) + 1024);
+
+		out.Raw("TITLE=\"Zaran3 DEM particles\"\n");
+		std::vector<std::string> names;
+		names.reserve(fields.size() + extra_names.size());
+		for (const auto& f : fields) { names.push_back(f.first); }
+		for (const auto& n : extra_names) { names.push_back(n); }
+		out.Raw(TecplotVariableLine(names));
+
+		WriteParticleZoneLine(out, "Particles", solution_time,
+			static_cast<long long>(n_particle), ResolveParticleZoneStyle());
+
+		// 一行一个粒子：全部变量按 VARIABLES 顺序排列
+		for (index_type i = 0; i < static_cast<index_type>(n_particle); ++i)
+		{
+			const DEMParticle& p = particles[i];
+			for (const auto& f : fields)
+			{
+				out.Real(f.second(p));
+				out.Sp();
+			}
+			out.Real(static_cast<double>(bond_incident[i]));
+			out.Sp();
+			out.Real(static_cast<double>(bond_broken[i]));
+			out.Sp();
+			out.Real(bond_incident[i] > 0
+				? static_cast<double>(bond_broken[i]) / static_cast<double>(bond_incident[i])
+				: 0.0);
+			out.Nl();
+		}
+
+		if (FlushTecplotFile(particle_file, out.Str()))
+		{
+			Log::info("Visual::WriteParticleTecplotASCII: {} particles, {} variables -> '{}'",
+				n_particle, fields.size() + extra_names.size(), particle_file);
+		}
+		if (out.NonFinite() > 0)
+		{
+			Log::warn("Visual: 粒子输出中有 {} 个非有限值被写成 0（Tecplot 无法解析 nan/inf）",
+				out.NonFinite());
+		}
+	}
+
+	// ---- 写键合文件 ----
+	if (!with_bonds || n_bond == 0)
+	{
+		return;
+	}
+
+	// 只保留两端都有效的键；给它们涉及的粒子重新编号，节点数远小于 2E
+	std::vector<index_type> node_of(n_particle, static_cast<index_type>(-1));
+	std::vector<index_type> node_particle;
+	std::vector<std::size_t> valid;
+	valid.reserve(n_bond);
+	node_particle.reserve(std::min<std::size_t>(n_particle, 2 * n_bond));
+	for (std::size_t b = 0; b < n_bond; ++b)
+	{
+		const DEMBond& bond = bonds[b];
+		if (bond.idx_a >= static_cast<index_type>(n_particle)) { continue; }
+		if (bond.idx_b >= static_cast<index_type>(n_particle)) { continue; }
+		valid.push_back(b);
+		const index_type ends[2] = { bond.idx_a, bond.idx_b };
+		for (const index_type e : ends)
+		{
+			if (node_of[e] == static_cast<index_type>(-1))
+			{
+				node_of[e] = static_cast<index_type>(node_particle.size());
+				node_particle.push_back(e);
+			}
+		}
+	}
+	const std::size_t n_elem = valid.size();
+	const std::size_t n_node = node_particle.size();
+	if (n_elem == 0)
+	{
+		Log::warn("Visual::WriteParticleTecplotASCII: 没有两端都有效的键，跳过键合文件");
+		return;
+	}
+
+	// ---- 单元中心变量表（顺序 = VARIABLES 里第 4 个起的顺序）----
+	using BondGetter = std::function<double(const DEMBond&)>;
+	std::vector<std::pair<std::string, BondGetter>> cell;
+	cell.reserve(24);
+	auto addc = [&cell](const char* name, BondGetter g)
+	{
+		cell.emplace_back(name, std::move(g));
+	};
+	addc("bond_id", [](const DEMBond& b) { return static_cast<double>(b.id); });
+	addc("active", [](const DEMBond& b) { return b.active ? 1.0 : 0.0; });
+	addc("source", [](const DEMBond& b) { return static_cast<double>(b.source); });
+	addc("normal_stiffness", [](const DEMBond& b) { return b.normal_stiffness; });
+	addc("tangential_stiffness", [](const DEMBond& b) { return b.tangential_stiffness; });
+	addc("rest_length", [](const DEMBond& b) { return b.rest_length; });
+	addc("extension", [](const DEMBond& b) { return b.extension; });
+	addc("strain", [](const DEMBond& b)
+		{ return b.rest_length > 0.0 ? b.extension / b.rest_length : 0.0; });
+	addc("max_strain", [](const DEMBond& b) { return b.maximum_tensile_strain; });
+	addc("max_compression", [](const DEMBond& b) { return b.maximum_compressive_strain; });
+	addc("strength_scale", [](const DEMBond& b) { return b.strength_scale; });
+	addc("force_x", [](const DEMBond& b) { return b.force_a.x(); });
+	addc("force_y", [](const DEMBond& b) { return b.force_a.y(); });
+	addc("force_z", [](const DEMBond& b) { return b.force_a.z(); });
+	addc("force_magnitude", [](const DEMBond& b) { return b.force_a.norm(); });
+	addc("damage", [](const DEMBond& b) { return b.damage; });
+	addc("elastic_energy", [](const DEMBond& b) { return b.elastic_energy; });
+	addc("fracture_energy", [](const DEMBond& b) { return b.fracture_energy; });
+	addc("energy_loss", [](const DEMBond& b) { return b.dissipated_fracture_energy; });
+	addc("heat_flow_a", [](const DEMBond& b) { return b.heat_flow_a; });
+	// γ 控制内聚律的两个特征分离度（未启用时为 0）：用于从输出直接复核
+	// "曲线下面积 == γ·A" 与 "δ_f = 2·Efract/F_p"，不必再去猜内部参数。
+	addc("cohesive_delta_p", [](const DEMBond& b) { return b.cohesive_peak_separation; });
+	addc("cohesive_delta_f", [](const DEMBond& b) { return b.cohesive_failure_separation; });
+	// 多通道失效诊断（默认关闭时恒为 0）：切向独立断裂标志与失效模式。
+	// 用 break_mode 着色可以直接分辨"被拉开的"（1）/"被剪坏的"（2）/"被压碎的"（3）。
+	addc("shear_broken", [](const DEMBond& b) { return b.shear_broken ? 1.0 : 0.0; });
+	addc("shear_energy_loss", [](const DEMBond& b) { return b.dissipated_shear_energy; });
+	addc("break_mode", [](const DEMBond& b) { return static_cast<double>(b.break_mode); });
+	// 累积切向位移 |δ_t| (m)：切向独立断裂判据 Et = ½·k_t·|δ_t|² ≥ UtIII 的直接观测量
+	// （切向断裂后恒为 0）。
+	addc("tangential_displacement", [](const DEMBond& b) { return b.delta_t.norm(); });
+	// 法向断裂能预算的折减系数（LSM 的 GBratio，初值 1）。切向独立断裂时乘 (1−α)。
+	// 有效法向断裂能 = fracture_energy × cohesive_budget_scale。
+	addc("cohesive_budget_scale", [](const DEMBond& b) { return b.cohesive_budget_scale; });
+
+	TecplotBuffer out(precision);
+	out.Reserve(n_elem * (cell.size() * 16 + 24) + n_node * 64 + 1024);
+
+	out.Raw("TITLE=\"Zaran3 DEM bonds\"\n");
+	std::vector<std::string> names{ "X", "Y", "Z" };
+	names.reserve(3 + cell.size());
+	for (const auto& c : cell) { names.push_back(c.first); }
+	out.Raw(TecplotVariableLine(names));
+
+	out.Raw("ZONE T=\"Bonds\", STRANDID=1, SOLUTIONTIME=");
+	out.Real(solution_time);
+	out.Raw(", N="); out.Int(static_cast<long long>(n_node));
+	out.Raw(", E="); out.Int(static_cast<long long>(n_elem));
+	out.Raw(", ZONETYPE=FELINESEG, DATAPACKING=BLOCK");
+	// Tecplot 规定：带单元中心量的 zone 必须用 BLOCK，且数据块顺序为
+	// 「全部节点变量（按 VARIABLES 顺序）→ 全部单元中心变量 → 连接表」
+	out.Raw(", VARLOCATION=([4-");
+	out.Int(static_cast<long long>(3 + cell.size()));
+	out.Raw("]=CELLCENTERED)");
+	out.Nl();
+
+	// 节点变量块：X、Y、Z
+	WriteTecplotBlock(out, n_node,
+		[&](std::size_t k) { return particles[node_particle[k]].pos.x(); });
+	WriteTecplotBlock(out, n_node,
+		[&](std::size_t k) { return particles[node_particle[k]].pos.y(); });
+	WriteTecplotBlock(out, n_node,
+		[&](std::size_t k) { return particles[node_particle[k]].pos.z(); });
+
+	// 单元中心变量块：顺序必须与 VARIABLES 严格一致
+	for (const auto& c : cell)
+	{
+		WriteTecplotBlock(out, n_elem,
+			[&](std::size_t k) { return c.second(bonds[valid[k]]); });
+	}
+
+	// 连接表（1 基）必须跟在所有数据之后
+	for (const std::size_t b : valid)
+	{
+		out.Int(static_cast<long long>(node_of[bonds[b].idx_a]) + 1);
+		out.Sp();
+		out.Int(static_cast<long long>(node_of[bonds[b].idx_b]) + 1);
+		out.Nl();
+	}
+
+	if (FlushTecplotFile(bond_file, out.Str()))
+	{
+		Log::info("Visual::WriteParticleTecplotASCII: {} bonds ({} nodes, {} cell variables) -> '{}'",
+			n_elem, n_node, cell.size(), bond_file);
+	}
+	if (out.NonFinite() > 0)
+	{
+		Log::warn("Visual: 键合输出中有 {} 个非有限值被写成 0", out.NonFinite());
+	}
+}
+
+void Visual::WriteUniformGridScalarTecplotASCII(const std::string& filename,
+	const std::string& title, const std::string& zone_name,
+	int ni, int nj, int nk,
+	double x0, double y0, double z0,
+	double dx, double dy, double dz,
+	const std::vector<UniformScalarField>& fields,
+	double solution_time)
+{
+	const std::size_t n_node = static_cast<std::size_t>(ni) * nj * nk;
+	const int precision = ResolveTecplotPrecision();
+
+	// 变量表：X,Y,Z + 各标量场。表头与数据出自同一份列表 ⇒ 不会列错位。
+	std::vector<std::string> names{ "X", "Y", "Z" };
+	for (const auto& f : fields)
+	{
+		if (!f.values || f.values->size() != n_node)
+		{
+			throw ZaranError("Visual::WriteUniformGridScalarTecplotASCII: field '" + f.name
+				+ "' has " + std::to_string(f.values ? f.values->size() : 0)
+				+ " values but the grid has " + std::to_string(n_node) + " nodes");
+		}
+		names.push_back(f.name);
+	}
+
+	TecplotBuffer out(precision);
+	out.Reserve(n_node * (names.size() * 16 + 24) + 1024);
+	out.Raw("TITLE=\""); out.Raw(title); out.Raw("\"\n");
+	out.Raw(TecplotVariableLine(names));
+	out.Raw("ZONE T=\""); out.Raw(zone_name);
+	out.Raw("\", STRANDID=1, SOLUTIONTIME=");
+	out.Real(solution_time);
+	out.Raw(", I="); out.Int(ni);
+	out.Raw(", J="); out.Int(nj);
+	out.Raw(", K="); out.Int(nk);
+	out.Raw(", ZONETYPE=ORDERED, DATAPACKING=POINT\n");
+
+	// ORDERED + POINT 的数据顺序：k 最慢、i 最快
+	for (int k = 0; k < nk; ++k)
+	{
+		for (int j = 0; j < nj; ++j)
+		{
+			for (int i = 0; i < ni; ++i)
+			{
+				const std::size_t idx = static_cast<std::size_t>(i)
+					+ static_cast<std::size_t>(ni) * (static_cast<std::size_t>(j)
+						+ static_cast<std::size_t>(nj) * static_cast<std::size_t>(k));
+				out.Real(x0 + i * dx); out.Sp();
+				out.Real(y0 + j * dy); out.Sp();
+				out.Real(z0 + k * dz);
+				for (const auto& f : fields)
+				{
+					out.Sp();
+					out.Real((*f.values)[idx]);
+				}
+				out.Nl();
+			}
+		}
+	}
+
+	if (FlushTecplotFile(filename, out.Str()))
+	{
+		Log::info("Visual::WriteUniformGridScalarTecplotASCII: {} nodes, {} variables -> '{}'",
+			n_node, names.size(), filename);
+	}
+	if (out.NonFinite() > 0)
+	{
+		Log::warn("Visual: '{}' 中有 {} 个非有限值被写成 0", filename, out.NonFinite());
+	}
+}
+
+void Visual::WritePointsTecplotASCII(const std::string& filename,
+	const std::string& title, const std::string& zone_name,
+	int num_points, const std::vector<PointScalarField>& fields,
+	double solution_time)
+{
+	if (num_points <= 0)
+	{
+		Log::warn("Visual::WritePointsTecplotASCII: 点数为 0，跳过输出（N=0 的 zone 在 Tecplot 里非法）");
+		return;
+	}
+	if (fields.empty())
+	{
+		Log::warn("Visual::WritePointsTecplotASCII: 没有任何变量，跳过输出");
+		return;
+	}
+	const int precision = ResolveTecplotPrecision();
+	std::vector<std::string> names;
+	names.reserve(fields.size());
+	for (const auto& f : fields)
+	{
+		if (!f.values || f.values->size() != static_cast<std::size_t>(num_points))
+		{
+			throw ZaranError("Visual::WritePointsTecplotASCII: field '" + f.name + "' has "
+				+ std::to_string(f.values ? f.values->size() : 0) + " values but there are "
+				+ std::to_string(num_points) + " points");
+		}
+		names.push_back(f.name);
+	}
+
+	TecplotBuffer out(precision);
+	out.Reserve(static_cast<std::size_t>(num_points) * (names.size() * 18 + 8) + 512);
+	out.Raw("TITLE=\""); out.Raw(title); out.Raw("\"\n");
+	out.Raw(TecplotVariableLine(names));
+	WriteParticleZoneLine(out, zone_name, solution_time, num_points, ResolveParticleZoneStyle());
+
+	// POINT 打包：一行一个点；每 512 个值插一个换行，保证单行远小于 32000 字节
+	const std::size_t kMaxValuesPerLine = 512;
+	std::size_t column = 0;
+	for (int p = 0; p < num_points; ++p)
+	{
+		for (std::size_t v = 0; v < fields.size(); ++v)
+		{
+			if (column == 0)
+			{
+				// 行首不写分隔空格
+			}
+			else if (column >= kMaxValuesPerLine)
+			{
+				out.Nl();
+				column = 0;
+			}
+			else
+			{
+				out.Sp();
+			}
+			out.Real((*fields[v].values)[static_cast<std::size_t>(p)]);
+			++column;
+		}
+		out.Nl();
+		column = 0;
+	}
+
+	if (FlushTecplotFile(filename, out.Str()))
+	{
+		Log::info("Visual::WritePointsTecplotASCII: {} points, {} variables -> '{}'",
+			num_points, names.size(), filename);
+	}
+	if (out.NonFinite() > 0)
+	{
+		Log::warn("Visual: '{}' 中有 {} 个非有限值被写成 0", filename, out.NonFinite());
+	}
 }
 
 

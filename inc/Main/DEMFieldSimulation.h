@@ -31,6 +31,10 @@ namespace zaran
         bool ContinueSolve() const;
         void SolveOneStep();
         void SaveFieldData(int iter) const;
+        /// @brief 写 result/cavity_gas.csv（气腔状态 + 能量账本，每帧一行）
+        void SaveCavityGasReport(int iter, const std::string& result_folder) const;
+        /// @brief 写 result/fragment_stats.csv（碎块/裂纹带/径向断键率，起裂后每帧一行）
+        void SaveFragmentStats(int iter, const std::string& result_folder) const;
 
     private:
         shared_ptr<FieldManager> m_field_manager;

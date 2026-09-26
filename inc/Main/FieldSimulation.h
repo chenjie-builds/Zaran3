@@ -19,6 +19,10 @@ namespace zaran
 {
     /// @brief 控制器类，用于控制流场求解
     /// @details 控制流场求解的前处理，求解，后处理，Feild之间的交互
+    ///
+    /// 阶段 3（DEM-CFD 单向耦合）把这层做成了**可继承的时间推进骨架**：
+    /// 主流程（初始化 → 循环 { 预处理 / 推进一步 / 后处理 } → 收尾输出）保持不变，
+    /// 只在三处留了耦合钩子。子类 `DEMCFDSimulation` 只实现这三个钩子，不重复时间循环。
     class NSFieldSimulation
     {
     public:
@@ -26,8 +30,8 @@ namespace zaran
         ~NSFieldSimulation();
 
     public:
-        // 流场求解
-        void SolveField();
+        // 流场求解（虚函数：耦合算例继承后不需要重写时间推进）
+        virtual void SolveField();
 
     protected:
         // 前处理
@@ -36,6 +40,23 @@ namespace zaran
         void SolveOneStep();
         // 后处理
         void PostSolve();
+
+        // ------------------------------------------------------------
+        // 耦合钩子（默认空实现 ⇒ 单相/两相算例的既有行为完全不变）
+        // ------------------------------------------------------------
+        /// @brief 求解开始前调用一次，且在 `Initialize()`（⇒ `solver->Init()`）**之前**。
+        /// @details 供耦合算例注入 ε 场：外部 ε 必须在 InitField() 之前写好。
+        virtual void PrepareCoupling() {}
+        /// @brief 每个时间步**之前**调用（在 PreSolve 之前）。
+        /// @details 双向耦合将在这里把上一时刻的相间反作用力散列进源项、
+        ///          并按子循环推进 DEM；单向耦合下无事可做。
+        virtual void CouplingPreStep(int iter) { (void)iter; }
+        /// @brief 每个时间步**之后**调用（在 PostSolve 之后，流场输出已完成）。
+        /// @details 单向耦合在这里用当前流场评估颗粒受力并输出。
+        virtual void CouplingPostStep(int iter) { (void)iter; }
+
+        /// @brief 取场管理器（子类需要访问场/求解器/数据管理器）
+        shared_ptr<FieldManager> GetFieldManager() const { return m_field_manager; }
 
     protected:
 		void CalcTimeStep();

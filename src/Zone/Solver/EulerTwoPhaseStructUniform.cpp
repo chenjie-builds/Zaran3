@@ -18,6 +18,8 @@ namespace zaran
 		constexpr int kEqNum = 5;
 		/// @brief 动量方程在守恒量里的起始下标（rho*u, rho*v, rho*w）
 		constexpr int kMomentumOffset = 1;
+		/// @brief 能量方程在守恒量里的下标
+		constexpr int kEnergyOffset = 4;
 
 		/// @brief 不含 ghost 的计算范围，统一转成 int 供 OpenMP 使用
 		///        （MSVC 对循环条件里直接出现 static_cast 会报 C1001）
@@ -198,7 +200,43 @@ namespace zaran
 	{
 		// ε 必须先于基类初值铺好：基类 InitField() 末尾会调用虚函数 Prim2Cons()，
 		// 而本类的 Prim2Cons 需要 ε 场（cons = ε · cons_intrinsic）。
-		InitVolumeFraction();
+		if (m_tp_para->GetVolumeFractionType() == VolumeFractionType::External)
+		{
+			// 阶段 3：ε 由 DEM-CFD 耦合器在 solver->Init() 之前写进数据管理器的
+			// volume_fraction（物理节点）。这里只负责把 ghost 层补齐——
+			// 不能直接调用基类 InitField()，否则它会用解析场把耦合器写好的值覆盖掉。
+			FillVolumeFractionGhost();
+			double eps_min = LARGE_NUMBER, eps_max = -LARGE_NUMBER;
+			auto grid = GetGrid();
+			IdProxyStruct& idx_proxy = GetIdxProxy();
+			const NodeCounts counts(*GetGrid());
+			index_type is, ie, js, je, ks, ke;
+			grid->GetRange(is, ie, js, je, ks, ke);
+			const double* volume_fraction = GetVolumeFraction();
+			for (int k = static_cast<int>(ks); k <= static_cast<int>(ke); ++k)
+			{
+				for (int j = static_cast<int>(js); j <= static_cast<int>(je); ++j)
+				{
+					for (int i = static_cast<int>(is); i <= static_cast<int>(ie); ++i)
+					{
+						const double eps = volume_fraction[idx_proxy(i, j, k)];
+						eps_min = Min(eps_min, eps);
+						eps_max = Max(eps_max, eps);
+					}
+				}
+			}
+			Log::info("Two-phase volume fraction: type=external（由耦合器注入）, "
+				"物理节点 ε_g ∈ [{:E}, {:E}]", eps_min, eps_max);
+			if (eps_max > 1.0 + 1.0e-12)
+			{
+				Log::warn("EulerTwoPhaseStructUniform: 注入的 ε_g 上界 {:E} > 1，"
+					"耦合侧应把 ε 限制在 [eps_min, 1]", eps_max);
+			}
+		}
+		else
+		{
+			InitVolumeFraction();
+		}
 		EulerSolverStructUniform::InitField();
 	}
 
@@ -269,6 +307,66 @@ namespace zaran
 		// 基类的 AddFluxResidual 已经通过 GetVolumeFractionField() 做了 ε 加权
 		EulerSolverStructUniform::CalcConvectionResidual();
 		AddPorosityGradientSource();
+	}
+
+	/// @brief 相间反作用力源项（DEM-CFD **双向耦合**）
+	/// @details 离散的 ε 加权动量方程是
+	///              ∂(ε ρ u)/∂t + ∇·(ε ρ u u + ε p I) = p∇ε + S
+	///          这里加的 S 就是"单位**混合物**体积上、流体受到的来自颗粒的力"。
+	///          它与连续方程里 −ε_g∇p 的分工（重要，写错就是双计）：
+	///              - 颗粒受的**压力梯度力** −V_p∇p 是 −ε_g∇p 的对偶项，
+	///                它已经隐含在气相的 −ε_g∇p 里了（两者之和 = −∇p，正是混合物的压强项）；
+	///              - 颗粒受的**曳力**在气相方程里没有任何对应项，必须由 S 补上。
+	///          所以 S = −Σ_p F_drag,p / V_cell，**不包含** −V_p∇p。
+	///          （若把 porosity_gradient_force 关掉、改用完全守恒的 ∇(εp) 形式，
+	///            那就必须把压力梯度力也反作用回去 —— 耦合器会按该开关自动决定并告警。）
+	void EulerTwoPhaseStructUniform::CalcSourceResidual()
+	{
+		// 基类目前是空实现；保留调用以便以后加真正的体积源（如重力）
+		EulerSolverStructUniform::CalcSourceResidual();
+
+		const double* src = m_interphase_source;
+		if (src == nullptr)
+		{
+			return;
+		}
+		auto data_manager = GetDataManager();
+		IdProxyStruct& idx_proxy = GetIdxProxy();
+		const LoopBounds bounds(*GetGrid());
+		const int is = bounds.is, ie = bounds.ie;
+		const int js = bounds.js, je = bounds.je;
+		const int ks = bounds.ks, ke = bounds.ke;
+		// 相间力对气相做功能：∂(εE)/∂t + ... = S·u（可以关，见 SetInterphaseWork 的说明）
+		double* res_energy = m_interphase_work ? data_manager->GetResidual(kEnergyOffset) : nullptr;
+		// 做功项用的速度取与原变量同一时刻（S 是滞后量，u 用**步初**的节点速度），
+		// 因此整个 RK 阶段这一项是常量，Σb_i = 1 ⇒ 一步的总功 = Σ_cells S·u·V·Δt，可精确核算。
+		const double* vel[3] = {
+			data_manager->GetPrim(ID_VELOCITY_X),
+			data_manager->GetPrim(ID_VELOCITY_Y),
+			data_manager->GetPrim(ID_VELOCITY_Z) };
+		for (int dir = 0; dir < 3; ++dir)
+		{
+			double* res_mom = data_manager->GetResidual(kMomentumOffset + dir);
+#ifdef USE_OMP
+#pragma omp parallel for collapse(3)
+#endif
+			for (int k = ks; k <= ke; ++k)
+			{
+				for (int j = js; j <= je; ++j)
+				{
+					for (int i = is; i <= ie; ++i)
+					{
+						const index_type idx = idx_proxy(i, j, k);
+						const double s = src[3 * idx + dir];
+						res_mom[idx] += s;
+						if (res_energy != nullptr)
+						{
+							res_energy[idx] += s * vel[dir][idx];
+						}
+					}
+				}
+			}
+		}
 	}
 
 	// ==================================================================

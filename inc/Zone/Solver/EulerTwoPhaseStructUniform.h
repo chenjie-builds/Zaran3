@@ -51,6 +51,24 @@ namespace zaran
 		/// @brief 气相体积分数场（节点中心，含 ghost）
 		const double* GetVolumeFraction() const;
 
+		/// @brief 注入相间反作用力源项（DEM-CFD 双向耦合，**无量纲**，节点量，长度 3*N）
+		/// @details 约定：`src[3*idx + dir]` 是加在节点 idx 的第 dir 个动量方程上的
+		///          **单位体积力**（无量纲形式 `F*·L_ref/(ρ_ref a_ref²)`）。
+		///          传 nullptr 关闭。每步由耦合器按"颗粒受力的负值"经同一套网格权重散列得到，
+		///          于是 `Σ_cell src·V_cell = −Σ_particle F*`（牛顿第三定律）是**构造保证**的。
+		///          ⚠ 只反作用**曳力**：颗粒的压力梯度力 −V_p∇p 是气相方程里 −ε_g∇p 的
+		///          对偶项（见 docs/TWO_PHASE_STAGE3/4），再反作用一次就是双计。
+		void SetInterphaseMomentumSource(const double* src) { m_interphase_source = src; }
+		/// @brief 相间力是否对气相**做功能**（把 S·u 加进能量方程）
+		/// @details 严谨的写法里相间力在能量方程里应当有 S·u 这一项（相间力对气相做的功）。
+		///          打开后能量账本闭合：`d(∭εE)/dt = ∭S·u dV = −Σ_p F_drag·u_g`，
+		///          且 `d(∭εE + Σ½m_p|u_p|²)/dt = −耗散 + 浮力功`（可据此做严格的能量收支检验）。
+		///          不少 CFD-DEM 代码省略这一项（只把力加进动量方程），那样气相会"白拿动量"。
+		///          默认打开。
+		void SetInterphaseWork(bool enabled) { m_interphase_work = enabled; }
+		/// @brief 当前是否接了相间源项
+		bool HasInterphaseMomentumSource() const { return m_interphase_source != nullptr; }
+
 	protected:
 		// ---------------- 求解器接入点 ----------------
 		/// @brief 体积分数场钩子：本类返回 ε 场，基类据此对通量与变量转换加权
@@ -63,6 +81,8 @@ namespace zaran
 		void CalcConvectionResidual() override;
 		/// @brief 基类物理性检查 + ε 范围检查
 		void CheckPrimtive() override;
+		/// @brief 相间反作用力源项（双向耦合）；无源项时与基类的空实现等价
+		void CalcSourceResidual() override;
 
 	private:
 		/// @brief 按参数类型铺 ε 场（全部节点，含 ghost）
@@ -76,5 +96,9 @@ namespace zaran
 
 		shared_ptr<DataManagerNSTwoPhase> m_tp_data_manager;
 		shared_ptr<FlowSolverParamTwoPhase> m_tp_para;
+		/// @brief 相间反作用力源项（3*N，无量纲"单位体积力"），nullptr = 未接
+		const double* m_interphase_source = nullptr;
+		/// @brief 相间力是否对气相做功能（把 S·u 加进能量方程，默认开）
+		bool m_interphase_work = true;
 	};
 }

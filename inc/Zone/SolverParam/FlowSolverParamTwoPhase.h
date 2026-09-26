@@ -20,6 +20,13 @@ namespace zaran
 		Uniform,   ///< 全场常值
 		Step,      ///< 沿 x 的阶跃（两段常值，膜片位置可指定）
 		Sine,      ///< 沿 x 的正弦分布，用于检验 ε 梯度项与静水平衡
+		/// @brief 由**外部**注入（阶段 3 的 DEM-CFD 耦合）：
+		///        求解器不计算 ε，物理节点上的 ε 由耦合器（DEMCFDCoupler）在
+		///        `solver->Init()` 之前写进 DataManagerNSTwoPhase 的 volume_fraction，
+		///        求解器只负责把 ghost 层做零梯度外推并做范围检查。
+		///        注意：ε_g ≡ 1 时整条链路与单相 Euler 逐位相同（乘/除 1.0 精确），
+		///        这正是"单向耦合不扰动流体"的检验口径。
+		External,
 	};
 
 	/// @brief 两相（体积分数）均匀结构网格 Euler 求解器的参数。

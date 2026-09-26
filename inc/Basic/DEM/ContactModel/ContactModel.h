@@ -31,5 +31,16 @@ namespace zaran
         /// @brief 计算切向接触力，结果写入 contact.force_t，更新 contact.delta_t
         virtual void CalcTangentialForce(const DEMParticle& pa, const DEMParticle& pb,
                                          DEMContact& contact, double dt) = 0;
+
+        /// @brief 设置切向阻尼与法向阻尼之比 λ（c_t = λ·c_n）。
+        /// λ ≤ 0 表示关闭：CalcTangentialForce 走与历史逐位一致的路径。
+        /// 法向阻尼 c_n 本就按恢复系数标定（Cundall-Strack），切向此前完全没有阻尼，
+        /// 这是"碎块之间的切向振动无衰减"的一个来源。
+        void SetTangentialDampingScale(double scale) { m_tangential_damping_scale = scale; }
+        double GetTangentialDampingScale() const { return m_tangential_damping_scale; }
+
+    protected:
+        /// @brief c_t = λ·c_n 中的 λ；默认 0（关闭）。
+        double m_tangential_damping_scale = 0.0;
     };
 } // namespace zaran

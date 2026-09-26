@@ -219,6 +219,16 @@ namespace zaran
 		InitFieldFarfield();
 	}
 
+	/// @brief 球形/柱形黎曼问题（内部高压静止、外部低压静止）
+	/// @details 原来只支持"等密度 + 压强比"的理想化爆炸初值。为了做**二维球形黎曼问题**
+	///          （内部球形静止高压、外部静止低压），这里补上可选覆盖项，全部**向后兼容**
+	///          （不写这些键时与原来逐位相同）：
+	///             init.explosion.dim            2 | 3   （2 = 只用 (x,y) 距离 ⇒ 柱形，
+	///                                                   薄板算例里 IC 严格与 z 无关）
+	///             init.explosion.outer_density / outer_pressure
+	///             init.explosion.inner_density / inner_pressure
+	///             init.explosion.inner_velocity_x/y/z, outer_velocity_x/y/z
+	///          文件里的取值都是**无量纲**量（p* = p/(ρ_ref a_ref²)、T* = γp*/ρ*）。
 	void EulerSolverStructUniform::InitFieldExplosion()
 	{
 		auto grid = GetGrid();
@@ -230,20 +240,43 @@ namespace zaran
 		auto nk = grid->GetNk();
 		auto para = GetPara();
 
+		int space_dim = 3;
+		if (GlobalData::IsExist("init.explosion.dim"))
+		{
+			space_dim = GlobalData::GetInt("init.explosion.dim");
+			if (space_dim != 2 && space_dim != 3)
+			{
+				Log::warn("init.explosion.dim={} 只能取 2 或 3，按 3 处理", space_dim);
+				space_dim = 3;
+			}
+		}
+
 		double prim_far[kEqNum];
-		prim_far[0] = 1.0;
-		prim_far[1] = 0.0;
-		prim_far[2] = 0.0;
-		prim_far[3] = 0.0;
-		prim_far[4] = para->GetInflowPressure();
+		prim_far[0] = GlobalData::IsExist("init.explosion.outer_density")
+			? GlobalData::GetDouble("init.explosion.outer_density") : 1.0;
+		prim_far[1] = GlobalData::IsExist("init.explosion.outer_velocity_x")
+			? GlobalData::GetDouble("init.explosion.outer_velocity_x") : 0.0;
+		prim_far[2] = GlobalData::IsExist("init.explosion.outer_velocity_y")
+			? GlobalData::GetDouble("init.explosion.outer_velocity_y") : 0.0;
+		prim_far[3] = GlobalData::IsExist("init.explosion.outer_velocity_z")
+			? GlobalData::GetDouble("init.explosion.outer_velocity_z") : 0.0;
+		prim_far[4] = GlobalData::IsExist("init.explosion.outer_pressure")
+			? GlobalData::GetDouble("init.explosion.outer_pressure")
+			: para->GetInflowPressure();
 
 		const double pressure_ratio = GlobalData::GetDouble("init.explosion.pressure");
 		double prim_inner[kEqNum];
-		prim_inner[0] = 1.0;
-		prim_inner[1] = 0.0;
-		prim_inner[2] = 0.0;
-		prim_inner[3] = 0.0;
-		prim_inner[4] = pressure_ratio * prim_far[4];
+		prim_inner[0] = GlobalData::IsExist("init.explosion.inner_density")
+			? GlobalData::GetDouble("init.explosion.inner_density") : 1.0;
+		prim_inner[1] = GlobalData::IsExist("init.explosion.inner_velocity_x")
+			? GlobalData::GetDouble("init.explosion.inner_velocity_x") : 0.0;
+		prim_inner[2] = GlobalData::IsExist("init.explosion.inner_velocity_y")
+			? GlobalData::GetDouble("init.explosion.inner_velocity_y") : 0.0;
+		prim_inner[3] = GlobalData::IsExist("init.explosion.inner_velocity_z")
+			? GlobalData::GetDouble("init.explosion.inner_velocity_z") : 0.0;
+		prim_inner[4] = GlobalData::IsExist("init.explosion.inner_pressure")
+			? GlobalData::GetDouble("init.explosion.inner_pressure")
+			: pressure_ratio * prim_far[4];
 
 		const double center[3] = {
 			GlobalData::GetDouble("init.explosion.center_x"),
@@ -251,7 +284,10 @@ namespace zaran
 			GlobalData::GetDouble("init.explosion.center_z")
 		};
 		const double radius = GlobalData::GetDouble("init.explosion.radius");
-		Log::info("Explosion pressure ratio: {}, radius: {}", pressure_ratio, radius);
+		Log::info("Explosion pressure ratio: {}, radius: {}, dim={}, "
+			"outer(rho={:E}, p={:E}), inner(rho={:E}, p={:E})",
+			pressure_ratio, radius, space_dim,
+			prim_far[0], prim_far[4], prim_inner[0], prim_inner[4]);
 
 		for (index_type k = 0; k < nk; ++k)
 		{
@@ -260,10 +296,11 @@ namespace zaran
 				for (index_type i = 0; i < ni; ++i)
 				{
 					const auto coord = node->GetCoord(i, j, k);
+					const double dz_off = (space_dim >= 3) ? (coord[2] - center[2]) : 0.0;
 					const double dist = std::sqrt(
 						(coord[0] - center[0]) * (coord[0] - center[0]) +
 						(coord[1] - center[1]) * (coord[1] - center[1]) +
-						(coord[2] - center[2]) * (coord[2] - center[2]));
+						dz_off * dz_off);
 					data_manager->SetPrim(idx_proxy(i, j, k),
 						(dist <= radius) ? prim_inner : prim_far);
 				}

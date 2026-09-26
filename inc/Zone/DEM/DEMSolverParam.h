@@ -102,6 +102,35 @@ namespace zaran
         /// @brief Weibull 抽样种子（按 (seed, id_a, id_b) 哈希，保证可复现且与键序无关）
         std::uint64_t GetBondWeibullSeed() const { return m_bond_weibull_seed; }
 
+        // --- γ 控制的双线性内聚律（断裂能-强度自洽）---
+        /// @brief 是否启用内聚模式。启用条件是：本开关为真 **且** 该键 `fracture_energy > 0`
+        ///        （即给了 dem.surface_energy）**且** `dem.bond_peak_strain` 有限（<1e29）。
+        ///        三者缺一即回退到原有的"储能达断裂能即脆断"路径（保证历史算例逐位不变）。
+        bool GetBondCohesiveEnabled() const { return m_bond_cohesive_enabled; }
+        /// @brief 内聚模式的严格性：δ_f < δ_p 时是报错还是仅告警并退化为脆断。
+        ///        默认严格（报错），因为静默退化正是最难发现的一类错误。
+        bool GetBondCohesiveStrict() const { return m_bond_cohesive_strict; }
+        /// @brief 软化段至少要有多少个键长（δ_f − δ_p ≥ ratio·L0）才认为网格分辨得开裂纹；
+        ///        不足时告警（不报错）。0 表示不检查。
+        double GetBondCohesiveMinSofteningBonds() const { return m_bond_cohesive_min_bonds; }
+
+        // --- 多通道失效（切向独立断裂 / 压剪），对照 LSM breakmod 2/4 ---
+        /// @brief 切向独立断裂能比 α = UtIII/UnIII。α > 0 时启用切向通道：
+        ///        切向弹簧储能达 UtIII 即切向先断，并把 UtIII 从法向断裂能里扣除；
+        ///        压缩侧的同一阈值给出"压剪破坏"通道。α ≤ 0（默认）表示关闭，
+        ///        所有既有一致性逐位不变。
+        double GetBondShearEnergyRatio() const { return m_bond_shear_energy_ratio; }
+
+        // --- 碎后接触：滚动阻力矩（决定"碎块堆是否像光滑球堆一样摊平"）---
+        /// @brief 滚动阻力系数 μ_r（长度量纲）。滚动阻力矩 M_r = −μ_r·R*·|F_n|·ω̂_rel，
+        ///        按 I_eff·|ω_rel|/dt 截断以防过冲反向。≤ 0（默认）表示关闭。
+        double GetRollingFriction() const { return m_rolling_friction; }
+
+        // --- 接触切向阻尼（法向有按恢复系数标定的 c_n，切向此前完全没有）---
+        /// @brief 切向阻尼与法向阻尼之比 λ：c_t = λ·c_n。λ ≤ 0（默认）表示关闭。
+        ///        按同恢复系数标定时 c_t/c_n = sqrt(k_t/k_n)（线性模型 ≈ 0.707）。
+        double GetTangentialDampingScale() const { return m_tangential_damping_scale; }
+
         // --- 刚性边界（把 prescribed-motion 粒子当作刚体平面）---
         /// @brief 是否将 kinematic（规定运动）粒子视为刚性边界平面
         bool GetRigidBoundaryEnabled() const { return m_rigid_boundary_enabled; }
@@ -121,6 +150,28 @@ namespace zaran
         /// @brief 是否把机械耗散（接触法向阻尼、接触切向摩擦、键合阻尼）计入温度。
         /// 关闭后温度只由键合导热与外部体热源驱动（与旧行为一致）。
         bool GetMechanicalHeatingEnabled() const { return m_mechanical_heating; }
+
+        // --- 高压气腔加载（孔洞内充压气体把脆性材料撑碎）---
+        /// @brief 是否启用气腔加载
+        bool GetGasCavityEnabled() const { return m_gas_cavity_enabled; }
+        /// @brief 气腔中心 (m)
+        const Eigen::Vector3d& GetGasCavityCenter() const { return m_gas_cavity_center; }
+        /// @brief 初始气腔半径 a0 (m)
+        double GetGasCavityRadius() const { return m_gas_cavity_radius; }
+        /// @brief 初始气体压力 p0 (Pa)
+        double GetGasPressureInitial() const { return m_gas_pressure_initial; }
+        /// @brief 气体绝热（多变）指数 gamma；1.4 = 双原子理想气体
+        double GetGasPolytropicIndex() const { return m_gas_polytropic_index; }
+        /// @brief 升压时间 (s)；0 = 瞬时加载
+        double GetGasRampTime() const { return m_gas_ramp_time; }
+        /// @brief 气腔边界环识别容差（× 格距）
+        double GetGasCavityShellTolerance() const { return m_gas_cavity_shell_tolerance; }
+        /// @brief 压力上限 (Pa)；≤0 = 不限
+        double GetGasCavityPressureCap() const { return m_gas_cavity_pressure_cap; }
+        /// @brief 泄压判据：气腔面积 / (π·样品外半径²)；≤0 = 永不泄压
+        double GetGasCavityVentAreaRatio() const { return m_gas_cavity_vent_area_ratio; }
+        /// @brief 样品外半径 (m)，供泄压判据使用
+        double GetSampleRadius() const { return m_sample_radius; }
 
     private:
         double         m_dt             = 1.0e-6;
@@ -192,6 +243,14 @@ namespace zaran
         double        m_bond_break_strain_compression = 0.0;
         double        m_bond_weibull_modulus = 0.0;
         std::uint64_t m_bond_weibull_seed = 20260917ULL;
+        bool          m_bond_cohesive_enabled = true;
+        bool          m_bond_cohesive_strict = true;
+        double        m_bond_cohesive_min_bonds = 1.0;
+
+        // 多通道失效 / 碎后接触（全部默认关闭 ⇒ 历史算例逐位不变）
+        double        m_bond_shear_energy_ratio = 0.0;   ///< α = UtIII/UnIII；≤0 = 关闭
+        double        m_rolling_friction = 0.0;          ///< μ_r（长度量纲）；≤0 = 关闭
+        double        m_tangential_damping_scale = 0.0;  ///< c_t = λ·c_n；≤0 = 关闭
 
         // 接触重叠限制。(r_a+r_b) 对应 LSM 的平衡间距 r0，默认取 LSM 的 0.6 作为统一阈值。
         //   ① 排斥力放大：dist < ratio·(r_a+r_b) 时 F_n *= (ratio·(r_a+r_b)/dist)^20
@@ -211,5 +270,25 @@ namespace zaran
 
         // 机械耗散（接触法向阻尼 / 切向摩擦 / 键合阻尼）是否计入温度，默认开启。
         bool m_mechanical_heating = true;
+
+        // 高压气腔加载（默认关闭）。
+        //   物理：空腔内的气体以压力 p 顶在空腔壁上，壁面由**空腔边界粒子环**离散，
+        //         每个边界粒子承受 F_i = p·ℓ_i·t·n̂_i（ℓ_i 为其角向分片对应的弦长、
+        //         t 为平面外厚度）。气腔体积随边界位移按散度定理增长，气体按绝热
+        //         （多变）规律膨胀做功、压力下降。
+        //   为什么必须单独实现：DEM 里既有的气相压力（CalcGasPressureForce）只在
+        //         reaction_enabled 打开、且气体由 Arrhenius/燃烧反应**产生**时才生效；
+        //         本算例的气体是**初始就存在**于空腔中的高压气体，且加载面是自由表面
+        //         （空腔壁），而不是两个固相粒子之间的内部连接面。
+        bool   m_gas_cavity_enabled = false;
+        Eigen::Vector3d m_gas_cavity_center = Eigen::Vector3d::Zero();
+        double m_gas_cavity_radius = 0.0;
+        double m_gas_pressure_initial = 0.0;
+        double m_gas_polytropic_index = 1.4;
+        double m_gas_ramp_time = 0.0;
+        double m_gas_cavity_shell_tolerance = 0.5;
+        double m_gas_cavity_pressure_cap = 0.0;   ///< ≤0 = 不限
+        double m_gas_cavity_vent_area_ratio = 0.0;///< ≤0 = 永不泄压
+        double m_sample_radius = 0.0;
     };
 } // namespace zaran

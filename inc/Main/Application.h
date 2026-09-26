@@ -23,7 +23,9 @@ namespace zaran
 		/// @brief 网格转换，将网格转换为程序所需的格式
         CONVERT_GRID = 1,
 		/// @brief 读取模型
-        READ_MODEL = 2
+        READ_MODEL = 2,
+		/// @brief 粒子 → 网格映射（阶段 2 的独立算例，不做时间推进）
+        MAPPING = 3
     };
 
     //应用类，用于控制整个程序的功能
@@ -51,6 +53,8 @@ namespace zaran
         void SolveField() const;
         void ConvertGrid();
         void ReadModel();
+        /// @brief 粒子 → 网格映射算例（`task.simulation = "MAPPING"`）
+        void MapParticles() const;
     private:
 		string m_work_dir;
         TaskType m_task;

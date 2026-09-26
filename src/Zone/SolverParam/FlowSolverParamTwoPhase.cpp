@@ -10,6 +10,22 @@
 
 namespace zaran
 {
+	namespace
+	{
+		/// @brief ε 场来源的可读名字（日志里出现 int 枚举值太难看，也容易看错）
+		const char* VolumeFractionTypeName(VolumeFractionType type)
+		{
+			switch (type)
+			{
+			case VolumeFractionType::Uniform:  return "uniform";
+			case VolumeFractionType::Step:     return "step";
+			case VolumeFractionType::Sine:     return "sine";
+			case VolumeFractionType::External: return "external(由 DEM-CFD 耦合器注入)";
+			}
+			return "unknown";
+		}
+	}
+
 	FlowSolverParamTwoPhase::FlowSolverParamTwoPhase()
 	{
 	}
@@ -38,6 +54,10 @@ namespace zaran
 			else if (type == "sine")
 			{
 				m_volume_fraction_type = VolumeFractionType::Sine;
+			}
+			else if (type == "external")
+			{
+				m_volume_fraction_type = VolumeFractionType::External;
 			}
 			else
 			{
@@ -99,7 +119,7 @@ namespace zaran
 		Log::info("Two-phase Euler parameters: volume_fraction_type={}, value={}, "
 			"step=({}, {} -> {}), sine=(mean {}, amp {}, lambda {}, phase {}), "
 			"porosity_gradient_force={}",
-			static_cast<int>(m_volume_fraction_type), m_volume_fraction_value,
+			VolumeFractionTypeName(m_volume_fraction_type), m_volume_fraction_value,
 			m_volume_fraction_x_step, m_volume_fraction_left, m_volume_fraction_right,
 			m_volume_fraction_mean, m_volume_fraction_amplitude,
 			m_volume_fraction_wavelength, m_volume_fraction_phase,

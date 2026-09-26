@@ -339,9 +339,19 @@ namespace zaran
 			m_grid.CellVolume());
 	}
 
-	void ParticleGridMapper::SetSubdivisions(int n)
+	double ParticleGridMapper::ParticleVolume(int dim, double radius)
 	{
-		m_sub = std::max(1, n);
+		if (!(radius > 0.0))
+		{
+			return 0.0;
+		}
+		return (dim >= 3)
+			? (4.0 / 3.0) * kPi * radius * radius * radius
+			: kPi * radius * radius;
+	}
+
+	void ParticleGridMapper::SetSubdivisions(int n)
+	{		m_sub = std::max(1, n);
 	}
 
 	void ParticleGridMapper::SetSmoothing(int passes, double blend)
@@ -429,8 +439,7 @@ namespace zaran
 		{
 			return;
 		}
-		const double particle_volume = (m_grid.dim >= 3)
-			? (4.0 / 3.0) * kPi * r * r * r : kPi * r * r;
+		const double particle_volume = ParticleVolume(m_grid.dim, r);
 		if (!(particle_volume > 0.0))
 		{
 			return;
@@ -505,9 +514,7 @@ namespace zaran
 		for (size_t ip = 0; ip < particles.size(); ++ip)
 		{
 			const Particle& p = particles[ip];
-			const double vp = (m_grid.dim >= 3)
-				? (4.0 / 3.0) * kPi * p.radius * p.radius * p.radius
-				: kPi * p.radius * p.radius;
+			const double vp = ParticleVolume(m_grid.dim, p.radius);
 			if (!(vp > 0.0))
 			{
 				continue;

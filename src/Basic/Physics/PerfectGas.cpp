@@ -28,7 +28,16 @@ double PerfectGas::CalcTemperature(const double& density, const double& p)
 
 double PerfectGas::CalcMul(const double& T)
 {
-	return m_mu0 * Southerland(T, m_T0, m_Ts);
+	// 无量纲 Sutherland：μ*(T*) = μ0* · (T*/T0*)^1.5 · (T0*+Ts*)/(T*+Ts*)
+	//
+	// ⚠ 原来的写法是 `m_mu0 * Southerland(T, m_T0, m_Ts)`，但 4 参数 Southerland 的
+	//   第 2 个形参是 **mu0** 而不是 T0（`Southerland(T, mu0, T0, Ts)`）。于是
+	//   m_T0 = 273.16/T_ref 被当成 μ0、m_Ts = 110.4/T_ref 被当成 T0 用了，
+	//   算出来的 μ 比真值大 5~6 倍（实测：空气 439 K 时给出 1.35e-4 而不是 2.43e-5）。
+	//   该函数此前**没有任何调用点**（粘性残差在现有算例里都没开），所以从未暴露；
+	//   阶段 3 的曳力需要 Re = ρ|u|d/μ，才把它逼出来。
+	//   修好后 T* = 1 处应精确还原 1.716e-5 Pa·s（见 tests/demcfd_shock_tube/verify.py 的 V11）。
+	return Southerland(T, m_mu0, m_T0, m_Ts);
 }
 
 double PerfectGas::CalcMut(const double& T)

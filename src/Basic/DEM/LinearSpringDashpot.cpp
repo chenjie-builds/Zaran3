@@ -65,6 +65,10 @@ void LinearSpringDashpot::CalcNormalForce(const DEMParticle& pa, const DEMPartic
     // 法向阻尼耗散：只有粘性（阻尼）部分不可逆，弹性项 k_n·δ 属可逆储能。
     // 由动量守恒可推得该对被粘性耗散的功率为 c_n·v_n_rel²（恒 ≥ 0）。
     contact.dissipation = c_n * v_n_rel * v_n_rel * dt;
+
+    // 接触弹簧的可逆储能（法向项；切向项由 CalcTangentialForce 追加）。
+    // 剧烈压缩下这一项可以达到焦耳量级，是能量账本必须单列的一项。
+    contact.elastic_energy = 0.5 * k_n * contact.overlap_n * contact.overlap_n;
 }
 
 void LinearSpringDashpot::CalcTangentialForce(const DEMParticle& pa, const DEMParticle& pb,
@@ -87,6 +91,18 @@ void LinearSpringDashpot::CalcTangentialForce(const DEMParticle& pa, const DEMPa
 
     Eigen::Vector3d Ft = -k_t * contact.delta_t;
 
+    // 切向阻尼（可选）：c_t = λ·c_n，与法向同一套恢复系数标定。
+    // λ ≤ 0（默认）时完全不进入该分支 ⇒ 与历史实现逐位一致。
+    // 物理意义：切向此前只有弹簧 + 库仑截断，粘滞-滑移转换时完全没有切向耗能，
+    // 碎块之间的切向振荡会一直持续（"碎块堆像流体一样晃动"的一个来源）。
+    const double c_t = m_tangential_damping_scale * c_n;
+    if (c_t > 0.0)
+    {
+        Ft -= c_t * v_t;
+        // 切向阻尼耗散 c_t·|v_t|²·dt（与法向 c_n·v_n²·dt 同理，恒 ≥ 0）
+        contact.dissipation += c_t * v_t.squaredNorm() * dt;
+    }
+
     // Coulomb 摩擦截断
     double mu = std::min(pa.friction_coeff, pb.friction_coeff);
     double Fn_mag = contact.force_n.norm();
@@ -99,13 +115,18 @@ void LinearSpringDashpot::CalcTangentialForce(const DEMParticle& pa, const DEMPa
         // 但在粘滞-滑移转换过程中不会出现负的"耗散"）。
         const double stored_before = 0.5 * k_t * contact.delta_t.squaredNorm();
         Ft = Ft.normalized() * Ft_max;
-        // 滑动时重置弹簧位移
-        contact.delta_t = -Ft / k_t;
+        // 滑动时重置弹簧位移。有切向阻尼时截断后的总切向力为 Ft，其中阻尼部分
+        // −c_t·v_t 不属弹簧，故弹簧力应为 Ft + c_t·v_t ⇒ δ_t = −(Ft + c_t·v_t)/k_t。
+        if (c_t > 0.0) contact.delta_t = -(Ft + c_t * v_t) / k_t;
+        else           contact.delta_t = -Ft / k_t;
         const double stored_after = 0.5 * k_t * contact.delta_t.squaredNorm();
         contact.dissipation += stored_before - stored_after;
     }
 
     contact.force_t = Ft;
+
+    // 切向弹簧的剩余可逆储能（库仑截断之后的口径），追加到接触弹性能。
+    contact.elastic_energy += 0.5 * k_t * contact.delta_t.squaredNorm();
 }
 
 } // namespace zaran

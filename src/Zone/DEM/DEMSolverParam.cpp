@@ -108,6 +108,19 @@ void DEMSolverParam::Init()
         m_surface_energy = GlobalData::GetDouble("dem.surface_energy");
     if (GlobalData::IsExist("dem.grain_boundary_energy"))
         m_grain_boundary_energy = GlobalData::GetDouble("dem.grain_boundary_energy");
+    if (GlobalData::IsExist("dem.bond_cohesive_enabled"))
+        m_bond_cohesive_enabled = GlobalData::GetBool("dem.bond_cohesive_enabled");
+    if (GlobalData::IsExist("dem.bond_cohesive_strict"))
+        m_bond_cohesive_strict = GlobalData::GetBool("dem.bond_cohesive_strict");
+    if (GlobalData::IsExist("dem.bond_cohesive_min_softening_bonds"))
+        m_bond_cohesive_min_bonds = GlobalData::GetDouble("dem.bond_cohesive_min_softening_bonds");
+    // 多通道失效（切向独立断裂 / 压剪）与碎后接触（滚动阻力矩、切向阻尼）
+    if (GlobalData::IsExist("dem.bond_shear_energy_ratio"))
+        m_bond_shear_energy_ratio = GlobalData::GetDouble("dem.bond_shear_energy_ratio");
+    if (GlobalData::IsExist("dem.rolling_friction"))
+        m_rolling_friction = GlobalData::GetDouble("dem.rolling_friction");
+    if (GlobalData::IsExist("dem.tangential_damping_scale"))
+        m_tangential_damping_scale = GlobalData::GetDouble("dem.tangential_damping_scale");
     if (GlobalData::IsExist("dem.high_pressure_rnn"))
         m_high_pressure_rnn = GlobalData::GetDouble("dem.high_pressure_rnn");
     if (GlobalData::IsExist("dem.high_pressure_knn"))
@@ -144,6 +157,32 @@ void DEMSolverParam::Init()
     // --- 机械耗散生热（可选，默认开启）---
     if (GlobalData::IsExist("dem.mechanical_heating"))
         m_mechanical_heating = GlobalData::GetBool("dem.mechanical_heating");
+
+    // --- 高压气腔加载（可选，默认关闭）---
+    if (GlobalData::IsExist("dem.gas_cavity_enabled"))
+        m_gas_cavity_enabled = GlobalData::GetBool("dem.gas_cavity_enabled");
+    if (GlobalData::IsExist("dem.gas_cavity_center_x"))
+        m_gas_cavity_center.x() = GlobalData::GetDouble("dem.gas_cavity_center_x");
+    if (GlobalData::IsExist("dem.gas_cavity_center_y"))
+        m_gas_cavity_center.y() = GlobalData::GetDouble("dem.gas_cavity_center_y");
+    if (GlobalData::IsExist("dem.gas_cavity_center_z"))
+        m_gas_cavity_center.z() = GlobalData::GetDouble("dem.gas_cavity_center_z");
+    if (GlobalData::IsExist("dem.gas_cavity_radius"))
+        m_gas_cavity_radius = GlobalData::GetDouble("dem.gas_cavity_radius");
+    if (GlobalData::IsExist("dem.gas_pressure_initial"))
+        m_gas_pressure_initial = GlobalData::GetDouble("dem.gas_pressure_initial");
+    if (GlobalData::IsExist("dem.gas_polytropic_index"))
+        m_gas_polytropic_index = GlobalData::GetDouble("dem.gas_polytropic_index");
+    if (GlobalData::IsExist("dem.gas_ramp_time"))
+        m_gas_ramp_time = GlobalData::GetDouble("dem.gas_ramp_time");
+    if (GlobalData::IsExist("dem.gas_cavity_shell_tolerance"))
+        m_gas_cavity_shell_tolerance = GlobalData::GetDouble("dem.gas_cavity_shell_tolerance");
+    if (GlobalData::IsExist("dem.gas_cavity_pressure_cap"))
+        m_gas_cavity_pressure_cap = GlobalData::GetDouble("dem.gas_cavity_pressure_cap");
+    if (GlobalData::IsExist("dem.gas_cavity_vent_area_ratio"))
+        m_gas_cavity_vent_area_ratio = GlobalData::GetDouble("dem.gas_cavity_vent_area_ratio");
+    if (GlobalData::IsExist("dem.sample_radius"))
+        m_sample_radius = GlobalData::GetDouble("dem.sample_radius");
 
     // 重力向量（分量分别读取）
     if (GlobalData::IsExist("dem.gravity_x"))
@@ -213,12 +252,58 @@ void DEMSolverParam::Init()
     if (m_bond_weibull_modulus > 0.0 && m_bond_weibull_modulus < 0.1)
         throw ZaranError("dem.bond_weibull_modulus is too small to be meaningful (< 0.1)");
 
+    // 多通道失效：α = UtIII/UnIII 必须落在 (0,1]，否则折减后法向断裂能非正
+    // （α ≥ 1 意味切向单独就能吃掉全部断裂能，多通道失去意义）。
+    if (m_bond_shear_energy_ratio < 0.0)
+        throw ZaranError("dem.bond_shear_energy_ratio must be non-negative "
+            "(0 = disable the shear channel)");
+    if (m_bond_shear_energy_ratio >= 1.0)
+        throw ZaranError("dem.bond_shear_energy_ratio must be < 1 "
+            "(the shear channel may not consume the whole bond fracture energy)");
+    if (m_bond_shear_energy_ratio > 0.0 && !m_bond_cohesive_enabled)
+        throw ZaranError("dem.bond_shear_energy_ratio > 0 requires dem.bond_cohesive_enabled = true "
+            "(the shear threshold UtIII is defined relative to the cohesive fracture energy)");
+    if (m_rolling_friction < 0.0)
+        throw ZaranError("dem.rolling_friction must be non-negative (0 = disable)");
+    if (m_tangential_damping_scale < 0.0)
+        throw ZaranError("dem.tangential_damping_scale must be non-negative (0 = disable)");
+
+    // 高压气腔：gamma 必须 > 1（内能写作 U = pV/(γ−1)），半径与初始压力必须为正。
+    if (m_gas_cavity_enabled)
+    {
+        if (!(m_gas_cavity_radius > 0.0) || !(m_gas_pressure_initial > 0.0))
+            throw ZaranError("DEM gas cavity requires dem.gas_cavity_radius > 0 "
+                "and dem.gas_pressure_initial > 0");
+        if (m_gas_polytropic_index <= 1.0)
+            throw ZaranError("dem.gas_polytropic_index must be > 1 "
+                "(internal energy is U = pV/(gamma-1))");
+        if (m_gas_ramp_time < 0.0 || m_gas_cavity_shell_tolerance < 0.0)
+            throw ZaranError("DEM gas cavity ramp time / shell tolerance must be non-negative");
+        if (m_gas_cavity_vent_area_ratio > 0.0 && !(m_sample_radius > 0.0))
+            throw ZaranError("dem.gas_cavity_vent_area_ratio > 0 requires dem.sample_radius > 0");
+    }
+
     Log::info("DEM SolverParam Init: dt={:E}, contact_model={}, particle_file={}, spring_network={}, "
               "overlap_limit(stiffen={:g}, rebound={:g}), compression_fail={:g}x tensile, weibull_m={:g}",
               m_dt, m_contact_model, m_particle_file, m_spring_network_enabled ? "on" : "off",
               m_contact_stiffen_ratio, m_contact_rebound_ratio,
               m_bond_break_strain_compression > 0.0 ? 0.0 : m_bond_compression_strength_ratio,
               m_bond_weibull_modulus);
+    if (m_gas_cavity_enabled)
+    {
+        Log::info("DEM 气腔加载: a0={:E} m, p0={:E} Pa, gamma={:g}, ramp={:E} s, "
+                  "shell_tol={:g}xL0, vent_ratio={:g}, p_cap={:E} Pa, sample_radius={:E} m",
+                  m_gas_cavity_radius, m_gas_pressure_initial, m_gas_polytropic_index,
+                  m_gas_ramp_time, m_gas_cavity_shell_tolerance,
+                  m_gas_cavity_vent_area_ratio, m_gas_cavity_pressure_cap, m_sample_radius);
+    }
+    if (m_bond_shear_energy_ratio > 0.0 || m_rolling_friction > 0.0
+        || m_tangential_damping_scale > 0.0)
+    {
+        Log::info("DEM 多通道失效/碎后接触: shear_ratio(UtIII/UnIII)={:g}, "
+                  "rolling_friction(mu_r)={:E} m, tangential_damping(c_t/c_n)={:g}",
+                  m_bond_shear_energy_ratio, m_rolling_friction, m_tangential_damping_scale);
+    }
 }
 
 } // namespace zaran

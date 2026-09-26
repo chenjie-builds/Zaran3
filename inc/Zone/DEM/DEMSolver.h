@@ -13,6 +13,7 @@
 #include "FieldSolver.h"
 #include "DEMFieldData.h"
 #include "DEMSolverParam.h"
+#include "CavityGasModel.h"
 #include "ContactModel.h"
 #include <algorithm>
 #include <cstdint>
@@ -51,6 +52,44 @@ namespace zaran
         DEMFieldData*    GetDEMData()  const { return m_dem_data.get(); }
         DEMSolverParam*  GetDEMParam() const;
 
+        /// @brief 能量诊断（供校验脚本/报告使用，全部为**当前状态量**，不带累计）
+        struct EnergyBudget
+        {
+            double bond_elastic = 0.0;         ///< 完好键的弹性能之和 (J)
+            double bond_fracture = 0.0;        ///< 键断裂耗散能累计 (J)；= 法向部分 + 切向部分
+            double bond_shear_fracture = 0.0;  ///< 其中"切向独立断裂"贡献的部分 (J)，默认恒为 0
+            double dissipation = 0.0;          ///< 机械耗散（接触阻尼+摩擦+键阻尼）累计 (J)
+            double contact_elastic = 0.0;      ///< 当前接触弹簧的可逆储能之和 (J)
+            double rebound_loss = 0.0;         ///< 重叠保护（刚性回弹改写速度）累计移出的动能 (J)
+            double kinetic_translation = 0.0;  ///< 平动动能合计 (J)
+            double kinetic_rotation = 0.0;     ///< 转动动能合计 (J)
+            double max_speed = 0.0;            ///< 最大平动速率 (m/s)
+            double max_fragment_distance = 0.0;///< 距离空腔中心最远的粒子 (m)
+            index_type active_bonds = 0;       ///< 完好键数
+            index_type broken_bonds = 0;       ///< 已断键数
+        };
+        EnergyBudget GetEnergyBudget() const;
+
+        /// @brief 破碎形态统计（碎片/裂纹带/径向断键率），用于区分"几条主裂纹"与"全盘粉化"
+        /// @details 由**未断键**在粒子图上做连通分量得到"完整碎块"，由**已断键**得到"裂纹带"；
+        ///          再按 12 个等宽环带统计断键率。O(N + E) 并查集，未启用键合时全为 0。
+        struct FragmentStats
+        {
+            index_type fragments = 0;              ///< 完整碎块个数（含孤立单粒子）
+            index_type isolated_particles = 0;     ///< 与任何完好键都不相连的粒子数
+            index_type largest_fragment = 0;       ///< 最大碎块的粒子数
+            double largest_fragment_mass_fraction = 0.0; ///< 最大碎块质量占比
+            index_type fragments_ge_20 = 0;        ///< ≥20 粒子的碎块个数
+            double fragments_ge_20_mass_fraction = 0.0;  ///< ≥20 粒子的碎块合计质量占比
+            index_type largest_crack_band = 0;     ///< 最大裂纹带（已断键连通）涉及的粒子数
+            double radial_broken_fraction[12] = { 0.0 }; ///< 12 个等宽环带的断键率
+            double max_radius = 0.0;               ///< 用于环带归一化的最大半径 (m)
+        };
+        FragmentStats ComputeFragmentStats() const;
+
+        /// @brief 气腔加载模型（未启用时 IsEnabled() 为 false）
+        const CavityGasModel& GetCavityGas() const { return m_cavity_gas; }
+
     protected:
         // 主流程各子步
         void ZeroForce();
@@ -58,11 +97,18 @@ namespace zaran
         void CalcContactForce();
         void CalcWallForce();
         void CalcBondForce();
+        /// @brief 建立 γ 控制双线性内聚律的逐键参数（δ_p、δ_f），并做自洽性检查。
+        /// 必须在全部键（含文件给定与自动建链）与 `AssignBondStrengthScales()` 之后调用一次。
+        void PrepareCohesiveLaw();
         void CalcThermalReaction();
         // --- 重力与积分 ---
         // 在启用反应功能时，该函数会根据粒子的 reaction_progress 和 gas_pressure 计算并施加气相压力力，将力以相反方向分别作用到成对颗粒上。
         // 若存在有效的气体 Voronoi 面，则按 Voronoi 面面积与局部开口比例计算；否则退化为按键合面的 conduction_area 和 rest_length 进行近似，并结合参考长度/当前距离修正作用力。
         void CalcGasPressureForce();
+        /// @brief 高压气腔面力：p·ℓ_i·t·n̂_i，作用于空腔边界粒子环（见 CavityGasModel）
+        void CalcCavityGasForce(double time);
+        /// @brief 积分之后更新气腔体积与内能（与受力共用同一套边界离散 ⇒ W ≡ pΔV）
+        void UpdateCavityGasState(double dt, double time);
         double JwlPressure(const DEMParticle& particle, double gas_volume) const;
         void UpdateGasSolidState(DEMParticle& particle) const;
         void UpdateGasVoronoiMesh(bool force = false);
@@ -80,6 +126,14 @@ namespace zaran
         /// 须在 CalcNormalForce 之后、CalcTangentialForce 之前调用，
         /// 使切向库仑摩擦上限用的是放大后的法向力（与 LSM 一致）。
         void AmplifyDeepOverlapForce(DEMContact& contact, double sum_radius) const;
+
+        // --- 碎后接触：滚动阻力矩（缺了它，碎块堆会像光滑球堆一样摊平）---
+        /// @brief 施加滚动阻力力偶 M_r = −μ_r·R*·|F_n|·ω̂_rel（Ai 等 2011 简化模型），
+        /// 写入 contact.torque_r 并把不可逆耗散 |M_r|·|ω_rel|·dt 累加进 contact.dissipation。
+        /// 按 I_eff·|ω_rel|/dt 截断，避免力矩把相对角速度推过零点后反向振荡。
+        /// dem.rolling_friction ≤ 0（默认）时立即返回、不做任何事。
+        void ApplyRollingResistance(const DEMParticle& pa, const DEMParticle& pb,
+                                    DEMContact& contact, double dt) const;
 
         // --- 均匀网格（链表式单元表）：接触检测与初始弹簧网络共用 ---
         /// @brief 建立单元表；cell 为期望单元边长（会放大以限制单元总数），返回实际边长
@@ -221,6 +275,17 @@ namespace zaran
 
         shared_ptr<DEMFieldData>   m_dem_data;
         unique_ptr<ContactModel>   m_contact_model;
+
+        /// @brief 高压气腔加载模型（孔洞内充压气体把脆性材料撑碎）
+        CavityGasModel             m_cavity_gas;
+        /// @brief 机械耗散累计 (J)：每步把 m_tmp_dissipation 求和累加，供能量账本使用
+        double                     m_dissipation_total = 0.0;
+        /// @brief 本步接触弹簧的可逆储能之和 (J)，在 CalcContactForce 中累加
+        double                     m_contact_elastic = 0.0;
+        /// @brief 重叠保护（刚性回弹）累计移出的动能 (J)。
+        /// ApplyContactRebound 是**速度改写**（不是力的做功），必须单独记账，
+        /// 否则能量账本会在压碎段凭空缺口。mutable：该函数是 const。
+        mutable double             m_rebound_loss = 0.0;
 
         struct GasVoronoiCell
         {

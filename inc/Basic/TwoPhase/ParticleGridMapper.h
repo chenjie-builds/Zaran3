@@ -102,6 +102,11 @@ namespace zaran
 			double smoothing_shift = 0.0;   ///< 光顺引起的 Σα 相对变化（应 ~1e-16）
 		};
 
+		/// @brief 单个粒子的体积（3 维用球、2 维用圆面积——与网格口径一致）
+		/// @details 体积守恒判据里 ΣV_p 的定义必须和这里完全一致，
+		///          所以做成公开静态函数，任何调用方都不要再自己写一遍公式。
+		static double ParticleVolume(int dim, double radius);
+
 	public:
 		ParticleGridMapper() = default;
 		explicit ParticleGridMapper(const GridSpec& grid) { Init(grid); }
@@ -148,8 +153,25 @@ namespace zaran
 			const dynamic_array<double>& cell_values,
 			dynamic_array<double>& particle_values) const;
 
-		/// @brief 上一次 ComputeSolidFraction 的统计
+		/// @brief 上次一次 ComputeSolidFraction 的统计
 		const Stats& GetStats() const { return m_stats; }
+
+		/// @brief 当前网格描述
+		const GridSpec& GetGridSpec() const { return m_grid; }
+
+		/// @brief 取某个粒子的"单元 + 权重"列表
+		/// @details 与 `ComputeSolidFraction` / `ScatterParticleVector` / `GatherToParticle`
+		///          用的是**同一套**权重（`Σw = 1`，粒子完全在域内时）。
+		///          阶段 3 的耦合器（DEMCFDCoupler）必须用它把网格量插值到粒子位置：
+		///          自己另写一份权重"看起来一样"，但会让散射/聚集失去严格对偶，
+		///          而且一旦以后改了分配方法（SubCell ↔ Exact）两处就会漂移。
+		/// @param cells   输出，单元线性索引
+		/// @param weights 输出，与 cells 一一对应
+		void ComputeWeights(const Particle& p,
+			dynamic_array<long long>& cells, dynamic_array<double>& weights) const
+		{
+			BuildWeights(p, cells, weights);
+		}
 
 		/// @brief 单元线性索引
 		long long Idx(int i, int j, int k) const
